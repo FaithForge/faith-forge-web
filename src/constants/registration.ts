@@ -1,0 +1,1 @@
+export const DEFAULT_AGE_IN_MONTHS_AVAILABLE = 3;

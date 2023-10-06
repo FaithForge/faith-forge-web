@@ -1,0 +1,54 @@
+import { IPagination } from './Pagination';
+import { UserGenderCode } from './Uset';
+
+export interface IKidRelation {
+  id: string;
+  guardianId?: string;
+  relation: string;
+  firstName: string;
+  lastName?: string;
+  phone?: string;
+}
+
+export interface IKid {
+  faithForgeId?: number;
+  age?: number;
+  ageInMonths?: number;
+  birthday: Date;
+  id?: string;
+  isRegistered?: boolean;
+  firstName: string;
+  lastName: string;
+  gender: UserGenderCode;
+  photoUrl?: string;
+  state?: string;
+  staticGroup?: string;
+  group?: string;
+  groupId?: string;
+  observations?: string;
+  medicalCondition?: string;
+  registry?: any;
+  relations?: {
+    value: string;
+    label: string;
+  }[];
+}
+
+export interface IKidGroup {
+  id: string;
+  name: string;
+}
+
+export interface IKidMedicalCondition {
+  id: string;
+  name: string;
+}
+
+export interface IKids extends IPagination {
+  data: IKid[];
+  groups: IKidGroup[];
+  medicalConditions: IKidMedicalCondition[];
+  current?: IKid;
+  error?: string;
+  loading: boolean;
+}
