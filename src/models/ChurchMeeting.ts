@@ -6,8 +6,8 @@ export interface IChurchMeeting {
   day: Days;
   initialHour: Date;
   finalHour: Date;
-  initialRegistrationHour: Date;
-  finalRegistrationHour: Date;
+  initialRegistrationHour: any;
+  finalRegistrationHour: any;
 }
 
 export interface IChurchMeetings {
