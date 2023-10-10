@@ -3,6 +3,7 @@ import { ApiVerbs, makeApiRequest } from '../api';
 import { IKid } from '../models/Kid';
 import { IKidGuardian } from '../models/KidGuardian';
 import { RootState } from '../redux/store';
+import { removeAccentsAndFormat } from '../utils/text';
 
 export const uploadKidPhoto = async (payload: { formData: any }) => {
   const response = (
@@ -104,8 +105,8 @@ export const CreateKid = createAsyncThunk(
       await makeApiRequest(ApiVerbs.POST, `/registration/kids`, {
         data: {
           ...kidRegistration,
-          firstName: kidRegistration.firstName,
-          lastName: kidRegistration.lastName,
+          firstName: removeAccentsAndFormat(kidRegistration.firstName),
+          lastName: removeAccentsAndFormat(kidRegistration.lastName),
           birthday: kidRegistration.birthday,
           gender: kidRegistration.gender,
           staticGroup: kidRegistration.staticGroup,
@@ -115,10 +116,12 @@ export const CreateKid = createAsyncThunk(
           medicalCondition: kidRegistration.medicalCondition?.id,
           guardian: {
             nationalIdType: kidGuardianRegistration.nationalIdType,
-            nationalId: kidGuardianRegistration.nationalId,
-            firstName: kidGuardianRegistration.firstName,
-            lastName: kidGuardianRegistration.lastName,
-            phone: kidGuardianRegistration.phone,
+            nationalId: kidGuardianRegistration.nationalId.trim(),
+            firstName: removeAccentsAndFormat(
+              kidGuardianRegistration.firstName,
+            ),
+            lastName: removeAccentsAndFormat(kidGuardianRegistration.lastName),
+            phone: kidGuardianRegistration.phone.trim(),
             gender: kidGuardianRegistration.gender,
             relation: kidGuardianRegistration.relation,
           },
@@ -171,13 +174,13 @@ export const UpdateKid = createAsyncThunk(
 
     const kidRegistrationData = {
       ...kidRegistration,
-      firstName: kidRegistration.firstName,
-      lastName: kidRegistration.lastName,
+      firstName: removeAccentsAndFormat(kidRegistration.firstName),
+      lastName: removeAccentsAndFormat(kidRegistration.lastName),
       birthday: kidRegistration.birthday,
       gender: kidRegistration.gender,
       staticGroup: kidRegistration.staticGroup,
       group: kidRegistration.group,
-      observations: kidRegistration.observations,
+      observations: kidRegistration.observations?.trim(),
       photoUrl: kidRegistration.photoUrl,
       medicalCondition: kidRegistration.medicalCondition?.id,
     } as IKid;

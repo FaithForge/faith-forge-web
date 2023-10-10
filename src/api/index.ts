@@ -5,8 +5,6 @@ const API_URL =
     ? 'http://192.168.1.4:8080/api'
     : 'https://faith-forge.fly.dev/api';
 
-// const API_URL = 'https://faith-forge.fly.dev/api';
-
 export enum ApiVerbs {
   GET = 'GET',
   POST = 'POST',

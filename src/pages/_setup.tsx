@@ -1,4 +1,4 @@
-import { Button, Form, Input, Popup, Selector } from 'antd-mobile';
+import { Button, Form, Input, Modal, Popup, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '../redux/store';
@@ -13,6 +13,7 @@ import {
   updateCurrentPrinter,
 } from '../redux/slices/churchSlice';
 import { useRouter } from 'next/router';
+import { ExclamationOutlined } from '@ant-design/icons';
 
 const Setup: NextPage = () => {
   const userSlice = useSelector((state: RootState) => state.userSlice);
@@ -24,18 +25,50 @@ const Setup: NextPage = () => {
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     const firstName = values.firstName;
     const lastName = values.lastName;
     const churchGroup = values.churchGroup[0];
     const church = values.church[0];
     const churchMeeting = values.churchMeeting[0];
     const printer = values.printer[0];
+    const password = values.password;
 
-    dispatch(setUser({ firstName, lastName, churchGroup }));
-    dispatch(updateCurrentChurch(church));
-    dispatch(updateCurrentChurchMeeting(churchMeeting));
-    dispatch(updateCurrentPrinter(printer));
+    if (password !== '963741') {
+      Modal.show({
+        header: (
+          <ExclamationOutlined
+            style={{
+              fontSize: 64,
+              color: 'var(--adm-color-warning)',
+            }}
+          />
+        ),
+        title: 'Contraseña Incorrecta',
+        content: (
+          <>
+            <div>
+              Por favor coloque la contraseña correcta. Si no la sabe por favor
+              preguntar al administrador del sistema
+            </div>
+          </>
+        ),
+        closeOnMaskClick: true,
+        closeOnAction: true,
+        actions: [
+          {
+            key: 'close',
+            text: 'Cerrar',
+            primary: true,
+          },
+        ],
+      });
+      return;
+    }
+    await dispatch(setUser({ firstName, lastName, churchGroup }));
+    await dispatch(updateCurrentChurch(church));
+    await dispatch(updateCurrentChurchMeeting(churchMeeting));
+    await dispatch(updateCurrentPrinter(printer));
     router.reload();
   };
 
@@ -155,6 +188,22 @@ const Setup: NextPage = () => {
             ]}
           >
             <Selector options={printerOptions} />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="Contraseña de ingreso"
+            rules={[
+              {
+                required: true,
+                message: 'Por favor coloca la contraseña para acceder',
+              },
+            ]}
+          >
+            <Input
+              placeholder="Ingresa contraseña de acceso"
+              type="number"
+              maxLength={6}
+            />
           </Form.Item>
         </Form>
       </div>

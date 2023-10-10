@@ -69,6 +69,10 @@ const NewKid: NextPage = () => {
 
   useEffect(() => {
     dispatch(cleanCurrentKidGuardian());
+  }, []);
+
+  useEffect(() => {
+    dispatch(cleanCurrentKidGuardian());
     dispatch(GetKidGroups());
     dispatch(GetKidMedicalConditions());
   }, [dispatch]);

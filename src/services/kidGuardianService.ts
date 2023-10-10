@@ -1,6 +1,7 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { ApiVerbs, makeApiRequest } from '../api';
 import { IKidGuardian } from '../models/KidGuardian';
+import { removeAccentsAndFormat } from '../utils/text';
 
 export const GetKidGuardian = createAsyncThunk(
   'kidGuardian/getKidGuardian',
@@ -27,10 +28,12 @@ export const CreateKidGuardian = createAsyncThunk(
           kidId,
           guardian: {
             nationalIdType: kidGuardianRegistration.nationalIdType,
-            nationalId: kidGuardianRegistration.nationalId,
-            firstName: kidGuardianRegistration.firstName,
-            lastName: kidGuardianRegistration.lastName,
-            phone: kidGuardianRegistration.phone,
+            nationalId: kidGuardianRegistration.nationalId.trim(),
+            firstName: removeAccentsAndFormat(
+              kidGuardianRegistration.firstName,
+            ),
+            lastName: removeAccentsAndFormat(kidGuardianRegistration.lastName),
+            phone: kidGuardianRegistration.phone.trim(),
             gender: kidGuardianRegistration.gender,
             relation: kidGuardianRegistration.relation,
           },
