@@ -128,7 +128,7 @@ const RegisterKidView: NextPage = () => {
           width={180}
           height={180}
           fit="cover"
-          style={{ marginTop: 10, marginBottom: 10 }}
+          style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
         />
         <h1
           style={{
