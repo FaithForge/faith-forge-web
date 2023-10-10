@@ -8,6 +8,7 @@ import {
   GetKidMedicalConditions,
   GetKids,
   GetMoreKids,
+  UpdateKid,
 } from '../../services/kidService';
 
 const initialState: IKids = {
@@ -122,6 +123,25 @@ const kidSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(CreateKid.rejected, (state, action) => {
+      state.error = action.error.message;
+      state.loading = false;
+    });
+    builder.addCase(UpdateKid.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(
+      UpdateKid.fulfilled,
+      (state, action: PayloadAction<IKid>) => {
+        state.current = {
+          ...state.current,
+          ...action.payload,
+        };
+        state.error = undefined;
+        state.loading = false;
+      },
+    );
+    builder.addCase(UpdateKid.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });

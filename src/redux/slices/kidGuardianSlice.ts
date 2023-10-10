@@ -43,6 +43,5 @@ const kidGuardianSlice = createSlice({
   },
 });
 
-export const { cleanCurrentKidGuardian } =
-  kidGuardianSlice.actions;
+export const { cleanCurrentKidGuardian } = kidGuardianSlice.actions;
 export default kidGuardianSlice.reducer;

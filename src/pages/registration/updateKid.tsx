@@ -20,40 +20,35 @@ import {
 import { RefObject } from 'react';
 import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
 import dayjs from 'dayjs';
-import { idTypeSelect, userGenderSelect } from '../../models/Uset';
-import { kidRelationSelect } from '../../models/KidGuardian';
-import { GetKidGuardian } from '../../services/kidGuardianService';
+import { userGenderSelect } from '../../models/Uset';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
-import { capitalizeWords } from '../../utils/text';
 import LoadingMask from '../../components/LoadingMask';
 import {
-  CreateKid,
   GetKidGroups,
   GetKidMedicalConditions,
+  UpdateKid,
   uploadKidPhoto,
 } from '../../services/kidService';
 import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
+import { capitalizeWords } from '../../utils/text';
 
-const NewKid: NextPage = () => {
+const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
   const {
+    current: kid,
     groups: kidGroups,
     loading: kidLoading,
     medicalConditions,
   } = useSelector((state: RootState) => state.kidSlice);
-  const { current: guardian, loading: guardianLoading } = useSelector(
-    (state: RootState) => state.kidGuardianSlice,
-  );
 
   const now = new Date();
 
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
-  const [staticGroup, setStaticGroup] = useState(false);
+  const [staticGroup, setStaticGroup] = useState(kid?.staticGroup as boolean);
   const dispatch = useDispatch<AppDispatch>();
 
   const handleCapture = (target: any) => {
@@ -68,48 +63,40 @@ const NewKid: NextPage = () => {
   };
 
   useEffect(() => {
-    dispatch(cleanCurrentKidGuardian());
     dispatch(GetKidGroups());
     dispatch(GetKidMedicalConditions());
   }, [dispatch]);
 
   useEffect(() => {
-    if (guardian) {
+    if (!staticGroup) {
+      form.resetFields(['kidGroup']);
+    }
+  }, [form, staticGroup]);
+
+  useEffect(() => {
+    if (kid) {
       form.setFieldsValue({
-        guardianNationalIdType: guardian.nationalIdType,
-        guardianNationalId: guardian.nationalId,
-        guardianFirstName: capitalizeWords(guardian.firstName),
-        guardianLastName: capitalizeWords(guardian.lastName),
-        guardianPhone: guardian.phone,
-        guardianGender: guardian.gender,
-        guardianRelation: guardian.relation,
+        firstName: capitalizeWords(kid.firstName),
+        lastName: capitalizeWords(kid.lastName),
+        birthday: new Date(kid.birthday),
+        gender: kid.gender,
+        staticGroup: kid.staticGroup,
+        kidGroup: [kid.groupId],
+        observations: kid.observations,
+      });
+      setStaticGroup(kid.staticGroup as boolean);
+      setMedicalCondition({
+        id: kid?.medicalCondition?.id ?? '',
+        name: kid?.medicalCondition?.name ?? '',
       });
     }
-  }, [guardian, form]);
-
-  const findGuardian = async () => {
-    const guardianNationalId = form.getFieldsValue().guardianNationalId;
-    dispatch(GetKidGuardian({ nationalId: guardianNationalId }));
-  };
-
-  const cleanGuardian = async () => {
-    dispatch(cleanCurrentKidGuardian());
-    form.resetFields([
-      'guardianNationalIdType',
-      'guardianNationalId',
-      'guardianFirstName',
-      'guardianLastName',
-      'guardianPhone',
-      'guardianGender',
-      'guardianRelation',
-    ]);
-  };
+  }, [kid, form]);
 
   const [searchMedicalCondition, setSearchMedicalCondition] = useState('');
   const [visibleMedicalCondition, setVisibleMedicalCondition] = useState(false);
   const [medicalCondition, setMedicalCondition] = useState({
-    id: '',
-    name: '',
+    id: kid?.medicalCondition?.id ?? '',
+    name: kid?.medicalCondition?.name ?? '',
   });
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
@@ -123,20 +110,22 @@ const NewKid: NextPage = () => {
     }
   }, [medicalConditions, searchMedicalCondition]);
 
-  const addNewKid = async (values: any) => {
+  const updatedKid = async (values: any) => {
     dispatch(loadingKidEnable());
 
     let photoUrl = undefined;
-    if (photo) {
+    if (photo && photo !== kid?.photoUrl) {
       const formData = new FormData();
       formData.append('photo', photo);
 
       photoUrl = await uploadKidPhoto({ formData });
     }
 
+    console.error(values.kidGroup);
     await dispatch(
-      CreateKid({
+      UpdateKid({
         kidRegistration: {
+          id: kid?.id,
           firstName: values.firstName,
           lastName: values.lastName,
           birthday: values.birthday,
@@ -145,16 +134,9 @@ const NewKid: NextPage = () => {
           group: values.kidGroup ? values.kidGroup[0] : undefined,
           observations: values.observations ?? undefined,
           photoUrl,
-          medicalCondition: medicalCondition.id ?? undefined,
-        },
-        kidGuardianRegistration: {
-          nationalIdType: values.guardianNationalIdType[0],
-          nationalId: values.guardianNationalId,
-          firstName: values.guardianFirstName,
-          lastName: values.guardianLastName,
-          phone: values.guardianPhone,
-          gender: values.guardianGender[0],
-          relation: values.guardianRelation[0],
+          medicalCondition: {
+            id: medicalCondition.id ?? undefined,
+          },
         },
       }),
     );
@@ -172,8 +154,8 @@ const NewKid: NextPage = () => {
 
   return (
     <>
-      {guardianLoading || kidLoading ? <LoadingMask /> : ''}
-      <NavBarApp title="Crear Niño" />
+      {kidLoading ? <LoadingMask /> : ''}
+      <NavBarApp title="Actualizar Niño" />
       <AutoCenter>
         <label htmlFor="profileImage">
           {source ? (
@@ -201,11 +183,11 @@ const NewKid: NextPage = () => {
 
       <Form
         form={form}
-        onFinish={addNewKid}
+        onFinish={updatedKid}
         layout="horizontal"
         footer={
           <Button block type="submit" color="primary" size="large">
-            Guardar
+            Actualizar
           </Button>
         }
       >
@@ -260,95 +242,6 @@ const NewKid: NextPage = () => {
           <Selector options={userGenderSelect} />
         </Form.Item>
 
-        <h3>Información del Acudiente</h3>
-        <Form.Item
-          name="guardianNationalIdType"
-          label="Tipo de documento"
-          disabled={!!guardian}
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione un tipo de documento',
-            },
-          ]}
-        >
-          <Selector options={idTypeSelect} />
-        </Form.Item>
-        <Form.Item
-          name="guardianNationalId"
-          label="Numero de documento"
-          disabled={!!guardian}
-          rules={[
-            { required: true, message: 'Numero de documento es requerido' },
-          ]}
-        >
-          <Input
-            placeholder="Escribir numero de documento..."
-            onBlur={findGuardian}
-          />
-        </Form.Item>
-        <Form.Item
-          name="guardianFirstName"
-          label="Nombre"
-          disabled={!!guardian}
-          rules={[{ required: true, message: 'Nombre es requerido' }]}
-        >
-          <Input placeholder="Escribir nombre..." />
-        </Form.Item>
-        <Form.Item
-          name="guardianLastName"
-          label="Apellido"
-          disabled={!!guardian}
-          rules={[{ required: true, message: 'Apellido es requerido' }]}
-        >
-          <Input placeholder="Escribir apellido..." />
-        </Form.Item>
-        <Form.Item
-          name="guardianPhone"
-          label="Telefono"
-          disabled={!!guardian}
-          rules={[
-            {
-              required: true,
-              message: 'Por favor digite el numero telefono del acudiente',
-            },
-          ]}
-        >
-          <Input placeholder="Escribir telefono..." />
-        </Form.Item>
-        <Form.Item
-          name="guardianGender"
-          label="Genero"
-          disabled={!!guardian}
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione el genero del acudiente',
-            },
-          ]}
-        >
-          <Selector options={userGenderSelect} />
-        </Form.Item>
-        <Form.Item
-          name="guardianRelation"
-          label="Relación con el niño"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione una relación',
-            },
-          ]}
-        >
-          <Selector options={kidRelationSelect} />
-        </Form.Item>
-        <Form.Item>
-          {!!guardian ? (
-            <Button block color="default" onClick={cleanGuardian} size="large">
-              Limpiar formulario acudiente
-            </Button>
-          ) : null}
-        </Form.Item>
-
         <h3>Información Adicional (Opcional)</h3>
         <Form.Item
           name="staticGroup"
@@ -360,18 +253,21 @@ const NewKid: NextPage = () => {
             defaultChecked={staticGroup}
           />
         </Form.Item>
-        <Form.Item
-          name="kidGroup"
-          label="Salón estatico"
-          rules={[
-            {
-              required: staticGroup,
-              message: 'Por favor seleccione un salón',
-            },
-          ]}
-        >
-          <Selector options={kidGroupsSelect} />
-        </Form.Item>
+        {staticGroup && (
+          <Form.Item
+            name="kidGroup"
+            label="Salón estatico"
+            rules={[
+              {
+                required: staticGroup,
+                message: 'Por favor seleccione un salón',
+              },
+            ]}
+          >
+            <Selector options={kidGroupsSelect} />
+          </Form.Item>
+        )}
+
         <Form.Item>
           <p>Selecciona condicion medica</p>
           <Space align="center">
@@ -466,4 +362,4 @@ const NewKid: NextPage = () => {
   );
 };
 
-export default NewKid;
+export default UpdateKidPage;

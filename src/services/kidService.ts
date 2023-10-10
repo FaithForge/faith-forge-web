@@ -112,6 +112,7 @@ export const CreateKid = createAsyncThunk(
           group: kidRegistration.group,
           observations: kidRegistration.observations,
           photoUrl: kidRegistration.photoUrl,
+          medicalCondition: kidRegistration.medicalCondition?.id,
           guardian: {
             nationalIdType: kidGuardianRegistration.nationalIdType,
             nationalId: kidGuardianRegistration.nationalId,
@@ -160,5 +161,37 @@ export const RegisterKid = createAsyncThunk(
     ).data;
 
     return response;
+  },
+);
+
+export const UpdateKid = createAsyncThunk(
+  'kid/updatedKid',
+  async (payload: { kidRegistration: IKid }) => {
+    const { kidRegistration } = payload;
+
+    const kidRegistrationData = {
+      ...kidRegistration,
+      firstName: kidRegistration.firstName,
+      lastName: kidRegistration.lastName,
+      birthday: kidRegistration.birthday,
+      gender: kidRegistration.gender,
+      staticGroup: kidRegistration.staticGroup,
+      group: kidRegistration.group,
+      observations: kidRegistration.observations,
+      photoUrl: kidRegistration.photoUrl,
+      medicalCondition: kidRegistration.medicalCondition?.id,
+    } as IKid;
+
+    await makeApiRequest(
+      ApiVerbs.PUT,
+      `/registration/kids/${kidRegistration.id}`,
+      {
+        data: {
+          ...kidRegistrationData,
+        },
+      },
+    );
+
+    return kidRegistrationData;
   },
 );

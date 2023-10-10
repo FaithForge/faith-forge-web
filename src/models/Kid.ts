@@ -22,11 +22,16 @@ export interface IKid {
   gender: UserGenderCode;
   photoUrl?: string;
   state?: string;
-  staticGroup?: string;
+  staticGroup?: boolean;
   group?: string;
   groupId?: string;
   observations?: string;
-  medicalCondition?: string;
+  medicalCondition?: {
+    id: string;
+    name?: string;
+    code?: string;
+    description?: string;
+  };
   registry?: any;
   relations?: {
     value: string;

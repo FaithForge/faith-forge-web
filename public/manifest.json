@@ -1,12 +1,13 @@
 {
-  "theme_color": "#9b9b9b",
+  "theme_color": "#ffffff",
   "background_color": "#ffffff",
   "display": "standalone",
   "scope": "/",
   "start_url": "/registration",
   "name": "Iglekids",
   "short_name": "Iglekids",
-  "description": "Aplicativo para el registro y control de niños",
+  "description": "Aplicativo para el registro y control de niños en Rios de Vida",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "/icons/icon-192x192.png",

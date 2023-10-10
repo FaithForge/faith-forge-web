@@ -87,6 +87,12 @@ const NewKid: NextPage = () => {
     }
   }, [guardian, form]);
 
+  useEffect(() => {
+    if (!staticGroup) {
+      form.resetFields(['kidGroup']);
+    }
+  }, [form, staticGroup]);
+
   const findGuardian = async () => {
     const guardianNationalId = form.getFieldsValue().guardianNationalId;
     dispatch(GetKidGuardian({ nationalId: guardianNationalId }));
@@ -145,7 +151,9 @@ const NewKid: NextPage = () => {
           group: values.kidGroup ? values.kidGroup[0] : undefined,
           observations: values.observations ?? undefined,
           photoUrl,
-          medicalCondition: medicalCondition.id ?? undefined,
+          medicalCondition: {
+            id: medicalCondition.id ?? undefined,
+          },
         },
         kidGuardianRegistration: {
           nationalIdType: values.guardianNationalIdType[0],
@@ -360,18 +368,21 @@ const NewKid: NextPage = () => {
             defaultChecked={staticGroup}
           />
         </Form.Item>
-        <Form.Item
-          name="kidGroup"
-          label="Salón estatico"
-          rules={[
-            {
-              required: staticGroup,
-              message: 'Por favor seleccione un salón',
-            },
-          ]}
-        >
-          <Selector options={kidGroupsSelect} />
-        </Form.Item>
+        {staticGroup && (
+          <Form.Item
+            name="kidGroup"
+            label="Salón estatico"
+            rules={[
+              {
+                required: staticGroup,
+                message: 'Por favor seleccione un salón',
+              },
+            ]}
+          >
+            <Selector options={kidGroupsSelect} />
+          </Form.Item>
+        )}
+
         <Form.Item>
           <p>Selecciona condicion medica</p>
           <Space align="center">

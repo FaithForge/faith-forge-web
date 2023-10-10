@@ -124,7 +124,7 @@ const Registration: NextPage = () => {
           kids.map((kid) => (
             <List.Item
               disabled={warningAlert.blockRegister}
-              key={kid.firstName}
+              key={kid.faithForgeId}
               style={{
                 backgroundColor: kid.isRegistered ? '#dddddd' : 'white',
               }}

@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
-import { SearchOutline, MoreOutline } from 'antd-mobile-icons';
+import { MoreOutline } from 'antd-mobile-icons';
 import {
   Space,
   Form,
@@ -11,6 +11,7 @@ import {
   AutoCenter,
   Grid,
   Radio,
+  Popover,
 } from 'antd-mobile';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -24,23 +25,57 @@ import {
   KidGuardianRelationCode,
 } from '../../models/KidGuardian';
 import { useRouter } from 'next/router';
+import { Action } from 'antd-mobile/es/components/popover';
+import { EditOutlined, TeamOutlined } from '@ant-design/icons';
+import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
+import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
+import LoadingMask from '../../components/LoadingMask';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
-  const { current: kid } = useSelector((state: RootState) => state.kidSlice);
+  const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
+  const { current: kid, loading: kidLoading } = useSelector(
+    (state: RootState) => state.kidSlice,
+  );
+  const actions: Action[] = [
+    {
+      key: 'updateKid',
+      icon: <EditOutlined />,
+      text: 'Actualizar datos del niño',
+      onClick: () => {
+        router.push('/registration/updateKid');
+      },
+    },
+    {
+      key: 'addNewKidGuardian',
+      icon: <TeamOutlined />,
+      text: 'Asignar nuevo acudiente',
+      onClick: () => {
+        dispatch(cleanCurrentKidGuardian());
+        setOpenKidGuardianModal(true);
+      },
+    },
+  ];
+
   const right = (
     <div style={{ fontSize: 24 }}>
       <Space style={{ '--gap': '16px' }}>
-        <SearchOutline />
-        <MoreOutline />
+        <Popover.Menu
+          actions={actions}
+          placement="bottom-start"
+          trigger="click"
+          onAction={(node) => node.onClick}
+        >
+          <MoreOutline />
+        </Popover.Menu>
       </Space>
     </div>
   );
 
   useEffect(() => {
     if (kid?.id) {
-      dispatch(GetKid({ id: kid?.id }));
+      dispatch(GetKid({ id: kid.id }));
     }
   }, [dispatch, kid?.id]);
 
@@ -78,6 +113,7 @@ const RegisterKidView: NextPage = () => {
 
   return (
     <>
+      {kidLoading ? <LoadingMask /> : ''}
       <NavBarApp right={right} title="Registrar niño" />
       <AutoCenter>
         <Image
@@ -89,10 +125,10 @@ const RegisterKidView: NextPage = () => {
               ? '/icons/boy.png'
               : '/icons/girl.png'
           }
-          width={160}
-          height={160}
+          width={180}
+          height={180}
           fit="cover"
-          style={{ borderRadius: '50%' }}
+          style={{ marginTop: 10, marginBottom: 10 }}
         />
         <h1
           style={{
@@ -182,6 +218,18 @@ const RegisterKidView: NextPage = () => {
               </Grid.Item>
               <Grid.Item>{`${guardianRegistration?.label}`}</Grid.Item>
             </Grid>
+            {kid.registry?.observation && (
+              <Grid
+                columns={2}
+                gap={8}
+                style={{ paddingBottom: 10, border: '1px' }}
+              >
+                <Grid.Item style={{ fontWeight: 'bold' }}>
+                  Observaciones al registrar
+                </Grid.Item>
+                <Grid.Item>{`${kid.registry?.observation}`}</Grid.Item>
+              </Grid>
+            )}
           </>
         )}
         {kid?.medicalCondition && (
@@ -193,7 +241,31 @@ const RegisterKidView: NextPage = () => {
             <Grid.Item style={{ fontWeight: 'bold' }}>
               Condición Medica
             </Grid.Item>
-            <Grid.Item>{kid.medicalCondition}</Grid.Item>
+            <Grid.Item>{`${kid.medicalCondition?.code} - ${kid.medicalCondition?.name}`}</Grid.Item>
+          </Grid>
+        )}
+        {kid?.observations && (
+          <Grid
+            columns={2}
+            gap={8}
+            style={{ paddingBottom: 10, border: '1px' }}
+          >
+            <Grid.Item style={{ fontWeight: 'bold' }}>
+              Observaciones generales
+            </Grid.Item>
+            <Grid.Item>{kid.observations}</Grid.Item>
+          </Grid>
+        )}
+        {kid?.group && (
+          <Grid
+            columns={2}
+            gap={8}
+            style={{ paddingBottom: 10, border: '1px' }}
+          >
+            <Grid.Item style={{ fontWeight: 'bold' }}>Salón</Grid.Item>
+            <Grid.Item>
+              {kid.group} {kid.staticGroup ? '(Estatico)' : ''}
+            </Grid.Item>
           </Grid>
         )}
       </div>
@@ -203,7 +275,7 @@ const RegisterKidView: NextPage = () => {
           onFinish={registerKid}
           footer={
             <Button block type="submit" color="primary" size="large">
-              Guardar
+              Registrar
             </Button>
           }
         >
@@ -238,7 +310,7 @@ const RegisterKidView: NextPage = () => {
             </Radio.Group>
           </Form.Item>
 
-          <Form.Item name="observations" label="Observaciones">
+          <Form.Item name="observations" label="Observaciones al registrar">
             <TextArea
               placeholder="Ejemplo: lleva bolso, lleva merienda, esta enfermo de algo en el momento."
               maxLength={300}
@@ -261,6 +333,10 @@ const RegisterKidView: NextPage = () => {
           </div>
         </>
       )}
+      <CreateNewKidGuardian
+        visible={openKidGuardianModal}
+        onClose={(status: boolean) => setOpenKidGuardianModal(status)}
+      />
     </>
   );
 };
