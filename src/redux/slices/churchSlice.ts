@@ -19,7 +19,9 @@ const churchSlice = createSlice({
   initialState: initialState,
   reducers: {
     updateCurrentChurch: (state, action: PayloadAction<string>) => {
-      state.current = state.data.find((church) => church.id === action.payload);
+      state.current =
+        state.data.find((church) => church.id === action.payload) ??
+        state.current;
     },
     updateCurrentPrinter: (state, action: PayloadAction<string>) => {
       state.currentPrinter = state.printers.find(

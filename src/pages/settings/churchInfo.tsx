@@ -27,14 +27,14 @@ const ChurchInfo: NextPage = () => {
     });
   }, [form, churchSlice.current?.id, churchMeetingSlice.current?.id]);
 
-  const onFinish = (values: any) => {
+  const onFinish = async (values: any) => {
     const church = values.church[0] ?? churchSlice.current?.id;
     const churchMeeting =
       values.churchMeeting[0] ?? churchMeetingSlice.current?.id;
 
     if (church && churchMeeting) {
-      dispatch(updateCurrentChurch(church));
-      dispatch(updateCurrentChurchMeeting(churchMeeting));
+      await dispatch(updateCurrentChurch(church));
+      await dispatch(updateCurrentChurchMeeting(churchMeeting));
       router.back();
     }
   };
@@ -89,12 +89,8 @@ const ChurchInfo: NextPage = () => {
               ]}
             >
               <Selector
-                options={churchOptions}
                 defaultValue={[churchSlice.current?.id as string]}
-                onChange={(arr) => {
-                  dispatch(updateCurrentChurch(arr[0]));
-                  dispatch(GetChurchMeetings(arr[0]));
-                }}
+                options={churchOptions}
               />
             </Form.Item>
             <Form.Item
