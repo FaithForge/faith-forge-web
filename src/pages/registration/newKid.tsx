@@ -36,6 +36,8 @@ import {
 } from '../../services/kidService';
 import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
+import { DateTime } from 'luxon';
+import { labelRendererCalendar } from '../../utils/date';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -49,7 +51,7 @@ const NewKid: NextPage = () => {
     (state: RootState) => state.kidGuardianSlice,
   );
 
-  const now = new Date();
+  const now = DateTime.local().endOf('year').toJSDate();
 
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
@@ -69,10 +71,12 @@ const NewKid: NextPage = () => {
 
   useEffect(() => {
     dispatch(cleanCurrentKidGuardian());
+    return () => {
+      dispatch(cleanCurrentKidGuardian());
+    };
   }, []);
 
   useEffect(() => {
-    dispatch(cleanCurrentKidGuardian());
     dispatch(GetKidGroups());
     dispatch(GetKidMedicalConditions());
   }, [dispatch]);
@@ -253,6 +257,9 @@ const NewKid: NextPage = () => {
             title={'Fecha de nacimiento'}
             cancelText={'Cancelar'}
             confirmText={'Confirmar'}
+            renderLabel={(type: string, data: number) =>
+              labelRendererCalendar(type, data)
+            }
           >
             {(value) =>
               value ? dayjs(value).format('YYYY-MM-DD') : 'Seleccionar fecha'
@@ -326,7 +333,7 @@ const NewKid: NextPage = () => {
             },
           ]}
         >
-          <Input placeholder="Escribir telefono..." />
+          <Input placeholder="Escribir telefono..." type="tel" />
         </Form.Item>
         <Form.Item
           name="guardianGender"

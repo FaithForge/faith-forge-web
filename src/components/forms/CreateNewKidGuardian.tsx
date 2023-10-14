@@ -32,6 +32,12 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
   };
 
   useEffect(() => {
+    return () => {
+      dispatch(cleanCurrentKidGuardian());
+    };
+  }, []);
+
+  useEffect(() => {
     if (guardian) {
       form.setFieldsValue({
         guardianNationalIdType: guardian.nationalIdType,
@@ -187,7 +193,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               },
             ]}
           >
-            <Input placeholder="Escribir telefono..." />
+            <Input placeholder="Escribir telefono..." type="tel" />
           </Form.Item>
           <Form.Item
             name="guardianGender"

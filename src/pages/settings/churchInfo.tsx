@@ -89,8 +89,11 @@ const ChurchInfo: NextPage = () => {
               ]}
             >
               <Selector
-                defaultValue={[churchSlice.current?.id as string]}
                 options={churchOptions}
+                onChange={(arr) => {
+                  form.resetFields(['churchMeeting']);
+                  dispatch(GetChurchMeetings(arr[0]));
+                }}
               />
             </Form.Item>
             <Form.Item
@@ -103,10 +106,7 @@ const ChurchInfo: NextPage = () => {
                 },
               ]}
             >
-              <Selector
-                defaultValue={[churchMeetingSlice.current?.id as string]}
-                options={churchMeetingOptions}
-              />
+              <Selector options={churchMeetingOptions} />
             </Form.Item>
           </Form>
         </>

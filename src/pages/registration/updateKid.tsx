@@ -33,6 +33,7 @@ import {
 import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
+import { DateTime } from 'luxon';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -44,7 +45,7 @@ const UpdateKidPage: NextPage = () => {
     medicalConditions,
   } = useSelector((state: RootState) => state.kidSlice);
 
-  const now = new Date();
+  const now = DateTime.local().endOf('year').toJSDate();
 
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
