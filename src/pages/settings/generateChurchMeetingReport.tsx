@@ -22,6 +22,8 @@ const GenerateChurchMeetingReport: NextPage = () => {
 
   const now = new Date();
   const [isLoading, setIsLoading] = useState(false);
+  const [dateCache, setDateCache] = useState(null);
+  const [churchMeetingCache, setChurchMeetingCache] = useState(null);
 
   useEffect(() => {
     (async () => {
@@ -45,13 +47,42 @@ const GenerateChurchMeetingReport: NextPage = () => {
     const churchMeetingId = values.churchMeeting[0];
     const date = values.date;
 
+    setChurchMeetingCache(churchMeetingId);
+    setDateCache(date);
+
     const reportResponse = (
       await makeApiRequest(ApiVerbs.GET, `/report/kidsChurchMeeting`, {
         params: { churchMeetingId, date },
       })
     ).data;
-    console.log(reportResponse);
     setReport(reportResponse);
+    setIsLoading(false);
+  };
+
+  const downloadFile = async () => {
+    setIsLoading(true);
+    const churchMeetingId = churchMeetingCache;
+    const date = dateCache;
+
+    const reportResponse = (
+      await makeApiRequest(ApiVerbs.GET, `/report/kidsChurchMeeting/download`, {
+        params: { churchMeetingId, date },
+      })
+    ).data;
+
+    const bufferData = Buffer.from(reportResponse['data']);
+    console.log(bufferData);
+    const blob = new Blob([bufferData], {
+      type: 'application/pdf',
+    });
+    const url = window.URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'archivo.pdf';
+    a.click();
+
+    window.URL.revokeObjectURL(url);
     setIsLoading(false);
   };
 
@@ -211,6 +242,9 @@ const GenerateChurchMeetingReport: NextPage = () => {
           {report.list.byKidGroup.map((kidGroup: any) => {
             return <ModalFaithForge kidGroup={kidGroup} />;
           })} */}
+          <Button block color="primary" size="large" onClick={downloadFile}>
+            Descargar reporte
+          </Button>
         </div>
       )}
     </>
