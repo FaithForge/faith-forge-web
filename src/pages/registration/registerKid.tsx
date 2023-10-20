@@ -12,6 +12,7 @@ import {
   Grid,
   Radio,
   Popover,
+  NoticeBar,
 } from 'antd-mobile';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -26,7 +27,7 @@ import {
 } from '../../models/KidGuardian';
 import { useRouter } from 'next/router';
 import { Action } from 'antd-mobile/es/components/popover';
-import { EditOutlined, TeamOutlined } from '@ant-design/icons';
+import { EditOutlined, HomeOutlined, TeamOutlined } from '@ant-design/icons';
 import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
 import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
 import LoadingMask from '../../components/LoadingMask';
@@ -37,6 +38,9 @@ const RegisterKidView: NextPage = () => {
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
   const { current: kid, loading: kidLoading } = useSelector(
     (state: RootState) => state.kidSlice,
+  );
+  const { current: churchMeeting } = useSelector(
+    (state: RootState) => state.churchMeetingSlice,
   );
   const actions: Action[] = [
     {
@@ -274,9 +278,19 @@ const RegisterKidView: NextPage = () => {
           layout="vertical"
           onFinish={registerKid}
           footer={
-            <Button block type="submit" color="primary" size="large">
-              Registrar
-            </Button>
+            <>
+              <NoticeBar
+                style={{
+                  '--height': '20px',
+                }}
+                icon={<HomeOutlined />}
+                content={`Servicio: ${churchMeeting?.name}`}
+                color="info"
+              />
+              <Button block type="submit" color="primary" size="large">
+                Registrar
+              </Button>
+            </>
           }
         >
           <Form.Item
