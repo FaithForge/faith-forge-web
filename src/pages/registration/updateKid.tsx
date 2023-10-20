@@ -34,6 +34,7 @@ import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
+import { calculateAge, getAgeInMonths } from '../../utils/date';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -226,7 +227,13 @@ const UpdateKidPage: NextPage = () => {
             confirmText={'Confirmar'}
           >
             {(value) =>
-              value ? dayjs(value).format('YYYY-MM-DD') : 'Seleccionar fecha'
+              value
+                ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
+                    calculateAge(value) ?? 0,
+                  )} años y ${
+                    getAgeInMonths(value) - Math.floor(calculateAge(value)) * 12
+                  } meses)`
+                : 'Seleccionar fecha'
             }
           </DatePicker>
         </Form.Item>

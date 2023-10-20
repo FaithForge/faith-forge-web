@@ -37,7 +37,11 @@ import {
 import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
 import { DateTime } from 'luxon';
-import { labelRendererCalendar } from '../../utils/date';
+import {
+  calculateAge,
+  getAgeInMonths,
+  labelRendererCalendar,
+} from '../../utils/date';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -262,7 +266,13 @@ const NewKid: NextPage = () => {
             }
           >
             {(value) =>
-              value ? dayjs(value).format('YYYY-MM-DD') : 'Seleccionar fecha'
+              value
+                ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
+                    calculateAge(value) ?? 0,
+                  )} años y ${
+                    getAgeInMonths(value) - Math.floor(calculateAge(value)) * 12
+                  } meses)`
+                : 'Seleccionar fecha'
             }
           </DatePicker>
         </Form.Item>
