@@ -22,9 +22,15 @@ export const uploadKidPhoto = async (payload: { formData: any }) => {
 
 export const GetKid = createAsyncThunk(
   'kid/getKid',
-  async (payload: { id: string }) => {
+  async (payload: { id: string; churchMeetingId?: string }, { getState }) => {
+    const state = getState() as RootState;
+    const churchMeeting = state.churchMeetingSlice;
     const response = (
-      await makeApiRequest(ApiVerbs.GET, `/registration/kids/${payload.id}`)
+      await makeApiRequest(ApiVerbs.GET, `/registration/kids/${payload.id}`, {
+        params: {
+          churchMeetingId: churchMeeting.current?.id,
+        },
+      })
     ).data;
 
     return response;
