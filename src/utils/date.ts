@@ -15,12 +15,22 @@ export const MONTH_NUMBER_TO_LETTER: { [key: number]: string } = {
   12: 'Diciembre',
 };
 
+/**
+ * Calculates the age in years based on the given birthday.
+ * @param {Date} birthday - The date of birth.
+ * @returns {number} - The age in years.
+ */
 export const calculateAge = (birthday: Date): number => {
   const today = DateTime.local();
   const birth = DateTime.fromJSDate(birthday);
   return today.diff(birth, 'years').years;
 };
 
+/**
+ * Gets the age in months based on the given birthday.
+ * @param {Date} birthday - The date of birth.
+ * @returns {number} - The age in months.
+ */
 export const getAgeInMonths = (birthday: Date): number => {
   const today = new Date();
   const yearsDiff = today.getFullYear() - birthday.getFullYear();
