@@ -8,7 +8,7 @@ import {
   InfiniteScroll,
   NoticeBar,
 } from 'antd-mobile';
-import { UserAddOutlined } from '@ant-design/icons';
+import { HomeOutlined, UserAddOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -48,7 +48,6 @@ const Registration: NextPage = () => {
   useEffect(() => {
     dispatch(GetKids({ findText }));
     const currentDay = DateTime.local().toFormat('EEEE');
-    console.log(currentDay, churchMeeting);
     if (churchMeeting) {
       let warning = false;
       if (currentDay.toUpperCase() === churchMeeting.day.toUpperCase()) {
@@ -99,12 +98,7 @@ const Registration: NextPage = () => {
   return (
     <>
       {loading ? <LoadingMask /> : ''}
-      {warningAlert.message && (
-        <NoticeBar
-          content={warningAlert.message}
-          color={warningAlert.blockRegister ? 'error' : 'alert'}
-        />
-      )}
+
       <SearchBar
         showCancelButton
         cancelText="Cancelar"
@@ -119,6 +113,20 @@ const Registration: NextPage = () => {
           backgroundColor: 'white',
         }}
       />
+      <NoticeBar
+        style={{
+          '--height': '25px',
+        }}
+        icon={<HomeOutlined />}
+        content={`Servicio a Registrar: ${churchMeeting?.name}`}
+        color="info"
+      />
+      {warningAlert.message && (
+        <NoticeBar
+          content={warningAlert.message}
+          color={warningAlert.blockRegister ? 'error' : 'alert'}
+        />
+      )}
       <List>
         {kids.length ? (
           kids.map((kid) => (
