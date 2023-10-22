@@ -13,6 +13,7 @@ import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
 import { ApiVerbs, makeApiRequest } from '../../api';
 import ModalFaithForge from '../../components/ModalFaithForge';
+import { DateTime } from 'luxon';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -59,33 +60,6 @@ const GenerateChurchMeetingReport: NextPage = () => {
     setIsLoading(false);
   };
 
-  const downloadFile = async () => {
-    setIsLoading(true);
-    const churchMeetingId = churchMeetingCache;
-    const date = dateCache;
-
-    const reportResponse = (
-      await makeApiRequest(ApiVerbs.GET, `/report/kidsChurchMeeting/download`, {
-        params: { churchMeetingId, date },
-      })
-    ).data;
-
-    const bufferData = Buffer.from(reportResponse['data']);
-    console.log(bufferData);
-    const blob = new Blob([bufferData], {
-      type: 'application/pdf',
-    });
-    const url = window.URL.createObjectURL(blob);
-
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'archivo.pdf';
-    a.click();
-
-    window.URL.revokeObjectURL(url);
-    setIsLoading(false);
-  };
-
   const churchOptions = churches
     ? churches.map((church: any) => {
         return {
@@ -103,6 +77,38 @@ const GenerateChurchMeetingReport: NextPage = () => {
         };
       })
     : [];
+
+  const downloadFile = async () => {
+    setIsLoading(true);
+    const churchMeetingId = churchMeetingCache;
+    const date = dateCache;
+
+    const reportResponse = (
+      await makeApiRequest(ApiVerbs.GET, `/report/kidsChurchMeeting/download`, {
+        params: { churchMeetingId, date },
+      })
+    ).data;
+
+    const bufferData = Buffer.from(reportResponse['data']);
+    const blob = new Blob([bufferData], {
+      type: 'application/pdf',
+    });
+    const url = window.URL.createObjectURL(blob);
+
+    const churchMeetingInfo = churchMeetingOptions.find(
+      (churchMeeting) => churchMeeting.value === churchMeetingId,
+    );
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${DateTime.local().toISODate()}-${churchMeetingInfo?.label.replace(
+      ' ',
+      '-',
+    )}.pdf`;
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    setIsLoading(false);
+  };
 
   return (
     <>
