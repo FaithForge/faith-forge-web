@@ -180,81 +180,83 @@ const GenerateChurchMeetingReport: NextPage = () => {
           </Form.Item>
         </Form>
       </>
-      {report && (
-        <div style={{ fontSize: 16 }} id="report">
-          <h2>Totales generales</h2>
+      <div style={{ fontSize: 16 }} id="report">
+        {report && (
           <>
-            <Grid
-              columns={2}
-              gap={8}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
-              <Grid.Item style={{ fontWeight: 'bold' }}>
-                Total niños registrados
-              </Grid.Item>
-              <Grid.Item>{report.total}</Grid.Item>
-            </Grid>
-            <Grid
-              columns={2}
-              gap={8}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
-              <Grid.Item style={{ fontWeight: 'bold' }}>
-                Total niños nuevos
-              </Grid.Item>
-              <Grid.Item>{report.new}</Grid.Item>
-            </Grid>
-          </>
-
-          <h2>Totales por salones</h2>
-          {report.report.byKidGroup.map((kidGroup: any) => {
-            return (
+            <h2>Totales generales</h2>
+            <>
               <Grid
                 columns={2}
                 gap={8}
                 style={{ paddingBottom: 10, border: '1px' }}
-                key={kidGroup.room}
               >
                 <Grid.Item style={{ fontWeight: 'bold' }}>
-                  {kidGroup.room}
+                  Total niños registrados
                 </Grid.Item>
-                <Grid.Item>{kidGroup.count}</Grid.Item>
+                <Grid.Item>{report.total}</Grid.Item>
               </Grid>
-            );
-          })}
+              <Grid
+                columns={2}
+                gap={8}
+                style={{ paddingBottom: 10, border: '1px' }}
+              >
+                <Grid.Item style={{ fontWeight: 'bold' }}>
+                  Total niños nuevos
+                </Grid.Item>
+                <Grid.Item>{report.new}</Grid.Item>
+              </Grid>
+            </>
 
-          <h2>Totales por genero</h2>
-          <Grid
-            columns={2}
-            gap={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
-            <Grid.Item>{report.report.byGender.M ?? 0}</Grid.Item>
-          </Grid>
-          <Grid
-            columns={2}
-            gap={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
-            <Grid.Item>{report.report.byGender.F ?? 0}</Grid.Item>
-          </Grid>
-          <h2>Lista niños por salones</h2>
-          {report.list.byKidGroup.map((kidGroup: any, index: any) => {
-            return <ModalFaithForge key={index} kidGroup={kidGroup} />;
-          })}
-          <Button
-            block
-            color="success"
-            style={{ marginTop: 5 }}
-            size="large"
-            onClick={downloadFile}
-          >
-            Descargar reporte
-          </Button>
-        </div>
-      )}
+            <h2>Totales por salones</h2>
+            {report.report.byKidGroup.map((kidGroup: any) => {
+              return (
+                <Grid
+                  columns={2}
+                  gap={8}
+                  style={{ paddingBottom: 10, border: '1px' }}
+                  key={kidGroup.room}
+                >
+                  <Grid.Item style={{ fontWeight: 'bold' }}>
+                    {kidGroup.room}
+                  </Grid.Item>
+                  <Grid.Item>{kidGroup.count}</Grid.Item>
+                </Grid>
+              );
+            })}
+
+            <h2>Totales por genero</h2>
+            <Grid
+              columns={2}
+              gap={8}
+              style={{ paddingBottom: 10, border: '1px' }}
+            >
+              <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
+              <Grid.Item>{report.report.byGender.M ?? 0}</Grid.Item>
+            </Grid>
+            <Grid
+              columns={2}
+              gap={8}
+              style={{ paddingBottom: 10, border: '1px' }}
+            >
+              <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
+              <Grid.Item>{report.report.byGender.F ?? 0}</Grid.Item>
+            </Grid>
+            <h2>Lista niños por salones</h2>
+            {report.list.byKidGroup.map((kidGroup: any, index: any) => {
+              return <ModalFaithForge key={index} kidGroup={kidGroup} />;
+            })}
+            <Button
+              block
+              color="success"
+              style={{ marginTop: 5 }}
+              size="large"
+              onClick={downloadFile}
+            >
+              Descargar reporte
+            </Button>
+          </>
+        )}
+      </div>
     </>
   );
 };
