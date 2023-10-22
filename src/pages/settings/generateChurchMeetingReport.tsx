@@ -56,8 +56,10 @@ const GenerateChurchMeetingReport: NextPage = () => {
         params: { churchMeetingId, date },
       })
     ).data;
-    setReport(reportResponse);
+    await setReport(reportResponse);
     setIsLoading(false);
+    const reportHTML = document.getElementById('report');
+    reportHTML?.scrollIntoView({ behavior: 'smooth' });
   };
 
   const churchOptions = churches
@@ -179,7 +181,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
         </Form>
       </>
       {report && (
-        <div style={{ fontSize: 16 }}>
+        <div style={{ fontSize: 16 }} id="report">
           <h2>Totales generales</h2>
           <>
             <Grid
