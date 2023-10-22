@@ -236,13 +236,13 @@ const GenerateChurchMeetingReport: NextPage = () => {
           {report.list.byKidGroup.map((kidGroup: any, index: any) => {
             return <ModalFaithForge key={index} kidGroup={kidGroup} />;
           })}
-          {/* <Text category="h4" style={styles.subTitles}>
-            Lista niños por salones
-          </Text>
-          {report.list.byKidGroup.map((kidGroup: any) => {
-            return <ModalFaithForge kidGroup={kidGroup} />;
-          })} */}
-          <Button block color="primary" size="large" onClick={downloadFile}>
+          <Button
+            block
+            color="success"
+            style={{ marginTop: 5 }}
+            size="large"
+            onClick={downloadFile}
+          >
             Descargar reporte
           </Button>
         </div>
