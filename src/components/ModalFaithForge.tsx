@@ -3,9 +3,18 @@ import { Button, List, Modal } from 'antd-mobile';
 
 const ModalFaithForge = ({ kidGroup }: any) => {
   const toggleModal = () => {
-    Modal.alert({
+    Modal.show({
       content: ModalBody,
       showCloseButton: false,
+      closeOnMaskClick: true,
+      closeOnAction: true,
+      actions: [
+        {
+          key: 'close',
+          text: 'Cerrar',
+          primary: true,
+        },
+      ],
     });
   };
 
