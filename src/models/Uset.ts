@@ -32,9 +32,9 @@ export enum IdTypeCode {
 }
 
 export enum IdType {
-  CC = 'Cédula de Ciudadania',
+  CC = 'Cédula de Ciudadanía',
   TI = 'Tarjeta de Identidad',
-  RC = 'Registro civil',
+  RC = 'Registro Cívil',
   CE = 'Cédula de Extranjería',
   PS = 'Pasaporte',
 }
