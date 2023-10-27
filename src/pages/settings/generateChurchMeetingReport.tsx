@@ -156,7 +156,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
             onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
               datePickerRef.current?.open();
             }}
-            rules={[{ required: true, message: 'Fecha de reporte' }]}
+            rules={[{ required: true, message: 'Por favor seleccionar fecha de reporte' }]}
           >
             <DatePicker
               max={now}
@@ -215,7 +215,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
             );
           })}
 
-          <h2>Totales por genero</h2>
+          <h2>Totales por género</h2>
           <Grid
             columns={2}
             gap={8}

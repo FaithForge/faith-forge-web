@@ -30,7 +30,7 @@ const Setting: NextPage = () => {
           prefix={<PrinterOutlined />}
           onClick={() => router.push('/settings/generateChurchMeetingReport')}
         >
-          Generar reporte de servicio
+          Generar Reporte de Servicio
         </List.Item>
       </List>
     </>

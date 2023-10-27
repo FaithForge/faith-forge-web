@@ -131,7 +131,7 @@ const Setup: NextPage = () => {
           <Form.Item
             name="firstName"
             label="Nombre"
-            rules={[{ required: true, message: 'Por favor coloca tu nombre' }]}
+            rules={[{ required: true, message: 'Por favor escribe tu nombre' }]}
           >
             <Input placeholder="Ingresa tu nombre" />
           </Form.Item>
@@ -139,7 +139,7 @@ const Setup: NextPage = () => {
             name="lastName"
             label="Apellido"
             rules={[
-              { required: true, message: 'Por favor coloca tu apellido' },
+              { required: true, message: 'Por favor escribe tu apellido' },
             ]}
           >
             <Input placeholder="Ingresa tu apellido" />
@@ -157,7 +157,7 @@ const Setup: NextPage = () => {
             name="church"
             label="Sede"
             rules={[
-              { required: true, message: 'Por favor seleccionar una sede' },
+              { required: true, message: 'Por favor selecciona una sede' },
             ]}
           >
             <Selector
@@ -172,7 +172,7 @@ const Setup: NextPage = () => {
             name="churchMeeting"
             label="Servicio"
             rules={[
-              { required: true, message: 'Por favor seleccionar una reunión' },
+              { required: true, message: 'Por favor selecciona una reunión' },
             ]}
           >
             <Selector options={churchMeetingOptions} />
@@ -183,7 +183,7 @@ const Setup: NextPage = () => {
             rules={[
               {
                 required: true,
-                message: 'Por favor seleccionar una impresora',
+                message: 'Por favor selecciona una impresora',
               },
             ]}
           >
@@ -195,7 +195,7 @@ const Setup: NextPage = () => {
             rules={[
               {
                 required: true,
-                message: 'Por favor coloca la contraseña para acceder',
+                message: 'Por favor escribe la contraseña para acceder',
               },
             ]}
           >

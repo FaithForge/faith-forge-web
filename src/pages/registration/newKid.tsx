@@ -295,11 +295,11 @@ const NewKid: NextPage = () => {
         </Form.Item>
         <Form.Item
           name="gender"
-          label="Genero"
+          label="Género"
           rules={[
             {
               required: true,
-              message: 'Por favor seleccione el genero del niño',
+              message: 'Por favor seleccione el género del niño',
             },
           ]}
         >
@@ -339,14 +339,14 @@ const NewKid: NextPage = () => {
         </Form.Item>
         <Form.Item
           name="guardianNationalId"
-          label="Numero de documento"
+          label="Número de documento"
           disabled={!!guardian}
           rules={[
-            { required: true, message: 'Numero de documento es requerido' },
+            { required: true, message: 'Número de documento es requerido' },
           ]}
         >
           <Input
-            placeholder="Escribir numero de documento..."
+            placeholder="Escribir número de documento..."
             onBlur={findGuardian}
           />
         </Form.Item>
@@ -368,12 +368,12 @@ const NewKid: NextPage = () => {
         </Form.Item>
         <Form.Item
           name="guardianPhone"
-          label="Telefono"
+          label="Teléfono"
           disabled={!!guardian}
           rules={[
             {
               required: true,
-              message: 'Por favor digite el numero telefono del acudiente',
+              message: 'Por favor digite el número teléfono del acudiente',
             },
           ]}
         >
@@ -381,12 +381,12 @@ const NewKid: NextPage = () => {
         </Form.Item>
         <Form.Item
           name="guardianGender"
-          label="Genero"
+          label="Género"
           disabled={!!guardian}
           rules={[
             {
               required: true,
-              message: 'Por favor seleccione el genero del acudiente',
+              message: 'Por favor seleccione el género del acudiente',
             },
           ]}
         >
@@ -439,7 +439,7 @@ const NewKid: NextPage = () => {
         )}
 
         <Form.Item>
-          <p>Selecciona condicion medica</p>
+          <p>Selecciona condición médica</p>
           <Space align="center">
             <Button
               onClick={() => {
@@ -460,7 +460,7 @@ const NewKid: NextPage = () => {
           >
             <div>
               <SearchBar
-                placeholder="Buscar condición medica"
+                placeholder="Buscar condición médica"
                 value={searchMedicalCondition}
                 onChange={(v) => {
                   setSearchMedicalCondition(v);
@@ -519,10 +519,9 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="observations"
           label="Observaciones"
-          help="Si selecciono Otra en enfermedades describala aqui o alguna condicion general que hay que tener en cuenta con el niño"
         >
           <TextArea
-            placeholder="Escriba aqui su descripción"
+            placeholder="Si seleccionó Otra condición describala aquí"
             maxLength={300}
             rows={2}
             showCount
