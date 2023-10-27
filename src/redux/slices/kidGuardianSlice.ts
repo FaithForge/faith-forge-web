@@ -1,7 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { PAGINATION_REGISTRATION_LIMIT } from '../../constants/pagination';
 import { IKidGuardians } from '../../models/KidGuardian';
-import { GetKidGuardian } from '../../services/kidGuardianService';
+import {
+  CreateKidGuardian,
+  GetKidGuardian,
+} from '../../services/kidGuardianService';
 
 const initialState: IKidGuardians = {
   data: [],
@@ -37,6 +40,18 @@ const kidGuardianSlice = createSlice({
     });
     builder.addCase(GetKidGuardian.rejected, (state, action) => {
       state.current = undefined;
+      state.error = action.error.message;
+      state.loading = false;
+    });
+    builder.addCase(CreateKidGuardian.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(CreateKidGuardian.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(CreateKidGuardian.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });

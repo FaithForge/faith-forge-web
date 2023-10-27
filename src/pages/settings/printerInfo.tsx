@@ -17,7 +17,6 @@ const PrinterInfo: NextPage = () => {
 
   const onFinish = (values: any) => {
     const printer = values.printer[0] ?? churchSlice.currentPrinter?.id;
-    console.log(printer);
     if (printer) {
       dispatch(updateCurrentPrinter(printer));
       router.back();

@@ -8,6 +8,7 @@ import {
   GetKidMedicalConditions,
   GetKids,
   GetMoreKids,
+  RegisterKid,
   UpdateKid,
 } from '../../services/kidService';
 
@@ -142,6 +143,18 @@ const kidSlice = createSlice({
       },
     );
     builder.addCase(UpdateKid.rejected, (state, action) => {
+      state.error = action.error.message;
+      state.loading = false;
+    });
+    builder.addCase(RegisterKid.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(RegisterKid.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(RegisterKid.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });
