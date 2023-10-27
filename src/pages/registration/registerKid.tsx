@@ -102,7 +102,7 @@ const RegisterKidView: NextPage = () => {
             KID_RELATION_CODE_MAPPER[
               relation.relation as KidGuardianRelationCode
             ]
-          }) - Telefono: ${relation.phone}`,
+          }) - Teléfono: ${relation.phone}`,
           value: relation.guardianId,
         };
       })
@@ -155,7 +155,7 @@ const RegisterKidView: NextPage = () => {
           {capitalizeWords(kid?.lastName ?? '')}
         </h2>
         <p>
-          <b>Codigo de aplicación:</b> {kid?.faithForgeId}
+          <b>Código de aplicación:</b> {kid?.faithForgeId}
         </p>
       </AutoCenter>
 
@@ -181,7 +181,7 @@ const RegisterKidView: NextPage = () => {
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>
-              Fecha de cumpleaños
+              Fecha de nacimiento
             </Grid.Item>
             <Grid.Item>{`${birthday}`}</Grid.Item>
           </Grid>
@@ -192,10 +192,20 @@ const RegisterKidView: NextPage = () => {
             gap={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Genero</Grid.Item>
+            <Grid.Item style={{ fontWeight: 'bold' }}>Género</Grid.Item>
             <Grid.Item>{`${
               USER_GENDER_CODE_MAPPER[kid.gender as any as UserGenderCode]
             }`}</Grid.Item>
+          </Grid>
+        )}
+        {kid?.healthSecurityEntity && (
+          <Grid
+            columns={2}
+            gap={8}
+            style={{ paddingBottom: 10, border: '1px' }}
+          >
+            <Grid.Item style={{ fontWeight: 'bold' }}>EPS</Grid.Item>
+            <Grid.Item>{kid.healthSecurityEntity}</Grid.Item>
           </Grid>
         )}
         {kid?.isRegistered && (
@@ -326,7 +336,7 @@ const RegisterKidView: NextPage = () => {
 
           <Form.Item name="observations" label="Observaciones al registrar">
             <TextArea
-              placeholder="Ejemplo: lleva bolso, lleva merienda, esta enfermo de algo en el momento."
+              placeholder="Ejemplo: lleva bolso, lleva merienda, está enfermo de algo en el momento."
               maxLength={300}
               rows={3}
               showCount

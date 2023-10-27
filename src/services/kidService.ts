@@ -120,6 +120,7 @@ export const CreateKid = createAsyncThunk(
           observations: kidRegistration.observations,
           photoUrl: kidRegistration.photoUrl,
           medicalCondition: kidRegistration.medicalCondition?.id,
+          healthSecurityEntity: kidRegistration.healthSecurityEntity,
           guardian: {
             nationalIdType: kidGuardianRegistration.nationalIdType,
             nationalId: kidGuardianRegistration.nationalId.trim(),
@@ -189,6 +190,7 @@ export const UpdateKid = createAsyncThunk(
       observations: kidRegistration.observations?.trim(),
       photoUrl: kidRegistration.photoUrl,
       medicalCondition: kidRegistration.medicalCondition?.id,
+      healthSecurityEntity: kidRegistration.healthSecurityEntity,
     } as IKid;
 
     await makeApiRequest(

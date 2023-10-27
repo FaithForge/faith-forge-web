@@ -20,7 +20,7 @@ const tabs = [
   },
   {
     key: '/settings',
-    title: 'Configuracion',
+    title: 'Configuración',
     icon: <SettingOutlined />,
   },
 ];

@@ -20,8 +20,8 @@ export enum KidGuardianRelation {
   SISTER = 'Hermana', // Hermana
   GRANDFATHER = 'Abuelo', // Abuelo
   GRANDMOTHER = 'Abuela', // Abuela
-  UNCLE = 'Tio', // Tio
-  AUNT = 'Tia', // Tia
+  UNCLE = 'Tío', // Tío
+  AUNT = 'Tía', // Tía
   ACQUAINTANCE = 'Conocido', // Conocido
 }
 
