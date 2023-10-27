@@ -11,7 +11,7 @@
   "dependencies": {
     "@ant-design/icons": "^5.2.6",
     "@reduxjs/toolkit": "^1.9.6",
-    "antd-mobile": "^5.32.4",
+    "antd-mobile": "^5.33.0",
     "axios": "^1.5.1",
     "dayjs": "^1.11.10",
     "luxon": "^3.4.3",

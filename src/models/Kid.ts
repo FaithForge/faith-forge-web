@@ -37,6 +37,7 @@ export interface IKid {
     value: string;
     label: string;
   }[];
+  healthSecurityEntity?: string;
 }
 
 export interface IKidGroup {

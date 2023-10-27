@@ -35,6 +35,7 @@ import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
 import { calculateAge, getAgeInMonths } from '../../utils/date';
+import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -91,6 +92,10 @@ const UpdateKidPage: NextPage = () => {
         id: kid?.medicalCondition?.id ?? '',
         name: kid?.medicalCondition?.name ?? '',
       });
+      setHealthSecurityEntity({
+        id: kid?.healthSecurityEntity ?? '',
+        name: kid?.healthSecurityEntity ?? '',
+      });
     }
   }, [kid, form]);
 
@@ -112,6 +117,21 @@ const UpdateKidPage: NextPage = () => {
     }
   }, [medicalConditions, searchMedicalCondition]);
 
+  const [healthSecurityEntity, setHealthSecurityEntity] = useState({
+    id: '',
+    name: '',
+  });
+  const checkHealthSecurityEntity = (
+    _: any,
+    value: { id: string; name: string },
+  ) => {
+    if (value.id) {
+      setHealthSecurityEntity(value);
+      return Promise.resolve();
+    }
+    return Promise.reject();
+  };
+
   const updatedKid = async (values: any) => {
     dispatch(loadingKidEnable());
 
@@ -123,7 +143,6 @@ const UpdateKidPage: NextPage = () => {
       photoUrl = await uploadKidPhoto({ formData });
     }
 
-    console.error(values.kidGroup);
     await dispatch(
       UpdateKid({
         kidRegistration: {
@@ -135,6 +154,7 @@ const UpdateKidPage: NextPage = () => {
           staticGroup: values.staticGroup ?? false,
           group: values.kidGroup ? values.kidGroup[0] : undefined,
           observations: values.observations ?? undefined,
+          healthSecurityEntity: values.healthSecurityEntity.name,
           photoUrl,
           medicalCondition: {
             id: medicalCondition.id ?? undefined,
@@ -249,7 +269,22 @@ const UpdateKidPage: NextPage = () => {
         >
           <Selector options={userGenderSelect} />
         </Form.Item>
-
+        <Form.Item
+          label="EPS"
+          required={true}
+          name="healthSecurityEntity"
+          rules={[
+            {
+              required: true,
+              message: 'Por favor la EPS del niño',
+              validator: checkHealthSecurityEntity,
+            },
+          ]}
+        >
+          <HealthSecurityEntitySelector
+            healthSecurityEntity={healthSecurityEntity}
+          />
+        </Form.Item>
         <h3>Información Adicional (Opcional)</h3>
         <Form.Item
           name="staticGroup"

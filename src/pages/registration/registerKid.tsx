@@ -198,6 +198,16 @@ const RegisterKidView: NextPage = () => {
             }`}</Grid.Item>
           </Grid>
         )}
+        {kid?.healthSecurityEntity && (
+          <Grid
+            columns={2}
+            gap={8}
+            style={{ paddingBottom: 10, border: '1px' }}
+          >
+            <Grid.Item style={{ fontWeight: 'bold' }}>EPS</Grid.Item>
+            <Grid.Item>{kid.healthSecurityEntity}</Grid.Item>
+          </Grid>
+        )}
         {kid?.isRegistered && (
           <>
             <Grid

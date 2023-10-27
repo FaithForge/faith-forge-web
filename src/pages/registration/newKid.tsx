@@ -42,6 +42,7 @@ import {
   getAgeInMonths,
   labelRendererCalendar,
 } from '../../utils/date';
+import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -141,6 +142,21 @@ const NewKid: NextPage = () => {
     }
   }, [medicalConditions, searchMedicalCondition]);
 
+  const [healthSecurityEntity, setHealthSecurityEntity] = useState({
+    id: '',
+    name: '',
+  });
+  const checkHealthSecurityEntity = (
+    _: any,
+    value: { id: string; name: string },
+  ) => {
+    if (value.id) {
+      setHealthSecurityEntity(value);
+      return Promise.resolve();
+    }
+    return Promise.reject();
+  };
+
   const addNewKid = async (values: any) => {
     dispatch(loadingKidEnable());
 
@@ -163,6 +179,7 @@ const NewKid: NextPage = () => {
           group: values.kidGroup ? values.kidGroup[0] : undefined,
           observations: values.observations ?? undefined,
           photoUrl,
+          healthSecurityEntity: values.healthSecurityEntity.name,
           medicalCondition: {
             id: medicalCondition.id ?? undefined,
           },
@@ -287,6 +304,23 @@ const NewKid: NextPage = () => {
           ]}
         >
           <Selector options={userGenderSelect} />
+        </Form.Item>
+
+        <Form.Item
+          label="EPS"
+          required={true}
+          name="healthSecurityEntity"
+          rules={[
+            {
+              required: true,
+              message: 'Por favor la EPS del niño',
+              validator: checkHealthSecurityEntity,
+            },
+          ]}
+        >
+          <HealthSecurityEntitySelector
+            healthSecurityEntity={healthSecurityEntity}
+          />
         </Form.Item>
 
         <h3>Información del Acudiente</h3>
@@ -421,6 +455,7 @@ const NewKid: NextPage = () => {
             onMaskClick={() => {
               setVisibleMedicalCondition(false);
             }}
+            position="top"
             destroyOnClose
           >
             <div>
