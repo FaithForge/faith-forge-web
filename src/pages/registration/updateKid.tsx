@@ -281,7 +281,7 @@ const UpdateKidPage: NextPage = () => {
           rules={[
             {
               required: true,
-              message: 'Por favor la EPS del niño',
+              message: 'Digitar la EPS del niño',
               validator: checkHealthSecurityEntity,
             },
           ]}

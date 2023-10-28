@@ -313,7 +313,7 @@ const NewKid: NextPage = () => {
           rules={[
             {
               required: true,
-              message: 'Por favor la EPS del niño',
+              message: 'Digitar la EPS del niño',
               validator: checkHealthSecurityEntity,
             },
           ]}
@@ -516,10 +516,7 @@ const NewKid: NextPage = () => {
             </div>
           </Popup>
         </Form.Item>
-        <Form.Item
-          name="observations"
-          label="Observaciones"
-        >
+        <Form.Item name="observations" label="Observaciones">
           <TextArea
             placeholder="Si seleccionó Otra condición describala aquí"
             maxLength={300}

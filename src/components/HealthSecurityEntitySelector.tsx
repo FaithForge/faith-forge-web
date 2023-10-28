@@ -26,21 +26,6 @@ export const HealthSecurityEntitySelector: FC<
     }
   }, [searchHealthSecurityEntity]);
 
-  // const [visible, setVisible] = useState(false);
-
-  // const triggerValue = (changedValue: Partial<MobileValue>) => {
-  //   onChange?.({ ...value, ...changedValue });
-  // };
-
-  // const onRealValueChange = (value: string) => {
-  //   triggerValue({ realValue: value });
-  // };
-
-  // const onPreValueChange = (value: PickerValue[]) => {
-  //   const v = value[0];
-  //   if (v === null) return;
-  //   triggerValue({ preValue: v });
-  // };
   return (
     <>
       <Space align="center">
