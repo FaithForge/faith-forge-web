@@ -125,6 +125,10 @@ const UpdateKidPage: NextPage = () => {
     _: any,
     value: { id: string; name: string },
   ) => {
+    value = value ?? {
+      id: kid?.healthSecurityEntity,
+      name: kid?.healthSecurityEntity,
+    };
     if (value.id) {
       setHealthSecurityEntity(value);
       return Promise.resolve();
@@ -154,7 +158,8 @@ const UpdateKidPage: NextPage = () => {
           staticGroup: values.staticGroup ?? false,
           group: values.kidGroup ? values.kidGroup[0] : undefined,
           observations: values.observations ?? undefined,
-          healthSecurityEntity: values.healthSecurityEntity.name,
+          healthSecurityEntity:
+            values.healthSecurityEntity?.name ?? kid?.healthSecurityEntity,
           photoUrl,
           medicalCondition: {
             id: medicalCondition.id ?? undefined,
