@@ -119,4 +119,5 @@ export const healthSecurityEntitySelect = [
   { id: 'PIJAOS SALUD EPSI', name: 'PIJAOS SALUD EPSI' },
   { id: 'SALUD BÓLIVAR EPS SAS', name: 'SALUD BÓLIVAR EPS SAS' },
   { id: 'ECOPETROL', name: 'ECOPETROL' },
+  { id: 'OTRA EPS', name: 'OTRA EPS' },
 ];
