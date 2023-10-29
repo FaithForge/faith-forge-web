@@ -63,6 +63,13 @@ export const idTypeSelect = [
   { value: IdTypeCode.PS, label: IdType.PS },
 ];
 
+export const idGuardianTypeSelect = [
+  { value: IdTypeCode.CC, label: IdType.CC },
+  { value: IdTypeCode.TI, label: IdType.TI },
+  { value: IdTypeCode.CE, label: IdType.CE },
+  { value: IdTypeCode.PS, label: IdType.PS },
+];
+
 export interface IUser {
   firstName?: string;
   lastName?: string;
