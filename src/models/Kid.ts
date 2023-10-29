@@ -14,7 +14,7 @@ export interface IKid {
   faithForgeId?: number;
   age?: number;
   ageInMonths?: number;
-  birthday: Date;
+  birthday: string;
   id?: string;
   isRegistered?: boolean;
   firstName: string;

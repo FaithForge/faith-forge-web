@@ -34,7 +34,11 @@ import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-import { calculateAge, getAgeInMonths, labelRendererCalendar } from '../../utils/date';
+import {
+  calculateAge,
+  getAgeInMonths,
+  labelRendererCalendar,
+} from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 
 const UpdateKidPage: NextPage = () => {
@@ -81,7 +85,7 @@ const UpdateKidPage: NextPage = () => {
       form.setFieldsValue({
         firstName: capitalizeWords(kid.firstName),
         lastName: capitalizeWords(kid.lastName),
-        birthday: new Date(kid.birthday),
+        birthday: DateTime.fromISO(kid.birthday).setZone('UTC').toJSDate(),
         gender: kid.gender,
         staticGroup: kid.staticGroup,
         kidGroup: [kid.groupId],
