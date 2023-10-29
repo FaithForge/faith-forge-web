@@ -34,7 +34,7 @@ import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-import { calculateAge, getAgeInMonths } from '../../utils/date';
+import { calculateAge, getAgeInMonths, labelRendererCalendar } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 
 const UpdateKidPage: NextPage = () => {
@@ -250,6 +250,9 @@ const UpdateKidPage: NextPage = () => {
             title={'Fecha de nacimiento'}
             cancelText={'Cancelar'}
             confirmText={'Confirmar'}
+            renderLabel={(type: string, data: number) =>
+              labelRendererCalendar(type, data)
+            }
           >
             {(value) =>
               value

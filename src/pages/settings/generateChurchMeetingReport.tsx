@@ -14,6 +14,7 @@ import dayjs from 'dayjs';
 import { ApiVerbs, makeApiRequest } from '../../api';
 import ModalFaithForge from '../../components/ModalFaithForge';
 import { DateTime } from 'luxon';
+import { labelRendererCalendar } from '../../utils/date';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -177,6 +178,9 @@ const GenerateChurchMeetingReport: NextPage = () => {
               title={'Fecha de reporte'}
               cancelText={'Cancelar'}
               confirmText={'Confirmar'}
+              renderLabel={(type: string, data: number) =>
+                labelRendererCalendar(type, data)
+              }
             >
               {(value) =>
                 value ? dayjs(value).format('YYYY-MM-DD') : 'Seleccionar fecha'
