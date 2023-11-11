@@ -9,6 +9,7 @@ import {
   GetKids,
   GetMoreKids,
   RegisterKid,
+  ReprintRegisterLabelKid,
   UpdateKid,
 } from '../../services/kidService';
 
@@ -155,6 +156,18 @@ const kidSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(RegisterKid.rejected, (state, action) => {
+      state.error = action.error.message;
+      state.loading = false;
+    });
+    builder.addCase(ReprintRegisterLabelKid.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(ReprintRegisterLabelKid.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(ReprintRegisterLabelKid.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });

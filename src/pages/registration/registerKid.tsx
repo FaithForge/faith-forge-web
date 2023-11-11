@@ -20,7 +20,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { capitalizeWords } from '../../utils/text';
 import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../../models/Uset';
-import { GetKid, RegisterKid } from '../../services/kidService';
+import {
+  GetKid,
+  RegisterKid,
+  ReprintRegisterLabelKid,
+} from '../../services/kidService';
 import {
   KID_RELATION_CODE_MAPPER,
   KidGuardianRelationCode,
@@ -89,6 +93,13 @@ const RegisterKidView: NextPage = () => {
 
     if (kid?.id) {
       await dispatch(RegisterKid({ kidId: kid.id, guardianId, observation }));
+      router.back();
+    }
+  };
+
+  const reprintRegisterLabelKid = async (copies: number) => {
+    if (kid?.id) {
+      await dispatch(ReprintRegisterLabelKid({ kidId: kid.id, copies }));
       router.back();
     }
   };
@@ -346,13 +357,23 @@ const RegisterKidView: NextPage = () => {
       ) : (
         <>
           <div style={{ paddingTop: 10 }}>
-            <Button block color="primary" size="large">
-              Reimprimir registro completo
+            <Button
+              block
+              color="primary"
+              size="large"
+              onClick={() => reprintRegisterLabelKid(2)}
+            >
+              Reimprimir registro completo (2)
             </Button>
           </div>
           <div style={{ paddingTop: 10 }}>
-            <Button block color="primary" size="large">
-              Reimprimir registro parcial
+            <Button
+              block
+              color="primary"
+              size="large"
+              onClick={() => reprintRegisterLabelKid(1)}
+            >
+              Reimprimir registro parcial (1)
             </Button>
           </div>
         </>

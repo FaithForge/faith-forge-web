@@ -206,3 +206,35 @@ export const UpdateKid = createAsyncThunk(
     return kidRegistrationData;
   },
 );
+
+export const ReprintRegisterLabelKid = createAsyncThunk(
+  'kid/reprintRegisterLabelKid',
+  async (
+    payload: {
+      kidId: string;
+      copies: number;
+    },
+    { getState },
+  ) => {
+    const state = getState() as RootState;
+    const church = state.churchSlice.current;
+    const churchPrinter = state.churchSlice.currentPrinter;
+
+    const churchMeeting = state.churchMeetingSlice.current;
+    const { kidId, copies } = payload;
+
+    const response = (
+      await makeApiRequest(ApiVerbs.POST, `/reprint`, {
+        data: {
+          kidId,
+          churchId: church?.id,
+          churchMeetingId: churchMeeting?.id,
+          churchPrinterId: churchPrinter?.name,
+          copies,
+        },
+      })
+    ).data;
+
+    return response;
+  },
+);
