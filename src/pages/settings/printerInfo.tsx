@@ -28,7 +28,7 @@ const PrinterInfo: NextPage = () => {
       dispatch(GetPrinters(churchSlice.current.id));
     }
     form.setFieldsValue({
-      printer: churchSlice.currentPrinter?.id,
+      printer: [churchSlice.currentPrinter?.id],
     });
   }, [churchSlice, dispatch]);
 

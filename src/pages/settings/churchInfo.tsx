@@ -22,8 +22,8 @@ const ChurchInfo: NextPage = () => {
 
   useEffect(() => {
     form.setFieldsValue({
-      church: churchSlice.current?.id,
-      churchMeeting: churchMeetingSlice.current?.id,
+      church: [churchSlice.current?.id],
+      churchMeeting: [churchMeetingSlice.current?.id],
     });
   }, [form, churchSlice.current?.id, churchMeetingSlice.current?.id]);
 
