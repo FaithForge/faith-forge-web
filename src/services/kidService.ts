@@ -224,7 +224,7 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
     const { kidId, copies } = payload;
 
     const response = (
-      await makeApiRequest(ApiVerbs.POST, `/reprint`, {
+      await makeApiRequest(ApiVerbs.POST, `/registration/reprint`, {
         data: {
           kidId,
           churchId: church?.id,
