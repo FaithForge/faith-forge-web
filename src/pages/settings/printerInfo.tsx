@@ -8,6 +8,7 @@ import { useEffect } from 'react';
 import { GetPrinters } from '../../services/churchService';
 import { updateCurrentPrinter } from '../../redux/slices/churchSlice';
 import LoadingMask from '../../components/LoadingMask';
+import { TestPrintLabel } from '@/services/kidService';
 
 const PrinterInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -33,6 +34,11 @@ const PrinterInfo: NextPage = () => {
   }, [churchSlice, dispatch]);
 
   useEffect(() => {}, [form, churchSlice.currentPrinter?.id]);
+
+  const testPrintLabel = () => {
+    dispatch(TestPrintLabel());
+    router.back();
+  };
 
   const printerOptions = churchSlice.printers
     ? churchSlice.printers.map((printer) => {
@@ -72,6 +78,9 @@ const PrinterInfo: NextPage = () => {
               <Selector options={printerOptions} />
             </Form.Item>
           </Form>
+          <Button block color="success" size="large" onClick={testPrintLabel}>
+            Probar impresora
+          </Button>
         </>
       ) : null}
     </>

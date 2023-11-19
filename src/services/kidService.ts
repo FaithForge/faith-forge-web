@@ -238,3 +238,24 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
     return response;
   },
 );
+
+export const TestPrintLabel = createAsyncThunk(
+  'kid/testPrintLabel',
+  async (_, { getState }) => {
+    const state = getState() as RootState;
+    const churchPrinter = state.churchSlice.currentPrinter;
+
+    const churchMeeting = state.churchMeetingSlice.current;
+
+    const response = (
+      await makeApiRequest(ApiVerbs.POST, `/registration/testPrint`, {
+        data: {
+          churchMeetingId: churchMeeting?.id,
+          churchPrinterId: churchPrinter?.name,
+        },
+      })
+    ).data;
+
+    return response;
+  },
+);
