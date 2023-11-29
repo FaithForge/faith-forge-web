@@ -24,6 +24,7 @@ import {
   GetKid,
   RegisterKid,
   ReprintRegisterLabelKid,
+  RestoreCreateKid,
 } from '../../services/kidService';
 import {
   KID_RELATION_CODE_MAPPER,
@@ -40,9 +41,12 @@ const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
-  const { current: kid, loading: kidLoading } = useSelector(
-    (state: RootState) => state.kidSlice,
-  );
+  const [kidId, setKidId] = useState('');
+  const {
+    current: kid,
+    loading: kidLoading,
+    error: kidError,
+  } = useSelector((state: RootState) => state.kidSlice);
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -83,6 +87,7 @@ const RegisterKidView: NextPage = () => {
 
   useEffect(() => {
     if (kid?.id) {
+      setKidId(kid.id);
       dispatch(GetKid({ id: kid.id }));
     }
   }, [dispatch, kid?.id]);
@@ -94,6 +99,13 @@ const RegisterKidView: NextPage = () => {
     if (kid?.id) {
       await dispatch(RegisterKid({ kidId: kid.id, guardianId, observation }));
       router.back();
+    }
+  };
+
+  const restoreCreateKid = async () => {
+    if (kidId) {
+      await dispatch(RestoreCreateKid({ id: kidId }));
+      router.reload();
     }
   };
 
@@ -169,7 +181,6 @@ const RegisterKidView: NextPage = () => {
           <b>Código de aplicación:</b> {kid?.faithForgeId}
         </p>
       </AutoCenter>
-
       <div style={{ fontSize: 16 }}>
         {kid?.age && kid?.ageInMonths && (
           <Grid
@@ -376,6 +387,24 @@ const RegisterKidView: NextPage = () => {
               Reimprimir registro parcial (1)
             </Button>
           </div>
+        </>
+      )}
+      {kidError && (
+        <>
+          <b>
+            El niño no fue bien guarado oprima este boton para restaurarlo.
+            Luego de esto debe editarlo en caso que requiera campos adicionales
+            como observaciones o enfermedades. Adicional debe asignar un
+            acudiente para registrarlo
+          </b>
+          <Button
+            block
+            color="primary"
+            size="large"
+            onClick={() => restoreCreateKid()}
+          >
+            Restaurar creación de niño niño
+          </Button>
         </>
       )}
       <CreateNewKidGuardian

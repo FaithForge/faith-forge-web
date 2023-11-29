@@ -259,3 +259,17 @@ export const TestPrintLabel = createAsyncThunk(
     return response;
   },
 );
+
+export const RestoreCreateKid = createAsyncThunk(
+  'kid/restoreCreateKid',
+  async (payload: { id: string }) => {
+    const response = (
+      await makeApiRequest(
+        ApiVerbs.POST,
+        `/registration/kids/${payload.id}/restore`,
+      )
+    ).data;
+
+    return response;
+  },
+);
