@@ -105,7 +105,7 @@ const RegisterKidView: NextPage = () => {
   const restoreCreateKid = async () => {
     if (kidId) {
       await dispatch(RestoreCreateKid({ id: kidId }));
-      router.reload();
+      router.back();
     }
   };
 
@@ -391,12 +391,16 @@ const RegisterKidView: NextPage = () => {
       )}
       {kidError && (
         <>
-          <b>
-            El niño no fue bien guarado oprima este boton para restaurarlo.
-            Luego de esto debe editarlo en caso que requiera campos adicionales
+          <p>
+            El niño no fue bien guardado, oprima este botón para restaurarlo.
+            Luego de esto, debe editarlo en caso que requiera campos adicionales
             como observaciones o enfermedades. Adicional debe asignar un
-            acudiente para registrarlo
-          </b>
+            acudiente para registrarlo.
+          </p>
+          <p>
+            Al oprimir se devolverá a la página anterior y debe buscarlo
+            nuevamente
+          </p>
           <Button
             block
             color="primary"
