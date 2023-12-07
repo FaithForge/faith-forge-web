@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
 
 const API_URL =
-  process.env.NODE_ENV === 'production'
+  process.env.NODE_ENV !== 'production'
     ? 'http://192.168.1.4:8080/api'
     : 'https://faith-forge-ztx8u.ondigitalocean.app/api';
 
