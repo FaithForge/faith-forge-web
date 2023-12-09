@@ -23,7 +23,7 @@ export const userGenderSelect = [
   { value: UserGenderCode.FEMALE, label: UserGender.FEMALE },
 ];
 
-export enum IdTypeCode {
+export enum UserIdType {
   CC = 'CC',
   TI = 'TI',
   RC = 'RC',
@@ -40,34 +40,34 @@ export enum IdType {
 }
 
 export const ID_TYPE_MAPPER = {
-  [IdType.CC]: IdTypeCode.CC,
-  [IdType.TI]: IdTypeCode.TI,
-  [IdType.RC]: IdTypeCode.RC,
-  [IdType.CE]: IdTypeCode.CE,
-  [IdType.PS]: IdTypeCode.PS,
+  [IdType.CC]: UserIdType.CC,
+  [IdType.TI]: UserIdType.TI,
+  [IdType.RC]: UserIdType.RC,
+  [IdType.CE]: UserIdType.CE,
+  [IdType.PS]: UserIdType.PS,
 };
 
 export const ID_TYPE_CODE_MAPPER = {
-  [IdTypeCode.CC]: IdType.CC,
-  [IdTypeCode.TI]: IdType.TI,
-  [IdTypeCode.RC]: IdType.RC,
-  [IdTypeCode.CE]: IdType.CE,
-  [IdTypeCode.PS]: IdType.PS,
+  [UserIdType.CC]: IdType.CC,
+  [UserIdType.TI]: IdType.TI,
+  [UserIdType.RC]: IdType.RC,
+  [UserIdType.CE]: IdType.CE,
+  [UserIdType.PS]: IdType.PS,
 };
 
 export const idTypeSelect = [
-  { value: IdTypeCode.CC, label: IdType.CC },
-  { value: IdTypeCode.TI, label: IdType.TI },
-  { value: IdTypeCode.RC, label: IdType.RC },
-  { value: IdTypeCode.CE, label: IdType.CE },
-  { value: IdTypeCode.PS, label: IdType.PS },
+  { value: UserIdType.CC, label: IdType.CC },
+  { value: UserIdType.TI, label: IdType.TI },
+  { value: UserIdType.RC, label: IdType.RC },
+  { value: UserIdType.CE, label: IdType.CE },
+  { value: UserIdType.PS, label: IdType.PS },
 ];
 
 export const idGuardianTypeSelect = [
-  { value: IdTypeCode.CC, label: IdType.CC },
-  { value: IdTypeCode.TI, label: IdType.TI },
-  { value: IdTypeCode.CE, label: IdType.CE },
-  { value: IdTypeCode.PS, label: IdType.PS },
+  { value: UserIdType.CC, label: IdType.CC },
+  { value: UserIdType.TI, label: IdType.TI },
+  { value: UserIdType.CE, label: IdType.CE },
+  { value: UserIdType.PS, label: IdType.PS },
 ];
 
 export interface IUser {
@@ -119,5 +119,13 @@ export const healthSecurityEntitySelect = [
   { id: 'PIJAOS SALUD EPSI', name: 'PIJAOS SALUD EPSI' },
   { id: 'SALUD BÓLIVAR EPS SAS', name: 'SALUD BÓLIVAR EPS SAS' },
   { id: 'ECOPETROL', name: 'ECOPETROL' },
+  { id: 'NO SABE', name: 'NO SABE' },
   { id: 'OTRA EPS', name: 'OTRA EPS' },
 ];
+
+/** User State Enum */
+export enum UserState {
+  ACTIVE = 'ACTIVE',
+  DISABLE = 'DISABLE',
+  VERIFICATION_PENDING = 'VERIFICATION_PENDING',
+}

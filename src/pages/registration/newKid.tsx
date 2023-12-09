@@ -20,7 +20,7 @@ import {
 import { RefObject } from 'react';
 import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
 import dayjs from 'dayjs';
-import { idGuardianTypeSelect, userGenderSelect } from '../../models/Uset';
+import { idGuardianTypeSelect, userGenderSelect } from '../../models/User';
 import { kidRelationSelect } from '../../models/KidGuardian';
 import { GetKidGuardian } from '../../services/kidGuardianService';
 import { useDispatch, useSelector } from 'react-redux';

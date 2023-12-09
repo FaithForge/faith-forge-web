@@ -14,7 +14,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useEffect, useState } from 'react';
 import { GetKids, GetMoreKids } from '../../services/kidService';
-import { UserGenderCode } from '../../models/Uset';
+import { UserGenderCode } from '../../models/User';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { IKid } from '../../models/Kid';

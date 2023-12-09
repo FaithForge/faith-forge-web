@@ -20,7 +20,7 @@ import {
 import { RefObject } from 'react';
 import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
 import dayjs from 'dayjs';
-import { userGenderSelect } from '../../models/Uset';
+import { userGenderSelect } from '../../models/User';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import LoadingMask from '../../components/LoadingMask';

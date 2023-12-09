@@ -2,7 +2,7 @@ import { Button, Form, Input, Popup, Selector } from 'antd-mobile';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { kidRelationSelect } from '../../models/KidGuardian';
-import { idGuardianTypeSelect, userGenderSelect } from '../../models/Uset';
+import { idGuardianTypeSelect, userGenderSelect } from '../../models/User';
 import {
   CreateKidGuardian,
   GetKidGuardian,

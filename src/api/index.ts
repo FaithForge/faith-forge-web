@@ -2,7 +2,7 @@ import axios, { AxiosResponse } from 'axios';
 
 const API_URL =
   process.env.NODE_ENV !== 'production'
-    ? 'http://192.168.1.4:8080/api'
+    ? 'http://faith-forge.com/api'
     : 'https://faith-forge-ztx8u.ondigitalocean.app/api';
 
 export enum ApiVerbs {
@@ -11,6 +11,10 @@ export enum ApiVerbs {
   PUT = 'PUT',
   DELETE = 'DELETE',
 }
+
+export const MS_CHURCH_PATH = 'ms-church';
+export const MS_KID_CHURCH_PATH = 'ms-kid-church';
+export const MS_USER_PATH = 'ms-user';
 
 export const makeApiRequest = async (
   verb: ApiVerbs,

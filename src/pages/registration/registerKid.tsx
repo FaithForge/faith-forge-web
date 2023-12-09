@@ -19,7 +19,7 @@ import 'dayjs/locale/es';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { capitalizeWords } from '../../utils/text';
-import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../../models/Uset';
+import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../../models/User';
 import {
   GetKid,
   RegisterKid,
