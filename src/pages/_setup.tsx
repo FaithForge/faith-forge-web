@@ -1,4 +1,4 @@
-import { Button, Form, Input, Popup, Selector } from 'antd-mobile';
+import { Button, Form, Popup, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '../redux/store';
@@ -12,8 +12,14 @@ import {
 import { updateCurrentChurch } from '@/redux/slices/church/church.slice';
 import { updateCurrentChurchMeeting } from '@/redux/slices/church/churchMeeting.slice';
 import { updateCurrentChurchPrinter } from '@/redux/slices/church/churchPrinter.slice';
+import { parseJwt } from '@/utils/jwt';
+import { churchGroup } from '@/constants/church';
+import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 
 const Setup: NextPage = () => {
+  const [form] = Form.useForm();
+  const authSlice = useSelector((state: RootState) => state.authSlice);
+  const accountSlice = useSelector((state: RootState) => state.accountSlice);
   const churchSlice = useSelector((state: RootState) => state.churchSlice);
   const churchMeetingSlice = useSelector(
     (state: RootState) => state.churchMeetingSlice,
@@ -28,24 +34,49 @@ const Setup: NextPage = () => {
   const onFinish = async (values: any) => {
     const church = values.church[0];
     const churchMeeting = values.churchMeeting[0];
-    const churchPrinter = values.printer[0];
+    const churchPrinter = values.churchPrinter[0];
+    const churchGroup = values.churchGroup[0];
 
     await dispatch(updateCurrentChurch(church));
     await dispatch(updateCurrentChurchMeeting(churchMeeting));
     await dispatch(updateCurrentChurchPrinter(churchPrinter));
+    await dispatch(updateUserChurchGroup(churchGroup));
+
     router.reload();
   };
 
   useEffect(() => {
-    if (
-      !churchSlice.current ||
-      !churchMeetingSlice.current ||
-      !churchPrinterSlice.current
-    ) {
-      setVisible(true);
-      dispatch(GetChurches(false));
+    if (authSlice.token || authSlice.token !== '') {
+      const decodedToken = parseJwt(authSlice.token);
+      const currentTime = Date.now() / 1000;
+
+      if (decodedToken.exp && decodedToken.exp >= currentTime) {
+        if (
+          !churchSlice.current ||
+          !churchMeetingSlice.current ||
+          !churchPrinterSlice.current ||
+          !accountSlice.churchGroup
+        ) {
+          setVisible(true);
+          dispatch(GetChurches(false));
+        }
+        return;
+      }
+
+      setVisible(false);
+      return;
     }
-  }, [churchMeetingSlice, churchPrinterSlice, churchSlice, dispatch]);
+
+    setVisible(false);
+  }, [authSlice.token]);
+
+  useEffect(() => {
+    form.setFieldsValue({
+      church: [churchSlice.current?.id],
+      churchMeeting: [churchMeetingSlice.current?.id],
+      churchPrinter: [churchPrinterSlice.current?.id],
+    });
+  }, [form, churchSlice.current?.id, churchMeetingSlice.current?.id]);
 
   const churchOptions = churchSlice.data
     ? churchSlice.data.map((church) => {
@@ -90,6 +121,7 @@ const Setup: NextPage = () => {
         <Form
           layout="vertical"
           onFinish={onFinish}
+          form={form}
           footer={
             <Button block type="submit" color="primary" size="large">
               Comenzar
@@ -133,20 +165,13 @@ const Setup: NextPage = () => {
             <Selector options={churchPrinterOptions} />
           </Form.Item>
           <Form.Item
-            name="password"
-            label="Contraseña de ingreso"
+            name="churchGroup"
+            label="Grupo al que perteneces"
             rules={[
-              {
-                required: true,
-                message: 'Por favor escribe la contraseña para acceder',
-              },
+              { required: true, message: 'Por favor seleccione un grupo' },
             ]}
           >
-            <Input
-              placeholder="Ingresa contraseña de acceso"
-              type="number"
-              maxLength={6}
-            />
+            <Selector options={churchGroup} />
           </Form.Item>
         </Form>
       </div>

@@ -118,7 +118,7 @@ const RegisterKidView: NextPage = () => {
     }
   };
 
-  const guardianOptions = kidSlice.current?.relations
+  const kidGuardianOptions = kidSlice.current?.relations
     ? kidSlice.current.relations.map((relation: IKidGuardian) => {
         return {
           label: `${capitalizeWords(relation.firstName)} ${capitalizeWords(
@@ -137,8 +137,8 @@ const RegisterKidView: NextPage = () => {
         .format('MMMM D, YYYY')
     : '';
 
-  const guardianRegistration = kidSlice.current?.currentKidRegistration
-    ? guardianOptions?.find(
+  const kidGuardianRegistration = kidGuardianOptions?.length
+    ? kidGuardianOptions?.find(
         (item) =>
           item.value === kidSlice.current?.currentKidRegistration?.guardianId,
       )
@@ -263,7 +263,7 @@ const RegisterKidView: NextPage = () => {
               <Grid.Item style={{ fontWeight: 'bold' }}>
                 Acudiente que registro
               </Grid.Item>
-              <Grid.Item>{`${guardianRegistration?.label}`}</Grid.Item>
+              <Grid.Item>{`${kidGuardianRegistration?.label}`}</Grid.Item>
             </Grid>
             {kidSlice.current.currentKidRegistration?.observation && (
               <Grid
@@ -349,7 +349,7 @@ const RegisterKidView: NextPage = () => {
           >
             <Radio.Group defaultValue="1">
               <Space direction="vertical">
-                {guardianOptions.map((guardian) => {
+                {kidGuardianOptions.map((kidGuardian) => {
                   return (
                     <Radio
                       style={{
@@ -357,10 +357,10 @@ const RegisterKidView: NextPage = () => {
                         '--font-size': '14px',
                         '--gap': '6px',
                       }}
-                      key={guardian.value}
-                      value={guardian.value}
+                      key={kidGuardian.value}
+                      value={kidGuardian.value}
                     >
-                      {guardian.label}
+                      {kidGuardian.label}
                     </Radio>
                   );
                 })}
@@ -399,6 +399,46 @@ const RegisterKidView: NextPage = () => {
               Reimprimir registro parcial (1)
             </Button>
           </div>
+          <h2
+            style={{
+              textAlign: 'center',
+              fontSize: 22,
+              marginTop: 25,
+              marginBottom: 5,
+            }}
+          >
+            Acudientes
+          </h2>
+          <table
+            width={'100%'}
+            style={{
+              marginTop: '5px',
+              marginBottom: '10px',
+              border: '1px solid black',
+            }}
+          >
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Relación</th>
+                <th>Teléfono</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kidSlice.current.relations?.map((kidGuardian) => {
+                return (
+                  <tr key={kidGuardian.id}>
+                    <td>
+                      {capitalizeWords(kidGuardian.firstName)}{' '}
+                      {capitalizeWords(kidGuardian.lastName as '')}
+                    </td>
+                    <td>{KID_RELATION_CODE_MAPPER[kidGuardian.relation]}</td>
+                    <td>{kidGuardian.phone}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </>
       )}
       {kidSlice.error && (
@@ -423,6 +463,7 @@ const RegisterKidView: NextPage = () => {
           </Button>
         </>
       )}
+
       <CreateNewKidGuardian
         visible={openKidGuardianModal}
         onClose={(status: boolean) => setOpenKidGuardianModal(status)}

@@ -3,13 +3,7 @@ import {
   ReduxDefaultStateWithPagination,
   ReduxDefaultStateWithoutData,
 } from './Redux';
-import {
-  IUser,
-  UserGender,
-  UserGenderCode,
-  UserIdType,
-  UserState,
-} from './User';
+import { IUser, UserGenderCode, UserIdType, UserState } from './User';
 
 // ENUMS
 
@@ -173,7 +167,8 @@ export interface ICreateKid {
   lastName: string;
   birthday: Date;
   healthSecurityEntity: string;
-  gender: UserGender;
+  gender: UserGenderCode;
+  photoUrl?: string;
   staticGroup?: boolean;
   staticKidGroupId?: string;
   observations?: string;
@@ -182,13 +177,13 @@ export interface ICreateKid {
 }
 
 export interface ICreateKidGuardian {
-  kidId: string;
+  kidId?: string;
   nationalId: string;
   nationalIdType: UserIdType;
   firstName: string;
   lastName: string;
   phone: string;
-  gender: UserGender;
+  gender: UserGenderCode;
   relation: KidGuardianRelationEnum;
 }
 
@@ -203,7 +198,7 @@ export interface ICreateKidRegistration {
 export interface IUpdateKid {
   firstName?: string;
   lastName?: string;
-  gender?: UserGender;
+  gender?: UserGenderCode;
   birthday?: Date;
   healthSecurityEntity?: string;
   staticGroup?: boolean;

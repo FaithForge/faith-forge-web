@@ -135,7 +135,9 @@ const Registration: NextPage = () => {
               disabled={warningAlert.blockRegister}
               key={kid.faithForgeId}
               style={{
-                backgroundColor: kid.currentKidRegistration ? '#dddddd' : 'white',
+                backgroundColor: kid.currentKidRegistration
+                  ? '#dddddd'
+                  : 'white',
               }}
               prefix={
                 <Image

@@ -24,14 +24,14 @@ const PersonalInfo: NextPage = () => {
 
   useEffect(() => {
     form.setFieldsValue({
-      firstName: authSlice.user.firstName,
-      lastName: authSlice.user.lastName,
+      firstName: authSlice.user?.firstName,
+      lastName: authSlice.user?.lastName,
       churchGroup: accountSlice.churchGroup,
     });
   }, [
     accountSlice.churchGroup,
-    authSlice.user.firstName,
-    authSlice.user.lastName,
+    authSlice.user?.firstName,
+    authSlice.user?.lastName,
     form,
   ]);
 

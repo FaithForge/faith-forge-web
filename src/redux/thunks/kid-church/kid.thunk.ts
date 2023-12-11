@@ -76,15 +76,14 @@ export const GetMoreKids = createAsyncThunk(
 
 export const CreateKid = createAsyncThunk(
   'kid-church/CreateKid',
-  async (payload: { createKid: ICreateKid }, { getState }) => {
+  async (payload: ICreateKid, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    const { createKid } = payload;
     const response = (
       await makeApiRequest(ApiVerbs.POST, `/${MS_KID_CHURCH_PATH}/kid`, {
         data: {
-          ...createKid,
+          ...payload,
         },
         headers: { Authorization: `Bearer ${token}` },
       })

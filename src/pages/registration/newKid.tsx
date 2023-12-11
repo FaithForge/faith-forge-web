@@ -21,19 +21,11 @@ import { RefObject } from 'react';
 import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
 import dayjs from 'dayjs';
 import { idGuardianTypeSelect, userGenderSelect } from '../../models/User';
-import { kidRelationSelect } from '../../models/KidGuardian';
-import { GetKidGuardian } from '../../services/kidGuardianService';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { capitalizeWords } from '../../utils/text';
 import LoadingMask from '../../components/LoadingMask';
-import {
-  CreateKid,
-  GetKidGroups,
-  GetKidMedicalConditions,
-  uploadKidPhoto,
-} from '../../services/kidService';
-import { loadingKidEnable } from '../../redux/slices/kidSlice';
+
 import { useRouter } from 'next/router';
 import { DateTime } from 'luxon';
 import {
@@ -43,17 +35,24 @@ import {
 } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
+import { GetKidGroups } from '@/redux/thunks/kid-church/kid-group.thunk';
+import { GetKidMedicalConditions } from '@/redux/thunks/kid-church/kid-medical-condition.thunk';
+import { GetKidGuardian } from '@/redux/thunks/kid-church/kid-guardian.thunk';
+import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
+import { uploadKidPhoto } from '@/services/kidService';
+import { kidRelationSelect } from '@/models/KidChurch';
+import { CreateKid } from '@/redux/thunks/kid-church/kid.thunk';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
-  const {
-    groups: kidGroups,
-    loading: kidLoading,
-    medicalConditions,
-  } = useSelector((state: RootState) => state.kidSlice);
-  const { current: guardian, loading: guardianLoading } = useSelector(
+  const kidSlice = useSelector((state: RootState) => state.kidSlice);
+  const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
+  const kidGuardianSlice = useSelector(
     (state: RootState) => state.kidGuardianSlice,
+  );
+  const kidMedicalConditionSlice = useSelector(
+    (state: RootState) => state.kidMedicalConditionSlice,
   );
 
   const now = DateTime.local().endOf('year').toJSDate();
@@ -87,18 +86,18 @@ const NewKid: NextPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (guardian) {
+    if (kidGuardianSlice.current) {
       form.setFieldsValue({
-        guardianNationalIdType: guardian.nationalIdType,
-        guardianNationalId: guardian.nationalId,
-        guardianFirstName: capitalizeWords(guardian.firstName),
-        guardianLastName: capitalizeWords(guardian.lastName),
-        guardianPhone: guardian.phone,
-        guardianGender: guardian.gender,
-        guardianRelation: guardian.relation,
+        guardianNationalIdType: kidGuardianSlice.current?.nationalIdType,
+        guardianNationalId: kidGuardianSlice.current?.nationalId,
+        guardianFirstName: capitalizeWords(kidGuardianSlice.current?.firstName),
+        guardianLastName: capitalizeWords(kidGuardianSlice.current?.lastName),
+        guardianPhone: kidGuardianSlice.current?.phone,
+        guardianGender: kidGuardianSlice.current?.gender,
+        guardianRelation: kidGuardianSlice.current?.relation,
       });
     }
-  }, [guardian, form]);
+  }, [form, kidGuardianSlice]);
 
   useEffect(() => {
     if (!staticGroup) {
@@ -108,7 +107,7 @@ const NewKid: NextPage = () => {
 
   const findGuardian = async () => {
     const guardianNationalId = form.getFieldsValue().guardianNationalId;
-    dispatch(GetKidGuardian({ nationalId: guardianNationalId }));
+    dispatch(GetKidGuardian(guardianNationalId));
   };
 
   const cleanGuardian = async () => {
@@ -132,15 +131,15 @@ const NewKid: NextPage = () => {
   });
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
-      return medicalConditions.filter((item) =>
+      return kidMedicalConditionSlice.data.filter((item) =>
         item.name
           .toLocaleLowerCase()
           .includes(searchMedicalCondition.toLocaleLowerCase()),
       );
     } else {
-      return medicalConditions;
+      return kidMedicalConditionSlice.data;
     }
-  }, [medicalConditions, searchMedicalCondition]);
+  }, [kidMedicalConditionSlice.data, searchMedicalCondition]);
 
   const [healthSecurityEntity, setHealthSecurityEntity] = useState({
     id: '',
@@ -170,21 +169,18 @@ const NewKid: NextPage = () => {
 
     await dispatch(
       CreateKid({
-        kidRegistration: {
-          firstName: values.firstName,
-          lastName: values.lastName,
-          birthday: values.birthday,
-          gender: values.gender ? values.gender[0] : undefined,
-          staticGroup: values.staticGroup ?? false,
-          group: values.kidGroup ? values.kidGroup[0] : undefined,
-          observations: values.observations ?? undefined,
-          photoUrl,
-          healthSecurityEntity: values.healthSecurityEntity.name,
-          medicalCondition: {
-            id: medicalCondition.id ?? undefined,
-          },
-        },
-        kidGuardianRegistration: {
+        firstName: values.firstName,
+        lastName: values.lastName,
+        birthday: values.birthday,
+        gender: values.gender ? values.gender[0] : undefined,
+        staticGroup: values.staticGroup ?? false,
+        staticKidGroupId: values.kidGroup ? values.kidGroup[0] : undefined,
+        observations: values.observations ?? undefined,
+        photoUrl,
+        healthSecurityEntity: values.healthSecurityEntity.name,
+        medicalConditionId:
+          medicalCondition.id !== '' ? medicalCondition.id : undefined,
+        kidGuardian: {
           nationalIdType: values.guardianNationalIdType[0],
           nationalId: values.guardianNationalId,
           firstName: values.guardianFirstName,
@@ -195,11 +191,14 @@ const NewKid: NextPage = () => {
         },
       }),
     );
-    router.back();
+
+    if (!kidSlice.error) {
+      router.back();
+    }
   };
 
-  const kidGroupsSelect = kidGroups
-    ? kidGroups.map((kidGroup) => {
+  const kidGroupsSelect = kidGroupSlice.data
+    ? kidGroupSlice.data.map((kidGroup) => {
         return {
           label: kidGroup.name,
           value: kidGroup.id,
@@ -209,7 +208,7 @@ const NewKid: NextPage = () => {
 
   return (
     <>
-      {guardianLoading || kidLoading ? <LoadingMask /> : ''}
+      {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title="Crear Niño" />
       <AutoCenter>
         <label htmlFor="profileImage">
@@ -327,7 +326,7 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="guardianNationalIdType"
           label="Tipo de documento"
-          disabled={!!guardian}
+          disabled={!!kidGuardianSlice.current}
           rules={[
             {
               required: true,
@@ -340,7 +339,7 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="guardianNationalId"
           label="Número de documento"
-          disabled={!!guardian}
+          disabled={!!kidGuardianSlice.current}
           rules={[
             { required: true, message: 'Número de documento es requerido' },
           ]}
@@ -353,7 +352,7 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="guardianFirstName"
           label="Nombre"
-          disabled={!!guardian}
+          disabled={!!kidGuardianSlice.current}
           rules={[{ required: true, message: 'Nombre es requerido' }]}
         >
           <Input placeholder="Escribir nombre..." />
@@ -361,7 +360,7 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="guardianLastName"
           label="Apellido"
-          disabled={!!guardian}
+          disabled={!!kidGuardianSlice.current}
           rules={[{ required: true, message: 'Apellido es requerido' }]}
         >
           <Input placeholder="Escribir apellido..." />
@@ -369,7 +368,7 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="guardianPhone"
           label="Teléfono"
-          disabled={!!guardian}
+          disabled={!!kidGuardianSlice.current}
           rules={[
             {
               required: true,
@@ -382,7 +381,7 @@ const NewKid: NextPage = () => {
         <Form.Item
           name="guardianGender"
           label="Género"
-          disabled={!!guardian}
+          disabled={!!kidGuardianSlice.current}
           rules={[
             {
               required: true,
@@ -405,7 +404,7 @@ const NewKid: NextPage = () => {
           <Selector options={kidRelationSelect} />
         </Form.Item>
         <Form.Item>
-          {!!guardian ? (
+          {!!kidGuardianSlice.current ? (
             <Button block color="default" onClick={cleanGuardian} size="large">
               Limpiar formulario acudiente
             </Button>
@@ -476,9 +475,14 @@ const NewKid: NextPage = () => {
                 style={{ '--border-top': '0', '--border-bottom': '0' }}
                 defaultValue={medicalCondition ? [medicalCondition.id] : []}
                 onChange={(val) => {
-                  let medicalConditionSelected = medicalConditions.find(
-                    (item) => item.id === val[0],
-                  );
+                  let medicalConditionSelected = kidMedicalConditionSlice.data
+                    .map((kidMedicalCondition) => {
+                      return {
+                        id: kidMedicalCondition.id,
+                        name: `${kidMedicalCondition.name} - ${kidMedicalCondition.code}`,
+                      };
+                    })
+                    .find((item) => item.id === val[0]);
                   if (
                     !medicalConditionSelected &&
                     val[0] === 'a18647b1-3455-4407-ada0-c94f39251e8c'
@@ -502,7 +506,7 @@ const NewKid: NextPage = () => {
                 {filteredMedicalConditions
                   ? filteredMedicalConditions.map((condition) => (
                       <CheckList.Item key={condition.id} value={condition.id}>
-                        {condition.name}
+                        {condition.name} - {condition.code}
                       </CheckList.Item>
                     ))
                   : null}

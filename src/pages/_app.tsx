@@ -9,7 +9,7 @@ import { Providers } from '../redux/provider';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore } from 'redux-persist';
 import { store } from '../redux/store';
-// import Setup from './_setup';
+import Setup from './_setup';
 import { SettingOutlined } from '@ant-design/icons';
 import Login from './_login';
 
@@ -77,7 +77,7 @@ function MyApp({ Component, pageProps }: AppProps) {
             ))}
           </TabBar>
           <Login />
-          {/* <Setup /> */}
+          <Setup />
         </div>
         <SafeArea position="bottom" />
       </PersistGate>
