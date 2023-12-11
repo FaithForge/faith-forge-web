@@ -3,7 +3,7 @@ import { UserLogin } from '@/redux/thunks/user/auth.thunk';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: IAuth = {
-  user: {},
+  user: undefined,
   token: '',
   error: undefined,
   loading: false,
@@ -25,7 +25,7 @@ const AuthSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(UserLogin.rejected, (state, action) => {
-      state.user = {};
+      state.user = undefined;
       state.token = '';
       state.error = action.error.message;
       state.loading = false;

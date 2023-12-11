@@ -1,17 +1,14 @@
 import { Button, Form, Input, Popup, Selector } from 'antd-mobile';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { kidRelationSelect } from '../../models/KidGuardian';
 import { idGuardianTypeSelect, userGenderSelect } from '../../models/User';
-import {
-  CreateKidGuardian,
-  GetKidGuardian,
-} from '../../services/kidGuardianService';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
 import LoadingMask from '../LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { useEffect } from 'react';
-import { GetKid } from '../../services/kidService';
+import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
+import { CreateKidGuardian, GetKidGuardian } from '@/redux/thunks/kid-church/kid-guardian.thunk';
+import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
+import { kidRelationSelect } from '@/models/KidChurch';
 
 type Props = {
   visible: boolean;
@@ -80,7 +77,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   const findGuardian = async () => {
     const guardianNationalId = form.getFieldsValue().guardianNationalId;
-    dispatch(GetKidGuardian({ nationalId: guardianNationalId }));
+    dispatch(GetKidGuardian(guardianNationalId));
   };
 
   const onFinish = async (values: any) => {
@@ -97,15 +94,13 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
       await dispatch(
         CreateKidGuardian({
           kidId,
-          kidGuardianRegistration: {
-            nationalIdType,
-            nationalId,
-            firstName,
-            lastName,
-            phone,
-            gender,
-            relation,
-          },
+          nationalIdType,
+          nationalId,
+          firstName,
+          lastName,
+          phone,
+          gender,
+          relation,
         }),
       );
       await dispatch(GetKid({ id: kidId }));

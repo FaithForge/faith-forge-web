@@ -5,10 +5,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
-import { GetPrinters } from '../../services/churchService';
-import { updateCurrentPrinter } from '../../redux/slices/churchSlice';
 import LoadingMask from '../../components/LoadingMask';
 import { TestPrintLabel } from '@/services/kidService';
+import { updateCurrentChurchPrinter } from '@/redux/slices/church/churchPrinter.slice';
+import { GetChurchPrinters } from '@/redux/thunks/church/church.thunk';
 
 const PrinterInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -16,32 +16,34 @@ const PrinterInfo: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const churchSlice = useSelector((state: RootState) => state.churchSlice);
 
+  const churchPrinterSlice = useSelector(
+    (state: RootState) => state.churchPrinterSlice,
+  );
+
   const onFinish = (values: any) => {
-    const printer = values.printer[0] ?? churchSlice.currentPrinter?.id;
+    const printer = values.printer[0] ?? churchPrinterSlice.current?.id;
     if (printer) {
-      dispatch(updateCurrentPrinter(printer));
+      dispatch(updateCurrentChurchPrinter(printer));
       router.back();
     }
   };
 
   useEffect(() => {
-    if (churchSlice.current?.id && churchSlice.printers.length === 0) {
-      dispatch(GetPrinters(churchSlice.current.id));
+    if (churchSlice.current?.id && churchPrinterSlice.data.length === 0) {
+      dispatch(GetChurchPrinters(churchSlice.current?.id));
     }
     form.setFieldsValue({
-      printer: [churchSlice.currentPrinter?.id],
+      printer: [churchPrinterSlice.current?.id],
     });
-  }, [churchSlice, dispatch]);
-
-  useEffect(() => {}, [form, churchSlice.currentPrinter?.id]);
+  }, [churchPrinterSlice, churchSlice, dispatch, form]);
 
   const testPrintLabel = () => {
     dispatch(TestPrintLabel());
     router.back();
   };
 
-  const printerOptions = churchSlice.printers
-    ? churchSlice.printers.map((printer) => {
+  const printerOptions = churchPrinterSlice.data
+    ? churchPrinterSlice.data.map((printer) => {
         return {
           label: printer.name,
           value: printer.id,
@@ -51,9 +53,9 @@ const PrinterInfo: NextPage = () => {
 
   return (
     <>
-      {churchSlice ? (
+      {churchPrinterSlice ? (
         <>
-          {churchSlice.loading ? <LoadingMask /> : ''}
+          {churchPrinterSlice.loading ? <LoadingMask /> : ''}
           <NavBarApp title="Configuración de Impresora" />
           <Form
             layout="vertical"

@@ -1,14 +1,18 @@
 import { ApiVerbs, MS_CHURCH_PATH, makeApiRequest } from '@/api';
+import { RootState } from '@/redux/store';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 
 export const GetChurches = createAsyncThunk(
   'church/GetChurches',
-  async (withAdditionalData: boolean) => {
+  async (withAdditionalData: boolean, { getState }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
     const response = (
       await makeApiRequest(ApiVerbs.GET, `/${MS_CHURCH_PATH}/churches`, {
         params: {
           withAdditionalData,
         },
+        headers: { Authorization: `Bearer ${token}` },
       })
     ).data;
     return response;
@@ -17,11 +21,16 @@ export const GetChurches = createAsyncThunk(
 
 export const GetChurchMeetings = createAsyncThunk(
   'church/GetChurchMeetings',
-  async (churchId: string) => {
+  async (churchId: string, { getState }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
     const response = (
       await makeApiRequest(
         ApiVerbs.GET,
-        `/${MS_CHURCH_PATH}/${churchId}/meetings`,
+        `/${MS_CHURCH_PATH}/church/${churchId}/meetings`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       )
     ).data;
     return response;
@@ -30,11 +39,16 @@ export const GetChurchMeetings = createAsyncThunk(
 
 export const GetChurchPrinters = createAsyncThunk(
   'church/GetChurchPrinters',
-  async (churchId: string) => {
+  async (churchId: string, { getState }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
     const response = (
       await makeApiRequest(
         ApiVerbs.GET,
-        `/${MS_CHURCH_PATH}/${churchId}/printers`,
+        `/${MS_CHURCH_PATH}/church/${churchId}/printers`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
       )
     ).data;
     return response;

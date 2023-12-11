@@ -9,8 +9,9 @@ import { Providers } from '../redux/provider';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore } from 'redux-persist';
 import { store } from '../redux/store';
-import Setup from './_setup';
+// import Setup from './_setup';
 import { SettingOutlined } from '@ant-design/icons';
+import Login from './_login';
 
 const tabs = [
   {
@@ -75,7 +76,8 @@ function MyApp({ Component, pageProps }: AppProps) {
               <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
             ))}
           </TabBar>
-          <Setup />
+          <Login />
+          {/* <Setup /> */}
         </div>
         <SafeArea position="bottom" />
       </PersistGate>

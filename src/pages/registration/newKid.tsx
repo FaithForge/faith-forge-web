@@ -25,7 +25,6 @@ import { kidRelationSelect } from '../../models/KidGuardian';
 import { GetKidGuardian } from '../../services/kidGuardianService';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
 import { capitalizeWords } from '../../utils/text';
 import LoadingMask from '../../components/LoadingMask';
 import {
@@ -43,6 +42,7 @@ import {
   labelRendererCalendar,
 } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
+import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();

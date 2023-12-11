@@ -13,18 +13,18 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useEffect, useState } from 'react';
-import { GetKids, GetMoreKids } from '../../services/kidService';
 import { UserGenderCode } from '../../models/User';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
-import { IKid } from '../../models/Kid';
-import { updateCurrentKid } from '../../redux/slices/kidSlice';
 import { DateTime } from 'luxon';
 import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
 } from '../../constants/copy';
+import { GetKids, GetMoreKids } from '@/redux/thunks/kid-church/kid.thunk';
+import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
+import { IKid } from '@/models/KidChurch';
 
 const Registration: NextPage = () => {
   const {
@@ -45,6 +45,7 @@ const Registration: NextPage = () => {
     icon: '',
     blockRegister: false,
   });
+
   useEffect(() => {
     dispatch(GetKids({ findText }));
     const currentDay = DateTime.local().toFormat('EEEE');
@@ -134,7 +135,7 @@ const Registration: NextPage = () => {
               disabled={warningAlert.blockRegister}
               key={kid.faithForgeId}
               style={{
-                backgroundColor: kid.isRegistered ? '#dddddd' : 'white',
+                backgroundColor: kid.currentKidRegistration ? '#dddddd' : 'white',
               }}
               prefix={
                 <Image
@@ -154,7 +155,7 @@ const Registration: NextPage = () => {
               }
               description={capitalizeWords(
                 `Codigo: ${kid.faithForgeId} ${
-                  kid.isRegistered ? '(Registrado)' : ''
+                  kid.currentKidRegistration ? '(Registrado)' : ''
                 }`,
               )}
               onClick={() => registerKidViewHandler(kid)}

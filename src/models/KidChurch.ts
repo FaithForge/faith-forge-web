@@ -3,7 +3,13 @@ import {
   ReduxDefaultStateWithPagination,
   ReduxDefaultStateWithoutData,
 } from './Redux';
-import { IUser, UserGender, UserIdType, UserState } from './User';
+import {
+  IUser,
+  UserGender,
+  UserGenderCode,
+  UserIdType,
+  UserState,
+} from './User';
 
 // ENUMS
 
@@ -92,18 +98,30 @@ export interface IKid {
   faithForgeId: number;
   firstName: string;
   lastName: string;
-  gender: UserGender;
+  gender: UserGenderCode;
   birthday: Date;
   state: UserState;
-  groupId?: string;
-  groupName?: string;
   photoUrl?: string;
   healthSecurityEntity?: string;
   age: number;
   ageInMonths: number;
   currentKidRegistration?: IKidRegistration;
+  staticGroup: boolean;
   kidGroup?: IKidGroup;
+  observations?: string;
   medicalCondition?: IKidMedicalCondition;
+  relations?: IKidGuardian[];
+}
+
+export interface IKidGuardian {
+  id?: string;
+  nationalId: string;
+  nationalIdType: UserIdType;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  gender: UserGenderCode;
+  relation: KidGuardianRelationCodeEnum;
 }
 
 export interface IKidRegistration {
@@ -141,8 +159,12 @@ export interface IKidMedicalCondition {
 }
 
 export interface IAuth extends ReduxDefaultStateWithoutData {
-  user: IUser;
+  user?: IUser;
   token: string;
+}
+
+export interface IAccount extends ReduxDefaultStateWithoutData {
+  churchGroup?: string;
 }
 
 // CREATE
@@ -160,6 +182,7 @@ export interface ICreateKid {
 }
 
 export interface ICreateKidGuardian {
+  kidId: string;
   nationalId: string;
   nationalIdType: UserIdType;
   firstName: string;
@@ -172,8 +195,7 @@ export interface ICreateKidGuardian {
 export interface ICreateKidRegistration {
   kidId: string;
   kidGuardianId: string;
-  churchMeetingId: string;
-  log: string;
+  kidGroupId: string;
   observation?: string;
 }
 
@@ -195,3 +217,4 @@ export interface IKids extends ReduxDefaultStateWithPagination<IKid> {}
 export interface IKidMedicalConditions
   extends ReduxDefaultState<IKidMedicalCondition> {}
 export interface IKidGroups extends ReduxDefaultState<IKidGroup> {}
+export interface IKidGuardians extends ReduxDefaultState<IKidGuardian> {}

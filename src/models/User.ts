@@ -71,9 +71,21 @@ export const idGuardianTypeSelect = [
 ];
 
 export interface IUser {
-  firstName?: string;
-  lastName?: string;
-  churchGroup?: string;
+  id: string;
+  faithForgeId: number;
+  nationalIdType?: UserIdType;
+  nationalId?: string;
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  email?: string;
+  gender: UserGender;
+  birthday?: Date;
+  state: UserState;
+  photoUrl?: string;
+  username?: string;
+  healthSecurityEntity?: string;
+  roles: string[];
 }
 
 export const healthSecurityEntitySelect = [

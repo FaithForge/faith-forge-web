@@ -34,16 +34,16 @@ export const makeApiRequest = async (
   try {
     switch (verb) {
       case 'GET':
-        response = await instance.get(url, { params });
+        response = await instance.get(url, { params, headers });
         break;
       case 'POST':
-        response = await instance.post(url, data, headers);
+        response = await instance.post(url, data, { headers });
         break;
       case 'PUT':
-        response = await instance.put(url, data);
+        response = await instance.put(url, data, { headers });
         break;
       case 'DELETE':
-        response = await instance.delete(url);
+        response = await instance.delete(url, { headers });
         break;
       default:
         throw new Error(`Invalid HTTP verb: ${verb}`);
