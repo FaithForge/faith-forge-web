@@ -33,6 +33,7 @@ import {
 } from '@/services/kidService';
 import { CreateKidRegistration } from '@/redux/thunks/kid-church/kid-registration.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
+import { Layout } from '@/components/Layout';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -145,7 +146,7 @@ const RegisterKidView: NextPage = () => {
     : null;
 
   return (
-    <>
+    <Layout>
       {kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp right={right} title="Registrar niño" />
       <AutoCenter>
@@ -188,21 +189,22 @@ const RegisterKidView: NextPage = () => {
         </p>
       </AutoCenter>
       <div style={{ fontSize: 16 }}>
-        {kidSlice.current?.age && kidSlice.current?.ageInMonths && (
-          <Grid
-            columns={2}
-            gap={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Edad</Grid.Item>
-            <Grid.Item>
-              {`${Math.floor(kidSlice.current?.age ?? 0)} años y ${
-                kidSlice.current.ageInMonths -
-                Math.floor(kidSlice.current.age) * 12
-              } meses`}
-            </Grid.Item>
-          </Grid>
-        )}
+        {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
+          kidSlice.current?.ageInMonths && (
+            <Grid
+              columns={2}
+              gap={8}
+              style={{ paddingBottom: 10, border: '1px' }}
+            >
+              <Grid.Item style={{ fontWeight: 'bold' }}>Edad</Grid.Item>
+              <Grid.Item>
+                {`${Math.floor(kidSlice.current?.age ?? 0)} años y ${
+                  kidSlice.current.ageInMonths -
+                  Math.floor(kidSlice.current.age) * 12
+                } meses`}
+              </Grid.Item>
+            </Grid>
+          )}
         {kidSlice.current?.birthday && (
           <Grid
             columns={2}
@@ -468,7 +470,7 @@ const RegisterKidView: NextPage = () => {
         visible={openKidGuardianModal}
         onClose={(status: boolean) => setOpenKidGuardianModal(status)}
       />
-    </>
+    </Layout>
   );
 };
 

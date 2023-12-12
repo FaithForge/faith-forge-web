@@ -7,6 +7,7 @@ import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
+import { Layout } from '@/components/Layout';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -36,7 +37,7 @@ const PersonalInfo: NextPage = () => {
   ]);
 
   return (
-    <>
+    <Layout>
       <NavBarApp title="Configuración Personal" />
       <Form
         layout="vertical"
@@ -70,7 +71,7 @@ const PersonalInfo: NextPage = () => {
           <Selector options={churchGroup} />
         </Form.Item>
       </Form>
-    </>
+    </Layout>
   );
 };
 

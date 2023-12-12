@@ -1,20 +1,32 @@
-import { Button, Form, Input, Modal, Popup } from 'antd-mobile';
+import {
+  Button,
+  Form,
+  Input,
+  Modal,
+  Image,
+  AutoCenter,
+  Card,
+} from 'antd-mobile';
 import type { NextPage } from 'next';
-import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { ExclamationOutlined } from '@ant-design/icons';
 import { UserLogin } from '@/redux/thunks/user/auth.thunk';
-import { parseJwt } from '@/utils/jwt';
+import styled from 'styled-components';
 
-const jwtSecret = process.env.NEXT_PUBLIC_JWT_SECRET;
+const CenteredContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+`;
 
 const Login: NextPage = () => {
   const authSlice = useSelector((state: RootState) => state.authSlice);
 
   const router = useRouter();
-  const [visible, setVisible] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const onLogin = async (values: any) => {
@@ -23,7 +35,7 @@ const Login: NextPage = () => {
 
     await dispatch(UserLogin({ username, password }));
 
-    if (authSlice.error) {
+    if (authSlice.error || authSlice.token === '') {
       Modal.show({
         header: (
           <ExclamationOutlined
@@ -36,10 +48,7 @@ const Login: NextPage = () => {
         title: 'Contraseña o usuario Incorrecto',
         content: (
           <>
-            <div>
-              Por favor digite su usuario y contraseña correctamente Error:
-              description: {authSlice.error}
-            </div>
+            <div>Por favor digite su usuario y contraseña correctamente</div>
           </>
         ),
         closeOnMaskClick: true,
@@ -55,42 +64,15 @@ const Login: NextPage = () => {
       return;
     }
 
-    router.reload();
+    router.push('/registration');
   };
 
-  useEffect(() => {
-    if (!authSlice.token || authSlice.token === '') {
-      setVisible(true);
-      return;
-    }
-
-    if (jwtSecret) {
-      const decodedToken = parseJwt(authSlice.token);
-      const currentTime = Date.now() / 1000;
-
-      if (decodedToken.exp && decodedToken.exp < currentTime) {
-        setVisible(true);
-        return;
-      }
-
-      setVisible(false);
-      return;
-    }
-  }, [authSlice.token, dispatch]);
-
   return (
-    <Popup
-      visible={visible}
-      bodyStyle={{
-        borderTopLeftRadius: '8px',
-        borderTopRightRadius: '8px',
-        padding: 5,
-      }}
-    >
-      <h1>Login</h1>
-      <div
-        style={{ overflowY: 'scroll', minHeight: '80vh', maxHeight: '80vh' }}
-      >
+    <CenteredContainer>
+      <AutoCenter>
+        <Image alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
+      </AutoCenter>
+      <Card style={{ width: '350px' }}>
         <Form
           layout="vertical"
           onFinish={onLogin}
@@ -122,8 +104,8 @@ const Login: NextPage = () => {
             <Input placeholder="Ingresa tu Contraseña" type="password" />
           </Form.Item>
         </Form>
-      </div>
-    </Popup>
+      </Card>
+    </CenteredContainer>
   );
 };
 

@@ -12,7 +12,14 @@ const initialState: IAuth = {
 const AuthSlice = createSlice({
   name: 'auth',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    logout: (state) => {
+      state.user = undefined;
+      state.token = '';
+      state.error = undefined;
+      state.loading = false;
+    },
+  },
   extraReducers(builder) {
     builder.addCase(UserLogin.pending, (state) => {
       state.error = undefined;
@@ -33,5 +40,5 @@ const AuthSlice = createSlice({
   },
 });
 
-export const {} = AuthSlice.actions;
+export const { logout } = AuthSlice.actions;
 export default AuthSlice.reducer;

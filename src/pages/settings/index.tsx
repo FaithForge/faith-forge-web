@@ -2,11 +2,12 @@ import type { NextPage } from 'next';
 import { List } from 'antd-mobile';
 import { HomeOutlined, PrinterOutlined, UserOutlined } from '@ant-design/icons';
 import { useRouter } from 'next/router';
+import { Layout } from '@/components/Layout';
 
 const Setting: NextPage = () => {
   const router = useRouter();
   return (
-    <>
+    <Layout>
       <List header="Configuraciones">
         <List.Item
           prefix={<UserOutlined />}
@@ -33,7 +34,7 @@ const Setting: NextPage = () => {
           Generar Reporte de Servicio
         </List.Item>
       </List>
-    </>
+    </Layout>
   );
 };
 

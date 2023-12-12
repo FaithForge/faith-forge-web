@@ -9,6 +9,7 @@ import LoadingMask from '../../components/LoadingMask';
 import { TestPrintLabel } from '@/services/kidService';
 import { updateCurrentChurchPrinter } from '@/redux/slices/church/churchPrinter.slice';
 import { GetChurchPrinters } from '@/redux/thunks/church/church.thunk';
+import { Layout } from '@/components/Layout';
 
 const PrinterInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -52,7 +53,7 @@ const PrinterInfo: NextPage = () => {
     : [];
 
   return (
-    <>
+    <Layout>
       {churchPrinterSlice ? (
         <>
           {churchPrinterSlice.loading ? <LoadingMask /> : ''}
@@ -85,7 +86,7 @@ const PrinterInfo: NextPage = () => {
           </Button>
         </>
       ) : null}
-    </>
+    </Layout>
   );
 };
 

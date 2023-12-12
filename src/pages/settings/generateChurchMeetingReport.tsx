@@ -15,6 +15,7 @@ import { ApiVerbs, makeApiRequest } from '../../api';
 import ModalFaithForge from '../../components/ModalFaithForge';
 import { DateTime } from 'luxon';
 import { labelRendererCalendar } from '../../utils/date';
+import { Layout } from '@/components/Layout';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -114,7 +115,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
   };
 
   return (
-    <>
+    <Layout>
       <>
         {isLoading ? <LoadingMask /> : ''}
         <NavBarApp title="Generar reporte servicio" />
@@ -266,7 +267,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
           </>
         )}
       </div>
-    </>
+    </Layout>
   );
 };
 

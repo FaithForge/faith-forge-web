@@ -12,6 +12,7 @@ import {
   GetChurchMeetings,
   GetChurches,
 } from '@/redux/thunks/church/church.thunk';
+import { Layout } from '@/components/Layout';
 
 const ChurchInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -64,7 +65,7 @@ const ChurchInfo: NextPage = () => {
     : [];
 
   return (
-    <>
+    <Layout>
       {churchMeetingSlice && churchSlice ? (
         <>
           {churchSlice.loading || churchMeetingSlice.loading ? (
@@ -113,7 +114,7 @@ const ChurchInfo: NextPage = () => {
           </Form>
         </>
       ) : null}
-    </>
+    </Layout>
   );
 };
 

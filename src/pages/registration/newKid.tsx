@@ -42,6 +42,7 @@ import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
 import { uploadKidPhoto } from '@/services/kidService';
 import { kidRelationSelect } from '@/models/KidChurch';
 import { CreateKid } from '@/redux/thunks/kid-church/kid.thunk';
+import { Layout } from '@/components/Layout';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -207,7 +208,7 @@ const NewKid: NextPage = () => {
     : [];
 
   return (
-    <>
+    <Layout>
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title="Crear Niño" />
       <AutoCenter>
@@ -529,7 +530,7 @@ const NewKid: NextPage = () => {
           />
         </Form.Item>
       </Form>
-    </>
+    </Layout>
   );
 };
 

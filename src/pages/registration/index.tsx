@@ -25,6 +25,7 @@ import {
 import { GetKids, GetMoreKids } from '@/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
 import { IKid } from '@/models/KidChurch';
+import { Layout } from '@/components/Layout';
 
 const Registration: NextPage = () => {
   const {
@@ -97,7 +98,7 @@ const Registration: NextPage = () => {
   };
 
   return (
-    <>
+    <Layout>
       {loading ? <LoadingMask /> : ''}
 
       <SearchBar
@@ -194,7 +195,7 @@ const Registration: NextPage = () => {
       >
         <UserAddOutlined style={{ fontSize: '28px' }} />
       </FloatingBubble>
-    </>
+    </Layout>
   );
 };
 

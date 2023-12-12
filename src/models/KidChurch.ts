@@ -205,6 +205,7 @@ export interface IUpdateKid {
   staticKidGroupId?: string;
   observations?: string;
   medicalConditionId?: string;
+  photoUrl?: string;
 }
 
 // SLIDES
