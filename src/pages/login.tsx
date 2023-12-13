@@ -48,7 +48,7 @@ const Login: NextPage = () => {
         title: 'Contraseña o usuario Incorrecto',
         content: (
           <>
-            <div>Por favor digite su usuario y contraseña correctamente</div>
+            <div>Por favor digita su usuario y contraseña correctamente</div>
           </>
         ),
         closeOnMaskClick: true,
