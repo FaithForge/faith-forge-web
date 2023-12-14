@@ -3,7 +3,7 @@ import axios, { AxiosResponse } from 'axios';
 const API_URL =
   process.env.NODE_ENV !== 'production'
     ? 'http://faith-forge.com/api'
-    : 'http://faith-forge.jucarlospm.com/api';
+    : 'http://159.65.248.54/api';
 
 export enum ApiVerbs {
   GET = 'GET',
