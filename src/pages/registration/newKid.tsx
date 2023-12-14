@@ -89,13 +89,13 @@ const NewKid: NextPage = () => {
   useEffect(() => {
     if (kidGuardianSlice.current) {
       form.setFieldsValue({
-        guardianNationalIdType: kidGuardianSlice.current?.nationalIdType,
+        guardianNationalIdType: [kidGuardianSlice.current?.nationalIdType],
         guardianNationalId: kidGuardianSlice.current?.nationalId,
         guardianFirstName: capitalizeWords(kidGuardianSlice.current?.firstName),
         guardianLastName: capitalizeWords(kidGuardianSlice.current?.lastName),
         guardianPhone: kidGuardianSlice.current?.phone,
-        guardianGender: kidGuardianSlice.current?.gender,
-        guardianRelation: kidGuardianSlice.current?.relation,
+        guardianGender: [kidGuardianSlice.current?.gender],
+        guardianRelation: [kidGuardianSlice.current?.relation],
       });
     }
   }, [form, kidGuardianSlice]);

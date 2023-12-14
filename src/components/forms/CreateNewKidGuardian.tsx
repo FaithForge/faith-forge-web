@@ -6,7 +6,10 @@ import LoadingMask from '../LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { useEffect } from 'react';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
-import { CreateKidGuardian, GetKidGuardian } from '@/redux/thunks/kid-church/kid-guardian.thunk';
+import {
+  CreateKidGuardian,
+  GetKidGuardian,
+} from '@/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { kidRelationSelect } from '@/models/KidChurch';
 
@@ -37,13 +40,13 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
   useEffect(() => {
     if (guardian) {
       form.setFieldsValue({
-        guardianNationalIdType: guardian.nationalIdType,
+        guardianNationalIdType: [guardian.nationalIdType],
         guardianNationalId: guardian.nationalId,
         guardianFirstName: capitalizeWords(guardian.firstName),
         guardianLastName: capitalizeWords(guardian.lastName),
         guardianPhone: guardian.phone,
-        guardianGender: guardian.gender,
-        guardianRelation: guardian.relation,
+        guardianGender: [guardian.gender],
+        guardianRelation: [guardian.relation],
       });
     }
   }, [guardian, form]);
