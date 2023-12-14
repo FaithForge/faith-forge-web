@@ -1,7 +1,7 @@
 /* eslint-disable @next/next/no-title-in-document-head */
 import Document, { Html, Head, Main, NextScript } from 'next/document';
 
-const prod = process.env.NODE_ENV === 'production';
+const prod = process.env.WEB_ENV === 'production';
 
 class MyDocument extends Document {
   render() {
