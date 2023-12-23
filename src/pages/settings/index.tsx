@@ -54,6 +54,7 @@ const Setting: NextPage = () => {
                   icon: 'success',
                   content: 'Se ha cerrado la sesión',
                   position: 'bottom',
+                  duration: 5000,
                 });
                 router.push('/login');
               },

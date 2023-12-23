@@ -13,7 +13,7 @@ const toastLogout = () => {
   Toast.show({
     content: 'Se ha cerrado su sesión',
     position: 'bottom',
-    duration: 5,
+    duration: 5000,
   });
 };
 

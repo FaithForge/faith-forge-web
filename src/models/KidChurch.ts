@@ -28,7 +28,7 @@ export enum KidGuardianRelationEnum {
   GRANDMOTHER = 'Abuela', // Abuela
   UNCLE = 'Tío', // Tío
   AUNT = 'Tía', // Tía
-  ACQUAINTANCE = 'Conocido', // Conocido
+  ACQUAINTANCE = 'Conocido/a', // Conocido
 }
 
 export const KID_RELATION_CODE_MAPPER = {
@@ -50,38 +50,52 @@ export const kidRelationSelect = [
   {
     value: KidGuardianRelationCodeEnum.FATHER,
     label: KidGuardianRelationEnum.FATHER,
+    gender: UserGenderCode.MALE,
   },
   {
     value: KidGuardianRelationCodeEnum.MOTHER,
     label: KidGuardianRelationEnum.MOTHER,
+    gender: UserGenderCode.FEMALE,
   },
   {
     value: KidGuardianRelationCodeEnum.BROTHER,
     label: KidGuardianRelationEnum.BROTHER,
+    gender: UserGenderCode.MALE,
   },
   {
     value: KidGuardianRelationCodeEnum.SISTER,
     label: KidGuardianRelationEnum.SISTER,
+    gender: UserGenderCode.FEMALE,
   },
   {
     value: KidGuardianRelationCodeEnum.GRANDFATHER,
     label: KidGuardianRelationEnum.GRANDFATHER,
+    gender: UserGenderCode.MALE,
   },
   {
     value: KidGuardianRelationCodeEnum.GRANDMOTHER,
     label: KidGuardianRelationEnum.GRANDMOTHER,
+    gender: UserGenderCode.FEMALE,
   },
   {
     value: KidGuardianRelationCodeEnum.UNCLE,
     label: KidGuardianRelationEnum.UNCLE,
+    gender: UserGenderCode.MALE,
   },
   {
     value: KidGuardianRelationCodeEnum.AUNT,
     label: KidGuardianRelationEnum.AUNT,
+    gender: UserGenderCode.FEMALE,
   },
   {
     value: KidGuardianRelationCodeEnum.ACQUAINTANCE,
     label: KidGuardianRelationEnum.ACQUAINTANCE,
+    gender: UserGenderCode.MALE,
+  },
+  {
+    value: KidGuardianRelationCodeEnum.ACQUAINTANCE,
+    label: KidGuardianRelationEnum.ACQUAINTANCE,
+    gender: UserGenderCode.FEMALE,
   },
 ];
 
@@ -173,7 +187,6 @@ export interface ICreateKid {
   staticKidGroupId?: string;
   observations?: string;
   medicalConditionId?: string;
-  kidGuardian: ICreateKidGuardian;
 }
 
 export interface ICreateKidGuardian {

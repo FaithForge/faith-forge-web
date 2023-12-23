@@ -18,3 +18,10 @@ export interface ReduxDefaultStateWithoutData {
   error?: string;
   loading: boolean;
 }
+
+export interface IApiErrorResponse {
+  error: {
+    code: number;
+    message: string;
+  };
+}

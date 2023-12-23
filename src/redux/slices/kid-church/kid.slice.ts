@@ -1,4 +1,5 @@
 import { IKid, IKids, IUpdateKid } from '@/models/KidChurch';
+import { IApiErrorResponse } from '@/models/Redux';
 import {
   CreateKid,
   GetKid,
@@ -34,7 +35,6 @@ const kidSlice = createSlice({
   extraReducers(builder) {
     builder.addCase(GetKids.pending, (state) => {
       state.data = [];
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetKids.fulfilled, (state, action) => {
@@ -52,12 +52,10 @@ const kidSlice = createSlice({
       state.totalPages = initialState.totalPages;
     });
     builder.addCase(GetMoreKids.pending, (state) => {
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetMoreKids.fulfilled, (state, action) => {
       state.data = Array.from(state.data).concat(action.payload.data);
-      state.error = undefined;
       state.loading = false;
       state.currentPage = state.currentPage + 1;
       state.totalPages = action.payload.totalPages;
@@ -70,7 +68,6 @@ const kidSlice = createSlice({
       state.totalPages = initialState.totalPages;
     });
     builder.addCase(GetKid.pending, (state) => {
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetKid.fulfilled, (state, action) => {
@@ -85,18 +82,21 @@ const kidSlice = createSlice({
     });
     builder.addCase(CreateKid.pending, (state) => {
       state.error = undefined;
+      state.current = undefined;
       state.loading = true;
     });
-    builder.addCase(CreateKid.fulfilled, (state) => {
+    builder.addCase(CreateKid.fulfilled, (state, action) => {
+      state.current = action.payload;
       state.error = undefined;
       state.loading = false;
     });
     builder.addCase(CreateKid.rejected, (state, action) => {
-      state.error = action.error.message;
+      const apiError = action.payload as IApiErrorResponse;
+      state.current = undefined;
+      state.error = apiError.error.message;
       state.loading = false;
     });
     builder.addCase(UpdateKid.pending, (state) => {
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(

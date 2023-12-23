@@ -3,6 +3,7 @@ import { PAGINATION_REGISTRATION_LIMIT } from '@/constants/pagination';
 import { ICreateKid, IUpdateKid } from '@/models/KidChurch';
 import { RootState } from '@/redux/store';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
 
 export const GetKid = createAsyncThunk(
   'kid-church/GetKid',
@@ -33,7 +34,20 @@ export const GetKids = createAsyncThunk(
     const state = getState() as RootState;
     const churchMeeting = state.churchMeetingSlice;
     const { token } = state.authSlice;
-    const findArray = payload.findText.split(' ');
+    const isNumber =
+      typeof Number(payload.findText) === 'number' &&
+      !Number.isNaN(Number(payload.findText));
+    let filterByFaithForge;
+    let filterByFirstName;
+    let filterByLastName;
+
+    if (isNumber) {
+      filterByFaithForge = payload.findText;
+    } else {
+      const findArray = payload.findText.split(' ');
+      filterByFirstName = findArray[0];
+      filterByLastName = findArray[1];
+    }
 
     const response = (
       await makeApiRequest(ApiVerbs.GET, `/${MS_KID_CHURCH_PATH}/kids`, {
@@ -41,8 +55,9 @@ export const GetKids = createAsyncThunk(
           limit: PAGINATION_REGISTRATION_LIMIT,
           page: 1,
           registrationChurchMeetingId: churchMeeting.current?.id,
-          filterByFirstName: findArray[0],
-          filterByLastName: findArray[1],
+          filterByFirstName,
+          filterByLastName,
+          filterByFaithForge,
         },
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -53,18 +68,33 @@ export const GetKids = createAsyncThunk(
 
 export const GetMoreKids = createAsyncThunk(
   'kid-church/GetMoreKids',
-  async (_, { getState }) => {
+  async (payload: { findText: string }, { getState }) => {
     const state = getState() as RootState;
     const kid = state.kidSlice;
     const churchMeeting = state.churchMeetingSlice;
     const { token } = state.authSlice;
+    const isNumber = typeof payload.findText === 'number';
+
+    let filterByFaithForge;
+    let filterByFirstName;
+    let filterByLastName;
+    if (isNumber) {
+      filterByFaithForge = payload.findText;
+    } else {
+      const findArray = payload.findText.split(' ');
+      filterByFirstName = findArray[0];
+      filterByLastName = findArray[1];
+    }
 
     const response = (
       await makeApiRequest(ApiVerbs.GET, `/${MS_KID_CHURCH_PATH}/kids`, {
         params: {
           limit: PAGINATION_REGISTRATION_LIMIT,
           page: kid.currentPage + 1,
-          churchMeetingId: churchMeeting.current?.id,
+          registrationChurchMeetingId: churchMeeting.current?.id,
+          filterByFirstName,
+          filterByLastName,
+          filterByFaithForge,
         },
         headers: { Authorization: `Bearer ${token}` },
       })
@@ -76,20 +106,25 @@ export const GetMoreKids = createAsyncThunk(
 
 export const CreateKid = createAsyncThunk(
   'kid-church/CreateKid',
-  async (payload: ICreateKid, { getState }) => {
+  async (payload: ICreateKid, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    const response = (
-      await makeApiRequest(ApiVerbs.POST, `/${MS_KID_CHURCH_PATH}/kid`, {
-        data: {
-          ...payload,
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      })
-    ).data;
+    try {
+      const response = (
+        await makeApiRequest(ApiVerbs.POST, `/${MS_KID_CHURCH_PATH}/kid`, {
+          data: {
+            ...payload,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ).data;
 
-    return response;
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Internal Error');
+    }
   },
 );
 

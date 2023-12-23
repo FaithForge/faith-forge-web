@@ -2,27 +2,33 @@ import { ApiVerbs, MS_KID_CHURCH_PATH, makeApiRequest } from '@/api';
 import { ICreateKidGuardian } from '@/models/KidChurch';
 import { RootState } from '@/redux/store';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
 
 export const CreateKidGuardian = createAsyncThunk(
-  'kid-church/CreateKid',
-  async (payload: ICreateKidGuardian, { getState }) => {
+  'kid-church/CreateKidGuardian',
+  async (payload: ICreateKidGuardian, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    const response = (
-      await makeApiRequest(
-        ApiVerbs.POST,
-        `/${MS_KID_CHURCH_PATH}/kid-guardian`,
-        {
-          data: {
-            ...payload,
+    try {
+      const response = (
+        await makeApiRequest(
+          ApiVerbs.POST,
+          `/${MS_KID_CHURCH_PATH}/kid-guardian`,
+          {
+            data: {
+              ...payload,
+            },
+            headers: { Authorization: `Bearer ${token}` },
           },
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      )
-    ).data;
+        )
+      ).data;
 
-    return response;
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Internal Error');
+    }
   },
 );
 

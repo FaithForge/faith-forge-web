@@ -1,10 +1,14 @@
-import { Button, Form, Input, Popup, Selector } from 'antd-mobile';
+import { Button, Form, Input, Popup, Selector, Toast } from 'antd-mobile';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { idGuardianTypeSelect, userGenderSelect } from '../../models/User';
+import {
+  UserGenderCode,
+  idGuardianTypeSelect,
+  userGenderSelect,
+} from '../../models/User';
 import LoadingMask from '../LoadingMask';
 import { capitalizeWords } from '../../utils/text';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
 import {
   CreateKidGuardian,
@@ -20,12 +24,28 @@ type Props = {
 
 const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
   const [form] = Form.useForm();
-  const { current: guardian, loading: guardianLoading } = useSelector(
-    (state: RootState) => state.kidGuardianSlice,
-  );
+  const {
+    current: guardian,
+    loading: guardianLoading,
+    error,
+  } = useSelector((state: RootState) => state.kidGuardianSlice);
   const { current: kid } = useSelector((state: RootState) => state.kidSlice);
+  const [selectedGender, setSelectedGender] = useState<UserGenderCode>();
+  const [kidRelationSelectFilter, setKidRelationSelectFilter] =
+    useState(kidRelationSelect);
 
   const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    if (error) {
+      Toast.show({
+        icon: 'fail',
+        content: `Ha ocurrido un error al crear el acudiente: ${error}`,
+        position: 'bottom',
+        duration: 5000,
+      });
+    }
+  }, [error]);
 
   const closeModal = () => {
     onClose(false);
@@ -94,7 +114,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
       const relation = values.guardianRelation[0];
       const kidId = kid.id;
 
-      await dispatch(
+      const response = await dispatch(
         CreateKidGuardian({
           kidId,
           nationalIdType,
@@ -106,10 +126,25 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           relation,
         }),
       );
-      await dispatch(GetKid({ id: kidId }));
-      await onClose(false);
+
+      if (!response.payload.error) {
+        await dispatch(GetKid({ id: kidId }));
+        await onClose(false);
+      }
     }
   };
+
+  useEffect(() => {
+    let filter;
+    if (selectedGender) {
+      filter = kidRelationSelect.filter(
+        (kidRelation) => kidRelation.gender === selectedGender,
+      );
+    } else {
+      filter = kidRelationSelect;
+    }
+    setKidRelationSelectFilter(filter);
+  }, [selectedGender]);
 
   return (
     <Popup
@@ -204,7 +239,14 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               },
             ]}
           >
-            <Selector options={userGenderSelect} />
+            <Selector
+              options={userGenderSelect}
+              onChange={(v) => {
+                if (v.length) {
+                  setSelectedGender(v[0]);
+                }
+              }}
+            />
           </Form.Item>
           <Form.Item
             name="guardianRelation"
@@ -216,7 +258,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               },
             ]}
           >
-            <Selector options={kidRelationSelect} />
+            <Selector options={kidRelationSelectFilter} />
           </Form.Item>
           <Form.Item>
             {!!guardian ? (

@@ -30,13 +30,13 @@ const PrinterInfo: NextPage = () => {
   };
 
   useEffect(() => {
-    if (churchSlice.current?.id && churchPrinterSlice.data.length === 0) {
+    if (churchSlice.current?.id) {
       dispatch(GetChurchPrinters(churchSlice.current?.id));
+      form.setFieldsValue({
+        printer: [churchPrinterSlice.current?.id],
+      });
     }
-    form.setFieldsValue({
-      printer: [churchPrinterSlice.current?.id],
-    });
-  }, [churchPrinterSlice, churchSlice, dispatch, form]);
+  }, []);
 
   const testPrintLabel = () => {
     dispatch(TestPrintLabel());

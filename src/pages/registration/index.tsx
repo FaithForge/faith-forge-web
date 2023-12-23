@@ -89,7 +89,7 @@ const Registration: NextPage = () => {
   }, [dispatch, findText, pathname]);
 
   const getMoreKids = async () => {
-    dispatch(GetMoreKids());
+    dispatch(GetMoreKids({ findText }));
   };
 
   const registerKidViewHandler = (kid: IKid) => {

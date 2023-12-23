@@ -1,4 +1,5 @@
 import { IKidGuardians } from '@/models/KidChurch';
+import { IApiErrorResponse } from '@/models/Redux';
 import {
   CreateKidGuardian,
   GetKidGuardian,
@@ -32,7 +33,8 @@ const kidGuardianSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(CreateKidGuardian.rejected, (state, action) => {
-      state.error = action.error.message;
+      const apiError = action.payload as IApiErrorResponse;
+      state.error = apiError.error.message;
       state.loading = false;
     });
     builder.addCase(GetKidGuardian.pending, (state) => {
