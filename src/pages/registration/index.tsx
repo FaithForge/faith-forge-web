@@ -8,7 +8,11 @@ import {
   InfiniteScroll,
   NoticeBar,
 } from 'antd-mobile';
-import { HomeOutlined, UserAddOutlined } from '@ant-design/icons';
+import {
+  HomeOutlined,
+  SearchOutlined,
+  UserAddOutlined,
+} from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -37,6 +41,9 @@ const Registration: NextPage = () => {
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
+  const churchPrinterSlice = useSelector(
+    (state: RootState) => state.churchPrinterSlice,
+  );
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const router = useRouter();
@@ -50,7 +57,7 @@ const Registration: NextPage = () => {
   useEffect(() => {
     dispatch(GetKids({ findText }));
     const currentDay = DateTime.local().toFormat('EEEE');
-    if (churchMeeting) {
+    if (churchMeeting && churchPrinterSlice.current) {
       let warning = false;
       if (currentDay.toUpperCase() === churchMeeting.day.toUpperCase()) {
         const currentTime = DateTime.local().toFormat('HH:mm:ss');
@@ -106,6 +113,8 @@ const Registration: NextPage = () => {
         cancelText="Cancelar"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
+        onCancel={() => setFindText('')}
+        icon={<SearchOutlined />}
         style={{
           position: 'sticky',
           top: '0',
@@ -120,7 +129,7 @@ const Registration: NextPage = () => {
           '--height': '25px',
         }}
         icon={<HomeOutlined />}
-        content={`Servicio a Registrar: ${churchMeeting?.name}`}
+        content={`${churchMeeting?.name} - Impresora: ${churchPrinterSlice.current?.name}`}
         color="info"
       />
       {warningAlert.message && (
