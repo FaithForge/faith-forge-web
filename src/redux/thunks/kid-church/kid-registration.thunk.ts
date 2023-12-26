@@ -22,7 +22,7 @@ export const CreateKidRegistration = createAsyncThunk(
             ...payload,
             churchMeetingId: churchMeetingSlice.current?.id,
             churchPrinterId: churchPrinterSlice.current?.name,
-            log: `Registrado por ${authSlice.user?.firstName}, ${authSlice.user?.lastName} del grupo ${accountSlice.churchGroup} en la impresora ${churchPrinterSlice.current?.name}`,
+            log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del grupo ${accountSlice.churchGroup} en la impresora ${churchPrinterSlice.current?.name}`,
           },
           headers: { Authorization: `Bearer ${token}` },
         },

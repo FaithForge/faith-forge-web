@@ -8,6 +8,7 @@ import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 import { Layout } from '@/components/Layout';
+import { capitalizeWords } from '@/utils/text';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -25,8 +26,8 @@ const PersonalInfo: NextPage = () => {
 
   useEffect(() => {
     form.setFieldsValue({
-      firstName: authSlice.user?.firstName,
-      lastName: authSlice.user?.lastName,
+      firstName: capitalizeWords(authSlice.user?.firstName ?? ''),
+      lastName: capitalizeWords(authSlice.user?.lastName ?? ''),
       churchGroup: accountSlice.churchGroup,
     });
   }, [

@@ -2,21 +2,6 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { ApiVerbs, makeApiRequest } from '../api';
 import { RootState } from '../redux/store';
 
-export const uploadKidPhoto = async (payload: { formData: any }) => {
-  const response = (
-    await makeApiRequest(ApiVerbs.POST, `/registration/uploadImage/kids`, {
-      data: payload.formData,
-      headers: {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
-      },
-    })
-  ).data;
-
-  return response.key;
-};
-
 export const ReprintRegisterLabelKid = createAsyncThunk(
   'kid/reprintRegisterLabelKid',
   async (

@@ -68,6 +68,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
         guardianGender: [guardian.gender],
         guardianRelation: [guardian.relation],
       });
+      setSelectedGender(guardian.gender);
     }
   }, [guardian, form]);
 

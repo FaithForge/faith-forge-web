@@ -48,11 +48,11 @@ import {
   GetKidGuardian,
 } from '@/redux/thunks/kid-church/kid-guardian.thunk';
 import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
-import { uploadKidPhoto } from '@/services/kidService';
 import { kidRelationSelect } from '@/models/KidChurch';
 import { CreateKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
 import { Step } from 'antd-mobile/es/components/steps/step';
+import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -113,6 +113,7 @@ const NewKid: NextPage = () => {
         guardianGender: [kidGuardianSlice.current?.gender],
         guardianRelation: [kidGuardianSlice.current?.relation],
       });
+      setSelectedGender(kidGuardianSlice.current?.gender);
     }
   }, [formKidGuardian, kidGuardianSlice]);
 
@@ -208,9 +209,10 @@ const NewKid: NextPage = () => {
     let photoUrl = undefined;
     if (photo) {
       const formData = new FormData();
-      formData.append('photo', photo);
+      formData.append('file', photo);
 
-      photoUrl = await uploadKidPhoto({ formData });
+      photoUrl = (await dispatch(UploadUserImage({ formData })))
+        .payload as string;
     }
 
     try {

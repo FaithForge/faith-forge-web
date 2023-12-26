@@ -36,9 +36,9 @@ import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEnt
 import { GetKidGroups } from '@/redux/thunks/kid-church/kid-group.thunk';
 import { GetKidMedicalConditions } from '@/redux/thunks/kid-church/kid-medical-condition.thunk';
 import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
-import { uploadKidPhoto } from '@/services/kidService';
 import { UpdateKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
+import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -51,7 +51,7 @@ const UpdateKidPage: NextPage = () => {
 
   const now = DateTime.local().endOf('year').toJSDate();
 
-  const [source, setSource] = useState('');
+  const [source, setSource] = useState(kidSlice.current?.photoUrl);
   const [photo, setPhoto] = useState<any>(null);
   const [staticGroup, setStaticGroup] = useState(
     kidSlice.current?.staticGroup as boolean,
@@ -146,12 +146,12 @@ const UpdateKidPage: NextPage = () => {
     let photoUrl = undefined;
     if (photo && photo !== kidSlice.current?.photoUrl) {
       const formData = new FormData();
-      formData.append('photo', photo);
+      formData.append('file', photo);
 
-      photoUrl = await uploadKidPhoto({ formData });
+      photoUrl = (await dispatch(UploadUserImage({ formData })))
+        .payload as string;
     }
 
-    console.log(medicalCondition);
     if (kidSlice.current?.id) {
       await dispatch(
         UpdateKid({
