@@ -27,11 +27,11 @@ import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
 import LoadingMask from '../../components/LoadingMask';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
 import { IKidGuardian, KID_RELATION_CODE_MAPPER } from '@/models/KidChurch';
+import { RestoreCreateKid } from '@/services/kidService';
 import {
-  ReprintRegisterLabelKid,
-  RestoreCreateKid,
-} from '@/services/kidService';
-import { CreateKidRegistration } from '@/redux/thunks/kid-church/kid-registration.thunk';
+  CreateKidRegistration,
+  ReprintKidRegistration,
+} from '@/redux/thunks/kid-church/kid-registration.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
 
@@ -111,9 +111,12 @@ const RegisterKidView: NextPage = () => {
   };
 
   const reprintRegisterLabelKid = async (copies: number) => {
-    if (kidSlice.current?.id) {
+    if (kidSlice.current?.currentKidRegistration?.id) {
       await dispatch(
-        ReprintRegisterLabelKid({ kidId: kidSlice.current.id, copies }),
+        ReprintKidRegistration({
+          id: kidSlice.current.currentKidRegistration.id,
+          copies,
+        }),
       );
       router.back();
     }
