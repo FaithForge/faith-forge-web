@@ -159,7 +159,7 @@ const NewKid: NextPage = () => {
 
   const cleanGuardian = async () => {
     dispatch(cleanCurrentKidGuardian());
-    form.resetFields([
+    formKidGuardian.resetFields([
       'guardianNationalIdType',
       'guardianNationalId',
       'guardianFirstName',

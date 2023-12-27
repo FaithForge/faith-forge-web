@@ -19,11 +19,9 @@ const UpdateKidGuardianPhoneModal = ({
   kidGuardian,
 }: Props) => {
   const [form] = Form.useForm();
-  const {
-    current: guardian,
-    loading: guardianLoading,
-    error,
-  } = useSelector((state: RootState) => state.kidGuardianSlice);
+  const { loading: guardianLoading, error } = useSelector(
+    (state: RootState) => state.kidGuardianSlice,
+  );
   const { current: kid } = useSelector((state: RootState) => state.kidSlice);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -113,7 +111,6 @@ const UpdateKidGuardianPhoneModal = ({
           <Form.Item
             name="guardianPhone"
             label="Telefono"
-            disabled={!!guardian}
             rules={[
               {
                 required: true,
