@@ -6,6 +6,7 @@ import { Providers } from '../redux/provider';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore } from 'redux-persist';
 import { store } from '../redux/store';
+import Setup from './_setup';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const persistor = persistStore(store);
@@ -21,7 +22,8 @@ function MyApp({ Component, pageProps }: AppProps) {
           <meta name="HandheldFriendly" content="true" />
         </Head>
         <SafeArea position="top" />
-        <Component {...pageProps} />
+          <Component {...pageProps} />
+          <Setup/>
         <SafeArea position="bottom" />
       </PersistGate>
     </Providers>

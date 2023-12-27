@@ -68,7 +68,7 @@ const Setup: NextPage = () => {
     }
 
     setVisible(false);
-  }, [authSlice.token]);
+  }, [accountSlice.churchGroup, authSlice.token, churchMeetingSlice, churchPrinterSlice, churchSlice, dispatch]);
 
   useEffect(() => {
     form.setFieldsValue({
