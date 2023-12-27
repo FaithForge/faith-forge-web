@@ -381,7 +381,13 @@ const RegisterKidView: NextPage = () => {
               <Space direction="vertical">
                 {kidGuardianOptions.map((kidGuardian) => {
                   return (
-                    <>
+                    <div
+                      key={kidGuardian.value}
+                      style={{
+                        display: 'flex',
+                        gap: '5px',
+                      }}
+                    >
                       <Radio
                         style={{
                           '--icon-size': '18px',
@@ -406,7 +412,7 @@ const RegisterKidView: NextPage = () => {
                           }
                         }}
                       />
-                    </>
+                    </div>
                   );
                 })}
               </Space>
