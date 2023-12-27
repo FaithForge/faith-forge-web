@@ -269,8 +269,8 @@ const GenerateChurchMeetingReport: NextPage = () => {
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
               <Grid.Item>
-                {report.statistics.byGender.find((d: any) => d.name === 'M')
-                  .count ?? 0}
+                {report.statistics?.byGender?.find((d: any) => d.name === 'M')
+                  ?.count ?? 0}
               </Grid.Item>
             </Grid>
             <Grid
@@ -280,8 +280,8 @@ const GenerateChurchMeetingReport: NextPage = () => {
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
               <Grid.Item>
-                {report.statistics.byGender.find((d: any) => d.name === 'F')
-                  .count ?? 0}
+                {report.statistics?.byGender?.find((d: any) => d.name === 'F')
+                  ?.count ?? 0}
               </Grid.Item>
             </Grid>
             <h2>Lista niños por salones</h2>

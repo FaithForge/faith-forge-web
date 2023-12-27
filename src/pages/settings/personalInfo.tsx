@@ -9,6 +9,7 @@ import { useEffect } from 'react';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 import { Layout } from '@/components/Layout';
 import { capitalizeWords } from '@/utils/text';
+import { UserRole } from '@/utils/auth';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -25,7 +26,16 @@ const PersonalInfo: NextPage = () => {
   };
 
   useEffect(() => {
+    let role;
+    if (authSlice.user?.roles.includes(UserRole.KID_GROUP_ADMIN))
+      role = 'Administrador Regikids';
+    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_SUPERVISOR))
+      role = 'Supervisor Regikids';
+    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_USER))
+      role = 'Maestro Regikids';
+
     form.setFieldsValue({
+      role,
       firstName: capitalizeWords(authSlice.user?.firstName ?? ''),
       lastName: capitalizeWords(authSlice.user?.lastName ?? ''),
       churchGroup: accountSlice.churchGroup,
@@ -50,6 +60,9 @@ const PersonalInfo: NextPage = () => {
           </Button>
         }
       >
+        <Form.Item name="role" label="Rol">
+          <Input placeholder="" disabled />
+        </Form.Item>
         <Form.Item
           name="firstName"
           label="Nombre"

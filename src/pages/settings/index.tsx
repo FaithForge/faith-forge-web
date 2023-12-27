@@ -10,6 +10,7 @@ import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { useDispatch } from 'react-redux';
+import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
 
 const Setting: NextPage = () => {
   const router = useRouter();
@@ -35,12 +36,14 @@ const Setting: NextPage = () => {
         >
           Configuración de Impresora
         </List.Item>
-        <List.Item
-          prefix={<PrinterOutlined />}
-          onClick={() => router.push('/settings/generateChurchMeetingReport')}
-        >
-          Generar Reporte de Servicio
-        </List.Item>
+        {IsSupervisorRegisterKidChurch() && (
+          <List.Item
+            prefix={<PrinterOutlined />}
+            onClick={() => router.push('/settings/generateChurchMeetingReport')}
+          >
+            Generar Reporte de Servicio
+          </List.Item>
+        )}
         <List.Item
           prefix={<LogoutOutlined />}
           onClick={() =>

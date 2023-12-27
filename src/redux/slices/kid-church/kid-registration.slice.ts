@@ -1,5 +1,8 @@
 import { ReduxDefaultStateWithoutData } from '@/models/Redux';
-import { CreateKidRegistration } from '@/redux/thunks/kid-church/kid-registration.thunk';
+import {
+  CreateKidRegistration,
+  RemoveKidRegistration,
+} from '@/redux/thunks/kid-church/kid-registration.thunk';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: ReduxDefaultStateWithoutData = {
@@ -21,6 +24,18 @@ const kidRegistrationSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(CreateKidRegistration.rejected, (state, action) => {
+      state.error = action.error.message;
+      state.loading = false;
+    });
+    builder.addCase(RemoveKidRegistration.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(RemoveKidRegistration.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(RemoveKidRegistration.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });

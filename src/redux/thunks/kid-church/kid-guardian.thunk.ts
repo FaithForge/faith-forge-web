@@ -50,3 +50,35 @@ export const GetKidGuardian = createAsyncThunk(
     return response;
   },
 );
+
+export const UpdateKidGuardianPhone = createAsyncThunk(
+  'kid-church/UpdateKidGuardianPhone',
+  async (
+    payload: { id: string; phone: string },
+    { getState, rejectWithValue },
+  ) => {
+    const { id, phone } = payload;
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await makeApiRequest(
+          ApiVerbs.PUT,
+          `/${MS_KID_CHURCH_PATH}/kid-guardian/${id}`,
+          {
+            data: {
+              phone,
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        )
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Internal Error');
+    }
+  },
+);

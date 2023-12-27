@@ -65,3 +65,29 @@ export const ReprintKidRegistration = createAsyncThunk(
     return response;
   },
 );
+
+export const RemoveKidRegistration = createAsyncThunk(
+  'kid-church/RemoveKidRegistration',
+  async (
+    payload: {
+      id: string;
+    },
+    { getState },
+  ) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+    const { id } = payload;
+
+    const response = (
+      await makeApiRequest(
+        ApiVerbs.DELETE,
+        `/${MS_KID_CHURCH_PATH}/kid-registration/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+    ).data;
+
+    return response;
+  },
+);

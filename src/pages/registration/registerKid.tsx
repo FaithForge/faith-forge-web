@@ -22,7 +22,12 @@ import { capitalizeWords } from '../../utils/text';
 import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../../models/User';
 import { useRouter } from 'next/router';
 import { Action } from 'antd-mobile/es/components/popover';
-import { EditOutlined, HomeOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  HomeOutlined,
+  TeamOutlined,
+  EditFilled,
+} from '@ant-design/icons';
 import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
 import LoadingMask from '../../components/LoadingMask';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
@@ -30,16 +35,25 @@ import { IKidGuardian, KID_RELATION_CODE_MAPPER } from '@/models/KidChurch';
 import { RestoreCreateKid } from '@/services/kidService';
 import {
   CreateKidRegistration,
+  RemoveKidRegistration,
   ReprintKidRegistration,
 } from '@/redux/thunks/kid-church/kid-registration.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
+import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
+import UpdateKidGuardianPhoneModal from '@/components/forms/UpdateKidGuardianPhone';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
+  const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] =
+    useState(false);
+  const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<
+    IKidGuardian | undefined
+  >();
   const [kidId, setKidId] = useState('');
+
   const kidSlice = useSelector((state: RootState) => state.kidSlice);
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
@@ -116,6 +130,17 @@ const RegisterKidView: NextPage = () => {
         ReprintKidRegistration({
           id: kidSlice.current.currentKidRegistration.id,
           copies,
+        }),
+      );
+      router.back();
+    }
+  };
+
+  const removeKidRegistration = async () => {
+    if (kidSlice.current?.currentKidRegistration?.id) {
+      await dispatch(
+        RemoveKidRegistration({
+          id: kidSlice.current.currentKidRegistration.id,
         }),
       );
       router.back();
@@ -356,17 +381,32 @@ const RegisterKidView: NextPage = () => {
               <Space direction="vertical">
                 {kidGuardianOptions.map((kidGuardian) => {
                   return (
-                    <Radio
-                      style={{
-                        '--icon-size': '18px',
-                        '--font-size': '14px',
-                        '--gap': '6px',
-                      }}
-                      key={kidGuardian.value}
-                      value={kidGuardian.value}
-                    >
-                      {kidGuardian.label}
-                    </Radio>
+                    <>
+                      <Radio
+                        style={{
+                          '--icon-size': '18px',
+                          '--font-size': '14px',
+                          '--gap': '6px',
+                        }}
+                        key={kidGuardian.value}
+                        value={kidGuardian.value}
+                      >
+                        {kidGuardian.label}
+                      </Radio>{' '}
+                      <EditFilled
+                        style={{ fontSize: 18 }}
+                        onClick={() => {
+                          const kidGuardianSearch =
+                            kidSlice.current?.relations?.find(
+                              (item) => item.id === kidGuardian.value,
+                            );
+                          if (kidGuardianSearch) {
+                            setKidGuardianToUpdate(kidGuardianSearch);
+                            setOpenUpdateKidGuardianPhoneModal(true);
+                          }
+                        }}
+                      />
+                    </>
                   );
                 })}
               </Space>
@@ -404,6 +444,19 @@ const RegisterKidView: NextPage = () => {
               Reimprimir registro parcial (1)
             </Button>
           </div>
+          {IsSupervisorRegisterKidChurch() && (
+            <div style={{ paddingTop: 10 }}>
+              <Button
+                block
+                color="danger"
+                size="large"
+                onClick={() => removeKidRegistration()}
+              >
+                Eliminar Registro
+              </Button>
+            </div>
+          )}
+
           <h2
             style={{
               textAlign: 'center',
@@ -473,6 +526,15 @@ const RegisterKidView: NextPage = () => {
         visible={openKidGuardianModal}
         onClose={(status: boolean) => setOpenKidGuardianModal(status)}
       />
+      {kidGuardianToUpdate && (
+        <UpdateKidGuardianPhoneModal
+          visible={openUpdateKidGuardianPhoneModal}
+          onClose={(status: boolean) =>
+            setOpenUpdateKidGuardianPhoneModal(status)
+          }
+          kidGuardian={kidGuardianToUpdate}
+        />
+      )}
     </Layout>
   );
 };
