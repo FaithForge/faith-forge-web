@@ -35,7 +35,7 @@ const Login: NextPage = () => {
 
   const onLogin = async (values: any) => {
     setIsLoading(true);
-    const username = values.username;
+    const username = values.username.toLowerCase();
     const password = values.password;
 
     await dispatch(UserLogin({ username, password }));
@@ -116,7 +116,12 @@ const Login: NextPage = () => {
               { required: true, message: 'Por favor escribe tu Contraseña' },
             ]}
           >
-            <Input placeholder="Ingresa tu Contraseña" type="password" />
+            <Input
+              placeholder="Ingresa tu Contraseña"
+              type="password"
+              minLength={6}
+              maxLength={8}
+            />
           </Form.Item>
         </Form>
       </Card>
