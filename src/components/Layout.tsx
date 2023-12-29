@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
-import { SettingOutlined } from '@ant-design/icons';
-import { AppOutline } from 'antd-mobile-icons';
+import { SettingOutlined, AuditOutlined } from '@ant-design/icons';
 import { TabBar } from 'antd-mobile';
 import { usePathname, useRouter } from 'next/navigation';
 import { AuthWrapper } from './AuthWrapper';
@@ -13,7 +12,7 @@ const tabs = [
   {
     key: '/registration',
     title: 'Registro',
-    icon: <AppOutline />,
+    icon: <AuditOutlined />,
   },
   {
     key: '/settings',

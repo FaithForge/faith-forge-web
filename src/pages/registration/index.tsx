@@ -30,6 +30,7 @@ import { GetKids, GetMoreKids } from '@/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
 import { IKid } from '@/models/KidChurch';
 import { Layout } from '@/components/Layout';
+import dayjs from 'dayjs';
 
 const Registration: NextPage = () => {
   const {
@@ -146,7 +147,7 @@ const Registration: NextPage = () => {
               key={kid.faithForgeId}
               style={{
                 backgroundColor: kid.currentKidRegistration
-                  ? '#dddddd'
+                  ? '#ebebeb'
                   : 'white',
               }}
               prefix={
@@ -165,11 +166,15 @@ const Registration: NextPage = () => {
                   height={40}
                 />
               }
-              description={capitalizeWords(
-                `Codigo: ${kid.faithForgeId} ${
-                  kid.currentKidRegistration ? '(Registrado)' : ''
-                }`,
-              )}
+              description={`Codigo: ${kid.faithForgeId} ${
+                kid.currentKidRegistration
+                  ? `(Registrado a las ${dayjs(
+                      kid.currentKidRegistration.date.toString(),
+                    )
+                      .locale('es')
+                      .format('h:mm:ss A')})`
+                  : ''
+              }`}
               onClick={() => registerKidViewHandler(kid)}
             >
               {capitalizeWords(`${kid.firstName} ${kid.lastName}`)}

@@ -5,6 +5,7 @@ import {
   LogoutOutlined,
   PrinterOutlined,
   UserOutlined,
+  FileSearchOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
@@ -38,7 +39,7 @@ const Setting: NextPage = () => {
         </List.Item>
         {IsSupervisorRegisterKidChurch() && (
           <List.Item
-            prefix={<PrinterOutlined />}
+            prefix={<FileSearchOutlined />}
             onClick={() => router.push('/settings/generateChurchMeetingReport')}
           >
             Generar Reporte de Servicio
