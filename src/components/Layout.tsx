@@ -53,7 +53,7 @@ export const Layout = ({ children }: Props) => {
             bottom: '0',
             left: '0',
             width: '100%',
-            backgroundColor: 'white',
+            backgroundColor: '#f5f5f5',
           }}
           className="TabBarApp"
         >
