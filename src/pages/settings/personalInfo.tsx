@@ -27,11 +27,11 @@ const PersonalInfo: NextPage = () => {
 
   useEffect(() => {
     let role;
-    if (authSlice.user?.roles.includes(UserRole.KID_GROUP_ADMIN))
+    if (authSlice.user?.roles.includes(UserRole.KID_REGISTER_ADMIN))
       role = 'Administrador Regikids';
-    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_SUPERVISOR))
+    else if (authSlice.user?.roles.includes(UserRole.KID_REGISTER_SUPERVISOR))
       role = 'Supervisor Regikids';
-    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_USER))
+    else if (authSlice.user?.roles.includes(UserRole.KID_REGISTER_USER))
       role = 'Maestro Regikids';
 
     form.setFieldsValue({
