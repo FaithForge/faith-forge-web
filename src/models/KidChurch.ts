@@ -16,7 +16,10 @@ export enum KidGuardianRelationCodeEnum {
   GRANDMOTHER = 'GRANDMOTHER', // Abuela
   UNCLE = 'UNCLE', // Tio
   AUNT = 'AUNT', // Tia
-  ACQUAINTANCE = 'ACQUAINTANCE', // Conocido
+  MALE_COUSIN = 'MALE_COUSIN', // Primo
+  FEMALE_COUSIN = 'FEMALE_COUSIN', // Prima
+  MALE_ACQUAINTANCE = 'MALE_ACQUAINTANCE', // Conocido
+  FEMALE_ACQUAINTANCE = 'FEMALE_ACQUAINTANCE', // Conocida
 }
 
 export enum KidGuardianRelationEnum {
@@ -28,7 +31,10 @@ export enum KidGuardianRelationEnum {
   GRANDMOTHER = 'Abuela', // Abuela
   UNCLE = 'Tío', // Tío
   AUNT = 'Tía', // Tía
-  ACQUAINTANCE = 'Conocido/a', // Conocido
+  MALE_COUSIN = 'Primo', // Primo
+  FEMALE_COUSIN = 'Prima', // Prima
+  MALE_ACQUAINTANCE = 'Conocido', // Conocido
+  FEMALE_ACQUAINTANCE = 'Conocida', // Conocida
 }
 
 export const KID_RELATION_CODE_MAPPER = {
@@ -42,8 +48,14 @@ export const KID_RELATION_CODE_MAPPER = {
     KidGuardianRelationEnum.GRANDMOTHER,
   [KidGuardianRelationCodeEnum.UNCLE]: KidGuardianRelationEnum.UNCLE,
   [KidGuardianRelationCodeEnum.AUNT]: KidGuardianRelationEnum.AUNT,
-  [KidGuardianRelationCodeEnum.ACQUAINTANCE]:
-    KidGuardianRelationEnum.ACQUAINTANCE,
+  [KidGuardianRelationCodeEnum.MALE_COUSIN]:
+    KidGuardianRelationEnum.MALE_COUSIN,
+  [KidGuardianRelationCodeEnum.FEMALE_COUSIN]:
+    KidGuardianRelationEnum.FEMALE_COUSIN,
+  [KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE]:
+    KidGuardianRelationEnum.MALE_ACQUAINTANCE,
+  [KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE]:
+    KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
 };
 
 export const kidRelationSelect = [
@@ -88,13 +100,23 @@ export const kidRelationSelect = [
     gender: UserGenderCode.FEMALE,
   },
   {
-    value: KidGuardianRelationCodeEnum.ACQUAINTANCE,
-    label: KidGuardianRelationEnum.ACQUAINTANCE,
+    value: KidGuardianRelationCodeEnum.MALE_COUSIN,
+    label: KidGuardianRelationEnum.MALE_COUSIN,
     gender: UserGenderCode.MALE,
   },
   {
-    value: KidGuardianRelationCodeEnum.ACQUAINTANCE,
-    label: KidGuardianRelationEnum.ACQUAINTANCE,
+    value: KidGuardianRelationCodeEnum.FEMALE_COUSIN,
+    label: KidGuardianRelationEnum.FEMALE_COUSIN,
+    gender: UserGenderCode.FEMALE,
+  },
+  {
+    value: KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE,
+    label: KidGuardianRelationEnum.MALE_ACQUAINTANCE,
+    gender: UserGenderCode.MALE,
+  },
+  {
+    value: KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE,
+    label: KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
     gender: UserGenderCode.FEMALE,
   },
 ];
