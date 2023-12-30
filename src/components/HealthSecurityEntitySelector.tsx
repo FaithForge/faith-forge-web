@@ -1,6 +1,6 @@
 import { Button, CheckList, Popup, SearchBar, Space } from 'antd-mobile';
 import { FC, useMemo, useState } from 'react';
-import { healthSecurityEntitySelect } from '../models/Uset';
+import { healthSecurityEntitySelect } from '../models/User';
 
 interface HealthSecurityEntitySelectorProps {
   healthSecurityEntity?: { id: string; name: string };

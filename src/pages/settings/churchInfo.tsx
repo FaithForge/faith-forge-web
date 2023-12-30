@@ -5,11 +5,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
-import { GetChurches } from '../../services/churchService';
-import { GetChurchMeetings } from '../../services/churchMeetingService';
-import { updateCurrentChurch } from '../../redux/slices/churchSlice';
-import { updateCurrentChurchMeeting } from '../../redux/slices/churchMeetingSlice';
 import LoadingMask from '../../components/LoadingMask';
+import { updateCurrentChurch } from '@/redux/slices/church/church.slice';
+import { updateCurrentChurchMeeting } from '@/redux/slices/church/churchMeeting.slice';
+import {
+  GetChurchMeetings,
+  GetChurches,
+} from '@/redux/thunks/church/church.thunk';
+import { Layout } from '@/components/Layout';
 
 const ChurchInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -40,7 +43,7 @@ const ChurchInfo: NextPage = () => {
   };
 
   useEffect(() => {
-    dispatch(GetChurches());
+    dispatch(GetChurches(false));
   }, [dispatch]);
 
   const churchOptions = churchSlice.data
@@ -62,7 +65,7 @@ const ChurchInfo: NextPage = () => {
     : [];
 
   return (
-    <>
+    <Layout>
       {churchMeetingSlice && churchSlice ? (
         <>
           {churchSlice.loading || churchMeetingSlice.loading ? (
@@ -111,7 +114,7 @@ const ChurchInfo: NextPage = () => {
           </Form>
         </>
       ) : null}
-    </>
+    </Layout>
   );
 };
 

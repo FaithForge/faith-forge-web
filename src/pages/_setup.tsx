@@ -1,83 +1,82 @@
-import { Button, Form, Input, Modal, Popup, Selector } from 'antd-mobile';
+import { Button, Form, Popup, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { GetChurches, GetPrinters } from '../services/churchService';
-import { GetChurchMeetings } from '../services/churchMeetingService';
-import { churchGroup } from '../constants/church';
-import { setUser } from '../redux/slices/userSlice';
-import { updateCurrentChurchMeeting } from '../redux/slices/churchMeetingSlice';
-import {
-  updateCurrentChurch,
-  updateCurrentPrinter,
-} from '../redux/slices/churchSlice';
 import { useRouter } from 'next/router';
-import { ExclamationOutlined } from '@ant-design/icons';
+import {
+  GetChurchMeetings,
+  GetChurchPrinters,
+  GetChurches,
+} from '@/redux/thunks/church/church.thunk';
+import { updateCurrentChurch } from '@/redux/slices/church/church.slice';
+import { updateCurrentChurchMeeting } from '@/redux/slices/church/churchMeeting.slice';
+import { updateCurrentChurchPrinter } from '@/redux/slices/church/churchPrinter.slice';
+import { parseJwt } from '@/utils/jwt';
+import { churchGroup } from '@/constants/church';
+import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 
 const Setup: NextPage = () => {
-  const userSlice = useSelector((state: RootState) => state.userSlice);
+  const [form] = Form.useForm();
+  const authSlice = useSelector((state: RootState) => state.authSlice);
+  const accountSlice = useSelector((state: RootState) => state.accountSlice);
   const churchSlice = useSelector((state: RootState) => state.churchSlice);
   const churchMeetingSlice = useSelector(
     (state: RootState) => state.churchMeetingSlice,
+  );
+  const churchPrinterSlice = useSelector(
+    (state: RootState) => state.churchPrinterSlice,
   );
   const router = useRouter();
   const [visible, setVisible] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const onFinish = async (values: any) => {
-    const firstName = values.firstName;
-    const lastName = values.lastName;
-    const churchGroup = values.churchGroup[0];
     const church = values.church[0];
     const churchMeeting = values.churchMeeting[0];
-    const printer = values.printer[0];
-    const password = values.password;
+    const churchPrinter = values.churchPrinter[0];
+    const churchGroup = values.churchGroup[0];
 
-    if (password !== '963741') {
-      Modal.show({
-        header: (
-          <ExclamationOutlined
-            style={{
-              fontSize: 64,
-              color: 'var(--adm-color-warning)',
-            }}
-          />
-        ),
-        title: 'Contraseña Incorrecta',
-        content: (
-          <>
-            <div>
-              Por favor coloque la contraseña correcta. Si no la sabe por favor
-              preguntar al administrador del sistema
-            </div>
-          </>
-        ),
-        closeOnMaskClick: true,
-        closeOnAction: true,
-        actions: [
-          {
-            key: 'close',
-            text: 'Cerrar',
-            primary: true,
-          },
-        ],
-      });
-      return;
-    }
-    await dispatch(setUser({ firstName, lastName, churchGroup }));
     await dispatch(updateCurrentChurch(church));
     await dispatch(updateCurrentChurchMeeting(churchMeeting));
-    await dispatch(updateCurrentPrinter(printer));
+    await dispatch(updateCurrentChurchPrinter(churchPrinter));
+    await dispatch(updateUserChurchGroup(churchGroup));
+
     router.reload();
   };
 
   useEffect(() => {
-    if (!churchMeetingSlice.current || !userSlice.firstName) {
-      setVisible(true);
+    if (authSlice.token || authSlice.token !== '') {
+      const decodedToken = parseJwt(authSlice.token);
+      const currentTime = Date.now() / 1000;
+
+      if (decodedToken.exp && decodedToken.exp >= currentTime) {
+        if (
+          !churchSlice.current ||
+          !churchMeetingSlice.current ||
+          !churchPrinterSlice.current ||
+          !accountSlice.churchGroup
+        ) {
+          setVisible(true);
+          dispatch(GetChurches(false));
+        }
+        return;
+      }
+
+      setVisible(false);
+      return;
     }
-    dispatch(GetChurches());
-  }, [churchMeetingSlice, dispatch, userSlice]);
+
+    setVisible(false);
+  }, [accountSlice.churchGroup, authSlice.token, churchMeetingSlice, churchPrinterSlice, churchSlice, dispatch]);
+
+  useEffect(() => {
+    form.setFieldsValue({
+      church: [churchSlice.current?.id],
+      churchMeeting: [churchMeetingSlice.current?.id],
+      churchPrinter: [churchPrinterSlice.current?.id],
+    });
+  }, [form, churchSlice.current?.id, churchMeetingSlice.current?.id]);
 
   const churchOptions = churchSlice.data
     ? churchSlice.data.map((church) => {
@@ -97,11 +96,11 @@ const Setup: NextPage = () => {
       })
     : [];
 
-  const printerOptions = churchSlice.printers
-    ? churchSlice.printers.map((printer) => {
+  const churchPrinterOptions = churchPrinterSlice.data
+    ? churchPrinterSlice.data.map((churchPrinter) => {
         return {
-          label: printer.name,
-          value: printer.id,
+          label: churchPrinter.name,
+          value: churchPrinter.id,
         };
       })
     : [];
@@ -122,37 +121,13 @@ const Setup: NextPage = () => {
         <Form
           layout="vertical"
           onFinish={onFinish}
+          form={form}
           footer={
             <Button block type="submit" color="primary" size="large">
               Comenzar
             </Button>
           }
         >
-          <Form.Item
-            name="firstName"
-            label="Nombre"
-            rules={[{ required: true, message: 'Por favor escribe tu nombre' }]}
-          >
-            <Input placeholder="Ingresa tu nombre" />
-          </Form.Item>
-          <Form.Item
-            name="lastName"
-            label="Apellido"
-            rules={[
-              { required: true, message: 'Por favor escribe tu apellido' },
-            ]}
-          >
-            <Input placeholder="Ingresa tu apellido" />
-          </Form.Item>
-          <Form.Item
-            name="churchGroup"
-            label="Grupo al que perteneces"
-            rules={[
-              { required: true, message: 'Por favor seleccione un grupo' },
-            ]}
-          >
-            <Selector options={churchGroup} />
-          </Form.Item>
           <Form.Item
             name="church"
             label="Sede"
@@ -164,7 +139,7 @@ const Setup: NextPage = () => {
               options={churchOptions}
               onChange={(arr) => {
                 dispatch(GetChurchMeetings(arr[0]));
-                dispatch(GetPrinters(arr[0]));
+                dispatch(GetChurchPrinters(arr[0]));
               }}
             />
           </Form.Item>
@@ -178,7 +153,7 @@ const Setup: NextPage = () => {
             <Selector options={churchMeetingOptions} />
           </Form.Item>
           <Form.Item
-            name="printer"
+            name="churchPrinter"
             label="Impresora seleccionada"
             rules={[
               {
@@ -187,23 +162,16 @@ const Setup: NextPage = () => {
               },
             ]}
           >
-            <Selector options={printerOptions} />
+            <Selector options={churchPrinterOptions} />
           </Form.Item>
           <Form.Item
-            name="password"
-            label="Contraseña de ingreso"
+            name="churchGroup"
+            label="Grupo al que perteneces"
             rules={[
-              {
-                required: true,
-                message: 'Por favor escribe la contraseña para acceder',
-              },
+              { required: true, message: 'Por favor seleccione un grupo' },
             ]}
           >
-            <Input
-              placeholder="Ingresa contraseña de acceso"
-              type="number"
-              maxLength={6}
-            />
+            <Selector options={churchGroup} />
           </Form.Item>
         </Form>
       </div>

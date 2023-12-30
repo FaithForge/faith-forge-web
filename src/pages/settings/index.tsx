@@ -1,12 +1,23 @@
 import type { NextPage } from 'next';
-import { List } from 'antd-mobile';
-import { HomeOutlined, PrinterOutlined, UserOutlined } from '@ant-design/icons';
+import { List, Modal, Toast } from 'antd-mobile';
+import {
+  HomeOutlined,
+  LogoutOutlined,
+  PrinterOutlined,
+  UserOutlined,
+  FileSearchOutlined,
+} from '@ant-design/icons';
 import { useRouter } from 'next/router';
+import { Layout } from '@/components/Layout';
+import { logout } from '@/redux/slices/user/auth.slice';
+import { useDispatch } from 'react-redux';
+import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
 
 const Setting: NextPage = () => {
   const router = useRouter();
+  const dispatch = useDispatch();
   return (
-    <>
+    <Layout>
       <List header="Configuraciones">
         <List.Item
           prefix={<UserOutlined />}
@@ -26,14 +37,38 @@ const Setting: NextPage = () => {
         >
           Configuración de Impresora
         </List.Item>
+        {IsSupervisorRegisterKidChurch() && (
+          <List.Item
+            prefix={<FileSearchOutlined />}
+            onClick={() => router.push('/settings/generateChurchMeetingReport')}
+          >
+            Generar Reporte de Servicio
+          </List.Item>
+        )}
         <List.Item
-          prefix={<PrinterOutlined />}
-          onClick={() => router.push('/settings/generateChurchMeetingReport')}
+          prefix={<LogoutOutlined />}
+          onClick={() =>
+            Modal.confirm({
+              content: '¿Desea cerrar sesión?',
+              confirmText: 'Cerrar sesión',
+              cancelText: 'Cancelar',
+              onConfirm: async () => {
+                await dispatch(logout());
+                Toast.show({
+                  icon: 'success',
+                  content: 'Se ha cerrado la sesión',
+                  position: 'bottom',
+                  duration: 5000,
+                });
+                router.push('/login');
+              },
+            })
+          }
         >
-          Generar Reporte de Servicio
+          Cerrar Sesión
         </List.Item>
       </List>
-    </>
+    </Layout>
   );
 };
 

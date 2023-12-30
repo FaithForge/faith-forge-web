@@ -20,17 +20,10 @@ import {
 import { RefObject } from 'react';
 import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
 import dayjs from 'dayjs';
-import { userGenderSelect } from '../../models/Uset';
+import { userGenderSelect } from '../../models/User';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import LoadingMask from '../../components/LoadingMask';
-import {
-  GetKidGroups,
-  GetKidMedicalConditions,
-  UpdateKid,
-  uploadKidPhoto,
-} from '../../services/kidService';
-import { loadingKidEnable } from '../../redux/slices/kidSlice';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
@@ -40,22 +33,29 @@ import {
   labelRendererCalendar,
 } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
+import { GetKidGroups } from '@/redux/thunks/kid-church/kid-group.thunk';
+import { GetKidMedicalConditions } from '@/redux/thunks/kid-church/kid-medical-condition.thunk';
+import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
+import { UpdateKid } from '@/redux/thunks/kid-church/kid.thunk';
+import { Layout } from '@/components/Layout';
+import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
-  const {
-    current: kid,
-    groups: kidGroups,
-    loading: kidLoading,
-    medicalConditions,
-  } = useSelector((state: RootState) => state.kidSlice);
+  const kidSlice = useSelector((state: RootState) => state.kidSlice);
+  const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
+  const kidMedicalConditionSlice = useSelector(
+    (state: RootState) => state.kidMedicalConditionSlice,
+  );
 
   const now = DateTime.local().endOf('year').toJSDate();
 
-  const [source, setSource] = useState('');
+  const [source, setSource] = useState(kidSlice.current?.photoUrl);
   const [photo, setPhoto] = useState<any>(null);
-  const [staticGroup, setStaticGroup] = useState(kid?.staticGroup as boolean);
+  const [staticGroup, setStaticGroup] = useState(
+    kidSlice.current?.staticGroup as boolean,
+  );
   const dispatch = useDispatch<AppDispatch>();
 
   const handleCapture = (target: any) => {
@@ -81,45 +81,45 @@ const UpdateKidPage: NextPage = () => {
   }, [form, staticGroup]);
 
   useEffect(() => {
-    if (kid) {
+    if (kidSlice.current) {
       form.setFieldsValue({
-        firstName: capitalizeWords(kid.firstName),
-        lastName: capitalizeWords(kid.lastName),
-        birthday: DateTime.fromISO(kid.birthday).setZone('UTC').toJSDate(),
-        gender: kid.gender,
-        staticGroup: kid.staticGroup,
-        kidGroup: [kid.groupId],
-        observations: kid.observations,
+        firstName: capitalizeWords(kidSlice.current.firstName ?? ''),
+        lastName: capitalizeWords(kidSlice.current.lastName ?? ''),
+        birthday: dayjs(kidSlice.current.birthday?.toString()).toDate(),
+        gender: kidSlice.current.gender,
+        staticGroup: kidSlice.current.staticGroup,
+        kidGroup: [kidSlice.current.kidGroup?.id],
+        observations: kidSlice.current.observations,
       });
-      setStaticGroup(kid.staticGroup as boolean);
+      setStaticGroup(kidSlice.current.staticGroup as boolean);
       setMedicalCondition({
-        id: kid?.medicalCondition?.id ?? '',
-        name: kid?.medicalCondition?.name ?? '',
+        id: kidSlice.current?.medicalCondition?.id ?? '',
+        name: kidSlice.current?.medicalCondition?.name ?? '',
       });
       setHealthSecurityEntity({
-        id: kid?.healthSecurityEntity ?? '',
-        name: kid?.healthSecurityEntity ?? '',
+        id: kidSlice.current?.healthSecurityEntity ?? '',
+        name: kidSlice.current?.healthSecurityEntity ?? '',
       });
     }
-  }, [kid, form]);
+  }, [form, kidSlice]);
 
   const [searchMedicalCondition, setSearchMedicalCondition] = useState('');
   const [visibleMedicalCondition, setVisibleMedicalCondition] = useState(false);
   const [medicalCondition, setMedicalCondition] = useState({
-    id: kid?.medicalCondition?.id ?? '',
-    name: kid?.medicalCondition?.name ?? '',
+    id: kidSlice.current?.medicalCondition?.id ?? '',
+    name: kidSlice.current?.medicalCondition?.name ?? '',
   });
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
-      return medicalConditions.filter((item) =>
+      return kidMedicalConditionSlice.data.filter((item) =>
         item.name
           .toLocaleLowerCase()
           .includes(searchMedicalCondition.toLocaleLowerCase()),
       );
     } else {
-      return medicalConditions;
+      return kidMedicalConditionSlice.data;
     }
-  }, [medicalConditions, searchMedicalCondition]);
+  }, [kidMedicalConditionSlice.data, searchMedicalCondition]);
 
   const [healthSecurityEntity, setHealthSecurityEntity] = useState({
     id: '',
@@ -130,8 +130,8 @@ const UpdateKidPage: NextPage = () => {
     value: { id: string; name: string },
   ) => {
     value = value ?? {
-      id: kid?.healthSecurityEntity,
-      name: kid?.healthSecurityEntity,
+      id: kidSlice.current?.healthSecurityEntity,
+      name: kidSlice.current?.healthSecurityEntity,
     };
     if (value.id) {
       setHealthSecurityEntity(value);
@@ -144,38 +144,41 @@ const UpdateKidPage: NextPage = () => {
     dispatch(loadingKidEnable());
 
     let photoUrl = undefined;
-    if (photo && photo !== kid?.photoUrl) {
+    if (photo && photo !== kidSlice.current?.photoUrl) {
       const formData = new FormData();
-      formData.append('photo', photo);
+      formData.append('file', photo);
 
-      photoUrl = await uploadKidPhoto({ formData });
+      photoUrl = (await dispatch(UploadUserImage({ formData })))
+        .payload as string;
     }
 
-    await dispatch(
-      UpdateKid({
-        kidRegistration: {
-          id: kid?.id,
-          firstName: values.firstName,
-          lastName: values.lastName,
-          birthday: values.birthday,
-          gender: values.gender ? values.gender[0] : undefined,
-          staticGroup: values.staticGroup ?? false,
-          group: values.kidGroup ? values.kidGroup[0] : undefined,
-          observations: values.observations ?? undefined,
-          healthSecurityEntity:
-            values.healthSecurityEntity?.name ?? kid?.healthSecurityEntity,
-          photoUrl,
-          medicalCondition: {
-            id: medicalCondition.id ?? undefined,
+    if (kidSlice.current?.id) {
+      await dispatch(
+        UpdateKid({
+          id: kidSlice.current.id,
+          updateKid: {
+            firstName: values.firstName,
+            lastName: values.lastName,
+            birthday: values.birthday,
+            gender: values.gender ? values.gender[0] : undefined,
+            staticGroup: values.staticGroup ?? false,
+            staticKidGroupId: values.kidGroup ? values.kidGroup[0] : undefined,
+            observations: values.observations ?? undefined,
+            photoUrl,
+            healthSecurityEntity:
+              values.healthSecurityEntity?.name ??
+              kidSlice.current?.healthSecurityEntity,
+            medicalConditionId:
+              medicalCondition.id !== '' ? medicalCondition.id : undefined,
           },
-        },
-      }),
-    );
+        }),
+      );
+    }
     router.back();
   };
 
-  const kidGroupsSelect = kidGroups
-    ? kidGroups.map((kidGroup) => {
+  const kidGroupsSelect = kidGroupSlice.data
+    ? kidGroupSlice.data.map((kidGroup) => {
         return {
           label: kidGroup.name,
           value: kidGroup.id,
@@ -184,8 +187,8 @@ const UpdateKidPage: NextPage = () => {
     : [];
 
   return (
-    <>
-      {kidLoading ? <LoadingMask /> : ''}
+    <Layout>
+      {kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title="Actualizar Niño" />
       <AutoCenter>
         <label htmlFor="profileImage">
@@ -360,9 +363,14 @@ const UpdateKidPage: NextPage = () => {
                 style={{ '--border-top': '0', '--border-bottom': '0' }}
                 defaultValue={medicalCondition ? [medicalCondition.id] : []}
                 onChange={(val) => {
-                  let medicalConditionSelected = medicalConditions.find(
-                    (item) => item.id === val[0],
-                  );
+                  let medicalConditionSelected = kidMedicalConditionSlice.data
+                    .map((kidMedicalCondition) => {
+                      return {
+                        id: kidMedicalCondition.id,
+                        name: `${kidMedicalCondition.name} - ${kidMedicalCondition.code}`,
+                      };
+                    })
+                    .find((item) => item.id === val[0]);
                   if (
                     !medicalConditionSelected &&
                     val[0] === 'a18647b1-3455-4407-ada0-c94f39251e8c'
@@ -413,7 +421,7 @@ const UpdateKidPage: NextPage = () => {
           />
         </Form.Item>
       </Form>
-    </>
+    </Layout>
   );
 };
 

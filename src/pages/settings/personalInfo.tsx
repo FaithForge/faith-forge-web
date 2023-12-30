@@ -4,35 +4,51 @@ import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { churchGroup } from '../../constants/church';
 import { useRouter } from 'next/router';
-import { setUser } from '../../redux/slices/userSlice';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
+import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
+import { Layout } from '@/components/Layout';
+import { capitalizeWords } from '@/utils/text';
+import { UserRole } from '@/utils/auth';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const userSlice = useSelector((state: RootState) => state.userSlice);
+  const authSlice = useSelector((state: RootState) => state.authSlice);
+  const accountSlice = useSelector((state: RootState) => state.accountSlice);
 
   const onFinish = (values: any) => {
-    const firstName = values.firstName;
-    const lastName = values.lastName;
     const churchGroup = values.churchGroup[0];
 
-    dispatch(setUser({ firstName, lastName, churchGroup }));
+    dispatch(updateUserChurchGroup(churchGroup));
     router.back();
   };
 
   useEffect(() => {
+    let role;
+    if (authSlice.user?.roles.includes(UserRole.KID_GROUP_ADMIN))
+      role = 'Administrador Regikids';
+    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_SUPERVISOR))
+      role = 'Supervisor Regikids';
+    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_USER))
+      role = 'Maestro Regikids';
+
     form.setFieldsValue({
-      firstName: userSlice.firstName,
-      lastName: userSlice.lastName,
-      churchGroup: userSlice.churchGroup,
+      role,
+      firstName: capitalizeWords(authSlice.user?.firstName ?? ''),
+      lastName: capitalizeWords(authSlice.user?.lastName ?? ''),
+      churchGroup: accountSlice.churchGroup,
     });
-  }, [form, userSlice.churchGroup, userSlice.firstName, userSlice.lastName]);
+  }, [
+    accountSlice.churchGroup,
+    authSlice.user?.firstName,
+    authSlice.user?.lastName,
+    form,
+  ]);
 
   return (
-    <>
+    <Layout>
       <NavBarApp title="Configuración Personal" />
       <Form
         layout="vertical"
@@ -44,19 +60,22 @@ const PersonalInfo: NextPage = () => {
           </Button>
         }
       >
+        <Form.Item name="role" label="Rol">
+          <Input placeholder="" disabled />
+        </Form.Item>
         <Form.Item
           name="firstName"
           label="Nombre"
           rules={[{ required: true, message: 'Por favor coloca tu nombre' }]}
         >
-          <Input placeholder="Ingresa tu nombre" value={userSlice.firstName} />
+          <Input placeholder="Ingresa tu nombre" disabled />
         </Form.Item>
         <Form.Item
           name="lastName"
           label="Apellido"
           rules={[{ required: true, message: 'Por favor coloca tu apellido' }]}
         >
-          <Input placeholder="Ingresa tu apellido" />
+          <Input placeholder="Ingresa tu apellido" disabled />
         </Form.Item>
         <Form.Item
           name="churchGroup"
@@ -66,7 +85,7 @@ const PersonalInfo: NextPage = () => {
           <Selector options={churchGroup} />
         </Form.Item>
       </Form>
-    </>
+    </Layout>
   );
 };
 

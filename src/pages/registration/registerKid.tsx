@@ -19,34 +19,42 @@ import 'dayjs/locale/es';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { capitalizeWords } from '../../utils/text';
-import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../../models/Uset';
-import {
-  GetKid,
-  RegisterKid,
-  ReprintRegisterLabelKid,
-  RestoreCreateKid,
-} from '../../services/kidService';
-import {
-  KID_RELATION_CODE_MAPPER,
-  KidGuardianRelationCode,
-} from '../../models/KidGuardian';
+import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../../models/User';
 import { useRouter } from 'next/router';
 import { Action } from 'antd-mobile/es/components/popover';
-import { EditOutlined, HomeOutlined, TeamOutlined } from '@ant-design/icons';
+import {
+  EditOutlined,
+  HomeOutlined,
+  TeamOutlined,
+  EditFilled,
+} from '@ant-design/icons';
 import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
 import LoadingMask from '../../components/LoadingMask';
+import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
+import { IKidGuardian, KID_RELATION_CODE_MAPPER } from '@/models/KidChurch';
+import { RestoreCreateKid } from '@/services/kidService';
+import {
+  CreateKidRegistration,
+  RemoveKidRegistration,
+  ReprintKidRegistration,
+} from '@/redux/thunks/kid-church/kid-registration.thunk';
+import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
+import { Layout } from '@/components/Layout';
+import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
+import UpdateKidGuardianPhoneModal from '@/components/forms/UpdateKidGuardianPhone';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
+  const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] =
+    useState(false);
+  const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<
+    IKidGuardian | undefined
+  >();
   const [kidId, setKidId] = useState('');
-  const {
-    current: kid,
-    loading: kidLoading,
-    error: kidError,
-  } = useSelector((state: RootState) => state.kidSlice);
+
+  const kidSlice = useSelector((state: RootState) => state.kidSlice);
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -86,18 +94,25 @@ const RegisterKidView: NextPage = () => {
   );
 
   useEffect(() => {
-    if (kid?.id) {
-      setKidId(kid.id);
-      dispatch(GetKid({ id: kid.id }));
+    if (kidSlice.current?.id) {
+      setKidId(kidSlice.current.id);
+      dispatch(GetKid({ id: kidSlice.current.id }));
     }
-  }, [dispatch, kid?.id]);
+  }, [dispatch, kidSlice.current?.id]);
 
   const registerKid = async (values: any) => {
-    const guardianId = values.guardian;
+    const kidGuardianId = values.guardian;
     const observation = values.observations;
 
-    if (kid?.id) {
-      await dispatch(RegisterKid({ kidId: kid.id, guardianId, observation }));
+    if (kidSlice.current?.id && kidSlice.current.kidGroup?.id) {
+      await dispatch(
+        CreateKidRegistration({
+          kidId: kidSlice.current.id,
+          kidGroupId: kidSlice.current.kidGroup?.id,
+          kidGuardianId,
+          observation,
+        }),
+      );
       router.back();
     }
   };
@@ -110,45 +125,65 @@ const RegisterKidView: NextPage = () => {
   };
 
   const reprintRegisterLabelKid = async (copies: number) => {
-    if (kid?.id) {
-      await dispatch(ReprintRegisterLabelKid({ kidId: kid.id, copies }));
+    if (kidSlice.current?.currentKidRegistration?.id) {
+      await dispatch(
+        ReprintKidRegistration({
+          id: kidSlice.current.currentKidRegistration.id,
+          copies,
+        }),
+      );
       router.back();
     }
   };
 
-  const guardianOptions = kid?.relations
-    ? kid.relations.map((relation: any) => {
+  const removeKidRegistration = async () => {
+    if (kidSlice.current?.currentKidRegistration?.id) {
+      await dispatch(
+        RemoveKidRegistration({
+          id: kidSlice.current.currentKidRegistration.id,
+        }),
+      );
+      router.back();
+    }
+  };
+
+  const kidGuardianOptions = kidSlice.current?.relations
+    ? kidSlice.current.relations.map((relation: IKidGuardian) => {
         return {
           label: `${capitalizeWords(relation.firstName)} ${capitalizeWords(
             relation.lastName as '',
-          )} (${
-            KID_RELATION_CODE_MAPPER[
-              relation.relation as KidGuardianRelationCode
-            ]
-          }) - Teléfono: ${relation.phone}`,
-          value: relation.guardianId,
+          )} (${KID_RELATION_CODE_MAPPER[relation.relation]}) - Teléfono: ${
+            relation.phone
+          }`,
+          value: relation.id,
         };
       })
     : [];
 
-  const birthday = kid?.birthday
-    ? dayjs(kid.birthday.toString()).locale('es').format('MMMM D, YYYY')
+  const birthday = kidSlice.current?.birthday
+    ? dayjs(kidSlice.current.birthday.toString())
+        .locale('es')
+        .format('MMMM D, YYYY')
     : '';
-  const guardianRegistration = kid?.isRegistered
-    ? guardianOptions?.find((item) => item.value === kid.registry.guardian.id)
+
+  const kidGuardianRegistration = kidGuardianOptions?.length
+    ? kidGuardianOptions?.find(
+        (item) =>
+          item.value === kidSlice.current?.currentKidRegistration?.guardianId,
+      )
     : null;
 
   return (
-    <>
-      {kidLoading ? <LoadingMask /> : ''}
+    <Layout>
+      {kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp right={right} title="Registrar niño" />
       <AutoCenter>
         <Image
           alt="profileImage"
           src={
-            kid?.photoUrl
-              ? kid?.photoUrl
-              : kid?.gender === UserGenderCode.MALE
+            kidSlice.current?.photoUrl
+              ? kidSlice.current?.photoUrl
+              : kidSlice.current?.gender === UserGenderCode.MALE
               ? '/icons/boy.png'
               : '/icons/girl.png'
           }
@@ -165,7 +200,7 @@ const RegisterKidView: NextPage = () => {
             marginBottom: 5,
           }}
         >
-          {capitalizeWords(kid?.firstName ?? '')}
+          {capitalizeWords(kidSlice.current?.firstName ?? '')}
         </h1>
         <h2
           style={{
@@ -175,28 +210,30 @@ const RegisterKidView: NextPage = () => {
             marginBottom: 5,
           }}
         >
-          {capitalizeWords(kid?.lastName ?? '')}
+          {capitalizeWords(kidSlice.current?.lastName ?? '')}
         </h2>
         <p>
-          <b>Código de aplicación:</b> {kid?.faithForgeId}
+          <b>Código de aplicación:</b> {kidSlice.current?.faithForgeId}
         </p>
       </AutoCenter>
       <div style={{ fontSize: 16 }}>
-        {kid?.age && kid?.ageInMonths && (
-          <Grid
-            columns={2}
-            gap={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Edad</Grid.Item>
-            <Grid.Item>
-              {`${Math.floor(kid?.age ?? 0)} años y ${
-                kid.ageInMonths - Math.floor(kid.age) * 12
-              } meses`}
-            </Grid.Item>
-          </Grid>
-        )}
-        {kid?.birthday && (
+        {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
+          kidSlice.current?.ageInMonths && (
+            <Grid
+              columns={2}
+              gap={8}
+              style={{ paddingBottom: 10, border: '1px' }}
+            >
+              <Grid.Item style={{ fontWeight: 'bold' }}>Edad</Grid.Item>
+              <Grid.Item>
+                {`${Math.floor(kidSlice.current?.age ?? 0)} años y ${
+                  kidSlice.current.ageInMonths -
+                  Math.floor(kidSlice.current.age) * 12
+                } meses`}
+              </Grid.Item>
+            </Grid>
+          )}
+        {kidSlice.current?.birthday && (
           <Grid
             columns={2}
             gap={8}
@@ -208,7 +245,7 @@ const RegisterKidView: NextPage = () => {
             <Grid.Item>{`${birthday}`}</Grid.Item>
           </Grid>
         )}
-        {kid?.gender && (
+        {kidSlice.current?.gender && (
           <Grid
             columns={2}
             gap={8}
@@ -216,21 +253,23 @@ const RegisterKidView: NextPage = () => {
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>Género</Grid.Item>
             <Grid.Item>{`${
-              USER_GENDER_CODE_MAPPER[kid.gender as any as UserGenderCode]
+              USER_GENDER_CODE_MAPPER[
+                kidSlice.current.gender as any as UserGenderCode
+              ]
             }`}</Grid.Item>
           </Grid>
         )}
-        {kid?.healthSecurityEntity && (
+        {kidSlice.current?.healthSecurityEntity && (
           <Grid
             columns={2}
             gap={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>EPS</Grid.Item>
-            <Grid.Item>{kid.healthSecurityEntity}</Grid.Item>
+            <Grid.Item>{kidSlice.current.healthSecurityEntity}</Grid.Item>
           </Grid>
         )}
-        {kid?.isRegistered && (
+        {kidSlice.current?.currentKidRegistration && (
           <>
             <Grid
               columns={2}
@@ -240,7 +279,9 @@ const RegisterKidView: NextPage = () => {
               <Grid.Item style={{ fontWeight: 'bold' }}>
                 Fecha de registro
               </Grid.Item>
-              <Grid.Item>{`${dayjs(kid.registry?.registrationDate.toString())
+              <Grid.Item>{`${dayjs(
+                kidSlice.current.currentKidRegistration?.date.toString(),
+              )
                 .locale('es')
                 .format('MMMM D, YYYY h:mm A')}`}</Grid.Item>
             </Grid>
@@ -252,9 +293,9 @@ const RegisterKidView: NextPage = () => {
               <Grid.Item style={{ fontWeight: 'bold' }}>
                 Acudiente que registro
               </Grid.Item>
-              <Grid.Item>{`${guardianRegistration?.label}`}</Grid.Item>
+              <Grid.Item>{`${kidGuardianRegistration?.label}`}</Grid.Item>
             </Grid>
-            {kid.registry?.observation && (
+            {kidSlice.current.currentKidRegistration?.observation && (
               <Grid
                 columns={2}
                 gap={8}
@@ -263,12 +304,12 @@ const RegisterKidView: NextPage = () => {
                 <Grid.Item style={{ fontWeight: 'bold' }}>
                   Observaciones al registrar
                 </Grid.Item>
-                <Grid.Item>{`${kid.registry?.observation}`}</Grid.Item>
+                <Grid.Item>{`${kidSlice.current.currentKidRegistration?.observation}`}</Grid.Item>
               </Grid>
             )}
           </>
         )}
-        {kid?.medicalCondition && (
+        {kidSlice.current?.medicalCondition && (
           <Grid
             columns={2}
             gap={8}
@@ -277,10 +318,10 @@ const RegisterKidView: NextPage = () => {
             <Grid.Item style={{ fontWeight: 'bold' }}>
               Condición Medica
             </Grid.Item>
-            <Grid.Item>{`${kid.medicalCondition?.code} - ${kid.medicalCondition?.name}`}</Grid.Item>
+            <Grid.Item>{`${kidSlice.current.medicalCondition?.code} - ${kidSlice.current.medicalCondition?.name}`}</Grid.Item>
           </Grid>
         )}
-        {kid?.observations && (
+        {kidSlice.current?.observations && (
           <Grid
             columns={2}
             gap={8}
@@ -289,10 +330,10 @@ const RegisterKidView: NextPage = () => {
             <Grid.Item style={{ fontWeight: 'bold' }}>
               Observaciones generales
             </Grid.Item>
-            <Grid.Item>{kid.observations}</Grid.Item>
+            <Grid.Item>{kidSlice.current.observations}</Grid.Item>
           </Grid>
         )}
-        {kid?.group && (
+        {kidSlice.current?.kidGroup && (
           <Grid
             columns={2}
             gap={8}
@@ -300,12 +341,13 @@ const RegisterKidView: NextPage = () => {
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>Salón</Grid.Item>
             <Grid.Item>
-              {kid.group} {kid.staticGroup ? '(Estatico)' : ''}
+              {kidSlice.current.kidGroup.name}{' '}
+              {kidSlice.current.staticGroup ? '(Estatico)' : ''}
             </Grid.Item>
           </Grid>
         )}
       </div>
-      {!kid?.isRegistered ? (
+      {!kidSlice.current?.currentKidRegistration ? (
         <Form
           layout="vertical"
           onFinish={registerKid}
@@ -337,19 +379,40 @@ const RegisterKidView: NextPage = () => {
           >
             <Radio.Group defaultValue="1">
               <Space direction="vertical">
-                {guardianOptions.map((guardian) => {
+                {kidGuardianOptions.map((kidGuardian) => {
                   return (
-                    <Radio
+                    <div
+                      key={kidGuardian.value}
                       style={{
-                        '--icon-size': '18px',
-                        '--font-size': '14px',
-                        '--gap': '6px',
+                        display: 'flex',
+                        gap: '5px',
                       }}
-                      key={guardian.value}
-                      value={guardian.value}
                     >
-                      {guardian.label}
-                    </Radio>
+                      <Radio
+                        style={{
+                          '--icon-size': '18px',
+                          '--font-size': '14px',
+                          '--gap': '6px',
+                        }}
+                        key={kidGuardian.value}
+                        value={kidGuardian.value}
+                      >
+                        {kidGuardian.label}
+                      </Radio>{' '}
+                      <EditFilled
+                        style={{ fontSize: 18 }}
+                        onClick={() => {
+                          const kidGuardianSearch =
+                            kidSlice.current?.relations?.find(
+                              (item) => item.id === kidGuardian.value,
+                            );
+                          if (kidGuardianSearch) {
+                            setKidGuardianToUpdate(kidGuardianSearch);
+                            setOpenUpdateKidGuardianPhoneModal(true);
+                          }
+                        }}
+                      />
+                    </div>
                   );
                 })}
               </Space>
@@ -387,9 +450,62 @@ const RegisterKidView: NextPage = () => {
               Reimprimir registro parcial (1)
             </Button>
           </div>
+          {IsSupervisorRegisterKidChurch() && (
+            <div style={{ paddingTop: 10 }}>
+              <Button
+                block
+                color="danger"
+                size="large"
+                onClick={() => removeKidRegistration()}
+              >
+                Eliminar Registro
+              </Button>
+            </div>
+          )}
+
+          <h2
+            style={{
+              textAlign: 'center',
+              fontSize: 22,
+              marginTop: 25,
+              marginBottom: 5,
+            }}
+          >
+            Acudientes
+          </h2>
+          <table
+            width={'100%'}
+            style={{
+              marginTop: '5px',
+              marginBottom: '10px',
+              border: '1px solid black',
+            }}
+          >
+            <thead>
+              <tr>
+                <th>Nombre</th>
+                <th>Relación</th>
+                <th>Teléfono</th>
+              </tr>
+            </thead>
+            <tbody>
+              {kidSlice.current.relations?.map((kidGuardian) => {
+                return (
+                  <tr key={kidGuardian.id}>
+                    <td>
+                      {capitalizeWords(kidGuardian.firstName)}{' '}
+                      {capitalizeWords(kidGuardian.lastName as '')}
+                    </td>
+                    <td>{KID_RELATION_CODE_MAPPER[kidGuardian.relation]}</td>
+                    <td>{kidGuardian.phone}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
         </>
       )}
-      {kidError && (
+      {kidSlice.error && (
         <>
           <p>
             El niño no fue bien guardado, oprima este botón para restaurarlo.
@@ -411,11 +527,21 @@ const RegisterKidView: NextPage = () => {
           </Button>
         </>
       )}
+
       <CreateNewKidGuardian
         visible={openKidGuardianModal}
         onClose={(status: boolean) => setOpenKidGuardianModal(status)}
       />
-    </>
+      {kidGuardianToUpdate && (
+        <UpdateKidGuardianPhoneModal
+          visible={openUpdateKidGuardianPhoneModal}
+          onClose={(status: boolean) =>
+            setOpenUpdateKidGuardianPhoneModal(status)
+          }
+          kidGuardian={kidGuardianToUpdate}
+        />
+      )}
+    </Layout>
   );
 };
 

@@ -11,16 +11,25 @@ import NavBarApp from '../../components/NavBarApp';
 import { RefObject, useEffect, useState } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
-import { ApiVerbs, makeApiRequest } from '../../api';
+import {
+  ApiVerbs,
+  MS_CHURCH_PATH,
+  MS_KID_CHURCH_PATH,
+  makeApiRequest,
+} from '../../api';
 import ModalFaithForge from '../../components/ModalFaithForge';
 import { DateTime } from 'luxon';
 import { labelRendererCalendar } from '../../utils/date';
+import { Layout } from '@/components/Layout';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/redux/store';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
   const [churches, setChurches] = useState([]);
   const [churchMeetings, setChurchMeetings] = useState([]);
   const [report, setReport] = useState<any>(null);
+  const { token } = useSelector((state: RootState) => state.authSlice);
 
   const now = new Date();
   const [isLoading, setIsLoading] = useState(false);
@@ -29,8 +38,11 @@ const GenerateChurchMeetingReport: NextPage = () => {
 
   useEffect(() => {
     (async () => {
-      const churchesResponse = (await makeApiRequest(ApiVerbs.GET, '/churches'))
-        .data;
+      const churchesResponse = (
+        await makeApiRequest(ApiVerbs.GET, `/${MS_CHURCH_PATH}/churches`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+      ).data;
       setChurches(churchesResponse);
     })();
   }, []);
@@ -38,7 +50,13 @@ const GenerateChurchMeetingReport: NextPage = () => {
   const findChurchMeetings = async (meetingId: any) => {
     setIsLoading(true);
     const churchMeetingsResponse = (
-      await makeApiRequest(ApiVerbs.GET, `/churches/${meetingId}/meetings`)
+      await makeApiRequest(
+        ApiVerbs.GET,
+        `${MS_CHURCH_PATH}/church/${meetingId}/meetings`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
     ).data;
     setChurchMeetings(churchMeetingsResponse);
     setIsLoading(false);
@@ -53,9 +71,14 @@ const GenerateChurchMeetingReport: NextPage = () => {
     setDateCache(date);
 
     const reportResponse = (
-      await makeApiRequest(ApiVerbs.GET, `/report/kidsChurchMeeting`, {
-        params: { churchMeetingId, date },
-      })
+      await makeApiRequest(
+        ApiVerbs.GET,
+        `/${MS_KID_CHURCH_PATH}/report/kid-church-meeting`,
+        {
+          params: { churchMeetingId, date },
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
     ).data;
     await setReport(reportResponse);
     setIsLoading(false);
@@ -87,9 +110,14 @@ const GenerateChurchMeetingReport: NextPage = () => {
     const date = dateCache;
 
     const reportResponse = (
-      await makeApiRequest(ApiVerbs.GET, `/report/kidsChurchMeeting/download`, {
-        params: { churchMeetingId, date },
-      })
+      await makeApiRequest(
+        ApiVerbs.GET,
+        `/${MS_KID_CHURCH_PATH}/report/kid-church-meeting/download`,
+        {
+          params: { churchMeetingId, date },
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
     ).data;
 
     const bufferData = Buffer.from(reportResponse['data']);
@@ -114,7 +142,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
   };
 
   return (
-    <>
+    <Layout>
       <>
         {isLoading ? <LoadingMask /> : ''}
         <NavBarApp title="Generar reporte servicio" />
@@ -202,7 +230,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
                 <Grid.Item style={{ fontWeight: 'bold' }}>
                   Total niños registrados
                 </Grid.Item>
-                <Grid.Item>{report.total}</Grid.Item>
+                <Grid.Item>{report.totalKids}</Grid.Item>
               </Grid>
               <Grid
                 columns={2}
@@ -212,21 +240,21 @@ const GenerateChurchMeetingReport: NextPage = () => {
                 <Grid.Item style={{ fontWeight: 'bold' }}>
                   Total niños nuevos
                 </Grid.Item>
-                <Grid.Item>{report.new}</Grid.Item>
+                <Grid.Item>{report.totalNewKids}</Grid.Item>
               </Grid>
             </>
 
             <h2>Totales por salones</h2>
-            {report.report.byKidGroup.map((kidGroup: any) => {
+            {report.statistics.byKidGroup.map((kidGroup: any) => {
               return (
                 <Grid
                   columns={2}
                   gap={8}
                   style={{ paddingBottom: 10, border: '1px' }}
-                  key={kidGroup.room}
+                  key={kidGroup.name}
                 >
                   <Grid.Item style={{ fontWeight: 'bold' }}>
-                    {kidGroup.room}
+                    {kidGroup.name}
                   </Grid.Item>
                   <Grid.Item>{kidGroup.count}</Grid.Item>
                 </Grid>
@@ -240,7 +268,10 @@ const GenerateChurchMeetingReport: NextPage = () => {
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
-              <Grid.Item>{report.report.byGender.M ?? 0}</Grid.Item>
+              <Grid.Item>
+                {report.statistics?.byGender?.find((d: any) => d.name === 'M')
+                  ?.count ?? 0}
+              </Grid.Item>
             </Grid>
             <Grid
               columns={2}
@@ -248,7 +279,10 @@ const GenerateChurchMeetingReport: NextPage = () => {
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
-              <Grid.Item>{report.report.byGender.F ?? 0}</Grid.Item>
+              <Grid.Item>
+                {report.statistics?.byGender?.find((d: any) => d.name === 'F')
+                  ?.count ?? 0}
+              </Grid.Item>
             </Grid>
             <h2>Lista niños por salones</h2>
             {report.list.byKidGroup.map((kidGroup: any, index: any) => {
@@ -266,7 +300,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
           </>
         )}
       </div>
-    </>
+    </Layout>
   );
 };
 

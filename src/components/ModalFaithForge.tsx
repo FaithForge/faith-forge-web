@@ -27,11 +27,9 @@ const ModalFaithForge = ({ kidGroup }: any) => {
   }): React.ReactElement => (
     <List.Item
       key={index}
-      description={`Genero: ${
-        item.kidGender === 'M' ? 'Masculino' : 'Femenino'
-      }`}
+      description={`Genero: ${item.gender === 'M' ? 'Masculino' : 'Femenino'}`}
     >
-      {capitalizeWords(`${item.firstName} ${item.lastName}`)}
+      {capitalizeWords(`${item.fullName}`)}
     </List.Item>
   );
 
@@ -52,7 +50,7 @@ const ModalFaithForge = ({ kidGroup }: any) => {
         onClick={toggleModal}
         block
         color="primary"
-      >{`Ver listado ${kidGroup.room}`}</Button>
+      >{`Ver listado ${kidGroup.kidGroup}`}</Button>
     </>
   );
 };
