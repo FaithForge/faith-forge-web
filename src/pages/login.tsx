@@ -120,7 +120,7 @@ const Login: NextPage = () => {
               placeholder="Ingresa tu Contraseña"
               type="password"
               minLength={6}
-              maxLength={8}
+              maxLength={16}
             />
           </Form.Item>
         </Form>
