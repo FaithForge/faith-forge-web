@@ -57,7 +57,7 @@ const Setup: NextPage = () => {
           !churchPrinterSlice.current ||
           !accountSlice.churchGroup
         ) {
-          setVisible(true);
+          setVisible(false);
           dispatch(GetChurches(false));
         }
         return;
