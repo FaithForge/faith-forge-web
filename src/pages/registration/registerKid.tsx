@@ -295,6 +295,19 @@ const RegisterKidView: NextPage = () => {
               </Grid.Item>
               <Grid.Item>{`${kidGuardianRegistration?.label}`}</Grid.Item>
             </Grid>
+            {IsSupervisorRegisterKidChurch() &&
+              kidSlice.current.currentKidRegistration?.log && (
+                <Grid
+                  columns={2}
+                  gap={8}
+                  style={{ paddingBottom: 10, border: '1px' }}
+                >
+                  <Grid.Item style={{ fontWeight: 'bold' }}>
+                    Log de registro
+                  </Grid.Item>
+                  <Grid.Item>{`${kidSlice.current.currentKidRegistration?.log}`}</Grid.Item>
+                </Grid>
+              )}
             {kidSlice.current.currentKidRegistration?.observation && (
               <Grid
                 columns={2}

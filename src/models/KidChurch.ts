@@ -162,6 +162,7 @@ export interface IKidRegistration {
   groupId: string;
   guardianId: string;
   churchMeetingId: string;
+  log?: string;
   additionalInfo?: {
     groupName?: string;
     guardianFullName?: string;
