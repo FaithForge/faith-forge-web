@@ -18,6 +18,12 @@ const churchSlice = createSlice({
         state.data.find((church) => church.id === action.payload) ??
         state.current;
     },
+    resetChurchState: (state) => {
+      state.data = initialState.data;
+      state.current = initialState.current;
+      state.error = initialState.error;
+      state.loading = initialState.loading;
+    },
   },
   extraReducers(builder) {
     builder.addCase(GetChurches.pending, (state) => {
@@ -37,5 +43,5 @@ const churchSlice = createSlice({
   },
 });
 
-export const { updateCurrentChurch } = churchSlice.actions;
+export const { updateCurrentChurch, resetChurchState } = churchSlice.actions;
 export default churchSlice.reducer;

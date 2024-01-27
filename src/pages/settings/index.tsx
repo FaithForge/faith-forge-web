@@ -12,6 +12,9 @@ import { Layout } from '@/components/Layout';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { useDispatch } from 'react-redux';
 import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
+import { resetChurchState } from '@/redux/slices/church/church.slice';
+import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
+import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
 
 const Setting: NextPage = () => {
   const router = useRouter();
@@ -53,6 +56,9 @@ const Setting: NextPage = () => {
               confirmText: 'Cerrar sesión',
               cancelText: 'Cancelar',
               onConfirm: async () => {
+                dispatch(resetChurchState());
+                dispatch(resetChurchMeetingState());
+                dispatch(resetChurchPrinterState());
                 await dispatch(logout());
                 Toast.show({
                   icon: 'success',

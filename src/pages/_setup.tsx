@@ -51,16 +51,8 @@ const Setup: NextPage = () => {
       const currentTime = Date.now() / 1000;
 
       if (decodedToken.exp && decodedToken.exp >= currentTime) {
-        if (
-          !churchSlice.current ||
-          !churchMeetingSlice.current ||
-          !churchPrinterSlice.current ||
-          !accountSlice.churchGroup
-        ) {
-          setVisible(true);
-          dispatch(GetChurches(false));
-        }
-        return;
+        setVisible(true);
+        dispatch(GetChurches(false));
       }
 
       setVisible(false);
@@ -68,7 +60,7 @@ const Setup: NextPage = () => {
     }
 
     setVisible(false);
-  }, [accountSlice.churchGroup, authSlice.token,  dispatch]);
+  }, [accountSlice.churchGroup, authSlice.token, dispatch]);
 
   useEffect(() => {
     form.setFieldsValue({

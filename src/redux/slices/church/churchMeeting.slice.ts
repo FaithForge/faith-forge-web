@@ -18,6 +18,12 @@ const churchMeetingSlice = createSlice({
         (churchMeeting) => churchMeeting.id === action.payload,
       );
     },
+    resetChurchMeetingState: (state) => {
+      state.data = initialState.data;
+      state.current = initialState.current;
+      state.error = initialState.error;
+      state.loading = initialState.loading;
+    },
   },
   extraReducers(builder) {
     builder.addCase(GetChurchMeetings.pending, (state) => {
@@ -37,5 +43,5 @@ const churchMeetingSlice = createSlice({
   },
 });
 
-export const { updateCurrentChurchMeeting } = churchMeetingSlice.actions;
+export const { updateCurrentChurchMeeting, resetChurchMeetingState } = churchMeetingSlice.actions;
 export default churchMeetingSlice.reducer;

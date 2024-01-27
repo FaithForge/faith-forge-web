@@ -18,6 +18,12 @@ const churchPrinterSlice = createSlice({
         (churchPrinter) => churchPrinter.id === action.payload,
       );
     },
+    resetChurchPrinterState: (state) => {
+      state.data = initialState.data;
+      state.current = initialState.current;
+      state.error = initialState.error;
+      state.loading = initialState.loading;
+    },
   },
   extraReducers(builder) {
     builder.addCase(GetChurchPrinters.pending, (state) => {
@@ -37,5 +43,6 @@ const churchPrinterSlice = createSlice({
   },
 });
 
-export const { updateCurrentChurchPrinter } = churchPrinterSlice.actions;
+export const { updateCurrentChurchPrinter, resetChurchPrinterState } =
+  churchPrinterSlice.actions;
 export default churchPrinterSlice.reducer;
