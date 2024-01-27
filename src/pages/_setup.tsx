@@ -53,6 +53,7 @@ const Setup: NextPage = () => {
       if (decodedToken.exp && decodedToken.exp >= currentTime) {
         setVisible(true);
         dispatch(GetChurches(false));
+        return;
       }
 
       setVisible(false);
