@@ -4,9 +4,6 @@ import { RootState } from '@/redux/store';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { parseJwt } from '@/utils/jwt';
 import { Toast } from 'antd-mobile';
-import { resetChurchState } from '@/redux/slices/church/church.slice';
-import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
-import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
 
 type Props = {
   children?: React.ReactNode;
@@ -27,9 +24,6 @@ export const AuthWrapper = ({ children }: Props) => {
 
   if (!authSlice.token || authSlice.token === '') {
     push('/login');
-    dispatch(resetChurchState());
-    dispatch(resetChurchMeetingState());
-    dispatch(resetChurchPrinterState());
     dispatch(logout());
     toastLogout();
     return;
@@ -41,9 +35,6 @@ export const AuthWrapper = ({ children }: Props) => {
   if (decodedToken.exp && decodedToken.exp < currentTime) {
     push('/login');
     toastLogout();
-    dispatch(resetChurchState());
-    dispatch(resetChurchMeetingState());
-    dispatch(resetChurchPrinterState());
     dispatch(logout());
   }
 

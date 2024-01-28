@@ -16,9 +16,6 @@ import { UserLogin } from '@/redux/thunks/user/auth.thunk';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import LoadingMask from '@/components/LoadingMask';
-import { resetChurchState } from '@/redux/slices/church/church.slice';
-import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
-import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
 
 const CenteredContainer = styled.div`
   display: flex;
@@ -43,9 +40,6 @@ const Login: NextPage = () => {
 
     await dispatch(UserLogin({ username, password }));
 
-    dispatch(resetChurchState());
-    dispatch(resetChurchMeetingState());
-    dispatch(resetChurchPrinterState());
     setInitialCheckDone(true);
     setIsLoading(false);
   };
