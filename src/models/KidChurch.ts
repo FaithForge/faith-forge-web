@@ -129,7 +129,7 @@ export interface IKid {
   firstName: string;
   lastName: string;
   gender: UserGenderCode;
-  birthday: Date;
+  birthday: string;
   state: UserState;
   photoUrl?: string;
   healthSecurityEntity?: string;

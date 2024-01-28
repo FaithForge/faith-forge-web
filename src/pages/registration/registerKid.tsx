@@ -27,6 +27,7 @@ import {
   HomeOutlined,
   TeamOutlined,
   EditFilled,
+  GiftOutlined,
 } from '@ant-design/icons';
 import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
 import LoadingMask from '../../components/LoadingMask';
@@ -42,6 +43,7 @@ import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
 import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
 import UpdateKidGuardianPhoneModal from '@/components/forms/UpdateKidGuardianPhone';
+import { FFDay } from '@/utils/ffDay';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -161,7 +163,8 @@ const RegisterKidView: NextPage = () => {
     : [];
 
   const birthday = kidSlice.current?.birthday
-    ? dayjs(kidSlice.current.birthday.toString())
+    ? FFDay(new Date(kidSlice.current.birthday))
+        .tz('UTC')
         .locale('es')
         .format('MMMM D, YYYY')
     : '';
@@ -216,6 +219,15 @@ const RegisterKidView: NextPage = () => {
           <b>Código de aplicación:</b> {kidSlice.current?.faithForgeId}
         </p>
       </AutoCenter>
+      {birthday.slice(0, -6) ===
+        dayjs(new Date()).locale('es').format('MMMM D') && (
+        <NoticeBar
+          content="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
+          color="info"
+          icon={<GiftOutlined />}
+          style={{ marginBottom: '10px' }}
+        />
+      )}
       <div style={{ fontSize: 16 }}>
         {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
           kidSlice.current?.ageInMonths && (
