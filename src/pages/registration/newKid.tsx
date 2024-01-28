@@ -147,6 +147,11 @@ const NewKid: NextPage = () => {
 
   useEffect(() => {
     if (step === 2) {
+      Toast.show({
+        content: 'Se ha creado al niño con éxito.',
+        position: 'bottom',
+        duration: 3000,
+      });
       router.back();
     }
   }, [router, step]);

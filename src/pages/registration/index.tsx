@@ -68,7 +68,7 @@ const Registration: NextPage = () => {
           warning = true;
           setWarningAlert({
             ...REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
-            blockRegister: false,
+            blockRegister: true,
           });
         }
         // If the current time is greater than the meeting end time

@@ -1,6 +1,6 @@
 // Registration Confirm
 export const REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING = {
-  message: `Estás intentando registrar a un niño en un servicio posterior al actual. Por favor comprueba si realmente deseas registrar al niño en este servicio.`,
+  message: `Estás intentando registrar a un niño en un servicio posterior al actual. Por favor elige un servicio adecuado.`,
   icon: 'alert',
 };
 
