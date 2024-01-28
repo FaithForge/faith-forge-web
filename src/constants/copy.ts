@@ -1,7 +1,7 @@
 // Registration Confirm
 export const REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING = {
   message: `Estás intentando registrar a un niño en un servicio posterior al actual. Por favor elige un servicio adecuado.`,
-  icon: 'alert',
+  icon: 'cancel',
 };
 
 export const REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING = {
