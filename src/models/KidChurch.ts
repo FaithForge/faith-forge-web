@@ -235,7 +235,7 @@ export interface IUpdateKid {
   firstName?: string;
   lastName?: string;
   gender?: UserGenderCode;
-  birthday?: Date;
+  birthday?: string;
   healthSecurityEntity?: string;
   staticGroup?: boolean;
   staticKidGroupId?: string;
