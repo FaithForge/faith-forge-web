@@ -16,6 +16,7 @@ import {
 } from '@/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { kidRelationSelect } from '@/models/KidChurch';
+import { checkLastNameField, checkPhoneField } from '@/utils/validator';
 
 type Props = {
   visible: boolean;
@@ -198,6 +199,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
             <Input
               placeholder="Escribir numero de documento..."
               onBlur={findGuardian}
+              autoComplete="false"
             />
           </Form.Item>
           <Form.Item
@@ -206,15 +208,25 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
             disabled={!!guardian}
             rules={[{ required: true, message: 'Nombre es requerido' }]}
           >
-            <Input placeholder="Escribir nombre..." />
+            <Input placeholder="Escribir nombre..." autoComplete="false" />
           </Form.Item>
           <Form.Item
             name="guardianLastName"
             label="Apellido"
             disabled={!!guardian}
-            rules={[{ required: true, message: 'Apellido es requerido' }]}
+            rules={[
+              {
+                required: true,
+                message: 'Apellido es requerido',
+              },
+              {
+                required: true,
+                message: 'Se debe colocar ambos apellidos',
+                validator: checkLastNameField,
+              },
+            ]}
           >
-            <Input placeholder="Escribir apellido..." />
+            <Input placeholder="Escribir apellido..." autoComplete="false" />
           </Form.Item>
           <Form.Item
             name="guardianPhone"
@@ -225,9 +237,18 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
                 required: true,
                 message: 'Por favor digite el numero telefono del acudiente',
               },
+              {
+                required: true,
+                message: 'El telefono debe tener minimo 10 digitos',
+                validator: checkPhoneField,
+              },
             ]}
           >
-            <Input placeholder="Escribir telefono..." type="tel" />
+            <Input
+              placeholder="Escribir telefono..."
+              type="tel"
+              autoComplete="false"
+            />
           </Form.Item>
           <Form.Item
             name="guardianGender"

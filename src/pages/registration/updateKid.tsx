@@ -39,6 +39,7 @@ import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
 import { UpdateKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
 import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
+import { checkLastNameField } from '@/utils/validator';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -231,14 +232,24 @@ const UpdateKidPage: NextPage = () => {
           label="Nombre"
           rules={[{ required: true, message: 'Nombre es requerido' }]}
         >
-          <Input placeholder="Escribir nombre..." />
+          <Input placeholder="Escribir nombre..." autoComplete="false" />
         </Form.Item>
         <Form.Item
           name="lastName"
           label="Apellido"
-          rules={[{ required: true, message: 'Apellido es requerido' }]}
+          rules={[
+            {
+              required: true,
+              message: 'Apellido es requerido',
+            },
+            {
+              required: true,
+              message: 'Se debe colocar ambos apellidos',
+              validator: checkLastNameField,
+            },
+          ]}
         >
-          <Input placeholder="Escribir apellido..." />
+          <Input placeholder="Escribir apellido..." autoComplete="false" />
         </Form.Item>
         <Form.Item
           name="birthday"

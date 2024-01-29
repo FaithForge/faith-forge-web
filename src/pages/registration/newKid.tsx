@@ -53,6 +53,7 @@ import { CreateKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
 import { Step } from 'antd-mobile/es/components/steps/step';
 import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
+import { checkLastNameField, checkPhoneField } from '@/utils/validator';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -353,14 +354,24 @@ const NewKid: NextPage = () => {
               label="Nombre"
               rules={[{ required: true, message: 'Nombre es requerido' }]}
             >
-              <Input placeholder="Escribir nombre..." />
+              <Input placeholder="Escribir nombre..." autoComplete="false" />
             </Form.Item>
             <Form.Item
               name="lastName"
               label="Apellido"
-              rules={[{ required: true, message: 'Apellido es requerido' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Apellido es requerido',
+                },
+                {
+                  required: true,
+                  message: 'Se debe colocar ambos apellidos',
+                  validator: checkLastNameField,
+                },
+              ]}
             >
-              <Input placeholder="Escribir apellido..." />
+              <Input placeholder="Escribir apellido..." autoComplete="false" />
             </Form.Item>
             <Form.Item
               name="birthday"
@@ -589,6 +600,7 @@ const NewKid: NextPage = () => {
               <Input
                 placeholder="Escribir número de documento..."
                 onBlur={findGuardian}
+                autoComplete="false"
               />
             </Form.Item>
             <Form.Item
@@ -597,15 +609,25 @@ const NewKid: NextPage = () => {
               disabled={!!kidGuardianSlice.current}
               rules={[{ required: true, message: 'Nombre es requerido' }]}
             >
-              <Input placeholder="Escribir nombre..." />
+              <Input placeholder="Escribir nombre..." autoComplete="false" />
             </Form.Item>
             <Form.Item
               name="guardianLastName"
               label="Apellido"
               disabled={!!kidGuardianSlice.current}
-              rules={[{ required: true, message: 'Apellido es requerido' }]}
+              rules={[
+                {
+                  required: true,
+                  message: 'Apellido es requerido',
+                },
+                {
+                  required: true,
+                  message: 'Se debe colocar ambos apellidos',
+                  validator: checkLastNameField,
+                },
+              ]}
             >
-              <Input placeholder="Escribir apellido..." />
+              <Input placeholder="Escribir apellido..." autoComplete="false" />
             </Form.Item>
             <Form.Item
               name="guardianPhone"
@@ -616,9 +638,18 @@ const NewKid: NextPage = () => {
                   required: true,
                   message: 'Por favor digite el número teléfono del acudiente',
                 },
+                {
+                  required: true,
+                  message: 'El telefono debe tener minimo 10 digitos',
+                  validator: checkPhoneField,
+                },
               ]}
             >
-              <Input placeholder="Escribir telefono..." type="tel" />
+              <Input
+                placeholder="Escribir telefono..."
+                type="tel"
+                autoComplete="false"
+              />
             </Form.Item>
             <Form.Item
               name="guardianGender"

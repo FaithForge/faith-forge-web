@@ -6,6 +6,7 @@ import { useEffect } from 'react';
 import { UpdateKidGuardianPhone } from '@/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { capitalizeWords } from '@/utils/text';
+import { checkPhoneField } from '@/utils/validator';
 
 type Props = {
   visible: boolean;
@@ -116,12 +117,18 @@ const UpdateKidGuardianPhoneModal = ({
                 required: true,
                 message: 'Por favor digite el numero telefono del acudiente',
               },
+              {
+                required: true,
+                message: 'El telefono debe tener minimo 10 digitos',
+                validator: checkPhoneField,
+              },
             ]}
           >
             <Input
               placeholder="Escribir telefono..."
               type="tel"
               defaultValue={kidGuardian.phone}
+              autoComplete="false"
             />
           </Form.Item>
         </Form>

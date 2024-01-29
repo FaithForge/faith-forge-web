@@ -10,6 +10,7 @@ import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 import { Layout } from '@/components/Layout';
 import { capitalizeWords } from '@/utils/text';
 import { UserRole } from '@/utils/auth';
+import { checkLastNameField } from '@/utils/validator';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -73,7 +74,17 @@ const PersonalInfo: NextPage = () => {
         <Form.Item
           name="lastName"
           label="Apellido"
-          rules={[{ required: true, message: 'Por favor coloca tu apellido' }]}
+          rules={[
+            {
+              required: true,
+              message: 'Apellido es requerido',
+            },
+            {
+              required: true,
+              message: 'Se debe colocar ambos apellidos',
+              validator: checkLastNameField,
+            },
+          ]}
         >
           <Input placeholder="Ingresa tu apellido" disabled />
         </Form.Item>
