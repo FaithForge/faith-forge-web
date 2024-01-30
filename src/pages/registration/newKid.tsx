@@ -54,6 +54,7 @@ import { Layout } from '@/components/Layout';
 import { Step } from 'antd-mobile/es/components/steps/step';
 import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
 import { checkLastNameField, checkPhoneField } from '@/utils/validator';
+import KidRegistrationView from '@/components/KidRegistrationView';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -147,12 +148,7 @@ const NewKid: NextPage = () => {
   }, [kidGuardianSlice]);
 
   useEffect(() => {
-    if (step === 2) {
-      Toast.show({
-        content: 'Se ha creado al niño con éxito.',
-        position: 'bottom',
-        duration: 3000,
-      });
+    if (step === 3) {
       router.back();
     }
   }, [router, step]);
@@ -277,6 +273,12 @@ const NewKid: NextPage = () => {
       );
 
       if (!response.payload.error) {
+        Toast.show({
+          content:
+            'Se ha creado al niño y acudiente con éxito. Proceda a registrarlo',
+          position: 'bottom',
+          duration: 3000,
+        });
         setStep(2);
       }
     }
@@ -303,13 +305,27 @@ const NewKid: NextPage = () => {
     setKidRelationSelectFilter(filter);
   }, [selectedGender]);
 
+  let titleNavBar = '';
+  switch (step) {
+    case 0:
+      titleNavBar = 'Crear Niño';
+      break;
+    case 1:
+      titleNavBar = 'Crear Acudiente';
+      break;
+    case 2:
+      titleNavBar = 'Registrar niño';
+      break;
+  }
+
   return (
     <Layout>
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
-      <NavBarApp title={`Crear ${step === 0 ? 'niño' : 'acudiente'}`} />
+      <NavBarApp title={titleNavBar} />
       <Steps current={step}>
         <Step title="Crear niño" />
         <Step title="Crear Acudiente" />
+        <Step title="Registrar Niño" />
       </Steps>
       {step === 0 && (
         <>
@@ -698,6 +714,8 @@ const NewKid: NextPage = () => {
           </Form>
         </>
       )}
+
+      {step === 2 && <KidRegistrationView />}
     </Layout>
   );
 };
