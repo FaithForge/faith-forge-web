@@ -48,6 +48,14 @@ const Setting: NextPage = () => {
             Generar Reporte de Servicio
           </List.Item>
         )}
+        {IsSupervisorRegisterKidChurch() && (
+          <List.Item
+            prefix={<FileSearchOutlined />}
+            onClick={() => router.push('/settings/generateChurchDayReport')}
+          >
+            Generar Reporte del dia
+          </List.Item>
+        )}
         <List.Item
           prefix={<LogoutOutlined />}
           onClick={() =>
