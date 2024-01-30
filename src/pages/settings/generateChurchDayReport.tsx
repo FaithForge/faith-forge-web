@@ -27,7 +27,7 @@ import { RootState } from '@/redux/store';
 const GenerateChurchDayReport: NextPage = () => {
   const [form] = Form.useForm();
   const [churches, setChurches] = useState([]);
-  const [reports, setReports] = useState<any>(null);
+  const [reports, setReports] = useState<any>([]);
   const { token } = useSelector((state: RootState) => state.authSlice);
 
   const now = new Date();
