@@ -11,7 +11,10 @@ import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { useDispatch } from 'react-redux';
-import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
+import {
+  IsAdminRegisterKidChurch,
+  IsSupervisorRegisterKidChurch,
+} from '@/utils/auth';
 import { resetChurchState } from '@/redux/slices/church/church.slice';
 import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
 import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
@@ -48,7 +51,7 @@ const Setting: NextPage = () => {
             Generar Reporte de Servicio
           </List.Item>
         )}
-        {IsSupervisorRegisterKidChurch() && (
+        {IsAdminRegisterKidChurch() && (
           <List.Item
             prefix={<FileSearchOutlined />}
             onClick={() => router.push('/settings/generateChurchDayReport')}
