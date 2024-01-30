@@ -13,6 +13,7 @@ import {
   Radio,
   Popover,
   NoticeBar,
+  Toast,
 } from 'antd-mobile';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -115,6 +116,11 @@ const RegisterKidView: NextPage = () => {
           observation,
         }),
       );
+      Toast.show({
+        content: 'Se ha registrado al niño con exito',
+        position: 'bottom',
+        duration: 3000,
+      });
       router.back();
     }
   };
