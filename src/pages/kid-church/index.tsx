@@ -28,8 +28,8 @@ import {
   GetKidGroups,
 } from '@/redux/thunks/kid-church/kid-group.thunk';
 import ShowKidRegisteredModal from '@/components/ShowKidRegisteredModal';
-import { withRoles } from '../permissions';
 import { KidChurchSupervisorRoles } from '@/utils/auth';
+import { withRoles } from '@/components/permissions';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
