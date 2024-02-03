@@ -32,7 +32,7 @@ import { IKid } from '@/models/KidChurch';
 import { Layout } from '@/components/Layout';
 import dayjs from 'dayjs';
 import { KidChurchRegisterRoles } from '@/utils/auth';
-import { withRoles } from '@/components/permissions';
+import { withRoles } from '@/components/Permissions';
 
 const Registration: NextPage = () => {
   const {
