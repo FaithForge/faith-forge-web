@@ -34,6 +34,10 @@ const PersonalInfo: NextPage = () => {
       role = 'Supervisor Regikids';
     else if (authSlice.user?.roles.includes(UserRole.KID_REGISTER_USER))
       role = 'Maestro Regikids';
+    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_ADMIN))
+      role = 'Coordinador Iglekids';
+    else if (authSlice.user?.roles.includes(UserRole.KID_GROUP_SUPERVISOR))
+      role = 'Supervisor Iglekids';
 
     form.setFieldsValue({
       role,
