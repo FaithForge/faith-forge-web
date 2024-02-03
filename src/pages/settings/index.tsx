@@ -13,7 +13,8 @@ import { logout } from '@/redux/slices/user/auth.slice';
 import { useDispatch } from 'react-redux';
 import {
   IsAdminRegisterKidChurch,
-  IsSupervisorRegisterKidChurch,
+  IsRegisterKidChurch,
+  IsSupervisorRegisterOrKidChurchSupervisor,
 } from '@/utils/auth';
 import { resetChurchState } from '@/redux/slices/church/church.slice';
 import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
@@ -37,13 +38,15 @@ const Setting: NextPage = () => {
         >
           Configuración de Iglesia
         </List.Item>
-        <List.Item
-          prefix={<PrinterOutlined />}
-          onClick={() => router.push('/settings/printerInfo')}
-        >
-          Configuración de Impresora
-        </List.Item>
-        {IsSupervisorRegisterKidChurch() && (
+        {IsRegisterKidChurch() && (
+          <List.Item
+            prefix={<PrinterOutlined />}
+            onClick={() => router.push('/settings/printerInfo')}
+          >
+            Configuración de Impresora
+          </List.Item>
+        )}
+        {IsSupervisorRegisterOrKidChurchSupervisor() && (
           <List.Item
             prefix={<FileSearchOutlined />}
             onClick={() => router.push('/settings/generateChurchMeetingReport')}

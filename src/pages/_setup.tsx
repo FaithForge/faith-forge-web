@@ -15,6 +15,7 @@ import { updateCurrentChurchPrinter } from '@/redux/slices/church/churchPrinter.
 import { parseJwt } from '@/utils/jwt';
 import { churchGroup } from '@/constants/church';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
+import { IsRegisterKidChurch } from '@/utils/auth';
 
 const Setup: NextPage = () => {
   const [form] = Form.useForm();
@@ -29,18 +30,22 @@ const Setup: NextPage = () => {
   );
   const router = useRouter();
   const [visible, setVisible] = useState(false);
+  const isRegisterKidChurch = IsRegisterKidChurch();
   const dispatch = useDispatch<AppDispatch>();
 
   const onFinish = async (values: any) => {
     const church = values.church[0];
     const churchMeeting = values.churchMeeting[0];
-    const churchPrinter = values.churchPrinter[0];
     const churchGroup = values.churchGroup[0];
 
     await dispatch(updateCurrentChurch(church));
     await dispatch(updateCurrentChurchMeeting(churchMeeting));
-    await dispatch(updateCurrentChurchPrinter(churchPrinter));
     await dispatch(updateUserChurchGroup(churchGroup));
+
+    if (isRegisterKidChurch) {
+      const churchPrinter = values.churchPrinter[0];
+      await dispatch(updateCurrentChurchPrinter(churchPrinter));
+    }
 
     router.reload();
   };
@@ -54,7 +59,7 @@ const Setup: NextPage = () => {
         if (
           !churchSlice.current ||
           !churchMeetingSlice.current ||
-          !churchPrinterSlice.current ||
+          (!churchPrinterSlice.current && isRegisterKidChurch) ||
           !accountSlice.churchGroup
         ) {
           setVisible(true);
@@ -152,18 +157,20 @@ const Setup: NextPage = () => {
           >
             <Selector options={churchMeetingOptions} />
           </Form.Item>
-          <Form.Item
-            name="churchPrinter"
-            label="Impresora seleccionada"
-            rules={[
-              {
-                required: true,
-                message: 'Por favor selecciona una impresora',
-              },
-            ]}
-          >
-            <Selector options={churchPrinterOptions} />
-          </Form.Item>
+          {isRegisterKidChurch && (
+            <Form.Item
+              name="churchPrinter"
+              label="Impresora seleccionada"
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor selecciona una impresora',
+                },
+              ]}
+            >
+              <Selector options={churchPrinterOptions} />
+            </Form.Item>
+          )}
           <Form.Item
             name="churchGroup"
             label="Grupo al que perteneces"

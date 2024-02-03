@@ -16,6 +16,7 @@ import { UserLogin } from '@/redux/thunks/user/auth.thunk';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import LoadingMask from '@/components/LoadingMask';
+import { IsRegisterKidChurch, IsSupervisorKidChurch } from '@/utils/auth';
 
 const CenteredContainer = styled.div`
   display: flex;
@@ -32,6 +33,8 @@ const Login: NextPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+  const isRegisterKidChurch = IsRegisterKidChurch();
+  const isSupervisorKidChurch = IsSupervisorKidChurch();
 
   const onLogin = async (values: any) => {
     setIsLoading(true);
@@ -77,7 +80,16 @@ const Login: NextPage = () => {
       }
 
       setInitialCheckDone(false);
-      router.push('/registration');
+
+      if (isRegisterKidChurch) {
+        router.push('/registration');
+        return;
+      }
+      if (isSupervisorKidChurch) {
+        router.push('/kid-church');
+        return;
+      }
+      router.push('/settings');
     }
   }, [authSlice.token, authSlice.error, initialCheckDone]);
 

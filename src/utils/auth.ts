@@ -28,10 +28,24 @@ export const KidChurchAdminRoles = [
   UserRole.KID_CHURCH_ADMIN,
   UserRole.KID_REGISTER_ADMIN,
 ];
-export const KidChurchRegisterSupervisorRoles = [
+export const KidGroupAdminRoles = [
   ...KidChurchAdminRoles,
+  UserRole.KID_GROUP_ADMIN,
+];
+export const KidChurchRegisterSupervisorRoles = [
+  ...KidGroupAdminRoles,
   UserRole.KID_REGISTER_SUPERVISOR,
 ];
+export const KidChurchSupervisorRoles = [
+  ...KidGroupAdminRoles,
+  UserRole.KID_GROUP_SUPERVISOR,
+];
+export const KidChurchAndRegisterSupervisorRoles = [
+  ...KidGroupAdminRoles,
+  UserRole.KID_GROUP_SUPERVISOR,
+  UserRole.KID_REGISTER_SUPERVISOR,
+];
+
 export const KidChurchRegisterRoles = [
   ...AdminRoles,
   UserRole.KID_REGISTER_ADMIN,
@@ -39,7 +53,7 @@ export const KidChurchRegisterRoles = [
   UserRole.KID_REGISTER_USER,
 ];
 export const KidChurchGroupRoles = [
-  ...AdminRoles,
+  ...KidGroupAdminRoles,
   UserRole.KID_GROUP_ADMIN,
   UserRole.KID_GROUP_SUPERVISOR,
   UserRole.KID_GROUP_USER,
@@ -62,4 +76,26 @@ export const IsSupervisorRegisterKidChurch = () => {
   const roles = GetUserRoles();
   if (!roles) return false;
   return roles.some((role) => KidChurchRegisterSupervisorRoles.includes(role));
+};
+
+export const IsSupervisorRegisterOrKidChurchSupervisor = () => {
+  const roles = GetUserRoles();
+  if (!roles) return false;
+  return roles.some((role) => KidChurchAndRegisterSupervisorRoles.includes(role));
+};
+
+export const IsSupervisorKidChurch = () => {
+  const roles = GetUserRoles();
+  if (!roles) return false;
+  return roles.some((role) => KidChurchSupervisorRoles.includes(role));
+};
+
+export const IsRegisterKidChurch = () => {
+  const roles = GetUserRoles();
+  if (!roles) return false;
+  return roles.some((role) => KidChurchRegisterRoles.includes(role));
+};
+
+export const IsAllRole = () => {
+  return true;
 };

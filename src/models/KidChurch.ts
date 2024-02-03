@@ -249,4 +249,5 @@ export interface IKids extends ReduxDefaultStateWithPagination<IKid> {}
 export interface IKidMedicalConditions
   extends ReduxDefaultState<IKidMedicalCondition> {}
 export interface IKidGroups extends ReduxDefaultState<IKidGroup> {}
+export interface IKidGroupRegistered extends ReduxDefaultState<IKid> {}
 export interface IKidGuardians extends ReduxDefaultState<IKidGuardian> {}

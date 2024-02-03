@@ -1,8 +1,17 @@
 import { useEffect, useState } from 'react';
-import { SettingOutlined, AuditOutlined } from '@ant-design/icons';
+import {
+  SettingOutlined,
+  AuditOutlined,
+  SmileOutlined,
+} from '@ant-design/icons';
 import { TabBar } from 'antd-mobile';
 import { usePathname, useRouter } from 'next/navigation';
 import { AuthWrapper } from './AuthWrapper';
+import {
+  IsAllRole,
+  IsRegisterKidChurch,
+  IsSupervisorKidChurch,
+} from '@/utils/auth';
 
 type Props = {
   children?: React.ReactNode;
@@ -13,11 +22,19 @@ const tabs = [
     key: '/registration',
     title: 'Registro',
     icon: <AuditOutlined />,
+    show: () => IsRegisterKidChurch(),
+  },
+  {
+    key: '/kid-church',
+    title: 'Iglekids',
+    icon: <SmileOutlined />,
+    show: () => IsSupervisorKidChurch(),
   },
   {
     key: '/settings',
     title: 'Configuración',
     icon: <SettingOutlined />,
+    show: () => IsAllRole(),
   },
 ];
 
@@ -57,9 +74,11 @@ export const Layout = ({ children }: Props) => {
           }}
           className="TabBarApp"
         >
-          {tabs.map((item) => (
-            <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
-          ))}
+          {tabs.map((item) =>
+            item.show() ? (
+              <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
+            ) : null,
+          )}
         </TabBar>
       </div>
     </AuthWrapper>

@@ -31,6 +31,8 @@ import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
 import { IKid } from '@/models/KidChurch';
 import { Layout } from '@/components/Layout';
 import dayjs from 'dayjs';
+import { KidChurchRegisterRoles } from '@/utils/auth';
+import { withRoles } from '../permissions';
 
 const Registration: NextPage = () => {
   const {
@@ -213,4 +215,4 @@ const Registration: NextPage = () => {
   );
 };
 
-export default Registration;
+export default withRoles(Registration, KidChurchRegisterRoles);
