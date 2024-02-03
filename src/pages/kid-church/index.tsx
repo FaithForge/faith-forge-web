@@ -128,7 +128,7 @@ const KidChurch: NextPage = () => {
     );
 
     setKidList(kidsFiltered);
-  }, [findText, selectedKidGroup]);
+  }, [findText, selectedKidGroup, kids]);
 
   return (
     <Layout>
