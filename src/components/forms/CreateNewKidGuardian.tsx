@@ -220,7 +220,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
                 message: 'Apellido es requerido',
               },
               {
-                required: true,
+                required: false,
                 message: 'Se debe colocar ambos apellidos',
                 validator: checkLastNameField,
               },
