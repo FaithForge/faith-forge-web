@@ -6,8 +6,13 @@ import {
   ErrorBlock,
   NoticeBar,
   Selector,
+  FloatingBubble,
 } from 'antd-mobile';
-import { HomeOutlined, SearchOutlined } from '@ant-design/icons';
+import {
+  HomeOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+} from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -239,6 +244,19 @@ const KidChurch: NextPage = () => {
           kid={kidToUpdate}
         />
       )}
+      <FloatingBubble
+        style={{
+          '--initial-position-bottom': '70px',
+          '--initial-position-right': '20px',
+          '--edge-distance': '24px',
+        }}
+        onClick={() => {
+          const currentDate = DateTime.local().toJSDate();
+          dispatch(GetKidGroupRegistered({ date: currentDate }));
+        }}
+      >
+        <ReloadOutlined style={{ fontSize: '28px' }} />
+      </FloatingBubble>
     </Layout>
   );
 };
