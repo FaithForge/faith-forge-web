@@ -42,6 +42,10 @@ const KidRegistrationView = () => {
   >();
 
   const kidSlice = useSelector((state: RootState) => state.kidSlice);
+  const kidRegistrationSlice = useSelector(
+    (state: RootState) => state.kidRegistrationSlice,
+  );
+
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -132,7 +136,7 @@ const KidRegistrationView = () => {
 
   return (
     <>
-      {kidSlice.loading ? <LoadingMask /> : ''}
+      {kidSlice.loading || kidRegistrationSlice.loading ? <LoadingMask /> : ''}
       <AutoCenter>
         <Image
           alt="profileImage"
