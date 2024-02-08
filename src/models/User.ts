@@ -1,3 +1,5 @@
+import { ReduxDefaultStateWithoutData } from './Redux';
+
 export enum UserGender {
   FEMALE = 'Femenino',
   MALE = 'Masculino',
@@ -88,6 +90,21 @@ export interface IUser {
   roles: string[];
 }
 
+export interface IUpdateUser {
+  nationalIdType?: UserIdType;
+  nationalId?: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  email?: string;
+  gender: UserGender;
+  birthday?: Date;
+  state?: UserState;
+  photoUrl?: string;
+  username?: string;
+  healthSecurityEntity?: string;
+}
+
 export const healthSecurityEntitySelect = [
   { id: 'COOSALUD EPS-S', name: 'COOSALUD EPS-S' },
   { id: 'NUEVA EPS', name: 'NUEVA EPS' },
@@ -164,4 +181,8 @@ export enum UserState {
   ACTIVE = 'ACTIVE',
   DISABLE = 'DISABLE',
   VERIFICATION_PENDING = 'VERIFICATION_PENDING',
+}
+
+export interface IEditUser extends ReduxDefaultStateWithoutData {
+  user?: IUser;
 }

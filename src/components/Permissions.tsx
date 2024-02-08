@@ -1,9 +1,18 @@
+import { RootState } from '@/redux/store';
 import { UserRole } from '@/utils/auth';
 import { useRouter } from 'next/router';
+import { useSelector } from 'react-redux';
 
-function hasRequiredPermissions(requiredPermissions: UserRole[]): boolean {
+const GetUserRoles = () => {
+  const { user } = useSelector((state: RootState) => state.authSlice);
+  return user?.roles as UserRole[];
+};
+
+export function hasRequiredPermissions(
+  requiredPermissions: UserRole[],
+): boolean {
   // get userPermissions from the redux-store
-  const userPermissions = Object.values(UserRole);
+  const userPermissions = GetUserRoles();
   return requiredPermissions.some((permission) =>
     userPermissions.includes(permission),
   );

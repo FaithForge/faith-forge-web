@@ -6,12 +6,14 @@ import {
   PrinterOutlined,
   UserOutlined,
   FileSearchOutlined,
+  EditOutlined,
 } from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { useDispatch } from 'react-redux';
 import {
+  ChurchRoles,
   IsAdminRegisterKidChurch,
   IsRegisterKidChurch,
   IsSupervisorRegisterOrKidChurchSupervisor,
@@ -19,6 +21,7 @@ import {
 import { resetChurchState } from '@/redux/slices/church/church.slice';
 import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
 import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
+import { hasRequiredPermissions } from '@/components/Permissions';
 
 const Setting: NextPage = () => {
   const router = useRouter();
@@ -60,6 +63,14 @@ const Setting: NextPage = () => {
             onClick={() => router.push('/settings/generateChurchDayReport')}
           >
             Generar Reporte del dia
+          </List.Item>
+        )}
+        {hasRequiredPermissions(ChurchRoles) && (
+          <List.Item
+            prefix={<EditOutlined />}
+            onClick={() => router.push('/settings/editUser')}
+          >
+            Actualizar usuarios
           </List.Item>
         )}
         <List.Item
