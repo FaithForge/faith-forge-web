@@ -13,9 +13,12 @@ export function hasRequiredPermissions(
 ): boolean {
   // get userPermissions from the redux-store
   const userPermissions = GetUserRoles();
-  return requiredPermissions.some((permission) =>
-    userPermissions.includes(permission),
-  );
+  if (userPermissions) {
+    return requiredPermissions.some((permission) =>
+      userPermissions.includes(permission),
+    );
+  }
+  return false;
 }
 
 export function withRoles(Component: any, requiredPermissions: UserRole[]) {
