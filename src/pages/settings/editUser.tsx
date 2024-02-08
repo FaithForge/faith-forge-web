@@ -5,7 +5,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect, useState } from 'react';
-import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 import { Layout } from '@/components/Layout';
 import { capitalizeWords } from '@/utils/text';
 import { checkLastNameField, checkPhoneField } from '@/utils/validator';
