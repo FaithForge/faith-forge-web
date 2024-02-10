@@ -637,11 +637,6 @@ const NewKid: NextPage = () => {
                   required: true,
                   message: 'Apellido es requerido',
                 },
-                {
-                  required: false,
-                  message: 'Se debe colocar ambos apellidos',
-                  validator: checkLastNameField,
-                },
               ]}
             >
               <Input placeholder="Escribir apellido..." autoComplete="false" />

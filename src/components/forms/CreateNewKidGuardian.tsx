@@ -16,7 +16,7 @@ import {
 } from '@/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { kidRelationSelect } from '@/models/KidChurch';
-import { checkLastNameField, checkPhoneField } from '@/utils/validator';
+import { checkPhoneField } from '@/utils/validator';
 
 type Props = {
   visible: boolean;
@@ -218,11 +218,6 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               {
                 required: true,
                 message: 'Apellido es requerido',
-              },
-              {
-                required: false,
-                message: 'Se debe colocar ambos apellidos',
-                validator: checkLastNameField,
               },
             ]}
           >
