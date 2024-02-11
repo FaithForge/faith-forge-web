@@ -31,8 +31,8 @@ import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
 import { IKid } from '@/models/KidChurch';
 import { Layout } from '@/components/Layout';
 import dayjs from 'dayjs';
-import { KidChurchRegisterRoles } from '@/utils/auth';
-import { withRoles } from '@/components/Permissions';
+import { ChurchRoles, KidChurchRegisterRoles } from '@/utils/auth';
+import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
 
 const Registration: NextPage = () => {
   const {
@@ -66,7 +66,7 @@ const Registration: NextPage = () => {
         const currentTime = DateTime.local().toFormat('HH:mm:ss');
 
         // If the current time is greater than the meeting end time
-        if (churchMeeting.initialRegistrationHour >= currentTime) {
+        if (!hasRequiredPermissions(ChurchRoles) && churchMeeting.initialRegistrationHour >= currentTime) {
           warning = true;
           setWarningAlert({
             ...REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
@@ -74,7 +74,7 @@ const Registration: NextPage = () => {
           });
         }
         // If the current time is greater than the meeting end time
-        if (currentTime >= churchMeeting.finalRegistrationHour) {
+        if (!hasRequiredPermissions(ChurchRoles) && currentTime >= churchMeeting.finalRegistrationHour) {
           warning = true;
           setWarningAlert({
             ...REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
