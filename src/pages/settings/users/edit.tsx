@@ -1,31 +1,27 @@
-import { Button, Form, Input, SearchBar, Selector } from 'antd-mobile';
+import { Button, Form, Input, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
-import { AppDispatch, RootState } from '../../redux/store';
+import { AppDispatch, RootState } from '../../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
-import NavBarApp from '../../components/NavBarApp';
-import { useEffect, useState } from 'react';
+import NavBarApp from '../../../components/NavBarApp';
+import { useEffect } from 'react';
 import { Layout } from '@/components/Layout';
 import { capitalizeWords } from '@/utils/text';
 import { checkLastNameField, checkPhoneField } from '@/utils/validator';
-import { SearchOutlined } from '@ant-design/icons';
 import { idGuardianTypeSelect, userGenderSelect } from '@/models/User';
-import {
-  GetUserByNationalId,
-  UpdateUser,
-} from '@/redux/thunks/user/user.thunk';
+import { UpdateUser } from '@/redux/thunks/user/user.thunk';
 import { resetEditUserState } from '@/redux/slices/user/editUser.slice';
 import LoadingMask from '@/components/LoadingMask';
+import { UserRole } from '@/utils/auth';
 
 const EditUser: NextPage = () => {
   const [form] = Form.useForm();
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const [findText, setFindText] = useState('');
-  const editUserSlice = useSelector((state: RootState) => state.editUserSlice);
+  const userSlice = useSelector((state: RootState) => state.userSlice);
   const onFinish = (values: any) => {
-    if (editUserSlice.user?.id) {
-      const id = editUserSlice.user.id;
+    if (userSlice.current?.id) {
+      const id = userSlice.current.id;
       const nationalIdType = values.nationalIdType[0];
       const nationalId = values.nationalId;
       const firstName = values.firstName;
@@ -62,44 +58,22 @@ const EditUser: NextPage = () => {
   }, []);
 
   useEffect(() => {
-    if (findText !== '') {
-      dispatch(GetUserByNationalId(findText));
-    }
-  }, [dispatch, findText]);
-
-  useEffect(() => {
-    if (editUserSlice.user) {
+    if (userSlice.current) {
       form.setFieldsValue({
-        nationalIdType: [editUserSlice.user?.nationalIdType],
-        nationalId: editUserSlice.user?.nationalId,
-        firstName: capitalizeWords(editUserSlice.user?.firstName),
-        lastName: capitalizeWords(editUserSlice.user?.lastName),
-        phone: editUserSlice.user?.phone,
-        gender: [editUserSlice.user?.gender],
+        nationalIdType: [userSlice.current?.nationalIdType],
+        nationalId: userSlice.current?.nationalId,
+        firstName: capitalizeWords(userSlice.current?.firstName),
+        lastName: capitalizeWords(userSlice.current?.lastName),
+        phone: userSlice.current?.phone,
+        gender: [userSlice.current?.gender],
       });
     }
-  }, [editUserSlice.user, form]);
+  }, [form, userSlice]);
 
   return (
     <Layout>
-      {editUserSlice.loading ? <LoadingMask /> : ''}
+      {userSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title="Actualizar Usuario" />
-      <SearchBar
-        showCancelButton
-        cancelText="Cancelar"
-        placeholder="Buscar usuario (cedula o nombre)"
-        onSearch={(value) => setFindText(value)}
-        onCancel={() => setFindText('')}
-        icon={<SearchOutlined />}
-        style={{
-          position: 'sticky',
-          top: '0',
-          zIndex: 2,
-          '--height': '49px',
-          padding: '10px 5px',
-          backgroundColor: 'white',
-        }}
-      />
       <Form
         layout="vertical"
         onFinish={onFinish}
@@ -115,37 +89,49 @@ const EditUser: NextPage = () => {
           label="Tipo de documento"
           rules={[
             {
-              required: true,
+              required: !userSlice.current?.roles?.find(
+                (role) => role === UserRole.KID,
+              ),
               message: 'Por favor seleccione un tipo de documento',
             },
           ]}
         >
           <Selector
             options={idGuardianTypeSelect}
-            disabled={!editUserSlice.user}
+            disabled={!userSlice.current}
           />
         </Form.Item>
         <Form.Item
           name="nationalId"
           label="Numero de documento"
           rules={[
-            { required: true, message: 'Numero de documento es requerido' },
+            {
+              required: !userSlice.current?.roles?.find(
+                (role) => role === UserRole.KID,
+              ),
+              message: 'Numero de documento es requerido',
+            },
           ]}
         >
           <Input
             placeholder="Escribir numero de documento..."
             autoComplete="false"
-            disabled={!editUserSlice.user}
+            disabled={!userSlice.current}
           />
         </Form.Item>
         <Form.Item
           name="firstName"
           label="Nombre"
-          rules={[{ required: true, message: 'Por favor coloca tu nombre' }]}
+          rules={[
+            {
+              required: true,
+              message: 'Por favor coloca tu nombre',
+            },
+          ]}
         >
           <Input
             placeholder="Ingresa tu nombre"
-            disabled={!editUserSlice.user}
+            disabled={!userSlice.current}
           />
         </Form.Item>
         <Form.Item
@@ -165,29 +151,34 @@ const EditUser: NextPage = () => {
         >
           <Input
             placeholder="Ingresa tu apellido"
-            disabled={!editUserSlice.user}
+            disabled={!userSlice.current}
           />
         </Form.Item>
         <Form.Item
           name="phone"
           label="Telefono"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor digite el numero telefono del acudiente',
-            },
-            {
-              required: true,
-              message: 'El telefono debe tener minimo 10 digitos',
-              validator: checkPhoneField,
-            },
-          ]}
+          rules={
+            !userSlice.current?.roles?.find((role) => role === UserRole.KID)
+              ? [
+                  {
+                    required: true,
+                    message:
+                      'Por favor digite el numero telefono del acudiente',
+                  },
+                  {
+                    required: true,
+                    message: 'El telefono debe tener minimo 10 digitos',
+                    validator: checkPhoneField,
+                  },
+                ]
+              : []
+          }
         >
           <Input
             placeholder="Escribir telefono..."
             type="tel"
             autoComplete="false"
-            disabled={!editUserSlice.user}
+            disabled={!userSlice.current}
           />
         </Form.Item>
         <Form.Item
@@ -200,7 +191,7 @@ const EditUser: NextPage = () => {
             },
           ]}
         >
-          <Selector options={userGenderSelect} disabled={!editUserSlice.user} />
+          <Selector options={userGenderSelect} disabled={!userSlice.current} />
         </Form.Item>
       </Form>
     </Layout>

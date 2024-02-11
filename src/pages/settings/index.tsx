@@ -68,7 +68,7 @@ const Setting: NextPage = () => {
         {hasRequiredPermissions(ChurchRoles) && (
           <List.Item
             prefix={<EditOutlined />}
-            onClick={() => router.push('/settings/editUser')}
+            onClick={() => router.push('/settings/users')}
           >
             Actualizar usuarios
           </List.Item>

@@ -81,7 +81,7 @@ export interface IUser {
   lastName: string;
   phone?: string;
   email?: string;
-  gender: UserGender;
+  gender: UserGenderCode;
   birthday?: Date;
   state: UserState;
   photoUrl?: string;

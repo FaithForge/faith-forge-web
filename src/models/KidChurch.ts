@@ -245,6 +245,7 @@ export interface IUpdateKid {
 }
 
 // SLIDES
+export interface IUsers extends ReduxDefaultStateWithPagination<IUser> {}
 export interface IKids extends ReduxDefaultStateWithPagination<IKid> {}
 export interface IKidMedicalConditions
   extends ReduxDefaultState<IKidMedicalCondition> {}

@@ -1,4 +1,8 @@
-export const capitalizeWords = (input: string): string => {
+export const capitalizeWords = (input?: string): string => {
+  if (!input) {
+    return '';
+  }
+
   if (input.length === 0) {
     return input;
   }

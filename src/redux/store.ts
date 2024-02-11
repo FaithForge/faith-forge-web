@@ -21,6 +21,7 @@ import kidSlice from './slices/kid-church/kid.slice';
 import accountSlice from './slices/user/account.slice';
 import authSlice from './slices/user/auth.slice';
 import editUserSlice from './slices/user/editUser.slice';
+import userSlice from './slices/user/users.slice';
 
 const reducers = combineReducers({
   churchSlice,
@@ -35,6 +36,7 @@ const reducers = combineReducers({
   accountSlice,
   kidGroupRegisteredSlice,
   editUserSlice,
+  userSlice,
 });
 
 const persistConfig = {
