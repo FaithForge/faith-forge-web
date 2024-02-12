@@ -31,8 +31,8 @@ import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
 import { IKid } from '@/models/KidChurch';
 import { Layout } from '@/components/Layout';
 import dayjs from 'dayjs';
-import { KidChurchRegisterRoles } from '@/utils/auth';
-import { withRoles } from '@/components/Permissions';
+import { ChurchRoles, KidChurchRegisterRoles } from '@/utils/auth';
+import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
 
 const Registration: NextPage = () => {
   const {
@@ -47,6 +47,7 @@ const Registration: NextPage = () => {
   const churchPrinterSlice = useSelector(
     (state: RootState) => state.churchPrinterSlice,
   );
+  const isAdmin = hasRequiredPermissions(ChurchRoles);
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const router = useRouter();
@@ -145,7 +146,7 @@ const Registration: NextPage = () => {
         {kids.length ? (
           kids.map((kid) => (
             <List.Item
-              disabled={warningAlert.blockRegister}
+              disabled={warningAlert.blockRegister && !isAdmin}
               key={kid.faithForgeId}
               style={{
                 backgroundColor: kid.currentKidRegistration

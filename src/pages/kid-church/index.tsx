@@ -33,8 +33,8 @@ import {
   GetKidGroups,
 } from '@/redux/thunks/kid-church/kid-group.thunk';
 import ShowKidRegisteredModal from '@/components/ShowKidRegisteredModal';
-import { KidChurchSupervisorRoles } from '@/utils/auth';
-import { withRoles } from '@/components/Permissions';
+import { ChurchRoles, KidChurchSupervisorRoles } from '@/utils/auth';
+import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
@@ -57,6 +57,7 @@ const KidChurch: NextPage = () => {
     icon: '',
     blockRegister: false,
   });
+  const isAdmin = hasRequiredPermissions(ChurchRoles);
 
   const kidGroupsSelect = kidGroupSlice.data
     ? kidGroupSlice.data.map((kidGroup) => {
@@ -194,7 +195,7 @@ const KidChurch: NextPage = () => {
           kidList.map((kid) => (
             <>
               <List.Item
-                disabled={warningAlert.blockRegister}
+                disabled={warningAlert.blockRegister && !isAdmin}
                 key={kid.faithForgeId}
                 style={{
                   backgroundColor: 'white',
