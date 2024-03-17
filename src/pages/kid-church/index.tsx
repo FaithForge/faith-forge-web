@@ -92,7 +92,12 @@ const KidChurch: NextPage = () => {
           });
         }
         // If the current time is greater than the meeting end time
-        if (currentTime >= churchMeeting.finalRegistrationHour) {
+        if (
+          currentTime >=
+          DateTime.local(churchMeeting.finalRegistrationHour)
+            .plus({ hours: 2 })
+            .toFormat('HH:mm:ss')
+        ) {
           warning = true;
           setWarningAlert({
             ...GENERAL_COPY_LOWER_HOURS_MEETING,
