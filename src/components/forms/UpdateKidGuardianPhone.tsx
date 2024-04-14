@@ -73,6 +73,13 @@ const UpdateKidGuardianPhoneModal = ({
         if (!response.payload.error) {
           await dispatch(GetKid({ id: kidId }));
           await onClose(false);
+        } else {
+          Toast.show({
+            icon: 'fail',
+            content: `El Telefono que intenta ingresar ya existe en la base de datos`,
+            position: 'bottom',
+            duration: 5000,
+          });
         }
       }
     }
