@@ -24,7 +24,7 @@ export const CreateKidRegistration = createAsyncThunk(
             churchId: churchSlice.current?.id,
             churchMeetingId: churchMeetingSlice.current?.id,
             churchPrinterId: churchPrinterSlice.current?.name,
-            log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del grupo ${accountSlice.churchGroup} en la impresora ${churchPrinterSlice.current?.name}`,
+            log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del grupo ${accountSlice.churchGroup}`,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -47,6 +47,7 @@ export const ReprintKidRegistration = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const { id, copies } = payload;
+    const churchPrinterSlice = state.churchPrinterSlice;
 
     const response = (
       await makeApiRequest(
@@ -56,6 +57,7 @@ export const ReprintKidRegistration = createAsyncThunk(
           data: {
             id,
             copies,
+            churchPrinterId: churchPrinterSlice.current?.name,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
