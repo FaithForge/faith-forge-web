@@ -21,7 +21,8 @@ export const GetChurches = createAsyncThunk(
 
 export const GetChurchMeetings = createAsyncThunk(
   'church/GetChurchMeetings',
-  async (churchId: string, { getState }) => {
+  async (payload: { churchId: string; state?: string }, { getState }) => {
+    const { churchId, state: stateMeeting } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -29,6 +30,9 @@ export const GetChurchMeetings = createAsyncThunk(
         ApiVerbs.GET,
         `/${MS_CHURCH_PATH}/church/${churchId}/meetings`,
         {
+          params: {
+            state: stateMeeting,
+          },
           headers: { Authorization: `Bearer ${token}` },
         },
       )

@@ -29,6 +29,12 @@ export interface IPrinters {
   active?: boolean;
 }
 
+export enum ChurchMeetingStateEnum {
+  ACTIVE = 'ACTIVE',
+  ACTIVE_WITHOUT_DISPLAY = 'ACTIVE_WITHOUT_DISPLAY',
+  DISABLE = 'DISABLE',
+}
+
 export interface IChurches extends ReduxDefaultState<IChurch> {}
 export interface IChurchMeetings extends ReduxDefaultState<IChurchMeeting> {}
 export interface IChurchPrinters extends ReduxDefaultState<IPrinters> {}

@@ -13,6 +13,7 @@ import {
   GetChurches,
 } from '@/redux/thunks/church/church.thunk';
 import { Layout } from '@/components/Layout';
+import { ChurchMeetingStateEnum } from '@/models/Church';
 
 const ChurchInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -95,7 +96,12 @@ const ChurchInfo: NextPage = () => {
                 options={churchOptions}
                 onChange={(arr) => {
                   form.resetFields(['churchMeeting']);
-                  dispatch(GetChurchMeetings(arr[0]));
+                  dispatch(
+                    GetChurchMeetings({
+                      churchId: arr[0],
+                      state: ChurchMeetingStateEnum.ACTIVE,
+                    }),
+                  );
                 }}
               />
             </Form.Item>

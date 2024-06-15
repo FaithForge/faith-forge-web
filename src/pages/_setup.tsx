@@ -16,6 +16,7 @@ import { parseJwt } from '@/utils/jwt';
 import { churchGroup } from '@/constants/church';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 import { IsRegisterKidChurch } from '@/utils/auth';
+import { ChurchMeetingStateEnum } from '@/models/Church';
 
 const Setup: NextPage = () => {
   const [form] = Form.useForm();
@@ -143,7 +144,12 @@ const Setup: NextPage = () => {
             <Selector
               options={churchOptions}
               onChange={(arr) => {
-                dispatch(GetChurchMeetings(arr[0]));
+                dispatch(
+                  GetChurchMeetings({
+                    churchId: arr[0],
+                    state: ChurchMeetingStateEnum.ACTIVE,
+                  }),
+                );
                 dispatch(GetChurchPrinters(arr[0]));
               }}
             />
