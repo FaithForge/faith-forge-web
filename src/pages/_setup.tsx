@@ -9,18 +9,9 @@ import {
   GetChurchPrinters,
   GetChurches,
 } from '@/redux/thunks/church/church.thunk';
-import {
-  resetChurchState,
-  updateCurrentChurch,
-} from '@/redux/slices/church/church.slice';
-import {
-  resetChurchMeetingState,
-  updateCurrentChurchMeeting,
-} from '@/redux/slices/church/churchMeeting.slice';
-import {
-  resetChurchPrinterState,
-  updateCurrentChurchPrinter,
-} from '@/redux/slices/church/churchPrinter.slice';
+import { updateCurrentChurch } from '@/redux/slices/church/church.slice';
+import { updateCurrentChurchMeeting } from '@/redux/slices/church/churchMeeting.slice';
+import { updateCurrentChurchPrinter } from '@/redux/slices/church/churchPrinter.slice';
 import { parseJwt } from '@/utils/jwt';
 import { churchGroup } from '@/constants/church';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
@@ -64,12 +55,6 @@ const Setup: NextPage = () => {
     if (authSlice.token || authSlice.token !== '') {
       const decodedToken = parseJwt(authSlice.token);
       const currentTime = Date.now() / 1000;
-
-      if (decodedToken.exp && decodedToken.exp < currentTime) {
-        dispatch(resetChurchState());
-        dispatch(resetChurchMeetingState());
-        dispatch(resetChurchPrinterState());
-      }
 
       if (decodedToken.exp && decodedToken.exp >= currentTime) {
         if (

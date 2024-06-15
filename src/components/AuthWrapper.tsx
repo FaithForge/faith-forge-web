@@ -4,6 +4,9 @@ import { RootState } from '@/redux/store';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { parseJwt } from '@/utils/jwt';
 import { Toast } from 'antd-mobile';
+import { resetChurchState } from '@/redux/slices/church/church.slice';
+import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
+import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
 
 type Props = {
   children?: React.ReactNode;
@@ -33,6 +36,9 @@ export const AuthWrapper = ({ children }: Props) => {
   const currentTime = Date.now() / 1000;
 
   if (decodedToken.exp && decodedToken.exp < currentTime) {
+    dispatch(resetChurchState());
+    dispatch(resetChurchMeetingState());
+    dispatch(resetChurchPrinterState());
     push('/login');
     toastLogout();
     dispatch(logout());
