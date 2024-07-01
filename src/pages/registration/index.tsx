@@ -146,11 +146,16 @@ const Registration: NextPage = () => {
         {kids.length ? (
           kids.map((kid) => (
             <List.Item
-              disabled={warningAlert.blockRegister && !isAdmin}
+              disabled={
+                (warningAlert.blockRegister && !isAdmin) ||
+                (kid.age >= 12 && !isAdmin)
+              }
               key={kid.faithForgeId}
               style={{
                 backgroundColor: kid.currentKidRegistration
                   ? '#ebebeb'
+                  : kid.age > 12
+                  ? '#EE4E4E'
                   : 'white',
               }}
               prefix={
