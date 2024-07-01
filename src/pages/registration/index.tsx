@@ -155,7 +155,7 @@ const Registration: NextPage = () => {
                 backgroundColor: kid.currentKidRegistration
                   ? '#ebebeb'
                   : kid.age >= 12
-                  ? '#EE4E4E'
+                  ? '#FBDAD7'
                   : 'white',
               }}
               prefix={
@@ -174,15 +174,19 @@ const Registration: NextPage = () => {
                   height={40}
                 />
               }
-              description={kid.age >= 12 ? `Codigo: ${kid.faithForgeId} ${
-                kid.currentKidRegistration
-                  ? `(Registrado a las ${dayjs(
-                      kid.currentKidRegistration.date.toString(),
-                    )
-                      .locale('es')
-                      .format('h:mm:ss A')})`
-                  : ''
-              }`: 'El niño ya cumplió la edad máxima, no puede ser registrado.'}
+              description={
+                kid.age < 12
+                  ? `Codigo: ${kid.faithForgeId} ${
+                      kid.currentKidRegistration
+                        ? `(Registrado a las ${dayjs(
+                            kid.currentKidRegistration.date.toString(),
+                          )
+                            .locale('es')
+                            .format('h:mm:ss A')})`
+                        : ''
+                    }`
+                  : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
+              }
               onClick={() => registerKidViewHandler(kid)}
             >
               {capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
