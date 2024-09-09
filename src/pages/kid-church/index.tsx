@@ -122,16 +122,21 @@ const KidChurch: NextPage = () => {
   }, [dispatch, pathname]);
 
   useEffect(() => {
-    let kidsFiltered = kids.filter((kid) => {
-      const fullName = `${kid.firstName} ${kid.lastName}`.toLowerCase();
-      const findTextSearch = findText.toLowerCase();
+    const findTextSearch = findText.toLowerCase().split(' ');
 
-      for (const text of findTextSearch) {
-        if (!fullName.includes(text)) {
-          return false;
-        }
+    let kidsFiltered = kids.filter((kid) => {
+      const firstName = kid.firstName.toLowerCase();
+      const lastName = kid.lastName.toLowerCase();
+
+      if (findTextSearch.length >= 2) {
+        const [searchFirstName, searchLastName] = findTextSearch;
+        return (
+          firstName.startsWith(searchFirstName) &&
+          lastName.startsWith(searchLastName)
+        );
       }
-      return true;
+
+      return firstName.startsWith(findTextSearch[0]);
     });
 
     kidsFiltered = kidsFiltered.filter((kid) =>
