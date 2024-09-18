@@ -10,6 +10,7 @@ import {
 } from 'antd-mobile';
 import {
   HomeOutlined,
+  QrcodeOutlined,
   SearchOutlined,
   UserAddOutlined,
 } from '@ant-design/icons';
@@ -217,6 +218,17 @@ const Registration: NextPage = () => {
         onClick={() => router.push('/registration/newKid')}
       >
         <UserAddOutlined style={{ fontSize: '28px' }} />
+      </FloatingBubble>
+      <FloatingBubble
+        style={{
+          '--initial-position-bottom': '140px',
+          '--initial-position-right': '20px',
+          '--edge-distance': '24px',
+          '--background': 'black',
+        }}
+        onClick={() => router.push('/registration/qrReader')}
+      >
+        <QrcodeOutlined style={{ fontSize: '28px' }} />
       </FloatingBubble>
     </Layout>
   );
