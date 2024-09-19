@@ -16,25 +16,22 @@ import {
   Popup,
   Space,
   TextArea,
+  Toast,
+  Steps,
 } from 'antd-mobile';
 import { RefObject } from 'react';
 import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
 import dayjs from 'dayjs';
-import { idTypeSelect, userGenderSelect } from '../../models/Uset';
-import { kidRelationSelect } from '../../models/KidGuardian';
-import { GetKidGuardian } from '../../services/kidGuardianService';
+import {
+  UserGenderCode,
+  idGuardianTypeSelect,
+  userGenderSelect,
+} from '../../models/User';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kidGuardianSlice';
 import { capitalizeWords } from '../../utils/text';
 import LoadingMask from '../../components/LoadingMask';
-import {
-  CreateKid,
-  GetKidGroups,
-  GetKidMedicalConditions,
-  uploadKidPhoto,
-} from '../../services/kidService';
-import { loadingKidEnable } from '../../redux/slices/kidSlice';
+
 import { useRouter } from 'next/router';
 import { DateTime } from 'luxon';
 import {
@@ -43,17 +40,34 @@ import {
   labelRendererCalendar,
 } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
+import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
+import { GetKidGroups } from '@/redux/thunks/kid-church/kid-group.thunk';
+import { GetKidMedicalConditions } from '@/redux/thunks/kid-church/kid-medical-condition.thunk';
+import {
+  CreateKidGuardian,
+  GetKidGuardian,
+} from '@/redux/thunks/kid-church/kid-guardian.thunk';
+import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
+import { kidRelationSelect } from '@/models/KidChurch';
+import { CreateKid } from '@/redux/thunks/kid-church/kid.thunk';
+import { Layout } from '@/components/Layout';
+import { Step } from 'antd-mobile/es/components/steps/step';
+import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
+import { checkLastNameField, checkPhoneField } from '@/utils/validator';
+import KidRegistrationView from '@/components/KidRegistrationView';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
+  const [formKidGuardian] = Form.useForm();
+
   const router = useRouter();
-  const {
-    groups: kidGroups,
-    loading: kidLoading,
-    medicalConditions,
-  } = useSelector((state: RootState) => state.kidSlice);
-  const { current: guardian, loading: guardianLoading } = useSelector(
+  const kidSlice = useSelector((state: RootState) => state.kidSlice);
+  const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
+  const kidGuardianSlice = useSelector(
     (state: RootState) => state.kidGuardianSlice,
+  );
+  const kidMedicalConditionSlice = useSelector(
+    (state: RootState) => state.kidMedicalConditionSlice,
   );
 
   const now = DateTime.local().endOf('year').toJSDate();
@@ -61,6 +75,10 @@ const NewKid: NextPage = () => {
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
   const [staticGroup, setStaticGroup] = useState(false);
+  const [step, setStep] = useState(0);
+  const [selectedGender, setSelectedGender] = useState<UserGenderCode>();
+  const [kidRelationSelectFilter, setKidRelationSelectFilter] =
+    useState(kidRelationSelect);
   const dispatch = useDispatch<AppDispatch>();
 
   const handleCapture = (target: any) => {
@@ -87,18 +105,19 @@ const NewKid: NextPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    if (guardian) {
-      form.setFieldsValue({
-        guardianNationalIdType: guardian.nationalIdType,
-        guardianNationalId: guardian.nationalId,
-        guardianFirstName: capitalizeWords(guardian.firstName),
-        guardianLastName: capitalizeWords(guardian.lastName),
-        guardianPhone: guardian.phone,
-        guardianGender: guardian.gender,
-        guardianRelation: guardian.relation,
+    if (kidGuardianSlice.current) {
+      formKidGuardian.setFieldsValue({
+        guardianNationalIdType: [kidGuardianSlice.current?.nationalIdType],
+        guardianNationalId: kidGuardianSlice.current?.nationalId,
+        guardianFirstName: capitalizeWords(kidGuardianSlice.current?.firstName),
+        guardianLastName: capitalizeWords(kidGuardianSlice.current?.lastName),
+        guardianPhone: kidGuardianSlice.current?.phone,
+        guardianGender: [kidGuardianSlice.current?.gender],
+        guardianRelation: [kidGuardianSlice.current?.relation],
       });
+      setSelectedGender(kidGuardianSlice.current?.gender);
     }
-  }, [guardian, form]);
+  }, [formKidGuardian, kidGuardianSlice]);
 
   useEffect(() => {
     if (!staticGroup) {
@@ -106,14 +125,43 @@ const NewKid: NextPage = () => {
     }
   }, [form, staticGroup]);
 
+  useEffect(() => {
+    if (kidSlice.error) {
+      Toast.show({
+        icon: 'fail',
+        content: `Ha ocurrido un error al crear al niño: ${kidSlice.error}`,
+        position: 'bottom',
+        duration: 5000,
+      });
+    }
+  }, [kidSlice]);
+
+  useEffect(() => {
+    if (kidGuardianSlice.error) {
+      Toast.show({
+        icon: 'fail',
+        content: `Ha ocurrido un error al crear el acudiente: ${kidGuardianSlice.error}`,
+        position: 'bottom',
+        duration: 5000,
+      });
+    }
+  }, [kidGuardianSlice]);
+
+  useEffect(() => {
+    if (step === 3) {
+      router.back();
+    }
+  }, [router, step]);
+
   const findGuardian = async () => {
-    const guardianNationalId = form.getFieldsValue().guardianNationalId;
-    dispatch(GetKidGuardian({ nationalId: guardianNationalId }));
+    const guardianNationalId =
+      formKidGuardian.getFieldsValue().guardianNationalId;
+    dispatch(GetKidGuardian(guardianNationalId));
   };
 
   const cleanGuardian = async () => {
     dispatch(cleanCurrentKidGuardian());
-    form.resetFields([
+    formKidGuardian.resetFields([
       'guardianNationalIdType',
       'guardianNationalId',
       'guardianFirstName',
@@ -132,15 +180,15 @@ const NewKid: NextPage = () => {
   });
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
-      return medicalConditions.filter((item) =>
+      return kidMedicalConditionSlice.data.filter((item) =>
         item.name
           .toLocaleLowerCase()
           .includes(searchMedicalCondition.toLocaleLowerCase()),
       );
     } else {
-      return medicalConditions;
+      return kidMedicalConditionSlice.data;
     }
-  }, [medicalConditions, searchMedicalCondition]);
+  }, [kidMedicalConditionSlice.data, searchMedicalCondition]);
 
   const [healthSecurityEntity, setHealthSecurityEntity] = useState({
     id: '',
@@ -163,43 +211,82 @@ const NewKid: NextPage = () => {
     let photoUrl = undefined;
     if (photo) {
       const formData = new FormData();
-      formData.append('photo', photo);
+      formData.append('file', photo);
 
-      photoUrl = await uploadKidPhoto({ formData });
+      photoUrl = (await dispatch(UploadUserImage({ formData })))
+        .payload as string;
     }
 
-    await dispatch(
-      CreateKid({
-        kidRegistration: {
+    try {
+      const response = await dispatch(
+        CreateKid({
           firstName: values.firstName,
           lastName: values.lastName,
           birthday: values.birthday,
           gender: values.gender ? values.gender[0] : undefined,
           staticGroup: values.staticGroup ?? false,
-          group: values.kidGroup ? values.kidGroup[0] : undefined,
+          staticKidGroupId: values.kidGroup ? values.kidGroup[0] : undefined,
           observations: values.observations ?? undefined,
           photoUrl,
           healthSecurityEntity: values.healthSecurityEntity.name,
-          medicalCondition: {
-            id: medicalCondition.id ?? undefined,
-          },
-        },
-        kidGuardianRegistration: {
-          nationalIdType: values.guardianNationalIdType[0],
-          nationalId: values.guardianNationalId,
-          firstName: values.guardianFirstName,
-          lastName: values.guardianLastName,
-          phone: values.guardianPhone,
-          gender: values.guardianGender[0],
-          relation: values.guardianRelation[0],
-        },
-      }),
-    );
-    router.back();
+          medicalConditionId:
+            medicalCondition.id !== '' ? medicalCondition.id : undefined,
+        }),
+      );
+
+      if (!response.payload.error) {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        setStep(1);
+      }
+    } catch (error) {
+      Toast.show({
+        icon: 'fail',
+        content: 'Ha ocurrido un error al crear el niño.',
+        position: 'bottom',
+        duration: 5000,
+      });
+    }
   };
 
-  const kidGroupsSelect = kidGroups
-    ? kidGroups.map((kidGroup) => {
+  const addNewKidGuardian = async (values: any) => {
+    if (kidSlice.current?.id) {
+      const nationalIdType = values.guardianNationalIdType[0];
+      const nationalId = values.guardianNationalId;
+      const firstName = values.guardianFirstName;
+      const lastName = values.guardianLastName;
+      const phone = values.guardianPhone;
+      const gender = values.guardianGender[0];
+      const relation = values.guardianRelation[0];
+      const kidId = kidSlice.current?.id;
+
+      const response = await dispatch(
+        CreateKidGuardian({
+          kidId,
+          nationalIdType,
+          nationalId,
+          firstName,
+          lastName,
+          phone,
+          gender,
+          relation,
+        }),
+      );
+
+      if (!response.payload.error) {
+        Toast.show({
+          content:
+            'Se ha creado al niño y acudiente con éxito. Proceda a registrarlo',
+          position: 'bottom',
+          duration: 3000,
+        });
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+        setStep(2);
+      }
+    }
+  };
+
+  const kidGroupsSelect = kidGroupSlice.data
+    ? kidGroupSlice.data.map((kidGroup) => {
         return {
           label: kidGroup.name,
           value: kidGroup.id,
@@ -207,328 +294,425 @@ const NewKid: NextPage = () => {
       })
     : [];
 
+  useEffect(() => {
+    let filter;
+    if (selectedGender) {
+      filter = kidRelationSelect.filter(
+        (kidRelation) => kidRelation.gender === selectedGender,
+      );
+    } else {
+      filter = kidRelationSelect;
+    }
+    setKidRelationSelectFilter(filter);
+  }, [selectedGender]);
+
+  let titleNavBar = '';
+  switch (step) {
+    case 0:
+      titleNavBar = 'Crear Niño';
+      break;
+    case 1:
+      titleNavBar = 'Crear Acudiente';
+      break;
+    case 2:
+      titleNavBar = 'Registrar niño';
+      break;
+  }
+
   return (
-    <>
-      {guardianLoading || kidLoading ? <LoadingMask /> : ''}
-      <NavBarApp title="Crear Niño" />
-      <AutoCenter>
-        <label htmlFor="profileImage">
-          {source ? (
-            <Image
-              alt="profileImage"
-              src={source}
-              width={160}
-              height={160}
-              fit="cover"
-              style={{ borderRadius: '50%' }}
+    <Layout>
+      {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
+      <NavBarApp title={titleNavBar} />
+      <Steps current={step}>
+        <Step title="Crear niño" />
+        <Step title="Crear Acudiente" />
+        <Step title="Registrar Niño" />
+      </Steps>
+      {step === 0 && (
+        <>
+          <AutoCenter>
+            <label htmlFor="profileImage">
+              {source ? (
+                <Image
+                  alt="profileImage"
+                  src={source}
+                  width={160}
+                  height={160}
+                  fit="cover"
+                  style={{ borderRadius: '50%' }}
+                />
+              ) : (
+                <CameraOutline fontSize={160} />
+              )}
+            </label>
+            <input
+              accept="image/*"
+              id="profileImage"
+              type="file"
+              capture="environment"
+              hidden={true}
+              onChange={(e) => handleCapture(e.target)}
             />
-          ) : (
-            <CameraOutline fontSize={160} />
-          )}
-        </label>
-        <input
-          accept="image/*"
-          id="profileImage"
-          type="file"
-          capture="environment"
-          hidden={true}
-          onChange={(e) => handleCapture(e.target)}
-        />
-      </AutoCenter>
+          </AutoCenter>
 
-      <Form
-        form={form}
-        onFinish={addNewKid}
-        layout="horizontal"
-        footer={
-          <Button block type="submit" color="primary" size="large">
-            Guardar
-          </Button>
-        }
-      >
-        <h3>Información Básica</h3>
-        <Form.Item
-          name="firstName"
-          label="Nombre"
-          rules={[{ required: true, message: 'Nombre es requerido' }]}
-        >
-          <Input placeholder="Escribir nombre..." />
-        </Form.Item>
-        <Form.Item
-          name="lastName"
-          label="Apellido"
-          rules={[{ required: true, message: 'Apellido es requerido' }]}
-        >
-          <Input placeholder="Escribir apellido..." />
-        </Form.Item>
-        <Form.Item
-          name="birthday"
-          label="Fecha de nacimiento"
-          trigger="onConfirm"
-          onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-            datePickerRef.current?.open();
-          }}
-          rules={[
-            { required: true, message: 'Fecha de nacimiento es requerida' },
-          ]}
-        >
-          <DatePicker
-            max={now}
-            min={dayjs().subtract(12, 'year').toDate()}
-            title={'Fecha de nacimiento'}
-            cancelText={'Cancelar'}
-            confirmText={'Confirmar'}
-            renderLabel={(type: string, data: number) =>
-              labelRendererCalendar(type, data)
+          <Form
+            form={form}
+            onFinish={addNewKid}
+            layout="horizontal"
+            footer={
+              <Button block type="submit" color="primary" size="large">
+                Siguiente
+              </Button>
             }
           >
-            {(value) =>
-              value
-                ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
-                    calculateAge(value) ?? 0,
-                  )} años y ${
-                    getAgeInMonths(value) - Math.floor(calculateAge(value)) * 12
-                  } meses)`
-                : 'Seleccionar fecha'
-            }
-          </DatePicker>
-        </Form.Item>
-        <Form.Item
-          name="gender"
-          label="Género"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione el género del niño',
-            },
-          ]}
-        >
-          <Selector options={userGenderSelect} />
-        </Form.Item>
-
-        <Form.Item
-          label="EPS"
-          required={true}
-          name="healthSecurityEntity"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor la EPS del niño',
-              validator: checkHealthSecurityEntity,
-            },
-          ]}
-        >
-          <HealthSecurityEntitySelector
-            healthSecurityEntity={healthSecurityEntity}
-          />
-        </Form.Item>
-
-        <h3>Información del Acudiente</h3>
-        <Form.Item
-          name="guardianNationalIdType"
-          label="Tipo de documento"
-          disabled={!!guardian}
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione un tipo de documento',
-            },
-          ]}
-        >
-          <Selector options={idTypeSelect} />
-        </Form.Item>
-        <Form.Item
-          name="guardianNationalId"
-          label="Número de documento"
-          disabled={!!guardian}
-          rules={[
-            { required: true, message: 'Número de documento es requerido' },
-          ]}
-        >
-          <Input
-            placeholder="Escribir número de documento..."
-            onBlur={findGuardian}
-          />
-        </Form.Item>
-        <Form.Item
-          name="guardianFirstName"
-          label="Nombre"
-          disabled={!!guardian}
-          rules={[{ required: true, message: 'Nombre es requerido' }]}
-        >
-          <Input placeholder="Escribir nombre..." />
-        </Form.Item>
-        <Form.Item
-          name="guardianLastName"
-          label="Apellido"
-          disabled={!!guardian}
-          rules={[{ required: true, message: 'Apellido es requerido' }]}
-        >
-          <Input placeholder="Escribir apellido..." />
-        </Form.Item>
-        <Form.Item
-          name="guardianPhone"
-          label="Teléfono"
-          disabled={!!guardian}
-          rules={[
-            {
-              required: true,
-              message: 'Por favor digite el número teléfono del acudiente',
-            },
-          ]}
-        >
-          <Input placeholder="Escribir telefono..." type="tel" />
-        </Form.Item>
-        <Form.Item
-          name="guardianGender"
-          label="Género"
-          disabled={!!guardian}
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione el género del acudiente',
-            },
-          ]}
-        >
-          <Selector options={userGenderSelect} />
-        </Form.Item>
-        <Form.Item
-          name="guardianRelation"
-          label="Relación con el niño"
-          rules={[
-            {
-              required: true,
-              message: 'Por favor seleccione una relación',
-            },
-          ]}
-        >
-          <Selector options={kidRelationSelect} />
-        </Form.Item>
-        <Form.Item>
-          {!!guardian ? (
-            <Button block color="default" onClick={cleanGuardian} size="large">
-              Limpiar formulario acudiente
-            </Button>
-          ) : null}
-        </Form.Item>
-
-        <h3>Información Adicional (Opcional)</h3>
-        <Form.Item
-          name="staticGroup"
-          label="Asignar salón estático"
-          childElementPosition="right"
-        >
-          <Switch
-            onChange={(value) => setStaticGroup(value)}
-            defaultChecked={staticGroup}
-          />
-        </Form.Item>
-        {staticGroup && (
-          <Form.Item
-            name="kidGroup"
-            label="Salón estatico"
-            rules={[
-              {
-                required: staticGroup,
-                message: 'Por favor seleccione un salón',
-              },
-            ]}
-          >
-            <Selector options={kidGroupsSelect} />
-          </Form.Item>
-        )}
-
-        <Form.Item>
-          <p>Selecciona condición médica</p>
-          <Space align="center">
-            <Button
-              onClick={() => {
-                setVisibleMedicalCondition(true);
-              }}
+            <h3>Información Básica</h3>
+            <Form.Item
+              name="firstName"
+              label="Nombre"
+              rules={[{ required: true, message: 'Nombre es requerido' }]}
             >
-              Buscar...
-            </Button>
-            <div>{medicalCondition.name}</div>
-          </Space>
-          <Popup
-            visible={visibleMedicalCondition}
-            onMaskClick={() => {
-              setVisibleMedicalCondition(false);
-            }}
-            position="top"
-            destroyOnClose
-          >
-            <div>
-              <SearchBar
-                placeholder="Buscar condición médica"
-                value={searchMedicalCondition}
-                onChange={(v) => {
-                  setSearchMedicalCondition(v);
-                }}
-                style={{
-                  padding: '12px',
-                  borderBottom: 'solid 1px var(--adm-color-border)',
-                }}
+              <Input placeholder="Escribir nombre..." autoComplete="false" />
+            </Form.Item>
+            <Form.Item
+              name="lastName"
+              label="Apellido"
+              rules={[
+                {
+                  required: true,
+                  message: 'Apellido es requerido',
+                },
+                {
+                  required: true,
+                  message: 'Se debe colocar ambos apellidos',
+                  validator: checkLastNameField,
+                },
+              ]}
+            >
+              <Input placeholder="Escribir apellido..." autoComplete="false" />
+            </Form.Item>
+            <Form.Item
+              name="birthday"
+              label="Fecha de nacimiento"
+              trigger="onConfirm"
+              onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
+                datePickerRef.current?.open();
+              }}
+              rules={[
+                { required: true, message: 'Fecha de nacimiento es requerida' },
+              ]}
+            >
+              <DatePicker
+                max={now}
+                min={dayjs().subtract(12, 'year').toDate()}
+                title={'Fecha de nacimiento'}
+                cancelText={'Cancelar'}
+                confirmText={'Confirmar'}
+                renderLabel={(type: string, data: number) =>
+                  labelRendererCalendar(type, data)
+                }
+              >
+                {(value) =>
+                  value
+                    ? `${dayjs(value).format(
+                        'YYYY-MM-DD',
+                      )} (Tiene: ${Math.floor(
+                        calculateAge(value) ?? 0,
+                      )} años y ${
+                        getAgeInMonths(value) -
+                        Math.floor(calculateAge(value)) * 12
+                      } meses)`
+                    : 'Seleccionar fecha'
+                }
+              </DatePicker>
+            </Form.Item>
+            <Form.Item
+              name="gender"
+              label="Género"
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor seleccione el género del niño',
+                },
+              ]}
+            >
+              <Selector options={userGenderSelect} />
+            </Form.Item>
+
+            <Form.Item
+              label="EPS"
+              required={true}
+              name="healthSecurityEntity"
+              rules={[
+                {
+                  required: true,
+                  message: 'Digitar la EPS del niño',
+                  validator: checkHealthSecurityEntity,
+                },
+              ]}
+            >
+              <HealthSecurityEntitySelector
+                healthSecurityEntity={healthSecurityEntity}
               />
-            </div>
-            <div style={{ height: '300px', overflowY: 'scroll' }}>
-              <CheckList
-                style={{ '--border-top': '0', '--border-bottom': '0' }}
-                defaultValue={medicalCondition ? [medicalCondition.id] : []}
-                onChange={(val) => {
-                  let medicalConditionSelected = medicalConditions.find(
-                    (item) => item.id === val[0],
-                  );
-                  if (
-                    !medicalConditionSelected &&
-                    val[0] === 'a18647b1-3455-4407-ada0-c94f39251e8c'
-                  ) {
-                    medicalConditionSelected = {
-                      id: 'a18647b1-3455-4407-ada0-c94f39251e8c',
-                      name: 'Otra',
-                    };
-                  }
-                  setMedicalCondition(
-                    medicalConditionSelected
-                      ? {
-                          id: medicalConditionSelected.id,
-                          name: medicalConditionSelected.name,
-                        }
-                      : { id: '', name: '' },
-                  );
+            </Form.Item>
+
+            <h3>Información Adicional (Opcional)</h3>
+            <Form.Item
+              name="staticGroup"
+              label="Asignar salón estático"
+              childElementPosition="right"
+            >
+              <Switch
+                onChange={(value) => setStaticGroup(value)}
+                defaultChecked={staticGroup}
+              />
+            </Form.Item>
+            {staticGroup && (
+              <Form.Item
+                name="kidGroup"
+                label="Salón estatico"
+                rules={[
+                  {
+                    required: staticGroup,
+                    message: 'Por favor seleccione un salón',
+                  },
+                ]}
+              >
+                <Selector options={kidGroupsSelect} />
+              </Form.Item>
+            )}
+
+            <Form.Item>
+              <p>Selecciona condición médica</p>
+              <Space align="center">
+                <Button
+                  onClick={() => {
+                    setVisibleMedicalCondition(true);
+                  }}
+                >
+                  Buscar...
+                </Button>
+                <div>{medicalCondition.name}</div>
+              </Space>
+              <Popup
+                visible={visibleMedicalCondition}
+                onMaskClick={() => {
                   setVisibleMedicalCondition(false);
                 }}
+                position="top"
+                destroyOnClose
               >
-                {filteredMedicalConditions
-                  ? filteredMedicalConditions.map((condition) => (
-                      <CheckList.Item key={condition.id} value={condition.id}>
-                        {condition.name}
-                      </CheckList.Item>
-                    ))
-                  : null}
-                <CheckList.Item
-                  key={'a18647b1-3455-4407-ada0-c94f39251e8c'}
-                  value={'a18647b1-3455-4407-ada0-c94f39251e8c'}
+                <div>
+                  <SearchBar
+                    placeholder="Buscar condición médica"
+                    value={searchMedicalCondition}
+                    onChange={(v) => {
+                      setSearchMedicalCondition(v);
+                    }}
+                    style={{
+                      padding: '12px',
+                      borderBottom: 'solid 1px var(--adm-color-border)',
+                    }}
+                  />
+                </div>
+                <div style={{ height: '300px', overflowY: 'scroll' }}>
+                  <CheckList
+                    style={{ '--border-top': '0', '--border-bottom': '0' }}
+                    defaultValue={medicalCondition ? [medicalCondition.id] : []}
+                    onChange={(val) => {
+                      let medicalConditionSelected =
+                        kidMedicalConditionSlice.data
+                          .map((kidMedicalCondition) => {
+                            return {
+                              id: kidMedicalCondition.id,
+                              name: `${kidMedicalCondition.name} - ${kidMedicalCondition.code}`,
+                            };
+                          })
+                          .find((item) => item.id === val[0]);
+                      if (
+                        !medicalConditionSelected &&
+                        val[0] === 'a18647b1-3455-4407-ada0-c94f39251e8c'
+                      ) {
+                        medicalConditionSelected = {
+                          id: 'a18647b1-3455-4407-ada0-c94f39251e8c',
+                          name: 'Otra',
+                        };
+                      }
+                      setMedicalCondition(
+                        medicalConditionSelected
+                          ? {
+                              id: medicalConditionSelected.id,
+                              name: medicalConditionSelected.name,
+                            }
+                          : { id: '', name: '' },
+                      );
+                      setVisibleMedicalCondition(false);
+                    }}
+                  >
+                    {filteredMedicalConditions
+                      ? filteredMedicalConditions.map((condition) => (
+                          <CheckList.Item
+                            key={condition.id}
+                            value={condition.id}
+                          >
+                            {condition.name} - {condition.code}
+                          </CheckList.Item>
+                        ))
+                      : null}
+                    <CheckList.Item
+                      key={'a18647b1-3455-4407-ada0-c94f39251e8c'}
+                      value={'a18647b1-3455-4407-ada0-c94f39251e8c'}
+                    >
+                      Otra
+                    </CheckList.Item>
+                  </CheckList>
+                </div>
+              </Popup>
+            </Form.Item>
+            <Form.Item name="observations" label="Observaciones">
+              <TextArea
+                placeholder="Si seleccionó Otra condición describala aquí"
+                maxLength={300}
+                rows={2}
+                showCount
+              />
+            </Form.Item>
+          </Form>
+        </>
+      )}
+
+      {step === 1 && (
+        <>
+          <Form
+            form={formKidGuardian}
+            onFinish={addNewKidGuardian}
+            layout="horizontal"
+            footer={
+              <Button block type="submit" color="primary" size="large">
+                Guardar Acudiente
+              </Button>
+            }
+          >
+            <h3>Información del Acudiente</h3>
+            <Form.Item
+              name="guardianNationalIdType"
+              label="Tipo de documento"
+              disabled={!!kidGuardianSlice.current}
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor seleccione un tipo de documento',
+                },
+              ]}
+            >
+              <Selector options={idGuardianTypeSelect} />
+            </Form.Item>
+            <Form.Item
+              name="guardianNationalId"
+              label="Número de documento"
+              disabled={!!kidGuardianSlice.current}
+              rules={[
+                { required: true, message: 'Número de documento es requerido' },
+              ]}
+            >
+              <Input
+                placeholder="Escribir número de documento..."
+                onBlur={findGuardian}
+                autoComplete="false"
+              />
+            </Form.Item>
+            <Form.Item
+              name="guardianFirstName"
+              label="Nombre"
+              disabled={!!kidGuardianSlice.current}
+              rules={[{ required: true, message: 'Nombre es requerido' }]}
+            >
+              <Input placeholder="Escribir nombre..." autoComplete="false" />
+            </Form.Item>
+            <Form.Item
+              name="guardianLastName"
+              label="Apellido"
+              disabled={!!kidGuardianSlice.current}
+              rules={[
+                {
+                  required: true,
+                  message: 'Apellido es requerido',
+                },
+              ]}
+            >
+              <Input placeholder="Escribir apellido..." autoComplete="false" />
+            </Form.Item>
+            <Form.Item
+              name="guardianPhone"
+              label="Teléfono"
+              disabled={!!kidGuardianSlice.current}
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor digite el número teléfono del acudiente',
+                },
+                {
+                  required: true,
+                  message: 'El telefono debe tener minimo 10 digitos',
+                  validator: checkPhoneField,
+                },
+              ]}
+            >
+              <Input
+                placeholder="Escribir telefono..."
+                type="tel"
+                autoComplete="false"
+              />
+            </Form.Item>
+            <Form.Item
+              name="guardianGender"
+              label="Género"
+              disabled={!!kidGuardianSlice.current}
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor seleccione el género del acudiente',
+                },
+              ]}
+            >
+              <Selector
+                options={userGenderSelect}
+                onChange={(v) => {
+                  if (v.length) {
+                    setSelectedGender(v[0]);
+                  }
+                }}
+              />
+            </Form.Item>
+            <Form.Item
+              name="guardianRelation"
+              label="Relación con el niño"
+              rules={[
+                {
+                  required: true,
+                  message: 'Por favor seleccione una relación',
+                },
+              ]}
+            >
+              <Selector options={kidRelationSelectFilter} />
+            </Form.Item>
+            <Form.Item>
+              {!!kidGuardianSlice.current ? (
+                <Button
+                  block
+                  color="default"
+                  onClick={cleanGuardian}
+                  size="large"
                 >
-                  Otra
-                </CheckList.Item>
-              </CheckList>
-            </div>
-          </Popup>
-        </Form.Item>
-        <Form.Item
-          name="observations"
-          label="Observaciones"
-        >
-          <TextArea
-            placeholder="Si seleccionó Otra condición describala aquí"
-            maxLength={300}
-            rows={2}
-            showCount
-          />
-        </Form.Item>
-      </Form>
-    </>
+                  Limpiar formulario acudiente
+                </Button>
+              ) : null}
+            </Form.Item>
+          </Form>
+        </>
+      )}
+
+      {step === 2 && <KidRegistrationView />}
+    </Layout>
   );
 };
 

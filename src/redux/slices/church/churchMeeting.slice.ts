@@ -1,6 +1,6 @@
+import { IChurchMeetings } from '@/models/Church';
+import { GetChurchMeetings } from '@/redux/thunks/church/church.thunk';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { IChurchMeeting, IChurchMeetings } from '../../models/ChurchMeeting';
-import { GetChurchMeetings } from '../../services/churchMeetingService';
 
 const initialState: IChurchMeetings = {
   data: [],
@@ -13,12 +13,16 @@ const churchMeetingSlice = createSlice({
   name: 'churchMeeting',
   initialState: initialState,
   reducers: {
-    updateChurchMeetings: (state, action: PayloadAction<IChurchMeeting[]>) => {
-      state.data = action.payload;
-      state.current = undefined;
-    },
     updateCurrentChurchMeeting: (state, action: PayloadAction<string>) => {
-      state.current = state.data.find((church) => church.id === action.payload);
+      state.current = state.data.find(
+        (churchMeeting) => churchMeeting.id === action.payload,
+      );
+    },
+    resetChurchMeetingState: (state) => {
+      state.data = initialState.data;
+      state.current = initialState.current;
+      state.error = initialState.error;
+      state.loading = initialState.loading;
     },
   },
   extraReducers(builder) {
@@ -39,6 +43,5 @@ const churchMeetingSlice = createSlice({
   },
 });
 
-export const { updateChurchMeetings, updateCurrentChurchMeeting } =
-  churchMeetingSlice.actions;
+export const { updateCurrentChurchMeeting, resetChurchMeetingState } = churchMeetingSlice.actions;
 export default churchMeetingSlice.reducer;

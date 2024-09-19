@@ -1,18 +1,14 @@
-import { createSlice } from '@reduxjs/toolkit';
-import { PAGINATION_REGISTRATION_LIMIT } from '../../constants/pagination';
-import { IKidGuardians } from '../../models/KidGuardian';
+import { IKidGuardians } from '@/models/KidChurch';
+import { IApiErrorResponse } from '@/models/Redux';
 import {
   CreateKidGuardian,
   GetKidGuardian,
-} from '../../services/kidGuardianService';
+} from '@/redux/thunks/kid-church/kid-guardian.thunk';
+import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: IKidGuardians = {
   data: [],
   current: undefined,
-  currentPage: 1,
-  itemsPerPage: PAGINATION_REGISTRATION_LIMIT,
-  totalItems: 0,
-  totalPages: 0,
   error: undefined,
   loading: false,
 };
@@ -28,8 +24,20 @@ const kidGuardianSlice = createSlice({
     },
   },
   extraReducers(builder) {
+    builder.addCase(CreateKidGuardian.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(CreateKidGuardian.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(CreateKidGuardian.rejected, (state, action) => {
+      const apiError = action.payload as IApiErrorResponse;
+      state.error = apiError.error.message;
+      state.loading = false;
+    });
     builder.addCase(GetKidGuardian.pending, (state) => {
-      state.current = undefined;
       state.error = undefined;
       state.loading = true;
     });
@@ -40,18 +48,6 @@ const kidGuardianSlice = createSlice({
     });
     builder.addCase(GetKidGuardian.rejected, (state, action) => {
       state.current = undefined;
-      state.error = action.error.message;
-      state.loading = false;
-    });
-    builder.addCase(CreateKidGuardian.pending, (state) => {
-      state.error = undefined;
-      state.loading = true;
-    });
-    builder.addCase(CreateKidGuardian.fulfilled, (state) => {
-      state.error = undefined;
-      state.loading = false;
-    });
-    builder.addCase(CreateKidGuardian.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });

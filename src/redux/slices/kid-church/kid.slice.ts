@@ -1,28 +1,21 @@
-import { PayloadAction, createSlice } from '@reduxjs/toolkit';
-import { PAGINATION_REGISTRATION_LIMIT } from '../../constants/pagination';
-import { IKid, IKids } from '../../models/Kid';
+import { IKid, IKids, IUpdateKid } from '@/models/KidChurch';
+import { IApiErrorResponse } from '@/models/Redux';
 import {
   CreateKid,
   GetKid,
-  GetKidGroups,
-  GetKidMedicalConditions,
   GetKids,
   GetMoreKids,
-  RegisterKid,
   UpdateKid,
-} from '../../services/kidService';
+} from '@/redux/thunks/kid-church/kid.thunk';
+import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 
 const initialState: IKids = {
   data: [],
-  groups: [],
-  medicalConditions: [],
   current: undefined,
-  currentPage: 1,
-  itemsPerPage: PAGINATION_REGISTRATION_LIMIT,
-  totalItems: 0,
-  totalPages: 0,
   error: undefined,
   loading: false,
+  currentPage: 1,
+  totalPages: 0,
 };
 
 const kidSlice = createSlice({
@@ -42,67 +35,39 @@ const kidSlice = createSlice({
   extraReducers(builder) {
     builder.addCase(GetKids.pending, (state) => {
       state.data = [];
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetKids.fulfilled, (state, action) => {
       state.data = action.payload.data;
-      state.currentPage = 1;
-      state.totalItems = action.payload.totalItems;
-      state.totalPages = action.payload.totalPages;
       state.error = undefined;
       state.loading = false;
+      state.currentPage = action.payload.currentPage;
+      state.totalPages = action.payload.totalPages;
     });
     builder.addCase(GetKids.rejected, (state, action) => {
       state.data = [];
       state.error = action.error.message;
       state.loading = false;
+      state.currentPage = initialState.currentPage;
+      state.totalPages = initialState.totalPages;
     });
     builder.addCase(GetMoreKids.pending, (state) => {
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetMoreKids.fulfilled, (state, action) => {
       state.data = Array.from(state.data).concat(action.payload.data);
-      state.currentPage = state.currentPage + 1;
-      state.error = undefined;
       state.loading = false;
+      state.currentPage = state.currentPage + 1;
+      state.totalPages = action.payload.totalPages;
     });
     builder.addCase(GetMoreKids.rejected, (state, action) => {
       state.data = [];
       state.error = action.error.message;
       state.loading = false;
-    });
-    builder.addCase(GetKidGroups.pending, (state) => {
-      state.error = undefined;
-      state.loading = true;
-    });
-    builder.addCase(GetKidGroups.fulfilled, (state, action) => {
-      state.groups = action.payload;
-      state.error = undefined;
-      state.loading = false;
-    });
-    builder.addCase(GetKidGroups.rejected, (state, action) => {
-      state.groups = [];
-      state.error = action.error.message;
-      state.loading = false;
-    });
-    builder.addCase(GetKidMedicalConditions.pending, (state) => {
-      state.error = undefined;
-      state.loading = true;
-    });
-    builder.addCase(GetKidMedicalConditions.fulfilled, (state, action) => {
-      state.medicalConditions = action.payload;
-      state.error = undefined;
-      state.loading = false;
-    });
-    builder.addCase(GetKidMedicalConditions.rejected, (state, action) => {
-      state.medicalConditions = [];
-      state.error = action.error.message;
-      state.loading = false;
+      state.currentPage = initialState.currentPage;
+      state.totalPages = initialState.totalPages;
     });
     builder.addCase(GetKid.pending, (state) => {
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetKid.fulfilled, (state, action) => {
@@ -117,23 +82,26 @@ const kidSlice = createSlice({
     });
     builder.addCase(CreateKid.pending, (state) => {
       state.error = undefined;
+      state.current = undefined;
       state.loading = true;
     });
-    builder.addCase(CreateKid.fulfilled, (state) => {
+    builder.addCase(CreateKid.fulfilled, (state, action) => {
+      state.current = action.payload;
       state.error = undefined;
       state.loading = false;
     });
     builder.addCase(CreateKid.rejected, (state, action) => {
-      state.error = action.error.message;
+      const apiError = action.payload as IApiErrorResponse;
+      state.current = undefined;
+      state.error = apiError.error.message;
       state.loading = false;
     });
     builder.addCase(UpdateKid.pending, (state) => {
-      state.error = undefined;
       state.loading = true;
     });
     builder.addCase(
       UpdateKid.fulfilled,
-      (state, action: PayloadAction<IKid>) => {
+      (state, action: PayloadAction<IUpdateKid>) => {
         state.current = {
           ...state.current,
           ...action.payload,
@@ -143,18 +111,6 @@ const kidSlice = createSlice({
       },
     );
     builder.addCase(UpdateKid.rejected, (state, action) => {
-      state.error = action.error.message;
-      state.loading = false;
-    });
-    builder.addCase(RegisterKid.pending, (state) => {
-      state.error = undefined;
-      state.loading = true;
-    });
-    builder.addCase(RegisterKid.fulfilled, (state) => {
-      state.error = undefined;
-      state.loading = false;
-    });
-    builder.addCase(RegisterKid.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });

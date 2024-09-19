@@ -1,6 +1,6 @@
 import { Button, CheckList, Popup, SearchBar, Space } from 'antd-mobile';
 import { FC, useMemo, useState } from 'react';
-import { healthSecurityEntitySelect } from '../models/Uset';
+import { healthSecurityEntitySelect } from '../models/User';
 
 interface HealthSecurityEntitySelectorProps {
   healthSecurityEntity?: { id: string; name: string };
@@ -26,21 +26,6 @@ export const HealthSecurityEntitySelector: FC<
     }
   }, [searchHealthSecurityEntity]);
 
-  // const [visible, setVisible] = useState(false);
-
-  // const triggerValue = (changedValue: Partial<MobileValue>) => {
-  //   onChange?.({ ...value, ...changedValue });
-  // };
-
-  // const onRealValueChange = (value: string) => {
-  //   triggerValue({ realValue: value });
-  // };
-
-  // const onPreValueChange = (value: PickerValue[]) => {
-  //   const v = value[0];
-  //   if (v === null) return;
-  //   triggerValue({ preValue: v });
-  // };
   return (
     <>
       <Space align="center">

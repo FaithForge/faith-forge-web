@@ -8,23 +8,32 @@ import {
   InfiniteScroll,
   NoticeBar,
 } from 'antd-mobile';
-import { HomeOutlined, UserAddOutlined } from '@ant-design/icons';
+import {
+  HomeOutlined,
+  QrcodeOutlined,
+  SearchOutlined,
+  UserAddOutlined,
+} from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useEffect, useState } from 'react';
-import { GetKids, GetMoreKids } from '../../services/kidService';
-import { UserGenderCode } from '../../models/Uset';
+import { UserGenderCode } from '../../models/User';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
-import { IKid } from '../../models/Kid';
-import { updateCurrentKid } from '../../redux/slices/kidSlice';
 import { DateTime } from 'luxon';
 import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
 } from '../../constants/copy';
+import { GetKids, GetMoreKids } from '@/redux/thunks/kid-church/kid.thunk';
+import { updateCurrentKid } from '@/redux/slices/kid-church/kid.slice';
+import { IKid } from '@/models/KidChurch';
+import { Layout } from '@/components/Layout';
+import dayjs from 'dayjs';
+import { ChurchRoles, KidChurchRegisterRoles } from '@/utils/auth';
+import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
 
 const Registration: NextPage = () => {
   const {
@@ -36,6 +45,10 @@ const Registration: NextPage = () => {
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
+  const churchPrinterSlice = useSelector(
+    (state: RootState) => state.churchPrinterSlice,
+  );
+  const isAdmin = hasRequiredPermissions(ChurchRoles);
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const router = useRouter();
@@ -45,10 +58,11 @@ const Registration: NextPage = () => {
     icon: '',
     blockRegister: false,
   });
+
   useEffect(() => {
     dispatch(GetKids({ findText }));
     const currentDay = DateTime.local().toFormat('EEEE');
-    if (churchMeeting) {
+    if (churchMeeting && churchPrinterSlice.current) {
       let warning = false;
       if (currentDay.toUpperCase() === churchMeeting.day.toUpperCase()) {
         const currentTime = DateTime.local().toFormat('HH:mm:ss');
@@ -58,7 +72,7 @@ const Registration: NextPage = () => {
           warning = true;
           setWarningAlert({
             ...REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
-            blockRegister: false,
+            blockRegister: true,
           });
         }
         // If the current time is greater than the meeting end time
@@ -87,7 +101,7 @@ const Registration: NextPage = () => {
   }, [dispatch, findText, pathname]);
 
   const getMoreKids = async () => {
-    dispatch(GetMoreKids());
+    dispatch(GetMoreKids({ findText }));
   };
 
   const registerKidViewHandler = (kid: IKid) => {
@@ -96,7 +110,7 @@ const Registration: NextPage = () => {
   };
 
   return (
-    <>
+    <Layout>
       {loading ? <LoadingMask /> : ''}
 
       <SearchBar
@@ -104,6 +118,8 @@ const Registration: NextPage = () => {
         cancelText="Cancelar"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
+        onCancel={() => setFindText('')}
+        icon={<SearchOutlined />}
         style={{
           position: 'sticky',
           top: '0',
@@ -118,7 +134,7 @@ const Registration: NextPage = () => {
           '--height': '25px',
         }}
         icon={<HomeOutlined />}
-        content={`Servicio a Registrar: ${churchMeeting?.name}`}
+        content={`${churchMeeting?.name} - Impresora: ${churchPrinterSlice.current?.name}`}
         color="info"
       />
       {warningAlert.message && (
@@ -131,10 +147,14 @@ const Registration: NextPage = () => {
         {kids.length ? (
           kids.map((kid) => (
             <List.Item
-              disabled={warningAlert.blockRegister}
+              disabled={warningAlert.blockRegister && !isAdmin}
               key={kid.faithForgeId}
               style={{
-                backgroundColor: kid.isRegistered ? '#dddddd' : 'white',
+                backgroundColor: kid.currentKidRegistration
+                  ? '#ebebeb'
+                  : kid.age >= 12
+                  ? '#FBDAD7'
+                  : 'white',
               }}
               prefix={
                 <Image
@@ -152,11 +172,19 @@ const Registration: NextPage = () => {
                   height={40}
                 />
               }
-              description={capitalizeWords(
-                `Codigo: ${kid.faithForgeId} ${
-                  kid.isRegistered ? '(Registrado)' : ''
-                }`,
-              )}
+              description={
+                kid.age < 12
+                  ? `Codigo: ${kid.faithForgeId} ${
+                      kid.currentKidRegistration
+                        ? `(Registrado a las ${dayjs(
+                            kid.currentKidRegistration.date.toString(),
+                          )
+                            .locale('es')
+                            .format('h:mm:ss A')})`
+                        : ''
+                    }`
+                  : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
+              }
               onClick={() => registerKidViewHandler(kid)}
             >
               {capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
@@ -191,8 +219,19 @@ const Registration: NextPage = () => {
       >
         <UserAddOutlined style={{ fontSize: '28px' }} />
       </FloatingBubble>
-    </>
+      <FloatingBubble
+        style={{
+          '--initial-position-bottom': '140px',
+          '--initial-position-right': '20px',
+          '--edge-distance': '24px',
+          '--background': 'black',
+        }}
+        onClick={() => router.push('/registration/qrReader')}
+      >
+        <QrcodeOutlined style={{ fontSize: '28px' }} />
+      </FloatingBubble>
+    </Layout>
   );
 };
 
-export default Registration;
+export default withRoles(Registration, KidChurchRegisterRoles);

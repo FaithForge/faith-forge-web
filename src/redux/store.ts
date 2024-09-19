@@ -9,19 +9,36 @@ import {
   persistReducer,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-
-import churchMeetingSlice from './slices/churchMeetingSlice';
-import churchSlice from './slices/churchSlice';
-import kidGuardianSlice from './slices/kidGuardianSlice';
-import kidSlice from './slices/kidSlice';
-import userSlice from './slices/userSlice';
+import churchSlice from './slices/church/church.slice';
+import churchMeetingSlice from './slices/church/churchMeeting.slice';
+import churchPrinterSlice from './slices/church/churchPrinter.slice';
+import kidGroupRegisteredSlice from './slices/kid-church/kid-group-registered.slice';
+import kidGroupSlice from './slices/kid-church/kid-group.slice';
+import kidGuardianSlice from './slices/kid-church/kid-guardian.slice';
+import kidMedicalConditionSlice from './slices/kid-church/kid-medical-condition.slice';
+import kidRegistrationSlice from './slices/kid-church/kid-registration.slice';
+import kidSlice from './slices/kid-church/kid.slice';
+import scanQRKidGuardianSlice from './slices/kid-church/scan-code-kid-registration.slice';
+import accountSlice from './slices/user/account.slice';
+import authSlice from './slices/user/auth.slice';
+import editUserSlice from './slices/user/editUser.slice';
+import userSlice from './slices/user/users.slice';
 
 const reducers = combineReducers({
-  churchMeetingSlice,
   churchSlice,
-  kidGuardianSlice,
+  churchMeetingSlice,
+  churchPrinterSlice,
+  kidGroupSlice,
+  kidMedicalConditionSlice,
+  kidRegistrationSlice,
   kidSlice,
+  kidGuardianSlice,
+  authSlice,
+  accountSlice,
+  kidGroupRegisteredSlice,
+  editUserSlice,
   userSlice,
+  scanQRKidGuardianSlice,
 });
 
 const persistConfig = {
