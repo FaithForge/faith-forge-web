@@ -11,6 +11,7 @@ import {
   CheckList,
   Collapse,
   Form,
+  Popover,
   Space,
   Steps,
   TextArea,
@@ -27,8 +28,11 @@ import {
   ArrowRightOutlined,
   CheckCircleOutlined,
   CheckCircleTwoTone,
+  QrcodeOutlined,
 } from '@ant-design/icons';
 import { Step } from 'antd-mobile/es/components/steps/step';
+import { Action } from 'antd-mobile/es/components/popover';
+import { MoreOutline } from 'antd-mobile-icons';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
@@ -144,10 +148,36 @@ const QRReader: NextPage = () => {
     scanQRKidGuardianSlice.relations,
   ]);
 
+  const actions: Action[] = [
+    {
+      key: 'updateKid',
+      icon: <QrcodeOutlined />,
+      text: 'Generar QR Acudiente',
+      onClick: () => {
+        router.push('/registration/generateQRKidGuardian');
+      },
+    },
+  ];
+
+  const right = (
+    <div style={{ fontSize: 24 }}>
+      <Space style={{ '--gap': '16px' }}>
+        <Popover.Menu
+          actions={actions}
+          placement="bottom-start"
+          trigger="click"
+          onAction={(node) => node.onClick}
+        >
+          <MoreOutline />
+        </Popover.Menu>
+      </Space>
+    </div>
+  );
+
   return (
     <Layout>
       {scanQRKidGuardianSlice.loading ? <LoadingMask /> : ''}
-      <NavBarApp title={titleNavBar} />
+      <NavBarApp title={titleNavBar} right={right} />
       <Steps current={step}>
         <Step title="Escanear Codigo" />
         <Step title="Escoger Niños a Registrar" />
