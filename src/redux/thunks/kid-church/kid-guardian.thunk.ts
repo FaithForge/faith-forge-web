@@ -82,3 +82,26 @@ export const UpdateKidGuardianPhone = createAsyncThunk(
     }
   },
 );
+
+export const UploadQRCodeImage = createAsyncThunk(
+  'kid-church/uploadQRCodeImage',
+  async (payload: { formData: any }, { getState }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+    const response = (
+      await makeApiRequest(
+        ApiVerbs.POST,
+        `/${MS_KID_CHURCH_PATH}/user/upload-qr-code`,
+        {
+          data: payload.formData,
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'multipart/form-data',
+          },
+        },
+      )
+    ).data;
+
+    return response.key;
+  },
+);

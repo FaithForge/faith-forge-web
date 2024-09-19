@@ -18,6 +18,7 @@ import kidGuardianSlice from './slices/kid-church/kid-guardian.slice';
 import kidMedicalConditionSlice from './slices/kid-church/kid-medical-condition.slice';
 import kidRegistrationSlice from './slices/kid-church/kid-registration.slice';
 import kidSlice from './slices/kid-church/kid.slice';
+import scanQRKidGuardianSlice from './slices/kid-church/scan-code-kid-registration.slice';
 import accountSlice from './slices/user/account.slice';
 import authSlice from './slices/user/auth.slice';
 import editUserSlice from './slices/user/editUser.slice';
@@ -37,6 +38,7 @@ const reducers = combineReducers({
   kidGroupRegisteredSlice,
   editUserSlice,
   userSlice,
+  scanQRKidGuardianSlice,
 });
 
 const persistConfig = {

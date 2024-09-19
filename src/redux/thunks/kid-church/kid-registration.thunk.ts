@@ -93,3 +93,28 @@ export const RemoveKidRegistration = createAsyncThunk(
     return response;
   },
 );
+
+export const ScanCodeKidRegistration = createAsyncThunk(
+  'kid-church/ScanCodeKidRegistration',
+  async (code: string, { getState }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+    const churchMeeting = state.churchMeetingSlice;
+
+    const response = (
+      await makeApiRequest(
+        ApiVerbs.GET,
+        `/${MS_KID_CHURCH_PATH}/kid-registration/scan-code`,
+        {
+          params: {
+            code,
+            registrationChurchMeetingId: churchMeeting.current?.id,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      )
+    ).data;
+
+    return response;
+  },
+);
