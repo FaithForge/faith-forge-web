@@ -8,11 +8,15 @@ import { Layout } from '@/components/Layout';
 import { QRCode } from 'react-qrcode-logo';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '@/redux/store';
-import { GetKidGuardian } from '@/redux/thunks/kid-church/kid-guardian.thunk';
+import {
+  GetKidGuardian,
+  UploadQRCodeImage,
+} from '@/redux/thunks/kid-church/kid-guardian.thunk';
 import {
   CloudDownloadOutlined,
   PrinterOutlined,
   ShareAltOutlined,
+  WhatsAppOutlined,
 } from '@ant-design/icons';
 import { capitalizeWords } from '@/utils/text';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
@@ -50,7 +54,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
         .replace('image/png', 'image/octet-stream');
       const downloadLink = document.createElement('a');
       downloadLink.href = pngUrl;
-      downloadLink.download = `${guardian?.nationalId}.png`;
+      downloadLink.download = `${guardian?.id}.png`;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       document.body.removeChild(downloadLink);
@@ -65,7 +69,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
       const dataUrl = canvas.toDataURL();
       const blob = await (await fetch(dataUrl)).blob();
       const filesArray = [
-        new File([blob], `${guardian?.nationalId}.png`, {
+        new File([blob], `${guardian?.id}.png`, {
           type: blob.type,
           lastModified: new Date().getTime(),
         }),
@@ -77,11 +81,44 @@ const GenerateQRKidGuardianView: NextPage = () => {
     }
   };
 
+  const sharedCQRodeWhatsapp = async () => {
+    const canvas: any = document.getElementById(
+      'qr-code-generate-kid-guardian',
+    );
+    if (canvas && guardian && guardian.id) {
+      const dataUrl = canvas.toDataURL();
+      const photo = await (await fetch(dataUrl)).blob();
+
+      const formData = new FormData();
+      formData.append('file', photo);
+      formData.append('qrCodeValue', guardian.id);
+      const photoUrl = (await dispatch(UploadQRCodeImage({ formData })))
+        .payload as string;
+
+      const url = `https://api.whatsapp.com/send?phone=${
+        guardian.phone
+      }&text=${encodeURIComponent(
+        `¡Hola! 
+Desde Iglekids te compartimos el siguiente enlace donde podrás descargar tu código QR para que en futuros registros lo puedas presentar a uno de nuestros maestros y tu registro sea mucho mas rapido:
+
+*URL de imagen:* ${photoUrl}
+        
+Este código es *personal*, debe ser presentado bajo el nombre del acudiente quien esta registrando. Luego de presentarlo el maestro te preguntara cuales de tu(s) hijo(s) deseas registrar y posterior las observaciones del mismo.
+
+Cualquier duda o pregunta recuerda que nuestro equipo esta presto para servirte.
+
+Y recuerda que para nosotros siempre será un privilegio cuidar a tu niño como si fuera Jesus.`,
+      )}`;
+
+      window.open(url, '_blank');
+    }
+  };
+
   return (
     <Layout>
       {guardianLoading ? <LoadingMask /> : ''}
 
-      <NavBarApp title="Generar Codigo QR" />
+      <NavBarApp title="Generar Código QR" />
       <SearchBar
         placeholder="Colocar Numero de Cedula del Acudiente"
         onSearch={(value) => findGuardian(value)}
@@ -120,10 +157,22 @@ const GenerateQRKidGuardianView: NextPage = () => {
 
           <Grid columns={1} gap={8}>
             <Grid.Item>
+              <Button
+                onClick={() => sharedCQRodeWhatsapp()}
+                block
+                color="primary"
+              >
+                <Space>
+                  <WhatsAppOutlined />
+                  <span>Compartir por Whatsapp</span>
+                </Space>
+              </Button>
+            </Grid.Item>
+            <Grid.Item>
               <Button onClick={() => sharedCode()} block color="primary">
                 <Space>
                   <ShareAltOutlined />
-                  <span>Compartir</span>
+                  <span>Compartir Imagen</span>
                 </Space>
               </Button>
             </Grid.Item>
