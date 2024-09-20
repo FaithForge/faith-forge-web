@@ -17,6 +17,7 @@ import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import LoadingMask from '@/components/LoadingMask';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '@/utils/auth';
+import packageJson from '../../package.json';
 
 const CenteredContainer = styled.div`
   display: flex;
@@ -119,17 +120,17 @@ const Login: NextPage = () => {
               },
             ]}
           >
-            <Input placeholder="Ingresa tu Usuario/Email" />
+            <Input placeholder="Ingresa tu usuario/email" />
           </Form.Item>
           <Form.Item
             name="password"
             label="Contraseña"
             rules={[
-              { required: true, message: 'Por favor escribe tu Contraseña' },
+              { required: true, message: 'Por favor, escribe tu contraseña' },
             ]}
           >
             <Input
-              placeholder="Ingresa tu Contraseña"
+              placeholder="Ingresa tu contraseña"
               type="password"
               minLength={6}
               maxLength={16}
@@ -137,6 +138,7 @@ const Login: NextPage = () => {
           </Form.Item>
         </Form>
       </Card>
+      Versión {packageJson.version}
     </CenteredContainer>
   );
 };

@@ -70,13 +70,19 @@ export const Layout = ({ children }: Props) => {
             bottom: '0',
             left: '0',
             width: '100%',
-            backgroundColor: '#f5f5f5',
+            backgroundColor: '#ffffff',
+            borderTop: '1px solid var(--adm-color-border)',
           }}
           className="TabBarApp"
         >
           {tabs.map((item) =>
             item.show() ? (
-              <TabBar.Item key={item.key} icon={item.icon} title={item.title} />
+              <TabBar.Item
+                key={item.key}
+                icon={item.icon}
+                title={item.title}
+                style={{ padding: '8px 8px' }}
+              />
             ) : null,
           )}
         </TabBar>

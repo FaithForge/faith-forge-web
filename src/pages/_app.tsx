@@ -1,12 +1,14 @@
 import React from 'react';
 import type { AppProps } from 'next/app';
-import { SafeArea } from 'antd-mobile';
+import { ConfigProvider, SafeArea } from 'antd-mobile';
 import Head from 'next/head';
 import { Providers } from '../redux/provider';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore } from 'redux-persist';
 import { store } from '../redux/store';
 import Setup from './_setup';
+import esES from 'antd-mobile/es/locales/es-ES';
+import './theme.css';
 
 function MyApp({ Component, pageProps }: AppProps) {
   const persistor = persistStore(store);
@@ -21,10 +23,12 @@ function MyApp({ Component, pageProps }: AppProps) {
           />
           <meta name="HandheldFriendly" content="true" />
         </Head>
-        <SafeArea position="top" />
+        <ConfigProvider locale={esES}>
+          <SafeArea position="top" />
           <Component {...pageProps} />
-          <Setup/>
-        <SafeArea position="bottom" />
+          <Setup />
+          <SafeArea position="bottom" />
+        </ConfigProvider>
       </PersistGate>
     </Providers>
   );
