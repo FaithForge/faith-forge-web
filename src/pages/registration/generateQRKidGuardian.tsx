@@ -33,12 +33,12 @@ const GenerateQRKidGuardianView: NextPage = () => {
 
   useEffect(() => {
     dispatch(cleanCurrentKidGuardian());
-    setLoading(true);
   }, []);
 
   useEffect(() => {
     const fetchUrl = async () => {
       if (guardian) {
+        setLoading(true);
         setSearch(true);
         const url = await sharedCQRodeWhatsapp();
         setUrlCode(url);
