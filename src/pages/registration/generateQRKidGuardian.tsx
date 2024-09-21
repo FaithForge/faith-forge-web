@@ -25,6 +25,7 @@ import LoadingMask from '@/components/LoadingMask';
 const GenerateQRKidGuardianView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [search, setSearch] = useState(false);
+  const [urlCode, setUrlCode] = useState<string | undefined>(undefined);
 
   const { current: guardian, loading: guardianLoading } = useSelector(
     (state: RootState) => state.kidGuardianSlice,
@@ -39,9 +40,15 @@ const GenerateQRKidGuardianView: NextPage = () => {
   }, []);
 
   useEffect(() => {
-    if (guardian) {
-      setSearch(true);
-    }
+    const fetchUrl = async () => {
+      if (guardian) {
+        setSearch(true);
+        const url = await sharedCQRodeWhatsapp();
+        setUrlCode(url);
+      }
+    };
+
+    fetchUrl();
   }, [guardian]);
 
   const downloadCode = () => {
@@ -85,7 +92,10 @@ const GenerateQRKidGuardianView: NextPage = () => {
     const canvas: any = document.getElementById(
       'qr-code-generate-kid-guardian',
     );
-    if (canvas && guardian && guardian.id) {
+    const canvasWhatsapp: any = document.getElementById(
+      'qr-code-generate-kid-guardian-whatsapp',
+    );
+    if (canvas && canvasWhatsapp && guardian && guardian.id) {
       const dataUrl = canvas.toDataURL();
       const photo = await (await fetch(dataUrl)).blob();
 
@@ -95,22 +105,20 @@ const GenerateQRKidGuardianView: NextPage = () => {
       const photoUrl = (await dispatch(UploadQRCodeImage({ formData })))
         .payload as string;
 
-      const url = `https://api.whatsapp.com/send?phone=${
+      const url = `https://api.whatsapp.com/send?phone=57${
         guardian.phone
       }&text=${encodeURIComponent(
-        `¡Hola! 
-Desde Iglekids te compartimos el siguiente enlace donde podrás descargar tu código QR para que en futuros registros lo puedas presentar a uno de nuestros maestros y tu registro sea mucho mas rapido:
+        `¡Hola *${capitalizeWords(guardian.firstName)} ${capitalizeWords(
+          guardian.lastName,
+        )}*!
+Desde Iglekids te enviamos este enlace para descargar un código QR, el cual podrás mostrar cada vez que registres a tu(s) niño(s) para que este proceso sea más ágil:
 
 *URL de imagen:* ${photoUrl}
         
-Este código es *personal*, debe ser presentado bajo el nombre del acudiente quien esta registrando. Luego de presentarlo el maestro te preguntara cuales de tu(s) hijo(s) deseas registrar y posterior las observaciones del mismo.
-
-Cualquier duda o pregunta recuerda que nuestro equipo esta presto para servirte.
-
-Y recuerda que para nosotros siempre será un privilegio cuidar a tu niño como si fuera Jesus.`,
+Este código es personal, solo lo puede presentar el acudiente que esté relacionado en el QR.`,
       )}`;
 
-      window.open(url, '_blank');
+      return url;
     }
   };
 
@@ -145,13 +153,9 @@ Y recuerda que para nosotros siempre será un privilegio cuidar a tu niño como 
           >
             <QRCode
               qrStyle="dots"
-              value={guardian.id}
-              logoImage={'/logo-iglekids.png'}
-              logoHeight={141}
-              logoWidth={217}
-              logoOpacity={0.4}
+              value={urlCode}
               size={365}
-              id="qr-code-generate-kid-guardian"
+              id="qr-code-generate-kid-guardian-whatsapp"
             />
           </div>
 
@@ -194,6 +198,17 @@ Y recuerda que para nosotros siempre será un privilegio cuidar a tu niño como 
               </Button>
             </Grid.Item>
           </Grid>
+          <QRCode
+            style={{ display: 'none' }}
+            qrStyle="dots"
+            value={guardian.id}
+            logoImage={'/logo-iglekids.png'}
+            logoHeight={141}
+            logoWidth={217}
+            logoOpacity={0.4}
+            size={365}
+            id="qr-code-generate-kid-guardian"
+          />
         </>
       )}
       {!guardian && (
