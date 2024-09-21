@@ -142,6 +142,13 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
           <p style={{ textAlign: 'center', margin: 0 }}>
             Telefono: {guardian.phone}
           </p>
+          <p
+            style={{ textAlign: 'center', marginBottom: 0, fontWeight: 'bold' }}
+          >
+            Pide al acudiente que lea este código con su celular y se autoenvíe
+            el mensaje generado (Este debe tener Whatsapp instalado con el
+            número de teléfono que aparece arriba)
+          </p>
           <div
             style={{
               marginTop: 10,
@@ -158,28 +165,15 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
               id="qr-code-generate-kid-guardian-whatsapp"
             />
           </div>
-
           <Grid columns={1} gap={8}>
-            <Grid.Item>
-              <Button
-                onClick={() => sharedCQRodeWhatsapp()}
-                block
-                color="primary"
-              >
-                <Space>
-                  <WhatsAppOutlined />
-                  <span>Compartir por Whatsapp</span>
-                </Space>
-              </Button>
-            </Grid.Item>
-            <Grid.Item>
+            {/* <Grid.Item>
               <Button onClick={() => sharedCode()} block color="primary">
                 <Space>
                   <ShareAltOutlined />
                   <span>Compartir Imagen</span>
                 </Space>
               </Button>
-            </Grid.Item>
+            </Grid.Item> */}
             <Grid.Item>
               <Button onClick={() => downloadCode()} block color="primary">
                 <Space>
@@ -193,7 +187,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
               <Button block disabled color="primary">
                 <Space>
                   <PrinterOutlined />
-                  <span>Imprimir</span>
+                  <span>Imprimir (Proximanente)</span>
                 </Space>
               </Button>
             </Grid.Item>
