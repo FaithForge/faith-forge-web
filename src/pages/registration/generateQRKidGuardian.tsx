@@ -12,12 +12,7 @@ import {
   GetKidGuardian,
   UploadQRCodeImage,
 } from '@/redux/thunks/kid-church/kid-guardian.thunk';
-import {
-  CloudDownloadOutlined,
-  PrinterOutlined,
-  ShareAltOutlined,
-  WhatsAppOutlined,
-} from '@ant-design/icons';
+import { CloudDownloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import { capitalizeWords } from '@/utils/text';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
 import LoadingMask from '@/components/LoadingMask';
