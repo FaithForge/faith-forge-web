@@ -24,6 +24,7 @@ import LoadingMask from '@/components/LoadingMask';
 
 const GenerateQRKidGuardianView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState(false);
   const [urlCode, setUrlCode] = useState<string | undefined>(undefined);
 
@@ -37,6 +38,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
 
   useEffect(() => {
     dispatch(cleanCurrentKidGuardian());
+    setLoading(true);
   }, []);
 
   useEffect(() => {
@@ -45,6 +47,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
         setSearch(true);
         const url = await sharedCQRodeWhatsapp();
         setUrlCode(url);
+        setLoading(false);
       }
     };
 
@@ -68,25 +71,25 @@ const GenerateQRKidGuardianView: NextPage = () => {
     }
   };
 
-  const sharedCode = async () => {
-    const canvas: any = document.getElementById(
-      'qr-code-generate-kid-guardian',
-    );
-    if (canvas) {
-      const dataUrl = canvas.toDataURL();
-      const blob = await (await fetch(dataUrl)).blob();
-      const filesArray = [
-        new File([blob], `${guardian?.id}.png`, {
-          type: blob.type,
-          lastModified: new Date().getTime(),
-        }),
-      ];
-      const shareData = {
-        files: filesArray,
-      };
-      navigator.share(shareData);
-    }
-  };
+  // const sharedCode = async () => {
+  //   const canvas: any = document.getElementById(
+  //     'qr-code-generate-kid-guardian',
+  //   );
+  //   if (canvas) {
+  //     const dataUrl = canvas.toDataURL();
+  //     const blob = await (await fetch(dataUrl)).blob();
+  //     const filesArray = [
+  //       new File([blob], `${guardian?.id}.png`, {
+  //         type: blob.type,
+  //         lastModified: new Date().getTime(),
+  //       }),
+  //     ];
+  //     const shareData = {
+  //       files: filesArray,
+  //     };
+  //     navigator.share(shareData);
+  //   }
+  // };
 
   const sharedCQRodeWhatsapp = async () => {
     const canvas: any = document.getElementById(
@@ -124,7 +127,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
 
   return (
     <Layout>
-      {guardianLoading ? <LoadingMask /> : ''}
+      {guardianLoading || loading ? <LoadingMask /> : ''}
 
       <NavBarApp title="Generar Código QR" />
       <SearchBar
