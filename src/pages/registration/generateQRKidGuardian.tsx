@@ -191,7 +191,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
             </Grid.Item>
           </Grid>
           <QRCode
-            // style={{ display: 'none' }}
+            style={{ display: 'contents' }}
             qrStyle="dots"
             value={guardian.id}
             logoImage={'/logo-iglekids.png'}
