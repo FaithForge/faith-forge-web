@@ -28,6 +28,8 @@ import {
   ArrowRightOutlined,
   CheckCircleOutlined,
   CheckCircleTwoTone,
+  MinusOutlined,
+  PlusOutlined,
   QrcodeOutlined,
 } from '@ant-design/icons';
 import { Step } from 'antd-mobile/es/components/steps/step';
@@ -201,7 +203,7 @@ const QRReader: NextPage = () => {
           >
             Acudiente
           </h1>
-          <h2
+          <p
             style={{
               textAlign: 'center',
               fontSize: 22,
@@ -212,11 +214,11 @@ const QRReader: NextPage = () => {
             {capitalizeWords(
               scanQRKidGuardianSlice.kidGuardian?.firstName ?? '',
             )}
-          </h2>
-          <h2
+          </p>
+          <p
             style={{
               textAlign: 'center',
-              fontSize: 22,
+              fontSize: 18,
               marginTop: 0,
               marginBottom: 5,
             }}
@@ -224,8 +226,11 @@ const QRReader: NextPage = () => {
             {capitalizeWords(
               scanQRKidGuardianSlice.kidGuardian?.lastName ?? '',
             )}
-          </h2>
-          <h3>Seleccione los niños a registrar</h3>
+          </p>
+          <h3 style={{ textAlign: 'center' }}>
+            Confirme que sea el acudiente y luego seleccione los niños a
+            registrar
+          </h3>
 
           <CheckList
             multiple
@@ -237,7 +242,12 @@ const QRReader: NextPage = () => {
               <CheckList.Item
                 value={relation.id}
                 key={relation.id}
-                disabled={!!relation.currentKidRegistration}
+                disabled={
+                  !!relation.currentKidRegistration || relation.age >= 12
+                }
+                description={`Codigo: ${relation.faithForgeId} - Salon: ${
+                  relation.kidGroup.name
+                } ${relation.staticGroup ? '(Estatico)' : ''}`}
               >
                 {capitalizeWords(relation.firstName)}{' '}
                 {capitalizeWords(relation.lastName)}{' '}
@@ -286,6 +296,7 @@ const QRReader: NextPage = () => {
 
           <Collapse
             accordion
+            arrow={(active) => (active ? <MinusOutlined /> : <PlusOutlined />)}
             style={{
               marginTop: 10,
               marginBottom: 10,
@@ -295,7 +306,9 @@ const QRReader: NextPage = () => {
               <Collapse.Panel
                 key={relation.id}
                 title={`${capitalizeWords(relation.firstName)} 
-                  ${capitalizeWords(relation.lastName)}`}
+                  ${capitalizeWords(relation.lastName)} - ${
+                    relation.kidGroup.name
+                  } ${relation.staticGroup ? '(Estatico)' : ''}`}
               >
                 <Form.Item
                   name={`observations-${relation.id}`}
