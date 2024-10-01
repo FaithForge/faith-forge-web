@@ -1,20 +1,21 @@
-import { Mask, SpinLoading } from 'antd-mobile';
+import { Loading, Overlay } from 'react-vant';
 
 const LoadingMask = () => {
   return (
     <>
-      <Mask visible={true}>
-        <SpinLoading
+      <Overlay visible={true} zIndex={10000}>
+        <Loading
+          size={64}
           style={{
-            '--size': '64px',
             position: 'absolute',
             top: '50%',
             left: '50%',
             transform: 'translate(-50%, -50%)',
           }}
-          color="primary"
+          type="spinner"
+          color="white"
         />
-      </Mask>
+      </Overlay>
     </>
   );
 };

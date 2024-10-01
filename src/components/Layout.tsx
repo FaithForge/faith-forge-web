@@ -1,10 +1,4 @@
 import { useEffect, useState } from 'react';
-import {
-  SettingOutlined,
-  AuditOutlined,
-  SmileOutlined,
-} from '@ant-design/icons';
-import { TabBar } from 'antd-mobile';
 import { usePathname, useRouter } from 'next/navigation';
 import { AuthWrapper } from './AuthWrapper';
 import {
@@ -12,6 +6,8 @@ import {
   IsRegisterKidChurch,
   IsSupervisorKidChurch,
 } from '@/utils/auth';
+import { Tabbar } from 'react-vant';
+import { Search, SettingO, SmileO } from '@react-vant/icons';
 
 type Props = {
   children?: React.ReactNode;
@@ -21,19 +17,19 @@ const tabs = [
   {
     key: '/registration',
     title: 'Registro',
-    icon: <AuditOutlined />,
+    icon: <Search />,
     show: () => IsRegisterKidChurch(),
   },
   {
     key: '/kid-church',
     title: 'Iglekids',
-    icon: <SmileOutlined />,
+    icon: <SmileO />,
     show: () => IsSupervisorKidChurch(),
   },
   {
     key: '/settings',
     title: 'Configuración',
-    icon: <SettingOutlined />,
+    icon: <SettingO />,
     show: () => IsAllRole(),
   },
 ];
@@ -62,30 +58,27 @@ export const Layout = ({ children }: Props) => {
         >
           {children}
         </div>
-        <TabBar
-          activeKey={`/${pathname.split('/')[1]}`}
-          onChange={(value) => router.push(value)}
-          style={{
-            position: 'fixed',
-            bottom: '0',
-            left: '0',
-            width: '100%',
-            backgroundColor: '#ffffff',
-            borderTop: '1px solid var(--adm-color-border)',
-          }}
+        <Tabbar
+          value={`/${pathname.split('/')[1]}`}
+          onChange={(value) => router.push(value as string)}
           className="TabBarApp"
+          // style={{
+          //   position: 'fixed',
+          //   bottom: '0',
+          //   left: '0',
+          //   width: '100%',
+          //   backgroundColor: '#f5f5f5',
+          // }}
         >
           {tabs.map((item) =>
             item.show() ? (
-              <TabBar.Item
-                key={item.key}
-                icon={item.icon}
-                title={item.title}
-                style={{ padding: '8px 8px' }}
-              />
+
+              <Tabbar.Item key={item.key} name={item.key} icon={item.icon}>
+                {item.title}
+              </Tabbar.Item>
             ) : null,
           )}
-        </TabBar>
+        </Tabbar>
       </div>
     </AuthWrapper>
   );
