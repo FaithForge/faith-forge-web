@@ -1,19 +1,4 @@
 import type { NextPage } from 'next';
-import {
-  Image,
-  List,
-  SearchBar,
-  FloatingBubble,
-  ErrorBlock,
-  InfiniteScroll,
-  NoticeBar,
-} from 'antd-mobile';
-import {
-  HomeOutlined,
-  QrcodeOutlined,
-  SearchOutlined,
-  UserAddOutlined,
-} from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -34,6 +19,9 @@ import { Layout } from '@/components/Layout';
 import dayjs from 'dayjs';
 import { ChurchRoles, KidChurchRegisterRoles } from '@/utils/auth';
 import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
+import { Cell, Empty, List, NoticeBar, Search, Image } from 'react-vant';
+import { FloatingBubble } from 'antd-mobile';
+import { QrcodeOutlined, UserAddOutlined } from '@ant-design/icons';
 
 const Registration: NextPage = () => {
   const {
@@ -113,18 +101,20 @@ const Registration: NextPage = () => {
     <Layout>
       {loading ? <LoadingMask /> : ''}
 
-      <SearchBar
-        showCancelButton
-        cancelText="Cancelar"
+      <Search
+        // showCancelButton
+        // cancelText="Cancelar"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
         onCancel={() => setFindText('')}
-        icon={<SearchOutlined />}
+        // icon={<SearchOutlined />}
+        // showAction
+        // actionText="Buscar"
         style={{
           position: 'sticky',
           top: '0',
           zIndex: 2,
-          '--height': '49px',
+          height: '49px',
           padding: '10px 5px',
           backgroundColor: 'white',
         }}
@@ -133,21 +123,21 @@ const Registration: NextPage = () => {
         style={{
           '--height': '25px',
         }}
-        icon={<HomeOutlined />}
-        content={`${churchMeeting?.name} - Impresora: ${churchPrinterSlice.current?.name}`}
+        // leftIcon={<HomeOutlined />}
+        text={`${churchMeeting?.name} - Impresora: ${churchPrinterSlice.current?.name}`}
         color="info"
       />
       {warningAlert.message && (
         <NoticeBar
-          content={warningAlert.message}
+          text={warningAlert.message}
           color={warningAlert.blockRegister ? 'error' : 'alert'}
         />
       )}
-      <List>
+      <List onLoad={getMoreKids} finished={currentPage >= totalPages}>
         {kids.length ? (
           kids.map((kid) => (
-            <List.Item
-              disabled={warningAlert.blockRegister && !isAdmin}
+            <Cell
+              clickable={warningAlert.blockRegister && !isAdmin}
               key={kid.faithForgeId}
               style={{
                 backgroundColor: kid.currentKidRegistration
@@ -156,7 +146,7 @@ const Registration: NextPage = () => {
                   ? '#FBDAD7'
                   : 'white',
               }}
-              prefix={
+              icon={
                 <Image
                   alt={`${kid.firstName} ${kid.lastName}`}
                   src={
@@ -168,11 +158,12 @@ const Registration: NextPage = () => {
                   }
                   style={{ borderRadius: 20 }}
                   fit="cover"
-                  width={40}
-                  height={40}
+                  width={44}
+                  height={44}
                 />
               }
-              description={
+              title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+              label={
                 kid.age < 12
                   ? `Codigo: ${kid.faithForgeId} ${
                       kid.currentKidRegistration
@@ -185,30 +176,14 @@ const Registration: NextPage = () => {
                     }`
                   : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
               }
+              isLink
               onClick={() => registerKidViewHandler(kid)}
-            >
-              {capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-            </List.Item>
+            />
           ))
         ) : (
-          <ErrorBlock
-            status="empty"
-            title="No hay registros"
-            description="No se encontraron registros"
-          />
+          <Empty description="No se encontraron registros" />
         )}
       </List>
-      {loading ? (
-        ''
-      ) : (
-        <InfiniteScroll
-          loadMore={getMoreKids}
-          hasMore={currentPage < totalPages}
-        >
-          {currentPage < totalPages ? '' : 'Final'}
-        </InfiniteScroll>
-      )}
-
       <FloatingBubble
         style={{
           '--initial-position-bottom': '70px',

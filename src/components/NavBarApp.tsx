@@ -1,6 +1,6 @@
-import { NavBar } from 'antd-mobile';
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
+import { NavBar } from 'react-vant';
 
 type Props = {
   title: string;
@@ -19,11 +19,10 @@ const NavBarApp = ({ title, right }: Props) => {
         backgroundColor: 'white',
         '--height': '49px',
       }}
-      onBack={() => router.back()}
-      right={right}
-    >
-      {title}
-    </NavBar>
+      onClickLeft={() => router.back()}
+      title={title}
+      // right={right}
+    />
   );
 };
 

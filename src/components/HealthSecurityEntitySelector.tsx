@@ -1,6 +1,6 @@
-import { Button, CheckList, Popup, SearchBar, Space } from 'antd-mobile';
 import { FC, useMemo, useState } from 'react';
 import { healthSecurityEntitySelect } from '../models/User';
+import { Button, Cell, Checkbox, Popup, Search, Space } from 'react-vant';
 
 interface HealthSecurityEntitySelectorProps {
   healthSecurityEntity?: { id: string; name: string };
@@ -40,14 +40,14 @@ export const HealthSecurityEntitySelector: FC<
       </Space>
       <Popup
         visible={visibleHealthSecurityEntity}
-        onMaskClick={() => {
+        onClickOverlay={() => {
           setVisibleHealthSecurityEntity(false);
         }}
         position="top"
         destroyOnClose
       >
         <div>
-          <SearchBar
+          <Search
             placeholder="Buscar EPS"
             value={searchHealthSecurityEntity}
             onChange={(v) => {
@@ -60,7 +60,7 @@ export const HealthSecurityEntitySelector: FC<
           />
         </div>
         <div style={{ height: '300px', overflowY: 'scroll' }}>
-          <CheckList
+          <Checkbox.Group
             style={{ '--border-top': '0', '--border-bottom': '0' }}
             defaultValue={healthSecurityEntity ? [healthSecurityEntity.id] : []}
             onChange={(val) => {
@@ -83,17 +83,30 @@ export const HealthSecurityEntitySelector: FC<
               setVisibleHealthSecurityEntity(false);
             }}
           >
-            {filteredHealthSecurityEntity
-              ? filteredHealthSecurityEntity.map((condition: any) => (
-                  <CheckList.Item key={condition.id} value={condition.id}>
-                    {condition.name}
-                  </CheckList.Item>
-                ))
-              : null}
-            <CheckList.Item key={'NO TIENE EPS'} value={'NO TIENE EPS'}>
-              NO TIENE EPS
-            </CheckList.Item>
-          </CheckList>
+            <Cell.Group>
+              {filteredHealthSecurityEntity
+                ? filteredHealthSecurityEntity.map((condition: any) => (
+                    // <CheckList.Item key={condition.id} value={condition.id}>
+                    //   {condition.name}
+                    // </CheckList.Item>
+                    <Cell
+                      key={condition.id}
+                      clickable
+                      title={condition.name}
+                      // onClick={() => toggle(condition.id)}
+                      rightIcon={<Checkbox name={condition.id} />}
+                    />
+                  ))
+                : null}
+              <Cell
+                key={'NO TIENE EPS'}
+                clickable
+                title={'NO TIENE EPS'}
+                // onClick={() => toggle(condition.id)}
+                rightIcon={<Checkbox name={'NO TIENE EPS'} />}
+              />
+            </Cell.Group>
+          </Checkbox.Group>
         </div>
       </Popup>
     </>

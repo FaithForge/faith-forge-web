@@ -3,18 +3,18 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
 import { logout } from '@/redux/slices/user/auth.slice';
 import { parseJwt } from '@/utils/jwt';
-import { Toast } from 'antd-mobile';
 import { resetChurchState } from '@/redux/slices/church/church.slice';
 import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
 import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
+import { Toast } from 'react-vant';
 
 type Props = {
   children?: React.ReactNode;
 };
 
 const toastLogout = () => {
-  Toast.show({
-    content: 'Se ha cerrado su sesión',
+  Toast.info({
+    message: 'Se ha cerrado su sesión',
     position: 'bottom',
     duration: 5000,
   });

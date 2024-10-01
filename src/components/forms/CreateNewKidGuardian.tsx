@@ -1,4 +1,3 @@
-import { Button, Form, Input, Popup, Selector, Toast } from 'antd-mobile';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import {
@@ -17,6 +16,7 @@ import {
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { kidRelationSelect } from '@/models/KidChurch';
 import { checkPhoneField } from '@/utils/validator';
+import { Button, Form, Input, Popup, Selector, Toast } from 'react-vant';
 
 type Props = {
   visible: boolean;
@@ -39,9 +39,8 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   useEffect(() => {
     if (error) {
-      Toast.show({
-        icon: 'fail',
-        content: `Ha ocurrido un error al crear el acudiente: ${error}`,
+      Toast.fail({
+        message: `Ha ocurrido un error al crear el acudiente: ${error}`,
         position: 'bottom',
         duration: 5000,
       });
@@ -148,27 +147,28 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   return (
     <Popup
-      showCloseButton
+      closeable
       visible={visible}
       onClose={closeModal}
-      onMaskClick={closeModal}
-      bodyStyle={{
-        borderTopLeftRadius: '8px',
-        borderTopRightRadius: '8px',
-        padding: 5,
-      }}
+      onClickOverlay={closeModal}
+      style={{ height: '90%' }}
+      position="bottom"
+      round
     >
       {guardianLoading ? <LoadingMask /> : ''}
-      <h1>Asignar acudiente</h1>
       <div
-        style={{ overflowY: 'scroll', minHeight: '80vh', maxHeight: '80vh' }}
+        style={{
+          padding: 5,
+        }}
       >
+        <h1>Asignar acudiente</h1>
+
         <Form
           form={form}
           layout="vertical"
           onFinish={onFinish}
           footer={
-            <Button block type="submit" color="primary" size="large">
+            <Button block type="primary" size="large">
               Asignar
             </Button>
           }

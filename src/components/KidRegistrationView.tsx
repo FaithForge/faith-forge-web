@@ -1,16 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import {
-  Space,
-  Form,
-  Button,
-  TextArea,
-  Image,
-  AutoCenter,
-  Grid,
-  Radio,
-  NoticeBar,
-  Toast,
-} from 'antd-mobile';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { capitalizeWords } from '../utils/text';
@@ -31,6 +19,17 @@ import {
 } from '@/redux/thunks/kid-church/kid-registration.thunk';
 import { useRouter } from 'next/router';
 import { GetKid } from '@/redux/thunks/kid-church/kid.thunk';
+import {
+  Button,
+  Form,
+  Grid,
+  Input,
+  NoticeBar,
+  Radio,
+  Space,
+  Toast,
+  Image,
+} from 'react-vant';
 
 const KidRegistrationView = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -69,8 +68,8 @@ const KidRegistrationView = () => {
           observation,
         }),
       );
-      Toast.show({
-        content: 'Se ha registrado al niño con exito',
+      Toast.info({
+        message: 'Se ha registrado al niño con exito',
         position: 'bottom',
         duration: 3000,
       });
@@ -86,8 +85,8 @@ const KidRegistrationView = () => {
         }),
       );
 
-      Toast.show({
-        content: 'Se ha eliminado el registro del niño con exito',
+      Toast.info({
+        message: 'Se ha eliminado el registro del niño con exito',
         position: 'bottom',
         duration: 3000,
       });
@@ -137,51 +136,51 @@ const KidRegistrationView = () => {
   return (
     <>
       {kidSlice.loading || kidRegistrationSlice.loading ? <LoadingMask /> : ''}
-      <AutoCenter>
-        <Image
-          alt="profileImage"
-          src={
-            kidSlice.current?.photoUrl
-              ? kidSlice.current?.photoUrl
-              : kidSlice.current?.gender === UserGenderCode.MALE
-              ? '/icons/boy.png'
-              : '/icons/girl.png'
-          }
-          width={180}
-          height={180}
-          fit="cover"
-          style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
-        />
-        <h1
-          style={{
-            textAlign: 'center',
-            fontSize: 32,
-            marginTop: 5,
-            marginBottom: 5,
-          }}
-        >
-          {capitalizeWords(kidSlice.current?.firstName ?? '')}
-        </h1>
-        <h2
-          style={{
-            textAlign: 'center',
-            fontSize: 22,
-            marginTop: 0,
-            marginBottom: 5,
-          }}
-        >
-          {capitalizeWords(kidSlice.current?.lastName ?? '')}
-        </h2>
-        <p>
-          <b>Código de aplicación:</b> {kidSlice.current?.faithForgeId}
-        </p>
-      </AutoCenter>
+      {/* <AutoCenter> */}
+      <Image
+        alt="profileImage"
+        src={
+          kidSlice.current?.photoUrl
+            ? kidSlice.current?.photoUrl
+            : kidSlice.current?.gender === UserGenderCode.MALE
+            ? '/icons/boy.png'
+            : '/icons/girl.png'
+        }
+        width={180}
+        height={180}
+        fit="cover"
+        style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
+      />
+      <h1
+        style={{
+          textAlign: 'center',
+          fontSize: 32,
+          marginTop: 5,
+          marginBottom: 5,
+        }}
+      >
+        {capitalizeWords(kidSlice.current?.firstName ?? '')}
+      </h1>
+      <h2
+        style={{
+          textAlign: 'center',
+          fontSize: 22,
+          marginTop: 0,
+          marginBottom: 5,
+        }}
+      >
+        {capitalizeWords(kidSlice.current?.lastName ?? '')}
+      </h2>
+      <p>
+        <b>Código de aplicación:</b> {kidSlice.current?.faithForgeId}
+      </p>
+      {/* </AutoCenter> */}
       {birthday.slice(0, -6) ===
         dayjs(new Date()).locale('es').format('MMMM D') && (
         <NoticeBar
-          content="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
+          text="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
           color="info"
-          icon={<GiftOutlined />}
+          leftIcon={<GiftOutlined />}
           style={{ marginBottom: '10px' }}
         />
       )}
@@ -189,8 +188,8 @@ const KidRegistrationView = () => {
         {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
           kidSlice.current?.ageInMonths && (
             <Grid
-              columns={2}
-              gap={8}
+              columnNum={2}
+              gutter={8}
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Edad</Grid.Item>
@@ -204,8 +203,8 @@ const KidRegistrationView = () => {
           )}
         {kidSlice.current?.birthday && (
           <Grid
-            columns={2}
-            gap={8}
+            columnNum={2}
+            gutter={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -216,8 +215,8 @@ const KidRegistrationView = () => {
         )}
         {kidSlice.current?.gender && (
           <Grid
-            columns={2}
-            gap={8}
+            columnNum={2}
+            gutter={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>Género</Grid.Item>
@@ -230,8 +229,8 @@ const KidRegistrationView = () => {
         )}
         {kidSlice.current?.healthSecurityEntity && (
           <Grid
-            columns={2}
-            gap={8}
+            columnNum={2}
+            gutter={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>EPS</Grid.Item>
@@ -241,8 +240,8 @@ const KidRegistrationView = () => {
         {kidSlice.current?.currentKidRegistration && (
           <>
             <Grid
-              columns={2}
-              gap={8}
+              columnNum={2}
+              gutter={8}
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -255,8 +254,8 @@ const KidRegistrationView = () => {
                 .format('MMMM D, YYYY h:mm A')}`}</Grid.Item>
             </Grid>
             <Grid
-              columns={2}
-              gap={8}
+              columnNum={2}
+              gutter={8}
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -267,8 +266,8 @@ const KidRegistrationView = () => {
             {IsSupervisorRegisterKidChurch() &&
               kidSlice.current.currentKidRegistration?.log && (
                 <Grid
-                  columns={2}
-                  gap={8}
+                  columnNum={2}
+                  gutter={8}
                   style={{ paddingBottom: 10, border: '1px' }}
                 >
                   <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -279,8 +278,8 @@ const KidRegistrationView = () => {
               )}
             {kidSlice.current.currentKidRegistration?.observation && (
               <Grid
-                columns={2}
-                gap={8}
+                columnNum={2}
+                gutter={8}
                 style={{ paddingBottom: 10, border: '1px' }}
               >
                 <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -293,8 +292,8 @@ const KidRegistrationView = () => {
         )}
         {kidSlice.current?.medicalCondition && (
           <Grid
-            columns={2}
-            gap={8}
+            columnNum={2}
+            gutter={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -305,8 +304,8 @@ const KidRegistrationView = () => {
         )}
         {kidSlice.current?.observations && (
           <Grid
-            columns={2}
-            gap={8}
+            columnNum={2}
+            gutter={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -317,8 +316,8 @@ const KidRegistrationView = () => {
         )}
         {kidSlice.current?.kidGroup && (
           <Grid
-            columns={2}
-            gap={8}
+            columnNum={2}
+            gutter={8}
             style={{ paddingBottom: 10, border: '1px' }}
           >
             <Grid.Item style={{ fontWeight: 'bold' }}>Salón</Grid.Item>
@@ -339,11 +338,11 @@ const KidRegistrationView = () => {
                 style={{
                   '--height': '20px',
                 }}
-                icon={<HomeOutlined />}
-                content={`Servicio: ${churchMeeting?.name}`}
+                leftIcon={<HomeOutlined />}
+                text={`Servicio: ${churchMeeting?.name}`}
                 color="info"
               />
-              <Button block type="submit" color="primary" size="large">
+              <Button block type="primary" size="large">
                 Registrar
               </Button>
             </>
@@ -402,11 +401,11 @@ const KidRegistrationView = () => {
           </Form.Item>
 
           <Form.Item name="observations" label="Observaciones al registrar">
-            <TextArea
+            <Input.TextArea
               placeholder="Ejemplo: lleva bolso, lleva merienda, está enfermo de algo en el momento."
               maxLength={300}
               rows={3}
-              showCount
+              showWordLimit
             />
           </Form.Item>
         </Form>
