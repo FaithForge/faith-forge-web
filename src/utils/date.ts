@@ -39,11 +39,11 @@ export const getAgeInMonths = (birthday: Date): number => {
   return ageInMonths;
 };
 
-export const labelRendererCalendar = (type: string, data: number) => {
+export const labelRendererCalendar = (type: string, data: number): string => {
   switch (type) {
     case 'month':
       return MONTH_NUMBER_TO_LETTER[data];
     default:
-      return data;
+      return data.toString();
   }
 };

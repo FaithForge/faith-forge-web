@@ -1,13 +1,4 @@
 import type { NextPage } from 'next';
-import {
-  Image,
-  List,
-  SearchBar,
-  FloatingBubble,
-  ErrorBlock,
-  InfiniteScroll,
-} from 'antd-mobile';
-import { SearchOutlined, UserAddOutlined } from '@ant-design/icons';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -21,6 +12,7 @@ import { withRoles } from '@/components/Permissions';
 import { updateCurrentUser } from '@/redux/slices/user/users.slice';
 import { GetMoreUsers, GetUsers } from '@/redux/thunks/user/user.thunk';
 import NavBarApp from '@/components/NavBarApp';
+import { Cell, List, Search, Image, Empty } from 'react-vant';
 
 const Users: NextPage = () => {
   const {
@@ -53,28 +45,28 @@ const Users: NextPage = () => {
       {loading ? <LoadingMask /> : ''}
       <NavBarApp title="Listado Usuarios" />
 
-      <SearchBar
-        showCancelButton
-        cancelText="Cancelar"
+      <Search
+        // showCancelButton
+        // cancelText="Cancelar"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
         onCancel={() => setFindText('')}
-        icon={<SearchOutlined />}
+        // icon={<SearchOutlined />}
         style={{
           position: 'sticky',
           top: '0',
           zIndex: 2,
-          '--height': '49px',
+          height: '49px',
           padding: '10px 5px',
           backgroundColor: 'white',
         }}
       />
-      <List>
+      <List onLoad={getMoreUsers} finished={currentPage >= totalPages}>
         {users.length ? (
           users.map((user) => (
-            <List.Item
+            <Cell
               key={user.faithForgeId}
-              prefix={
+              icon={
                 <Image
                   alt={`${user.firstName} ${user.lastName}`}
                   src={
@@ -94,32 +86,17 @@ const Users: NextPage = () => {
                   height={40}
                 />
               }
-              description={`Codigo: ${user.faithForgeId}`}
+              title={capitalizeWords(`${user.firstName} ${user.lastName}`)}
+              label={`Codigo: ${user.faithForgeId}`}
               onClick={() => editUserViewHandler(user)}
-            >
-              {capitalizeWords(`${user.firstName} ${user.lastName}`)}
-            </List.Item>
+            />
           ))
         ) : (
-          <ErrorBlock
-            status="empty"
-            title="No hay registros"
-            description="No se encontraron registros"
-          />
+          <Empty description="No se encontraron registros" />
         )}
       </List>
-      {loading ? (
-        ''
-      ) : (
-        <InfiniteScroll
-          loadMore={getMoreUsers}
-          hasMore={currentPage < totalPages}
-        >
-          {currentPage < totalPages ? '' : 'Final'}
-        </InfiniteScroll>
-      )}
 
-      <FloatingBubble
+      {/* <FloatingBubble
         style={{
           '--initial-position-bottom': '70px',
           '--initial-position-right': '20px',
@@ -128,7 +105,7 @@ const Users: NextPage = () => {
         onClick={() => router.push('/registration/newKid')}
       >
         <UserAddOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble>
+      </FloatingBubble> */}
     </Layout>
   );
 };

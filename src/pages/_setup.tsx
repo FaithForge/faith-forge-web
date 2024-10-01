@@ -1,4 +1,3 @@
-import { Button, Form, Popup, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '../redux/store';
@@ -17,6 +16,7 @@ import { churchGroup } from '@/constants/church';
 import { updateUserChurchGroup } from '@/redux/slices/user/account.slice';
 import { IsRegisterKidChurch } from '@/utils/auth';
 import { ChurchMeetingStateEnum } from '@/models/Church';
+import { Button, Form, Popup, Selector } from 'react-vant';
 
 const Setup: NextPage = () => {
   const [form] = Form.useForm();
@@ -114,11 +114,11 @@ const Setup: NextPage = () => {
   return (
     <Popup
       visible={visible}
-      bodyStyle={{
-        borderTopLeftRadius: '8px',
-        borderTopRightRadius: '8px',
-        padding: 5,
-      }}
+      // bodyStyle={{
+      //   borderTopLeftRadius: '8px',
+      //   borderTopRightRadius: '8px',
+      //   padding: 5,
+      // }}
     >
       <h1>Configuración Inicial</h1>
       <div
@@ -129,7 +129,7 @@ const Setup: NextPage = () => {
           onFinish={onFinish}
           form={form}
           footer={
-            <Button block type="submit" color="primary" size="large">
+            <Button block type="primary" size="large">
               Comenzar
             </Button>
           }

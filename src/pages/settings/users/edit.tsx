@@ -1,4 +1,3 @@
-import { Button, Form, Input, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { AppDispatch, RootState } from '../../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
@@ -13,6 +12,7 @@ import { UpdateUser } from '@/redux/thunks/user/user.thunk';
 import { resetEditUserState } from '@/redux/slices/user/editUser.slice';
 import LoadingMask from '@/components/LoadingMask';
 import { UserRole } from '@/utils/auth';
+import { Button, Form, Input, Selector } from 'react-vant';
 
 const EditUser: NextPage = () => {
   const [form] = Form.useForm();
@@ -79,7 +79,7 @@ const EditUser: NextPage = () => {
         onFinish={onFinish}
         form={form}
         footer={
-          <Button block type="submit" color="primary" size="large">
+          <Button block type="primary" size="large">
             Actualizar
           </Button>
         }

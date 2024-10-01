@@ -8,7 +8,6 @@ import { store } from '../redux/store';
 import Setup from './_setup';
 import { ConfigProvider } from 'react-vant';
 import { themeVars } from '@/constants/theme';
-import { SafeArea } from 'antd-mobile';
 import './theme.css';
 function MyApp({ Component, pageProps }: AppProps) {
   const persistor = persistStore(store);
@@ -24,10 +23,10 @@ function MyApp({ Component, pageProps }: AppProps) {
             />
             <meta name="HandheldFriendly" content="true" />
           </Head>
-          <SafeArea position="top" />
+          {/* <SafeArea position="top" /> */}
           <Component {...pageProps} />
           <Setup />
-          <SafeArea position="bottom" />
+          {/* <SafeArea position="bottom" /> */}
         </PersistGate>
       </ConfigProvider>
     </Providers>

@@ -1,9 +1,9 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { capitalizeWords } from '../utils/text';
 import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../models/User';
-import { HomeOutlined, EditFilled, GiftOutlined } from '@ant-design/icons';
 
 import { IKidGuardian, KID_RELATION_CODE_MAPPER } from '@/models/KidChurch';
 import { IsSupervisorRegisterKidChurch } from '@/utils/auth';
@@ -180,7 +180,7 @@ const KidRegistrationView = () => {
         <NoticeBar
           text="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
           color="info"
-          leftIcon={<GiftOutlined />}
+          // leftIcon={<GiftOutlined />}
           style={{ marginBottom: '10px' }}
         />
       )}
@@ -338,7 +338,7 @@ const KidRegistrationView = () => {
                 style={{
                   '--height': '20px',
                 }}
-                leftIcon={<HomeOutlined />}
+                // leftIcon={<HomeOutlined />}
                 text={`Servicio: ${churchMeeting?.name}`}
                 color="info"
               />
@@ -380,7 +380,7 @@ const KidRegistrationView = () => {
                       >
                         {kidGuardian.label}
                       </Radio>{' '}
-                      <EditFilled
+                      {/* <EditFilled
                         style={{ fontSize: 18 }}
                         onClick={() => {
                           const kidGuardianSearch =
@@ -392,7 +392,7 @@ const KidRegistrationView = () => {
                             setOpenUpdateKidGuardianPhoneModal(true);
                           }
                         }}
-                      />
+                      /> */}
                     </div>
                   );
                 })}

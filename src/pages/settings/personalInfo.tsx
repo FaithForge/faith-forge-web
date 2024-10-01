@@ -1,4 +1,3 @@
-import { Button, Form, Input, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
@@ -11,6 +10,7 @@ import { Layout } from '@/components/Layout';
 import { capitalizeWords } from '@/utils/text';
 import { UserRole } from '@/utils/auth';
 import { checkLastNameField } from '@/utils/validator';
+import { Button, Form, Input, Selector } from 'react-vant';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -60,7 +60,7 @@ const PersonalInfo: NextPage = () => {
         onFinish={onFinish}
         form={form}
         footer={
-          <Button block type="submit" color="primary" size="large">
+          <Button block type="primary" size="large">
             Guardar
           </Button>
         }

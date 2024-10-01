@@ -1,14 +1,6 @@
-import {
-  Button,
-  DatePicker,
-  DatePickerRef,
-  Form,
-  Grid,
-  Selector,
-} from 'antd-mobile';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
-import { RefObject, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
 import {
@@ -23,6 +15,7 @@ import { labelRendererCalendar } from '../../utils/date';
 import { Layout } from '@/components/Layout';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/redux/store';
+import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
 
 const GenerateChurchDayReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -123,7 +116,7 @@ const GenerateChurchDayReport: NextPage = () => {
           onFinish={onFinish}
           form={form}
           footer={
-            <Button block type="submit" color="primary" size="large">
+            <Button block type="primary" size="large">
               Generar reporte
             </Button>
           }
@@ -141,9 +134,9 @@ const GenerateChurchDayReport: NextPage = () => {
             name="date"
             label="Fecha de reporte"
             trigger="onConfirm"
-            onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-              datePickerRef.current?.open();
-            }}
+            // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
+            //   datePickerRef.current?.open();
+            // }}
             rules={[
               {
                 required: true,
@@ -151,20 +144,16 @@ const GenerateChurchDayReport: NextPage = () => {
               },
             ]}
           >
-            <DatePicker
-              max={now}
-              min={dayjs().subtract(12, 'year').toDate()}
+            <DatetimePicker
+              maxDate={now}
+              minDate={dayjs().subtract(12, 'year').toDate()}
               title={'Fecha de reporte'}
-              cancelText={'Cancelar'}
-              confirmText={'Confirmar'}
-              renderLabel={(type: string, data: number) =>
-                labelRendererCalendar(type, data)
+              cancelButtonText={'Cancelar'}
+              confirmButtonText={'Confirmar'}
+              formatter={(type: string, val: string) =>
+                labelRendererCalendar(type, Number(val))
               }
-            >
-              {(value) =>
-                value ? dayjs(value).format('YYYY-MM-DD') : 'Seleccionar fecha'
-              }
-            </DatePicker>
+            />
           </Form.Item>
         </Form>
       </>
@@ -177,8 +166,8 @@ const GenerateChurchDayReport: NextPage = () => {
                 <h2>Totales generales</h2>
                 <>
                   <Grid
-                    columns={2}
-                    gap={8}
+                    columnNum={2}
+                    gutter={8}
                     style={{ paddingBottom: 10, border: '1px' }}
                   >
                     <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -187,8 +176,8 @@ const GenerateChurchDayReport: NextPage = () => {
                     <Grid.Item>{report.totalKids}</Grid.Item>
                   </Grid>
                   <Grid
-                    columns={2}
-                    gap={8}
+                    columnNum={2}
+                    gutter={8}
                     style={{ paddingBottom: 10, border: '1px' }}
                   >
                     <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -202,8 +191,8 @@ const GenerateChurchDayReport: NextPage = () => {
                 {report.statistics.byKidGroup.map((kidGroup: any) => {
                   return (
                     <Grid
-                      columns={2}
-                      gap={8}
+                      columnNum={2}
+                      gutter={8}
                       style={{ paddingBottom: 10, border: '1px' }}
                       key={kidGroup.name}
                     >
@@ -217,8 +206,8 @@ const GenerateChurchDayReport: NextPage = () => {
 
                 <h2>Totales por genero</h2>
                 <Grid
-                  columns={2}
-                  gap={8}
+                  columnNum={2}
+                  gutter={8}
                   style={{ paddingBottom: 10, border: '1px' }}
                 >
                   <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -231,8 +220,8 @@ const GenerateChurchDayReport: NextPage = () => {
                   </Grid.Item>
                 </Grid>
                 <Grid
-                  columns={2}
-                  gap={8}
+                  columnNum={2}
+                  gutter={8}
                   style={{ paddingBottom: 10, border: '1px' }}
                 >
                   <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>

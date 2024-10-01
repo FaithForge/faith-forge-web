@@ -1,24 +1,8 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useMemo, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
-import { CameraOutline } from 'antd-mobile-icons';
-import {
-  Form,
-  Input,
-  Button,
-  Switch,
-  DatePicker,
-  Image,
-  AutoCenter,
-  Selector,
-  CheckList,
-  SearchBar,
-  Popup,
-  Space,
-  TextArea,
-} from 'antd-mobile';
-import { RefObject } from 'react';
-import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
+// import { RefObject } from 'react';
 import dayjs from 'dayjs';
 import { userGenderSelect } from '../../models/User';
 import { useDispatch, useSelector } from 'react-redux';
@@ -27,11 +11,11 @@ import LoadingMask from '../../components/LoadingMask';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-import {
-  calculateAge,
-  getAgeInMonths,
-  labelRendererCalendar,
-} from '../../utils/date';
+// import {
+//   calculateAge,
+//   getAgeInMonths,
+//   labelRendererCalendar,
+// } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 import { GetKidGroups } from '@/redux/thunks/kid-church/kid-group.thunk';
 import { GetKidMedicalConditions } from '@/redux/thunks/kid-church/kid-medical-condition.thunk';
@@ -40,6 +24,17 @@ import { UpdateKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
 import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
 import { checkLastNameField } from '@/utils/validator';
+import {
+  Button,
+  Form,
+  Image,
+  Input,
+  Popup,
+  Search,
+  Selector,
+  Space,
+  Switch,
+} from 'react-vant';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -50,6 +45,7 @@ const UpdateKidPage: NextPage = () => {
     (state: RootState) => state.kidMedicalConditionSlice,
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const now = DateTime.local().endOf('year').toJSDate();
 
   const [source, setSource] = useState(kidSlice.current?.photoUrl);
@@ -110,6 +106,7 @@ const UpdateKidPage: NextPage = () => {
     id: kidSlice.current?.medicalCondition?.id ?? '',
     name: kidSlice.current?.medicalCondition?.name ?? '',
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
       return kidMedicalConditionSlice.data.filter((item) =>
@@ -191,37 +188,37 @@ const UpdateKidPage: NextPage = () => {
     <Layout>
       {kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title="Actualizar Niño" />
-      <AutoCenter>
-        <label htmlFor="profileImage">
-          {source ? (
-            <Image
-              alt="profileImage"
-              src={source}
-              width={160}
-              height={160}
-              fit="cover"
-              style={{ borderRadius: '50%' }}
-            />
-          ) : (
-            <CameraOutline fontSize={160} />
-          )}
-        </label>
-        <input
-          accept="image/*"
-          id="profileImage"
-          type="file"
-          capture="environment"
-          hidden={true}
-          onChange={(e) => handleCapture(e.target)}
-        />
-      </AutoCenter>
+      {/* <AutoCenter> */}
+      <label htmlFor="profileImage">
+        {/* {source ? (
+          <Image
+            alt="profileImage"
+            src={source}
+            width={160}
+            height={160}
+            fit="cover"
+            style={{ borderRadius: '50%' }}
+          />
+        ) : (
+          <CameraOutline fontSize={160} />
+        )} */}
+      </label>
+      <input
+        accept="image/*"
+        id="profileImage"
+        type="file"
+        capture="environment"
+        hidden={true}
+        onChange={(e) => handleCapture(e.target)}
+      />
+      {/* </AutoCenter> */}
 
       <Form
         form={form}
         onFinish={updatedKid}
         layout="horizontal"
         footer={
-          <Button block type="submit" color="primary" size="large">
+          <Button block type="primary" size="large">
             Actualizar
           </Button>
         }
@@ -255,14 +252,14 @@ const UpdateKidPage: NextPage = () => {
           name="birthday"
           label="Fecha de nacimiento"
           trigger="onConfirm"
-          onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-            datePickerRef.current?.open();
-          }}
+          // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
+          //   datePickerRef.current?.open();
+          // }}
           rules={[
             { required: true, message: 'Fecha de nacimiento es requerida' },
           ]}
         >
-          <DatePicker
+          {/* <DatePicker
             max={now}
             min={dayjs().subtract(12, 'year').toDate()}
             title={'Fecha de nacimiento'}
@@ -281,7 +278,7 @@ const UpdateKidPage: NextPage = () => {
                   } meses)`
                 : 'Seleccionar fecha'
             }
-          </DatePicker>
+          </DatePicker> */}
         </Form.Item>
         <Form.Item
           name="gender"
@@ -315,7 +312,7 @@ const UpdateKidPage: NextPage = () => {
         <Form.Item
           name="staticGroup"
           label="Asignar salón estático"
-          childElementPosition="right"
+          // childElementPosition="right"
         >
           <Switch
             onChange={(value) => setStaticGroup(value)}
@@ -351,13 +348,13 @@ const UpdateKidPage: NextPage = () => {
           </Space>
           <Popup
             visible={visibleMedicalCondition}
-            onMaskClick={() => {
+            onClickOverlay={() => {
               setVisibleMedicalCondition(false);
             }}
             destroyOnClose
           >
             <div>
-              <SearchBar
+              <Search
                 placeholder="Buscar condición medica"
                 value={searchMedicalCondition}
                 onChange={(v) => {
@@ -369,7 +366,7 @@ const UpdateKidPage: NextPage = () => {
                 }}
               />
             </div>
-            <div style={{ height: '300px', overflowY: 'scroll' }}>
+            {/* <div style={{ height: '300px', overflowY: 'scroll' }}>
               <CheckList
                 style={{ '--border-top': '0', '--border-bottom': '0' }}
                 defaultValue={medicalCondition ? [medicalCondition.id] : []}
@@ -416,19 +413,19 @@ const UpdateKidPage: NextPage = () => {
                   Otra
                 </CheckList.Item>
               </CheckList>
-            </div>
+            </div> */}
           </Popup>
         </Form.Item>
         <Form.Item
           name="observations"
           label="Observaciones"
-          help="Si selecciono Otra en enfermedades describala aqui o alguna condicion general que hay que tener en cuenta con el niño"
+          // help="Si selecciono Otra en enfermedades describala aqui o alguna condicion general que hay que tener en cuenta con el niño"
         >
-          <TextArea
+          <Input.TextArea
             placeholder="Escriba aqui su descripción"
             maxLength={300}
             rows={2}
-            showCount
+            showWordLimit
           />
         </Form.Item>
       </Form>
