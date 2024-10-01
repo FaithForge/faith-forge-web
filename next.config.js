@@ -10,5 +10,5 @@ const withPWA = require('next-pwa')({
 
 module.exports = withPWA({
   reactStrictMode: true,
-  transpilePackages: ['antd-mobile'],
+  transpilePackages: ['react-vant'],
 });

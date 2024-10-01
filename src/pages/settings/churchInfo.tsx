@@ -1,4 +1,3 @@
-import { Button, Form, Selector } from 'antd-mobile';
 import type { NextPage } from 'next';
 import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
@@ -14,6 +13,7 @@ import {
 } from '@/redux/thunks/church/church.thunk';
 import { Layout } from '@/components/Layout';
 import { ChurchMeetingStateEnum } from '@/models/Church';
+import { Button, Form, Selector } from 'react-vant';
 
 const ChurchInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -80,7 +80,7 @@ const ChurchInfo: NextPage = () => {
             onFinish={onFinish}
             form={form}
             footer={
-              <Button block type="submit" color="primary" size="large">
+              <Button block type="primary" size="large">
                 Guardar
               </Button>
             }

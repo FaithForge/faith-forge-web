@@ -1,23 +1,14 @@
-import {
-  Button,
-  Form,
-  Input,
-  Modal,
-  Image,
-  AutoCenter,
-  Card,
-} from 'antd-mobile';
 import type { NextPage } from 'next';
 import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
-import { ExclamationOutlined } from '@ant-design/icons';
 import { UserLogin } from '@/redux/thunks/user/auth.thunk';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import LoadingMask from '@/components/LoadingMask';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '@/utils/auth';
 import packageJson from '../../package.json';
+import { Button, Card, Form, Input } from 'react-vant';
 
 const CenteredContainer = styled.div`
   display: flex;
@@ -51,31 +42,31 @@ const Login: NextPage = () => {
   useEffect(() => {
     if (initialCheckDone) {
       if (authSlice.error || authSlice.token === '') {
-        Modal.show({
-          header: (
-            <ExclamationOutlined
-              style={{
-                fontSize: 64,
-                color: 'var(--adm-color-warning)',
-              }}
-            />
-          ),
-          title: 'Contraseña o usuario Incorrecto',
-          content: (
-            <>
-              <div>Por favor digita su usuario y contraseña correctamente</div>
-            </>
-          ),
-          closeOnMaskClick: true,
-          closeOnAction: true,
-          actions: [
-            {
-              key: 'close',
-              text: 'Cerrar',
-              primary: true,
-            },
-          ],
-        });
+        // Modal.show({
+        //   header: (
+        //     <ExclamationOutlined
+        //       style={{
+        //         fontSize: 64,
+        //         color: 'var(--adm-color-warning)',
+        //       }}
+        //     />
+        //   ),
+        //   title: 'Contraseña o usuario Incorrecto',
+        //   content: (
+        //     <>
+        //       <div>Por favor digita su usuario y contraseña correctamente</div>
+        //     </>
+        //   ),
+        //   closeOnMaskClick: true,
+        //   closeOnAction: true,
+        //   actions: [
+        //     {
+        //       key: 'close',
+        //       text: 'Cerrar',
+        //       primary: true,
+        //     },
+        //   ],
+        // });
         setInitialCheckDone(false);
         return;
       }
@@ -97,15 +88,15 @@ const Login: NextPage = () => {
   return (
     <CenteredContainer>
       {isLoading ? <LoadingMask /> : ''}
-      <AutoCenter>
+      {/* <AutoCenter>
         <Image alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
-      </AutoCenter>
+      </AutoCenter> */}
       <Card style={{ width: '350px' }}>
         <Form
           layout="vertical"
           onFinish={async (values) => await onLogin(values)}
           footer={
-            <Button block type="submit" color="primary" size="large">
+            <Button block type="primary" size="large">
               Iniciar sesión
             </Button>
           }

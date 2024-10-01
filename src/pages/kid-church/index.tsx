@@ -1,18 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { NextPage } from 'next';
-import {
-  Image,
-  List,
-  SearchBar,
-  ErrorBlock,
-  NoticeBar,
-  Selector,
-  FloatingBubble,
-} from 'antd-mobile';
-import {
-  HomeOutlined,
-  ReloadOutlined,
-  SearchOutlined,
-} from '@ant-design/icons';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from '../../redux/store';
@@ -35,6 +22,7 @@ import {
 import ShowKidRegisteredModal from '@/components/ShowKidRegisteredModal';
 import { ChurchRoles, KidChurchSupervisorRoles } from '@/utils/auth';
 import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
+import { List, NoticeBar, Search, Selector } from 'react-vant';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
@@ -141,16 +129,16 @@ const KidChurch: NextPage = () => {
       {loading ? <LoadingMask /> : ''}
 
       <div style={{ position: 'sticky', top: '0', zIndex: 2 }}>
-        <SearchBar
-          showCancelButton
-          cancelText="Cancelar"
-          placeholder="Buscar Niño"
+        <Search
+          // showCancelButton
+          // cancelText="Cancelar"
+          // placeholder="Buscar Niño"
           onChange={(value) => setFindText(value)}
           onSearch={(value) => setFindText(value)}
           onCancel={() => setFindText('')}
-          icon={<SearchOutlined />}
+          // icon={<SearchOutlined />}
           style={{
-            '--height': '49px',
+            height: '49px',
             padding: '10px 5px 5px 5px',
             backgroundColor: 'white',
           }}
@@ -159,16 +147,14 @@ const KidChurch: NextPage = () => {
           style={{
             '--height': '25px',
           }}
-          icon={<HomeOutlined />}
-          content={`${churchMeeting?.name} Total Niños: ${kids.length}`}
+          // icon={<HomeOutlined />}
+          text={`${churchMeeting?.name} Total Niños: ${kids.length}`}
           color="info"
         />
         <Selector
           columns={3}
           style={{
-            '--border': 'solid transparent 1px',
-            '--checked-border': 'solid var(--adm-color-primary) 1px',
-            '--padding': '8px 12px',
+            border: 'solid transparent 1px',
             padding: '5px 5px 5px 5px',
             backgroundColor: 'white',
           }}
@@ -186,11 +172,11 @@ const KidChurch: NextPage = () => {
 
       {warningAlert.message && (
         <NoticeBar
-          content={warningAlert.message}
+          text={warningAlert.message}
           color={warningAlert.blockRegister ? 'error' : 'alert'}
         />
       )}
-      <List>
+      {/* <List>
         {kidList.length ? (
           kidList.map((kid) => (
             <>
@@ -237,15 +223,15 @@ const KidChurch: NextPage = () => {
             description="No se encontraron registros"
           />
         )}
-      </List>
-      {kidToUpdate && (
+      </List> */}
+      {/* {kidToUpdate && (
         <ShowKidRegisteredModal
           visible={openShowKidRegisteredModal}
           onClose={(status: boolean) => setOpenShowKidRegisteredModal(status)}
           kid={kidToUpdate}
         />
-      )}
-      <FloatingBubble
+      )} */}
+      {/* <FloatingBubble
         style={{
           '--initial-position-bottom': '70px',
           '--initial-position-right': '20px',
@@ -257,7 +243,7 @@ const KidChurch: NextPage = () => {
         }}
       >
         <ReloadOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble>
+      </FloatingBubble> */}
     </Layout>
   );
 };

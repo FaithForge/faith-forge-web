@@ -20,8 +20,6 @@ import dayjs from 'dayjs';
 import { ChurchRoles, KidChurchRegisterRoles } from '@/utils/auth';
 import { hasRequiredPermissions, withRoles } from '@/components/Permissions';
 import { Cell, Empty, List, NoticeBar, Search, Image } from 'react-vant';
-import { FloatingBubble } from 'antd-mobile';
-import { QrcodeOutlined, UserAddOutlined } from '@ant-design/icons';
 
 const Registration: NextPage = () => {
   const {
@@ -184,7 +182,7 @@ const Registration: NextPage = () => {
           <Empty description="No se encontraron registros" />
         )}
       </List>
-      <FloatingBubble
+      {/* <FloatingBubble
         style={{
           '--initial-position-bottom': '70px',
           '--initial-position-right': '20px',
@@ -204,7 +202,7 @@ const Registration: NextPage = () => {
         onClick={() => router.push('/registration/qrReader')}
       >
         <QrcodeOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble>
+      </FloatingBubble> */}
     </Layout>
   );
 };

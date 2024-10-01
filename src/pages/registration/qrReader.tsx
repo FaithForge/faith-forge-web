@@ -7,34 +7,13 @@ import LoadingMask from '../../components/LoadingMask';
 import { Layout } from '@/components/Layout';
 import { IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
 import {
-  Button,
-  CheckList,
-  Collapse,
-  Form,
-  Popover,
-  Space,
-  Steps,
-  TextArea,
-  Toast,
-} from 'antd-mobile';
-import {
   CreateKidRegistration,
   ScanCodeKidRegistration,
 } from '@/redux/thunks/kid-church/kid-registration.thunk';
 import { usePathname, useRouter } from 'next/navigation';
 import { cleanScanQRSearch } from '@/redux/slices/kid-church/scan-code-kid-registration.slice';
 import { capitalizeWords } from '@/utils/text';
-import {
-  ArrowRightOutlined,
-  CheckCircleOutlined,
-  CheckCircleTwoTone,
-  MinusOutlined,
-  PlusOutlined,
-  QrcodeOutlined,
-} from '@ant-design/icons';
-import { Step } from 'antd-mobile/es/components/steps/step';
-import { Action } from 'antd-mobile/es/components/popover';
-import { MoreOutline } from 'antd-mobile-icons';
+import { Button, Collapse, Form, Input, Space, Steps, Toast } from 'react-vant';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
@@ -45,6 +24,7 @@ const QRReader: NextPage = () => {
   const [relationsToRegister, setRelationsToRegister] = useState(
     scanQRKidGuardianSlice.relations,
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [relationSelectToRegister, setRelationSelectToRegister] = useState<
     string[]
   >([]);
@@ -64,11 +44,10 @@ const QRReader: NextPage = () => {
     const code = targets[0].rawValue;
 
     if (!code) {
-      Toast.show({
-        content: 'Código Invalido',
+      Toast.fail({
+        message: 'Código Invalido',
         position: 'bottom',
         duration: 3000,
-        icon: 'fail',
       });
     } else {
       dispatch(ScanCodeKidRegistration(code));
@@ -77,10 +56,9 @@ const QRReader: NextPage = () => {
 
   const confirmKidToRegister = () => {
     if (!relationSelectToRegister.length) {
-      Toast.show({
-        icon: 'fail',
-        content: `Seleccione al menos un niño`,
-        position: 'center',
+      Toast.fail({
+        message: `Seleccione al menos un niño`,
+        position: 'middle',
         duration: 3000,
       });
       return;
@@ -106,15 +84,15 @@ const QRReader: NextPage = () => {
               : undefined,
           }),
         );
-        Toast.show({
-          content: 'Se ha registrado al niño con exito',
+        Toast.info({
+          message: 'Se ha registrado al niño con exito',
           position: 'bottom',
           duration: 3000,
         });
       }
     }
-    Toast.show({
-      content: 'Se ha registrado con exito a todos los niños',
+    Toast.info({
+      message: 'Se ha registrado con exito a todos los niños',
       position: 'bottom',
       duration: 3000,
     });
@@ -127,11 +105,10 @@ const QRReader: NextPage = () => {
 
   useEffect(() => {
     if (scanQRKidGuardianSlice.error) {
-      Toast.show({
-        content: scanQRKidGuardianSlice.error,
+      Toast.fail({
+        message: scanQRKidGuardianSlice.error,
         position: 'bottom',
         duration: 3000,
-        icon: 'fail',
       });
     }
   }, [dispatch, scanQRKidGuardianSlice.error]);
@@ -150,28 +127,29 @@ const QRReader: NextPage = () => {
     scanQRKidGuardianSlice.relations,
   ]);
 
-  const actions: Action[] = [
-    {
-      key: 'updateKid',
-      icon: <QrcodeOutlined />,
-      text: 'Generar QR Acudiente',
-      onClick: () => {
-        router.push('/registration/generateQRKidGuardian');
-      },
-    },
-  ];
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  // const actions: Action[] = [
+  //   {
+  //     key: 'updateKid',
+  //     icon: <QrcodeOutlined />,
+  //     text: 'Generar QR Acudiente',
+  //     onClick: () => {
+  //       router.push('/registration/generateQRKidGuardian');
+  //     },
+  //   },
+  // ];
 
   const right = (
     <div style={{ fontSize: 24 }}>
       <Space style={{ '--gap': '16px' }}>
-        <Popover.Menu
+        {/* <Popover.Menu
           actions={actions}
           placement="bottom-start"
           trigger="click"
           onAction={(node) => node.onClick}
         >
           <MoreOutline />
-        </Popover.Menu>
+        </Popover.Menu> */}
       </Space>
     </div>
   );
@@ -180,10 +158,10 @@ const QRReader: NextPage = () => {
     <Layout>
       {scanQRKidGuardianSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title={titleNavBar} right={right} />
-      <Steps current={step}>
-        <Step title="Escanear Codigo" />
-        <Step title="Escoger Niños a Registrar" />
-        <Step title="Añadir Observaciones" />
+      <Steps active={step}>
+        <Steps.Item>Escanear Codigo</Steps.Item>
+        <Steps.Item>Escoger Niños a Registrar</Steps.Item>
+        <Steps.Item>Añadir Observaciones</Steps.Item>
       </Steps>
       {step === 0 && (
         <Scanner
@@ -232,7 +210,7 @@ const QRReader: NextPage = () => {
             registrar
           </h3>
 
-          <CheckList
+          {/* <CheckList
             multiple
             style={{ marginBottom: 10 }}
             activeIcon={<CheckCircleTwoTone />}
@@ -254,7 +232,7 @@ const QRReader: NextPage = () => {
                 {!!relation.currentKidRegistration ? '(Registrado)' : ''}
               </CheckList.Item>
             ))}
-          </CheckList>
+          </CheckList> */}
           <Button
             block
             color="primary"
@@ -263,7 +241,7 @@ const QRReader: NextPage = () => {
           >
             <Space>
               <span>Siguiente</span>
-              <ArrowRightOutlined />
+              {/* <ArrowRightOutlined /> */}
             </Space>
           </Button>
         </>
@@ -274,10 +252,10 @@ const QRReader: NextPage = () => {
           layout="vertical"
           onFinish={onRegisterKids}
           footer={
-            <Button block type="submit" color="primary" size="large">
+            <Button block type="primary" size="large">
               <Space>
                 <span>Registrar niños</span>
-                <CheckCircleOutlined />
+                {/* <CheckCircleOutlined /> */}
               </Space>
             </Button>
           }
@@ -296,14 +274,14 @@ const QRReader: NextPage = () => {
 
           <Collapse
             accordion
-            arrow={(active) => (active ? <MinusOutlined /> : <PlusOutlined />)}
+            // arrow={(active) => (active ? <MinusOutlined /> : <PlusOutlined />)}
             style={{
               marginTop: 10,
               marginBottom: 10,
             }}
           >
             {relationsToRegister.map((relation: any) => (
-              <Collapse.Panel
+              <Collapse.Item
                 key={relation.id}
                 title={`${capitalizeWords(relation.firstName)} 
                   ${capitalizeWords(relation.lastName)} - ${
@@ -314,14 +292,14 @@ const QRReader: NextPage = () => {
                   name={`observations-${relation.id}`}
                   label="Observaciones"
                 >
-                  <TextArea
+                  <Input.TextArea
                     placeholder="Ejemplo: lleva bolso, lleva merienda, está enfermo de algo en el momento."
                     maxLength={300}
                     rows={3}
-                    showCount
+                    showWordLimit
                   />
                 </Form.Item>
-              </Collapse.Panel>
+              </Collapse.Item>
             ))}
           </Collapse>
         </Form>

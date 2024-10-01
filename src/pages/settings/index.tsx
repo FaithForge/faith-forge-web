@@ -1,47 +1,42 @@
 import type { NextPage } from 'next';
-import { List, Modal, Toast } from 'antd-mobile';
-import {
-  HomeOutlined,
-  LogoutOutlined,
-  PrinterOutlined,
-  UserOutlined,
-  FileSearchOutlined,
-  EditOutlined,
-} from '@ant-design/icons';
 import { useRouter } from 'next/router';
 import { Layout } from '@/components/Layout';
-import { logout } from '@/redux/slices/user/auth.slice';
-import { useDispatch } from 'react-redux';
-import {
-  ChurchRoles,
-  IsAdminRegisterKidChurch,
-  IsRegisterKidChurch,
-  IsSupervisorRegisterOrKidChurchSupervisor,
-} from '@/utils/auth';
-import { resetChurchState } from '@/redux/slices/church/church.slice';
-import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
-import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
-import { hasRequiredPermissions } from '@/components/Permissions';
+// import { logout } from '@/redux/slices/user/auth.slice';
+// import { useDispatch } from 'react-redux';
+// import {
+//   ChurchRoles,
+//   IsAdminRegisterKidChurch,
+//   IsRegisterKidChurch,
+//   IsSupervisorRegisterOrKidChurchSupervisor,
+// } from '@/utils/auth';
+// import { resetChurchState } from '@/redux/slices/church/church.slice';
+// import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
+// import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
+// import { hasRequiredPermissions } from '@/components/Permissions';
+import { Cell } from 'react-vant';
 
 const Setting: NextPage = () => {
   const router = useRouter();
-  const dispatch = useDispatch();
+  // const dispatch = useDispatch();
   return (
     <Layout>
-      <List header="Configuraciones">
-        <List.Item
-          prefix={<UserOutlined />}
-          onClick={() => router.push('/settings/personalInfo')}
-        >
-          Configuración Personal
-        </List.Item>
-        <List.Item
-          prefix={<HomeOutlined />}
-          onClick={() => router.push('/settings/churchInfo')}
-        >
-          Configuración de Iglesia
-        </List.Item>
-        {IsRegisterKidChurch() && (
+      <Cell
+        // icon={<UserOutlined />}
+        onClick={() => router.push('/settings/personalInfo')}
+        title="Configuración Personal"
+      />
+      <Cell
+        // icon={<HomeOutlined />}
+        onClick={() => router.push('/settings/churchInfo')}
+        title="Configuración de Iglesia"
+      />
+      <Cell
+        // icon={<UserOutlined />}
+        onClick={() => router.push('/settings/personalInfo')}
+        title="Configuración Personal"
+      />
+
+      {/* {IsRegisterKidChurch() && (
           <List.Item
             prefix={<PrinterOutlined />}
             onClick={() => router.push('/settings/printerInfo')}
@@ -97,8 +92,7 @@ const Setting: NextPage = () => {
           }
         >
           Cerrar Sesión
-        </List.Item>
-      </List>
+        </List.Item> */}
     </Layout>
   );
 };

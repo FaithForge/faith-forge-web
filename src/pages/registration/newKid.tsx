@@ -1,27 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
-import { CameraOutline } from 'antd-mobile-icons';
-import {
-  Form,
-  Input,
-  Button,
-  Switch,
-  DatePicker,
-  Image,
-  AutoCenter,
-  Selector,
-  CheckList,
-  SearchBar,
-  Popup,
-  Space,
-  TextArea,
-  Toast,
-  Steps,
-} from 'antd-mobile';
-import { RefObject } from 'react';
-import type { DatePickerRef } from 'antd-mobile/es/components/date-picker';
-import dayjs from 'dayjs';
+// import { RefObject } from 'react';
+// import dayjs from 'dayjs';
 import {
   UserGenderCode,
   idGuardianTypeSelect,
@@ -33,12 +14,12 @@ import { capitalizeWords } from '../../utils/text';
 import LoadingMask from '../../components/LoadingMask';
 
 import { useRouter } from 'next/router';
-import { DateTime } from 'luxon';
-import {
-  calculateAge,
-  getAgeInMonths,
-  labelRendererCalendar,
-} from '../../utils/date';
+// import { DateTime } from 'luxon';
+// import {
+//   calculateAge,
+//   getAgeInMonths,
+//   labelRendererCalendar,
+// } from '../../utils/date';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
 import { GetKidGroups } from '@/redux/thunks/kid-church/kid-group.thunk';
@@ -51,10 +32,21 @@ import { loadingKidEnable } from '@/redux/slices/kid-church/kid.slice';
 import { kidRelationSelect } from '@/models/KidChurch';
 import { CreateKid } from '@/redux/thunks/kid-church/kid.thunk';
 import { Layout } from '@/components/Layout';
-import { Step } from 'antd-mobile/es/components/steps/step';
 import { UploadUserImage } from '@/redux/thunks/user/user.thunk';
 import { checkLastNameField, checkPhoneField } from '@/utils/validator';
 import KidRegistrationView from '@/components/KidRegistrationView';
+import {
+  Steps,
+  Toast,
+  Form,
+  Button,
+  Input,
+  Selector,
+  Switch,
+  Space,
+  Popup,
+  Search,
+} from 'react-vant';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -70,8 +62,9 @@ const NewKid: NextPage = () => {
     (state: RootState) => state.kidMedicalConditionSlice,
   );
 
-  const now = DateTime.local().endOf('year').toJSDate();
+  // const now = DateTime.local().endOf('year').toJSDate();
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
   const [staticGroup, setStaticGroup] = useState(false);
@@ -127,9 +120,8 @@ const NewKid: NextPage = () => {
 
   useEffect(() => {
     if (kidSlice.error) {
-      Toast.show({
-        icon: 'fail',
-        content: `Ha ocurrido un error al crear al niño: ${kidSlice.error}`,
+      Toast.fail({
+        message: `Ha ocurrido un error al crear al niño: ${kidSlice.error}`,
         position: 'bottom',
         duration: 5000,
       });
@@ -138,9 +130,8 @@ const NewKid: NextPage = () => {
 
   useEffect(() => {
     if (kidGuardianSlice.error) {
-      Toast.show({
-        icon: 'fail',
-        content: `Ha ocurrido un error al crear el acudiente: ${kidGuardianSlice.error}`,
+      Toast.fail({
+        message: `Ha ocurrido un error al crear el acudiente: ${kidGuardianSlice.error}`,
         position: 'bottom',
         duration: 5000,
       });
@@ -174,10 +165,12 @@ const NewKid: NextPage = () => {
 
   const [searchMedicalCondition, setSearchMedicalCondition] = useState('');
   const [visibleMedicalCondition, setVisibleMedicalCondition] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [medicalCondition, setMedicalCondition] = useState({
     id: '',
     name: '',
   });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
       return kidMedicalConditionSlice.data.filter((item) =>
@@ -239,9 +232,8 @@ const NewKid: NextPage = () => {
         setStep(1);
       }
     } catch (error) {
-      Toast.show({
-        icon: 'fail',
-        content: 'Ha ocurrido un error al crear el niño.',
+      Toast.fail({
+        message: 'Ha ocurrido un error al crear el niño.',
         position: 'bottom',
         duration: 5000,
       });
@@ -273,8 +265,8 @@ const NewKid: NextPage = () => {
       );
 
       if (!response.payload.error) {
-        Toast.show({
-          content:
+        Toast.info({
+          message:
             'Se ha creado al niño y acudiente con éxito. Proceda a registrarlo',
           position: 'bottom',
           duration: 3000,
@@ -323,44 +315,42 @@ const NewKid: NextPage = () => {
     <Layout>
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title={titleNavBar} />
-      <Steps current={step}>
-        <Step title="Crear niño" />
-        <Step title="Crear Acudiente" />
-        <Step title="Registrar Niño" />
+      <Steps active={step}>
+        <Steps>Crear niño </Steps>
+        <Steps>Crear Acudiente</Steps>
+        <Steps>Registrar Niño</Steps>
       </Steps>
       {step === 0 && (
         <>
-          <AutoCenter>
-            <label htmlFor="profileImage">
-              {source ? (
-                <Image
-                  alt="profileImage"
-                  src={source}
-                  width={160}
-                  height={160}
-                  fit="cover"
-                  style={{ borderRadius: '50%' }}
-                />
-              ) : (
-                <CameraOutline fontSize={160} />
-              )}
-            </label>
-            <input
-              accept="image/*"
-              id="profileImage"
-              type="file"
-              capture="environment"
-              hidden={true}
-              onChange={(e) => handleCapture(e.target)}
-            />
-          </AutoCenter>
+          {/* <label htmlFor="profileImage">
+            {source ? (
+              <Image
+                alt="profileImage"
+                src={source}
+                width={160}
+                height={160}
+                fit="cover"
+                style={{ borderRadius: '50%' }}
+              />
+            ) : (
+              <CameraOutline fontSize={160} />
+            )}
+          </label> */}
+          <input
+            accept="image/*"
+            id="profileImage"
+            type="file"
+            capture="environment"
+            hidden={true}
+            onChange={(e) => handleCapture(e.target)}
+          />
 
           <Form
             form={form}
             onFinish={addNewKid}
             layout="horizontal"
             footer={
-              <Button block type="submit" color="primary" size="large">
+              <Button block type="primary" size="large">
                 Siguiente
               </Button>
             }
@@ -394,14 +384,14 @@ const NewKid: NextPage = () => {
               name="birthday"
               label="Fecha de nacimiento"
               trigger="onConfirm"
-              onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-                datePickerRef.current?.open();
-              }}
+              // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
+              //   datePickerRef.current?.open();
+              // }}
               rules={[
                 { required: true, message: 'Fecha de nacimiento es requerida' },
               ]}
             >
-              <DatePicker
+              {/* <DatePicker
                 max={now}
                 min={dayjs().subtract(12, 'year').toDate()}
                 title={'Fecha de nacimiento'}
@@ -423,7 +413,7 @@ const NewKid: NextPage = () => {
                       } meses)`
                     : 'Seleccionar fecha'
                 }
-              </DatePicker>
+              </DatePicker> */}
             </Form.Item>
             <Form.Item
               name="gender"
@@ -459,7 +449,7 @@ const NewKid: NextPage = () => {
             <Form.Item
               name="staticGroup"
               label="Asignar salón estático"
-              childElementPosition="right"
+              // childElementPosition="right"
             >
               <Switch
                 onChange={(value) => setStaticGroup(value)}
@@ -495,14 +485,14 @@ const NewKid: NextPage = () => {
               </Space>
               <Popup
                 visible={visibleMedicalCondition}
-                onMaskClick={() => {
+                onClickOverlay={() => {
                   setVisibleMedicalCondition(false);
                 }}
                 position="top"
                 destroyOnClose
               >
                 <div>
-                  <SearchBar
+                  <Search
                     placeholder="Buscar condición médica"
                     value={searchMedicalCondition}
                     onChange={(v) => {
@@ -514,7 +504,7 @@ const NewKid: NextPage = () => {
                     }}
                   />
                 </div>
-                <div style={{ height: '300px', overflowY: 'scroll' }}>
+                {/* <div style={{ height: '300px', overflowY: 'scroll' }}>
                   <CheckList
                     style={{ '--border-top': '0', '--border-bottom': '0' }}
                     defaultValue={medicalCondition ? [medicalCondition.id] : []}
@@ -565,15 +555,15 @@ const NewKid: NextPage = () => {
                       Otra
                     </CheckList.Item>
                   </CheckList>
-                </div>
+                </div> */}
               </Popup>
             </Form.Item>
             <Form.Item name="observations" label="Observaciones">
-              <TextArea
+              <Input.TextArea
                 placeholder="Si seleccionó Otra condición describala aquí"
                 maxLength={300}
                 rows={2}
-                showCount
+                showWordLimit
               />
             </Form.Item>
           </Form>
@@ -587,7 +577,7 @@ const NewKid: NextPage = () => {
             onFinish={addNewKidGuardian}
             layout="horizontal"
             footer={
-              <Button block type="submit" color="primary" size="large">
+              <Button block type="primary" size="large">
                 Guardar Acudiente
               </Button>
             }

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
-import { Button, ErrorBlock, Grid, SearchBar, Space } from 'antd-mobile';
 import 'dayjs/locale/es';
 
 import { Layout } from '@/components/Layout';
@@ -12,14 +11,15 @@ import {
   GetKidGuardian,
   UploadQRCodeImage,
 } from '@/redux/thunks/kid-church/kid-guardian.thunk';
-import { CloudDownloadOutlined, PrinterOutlined } from '@ant-design/icons';
 import { capitalizeWords } from '@/utils/text';
 import { cleanCurrentKidGuardian } from '@/redux/slices/kid-church/kid-guardian.slice';
 import LoadingMask from '@/components/LoadingMask';
+import { Button, Grid, Search, Space } from 'react-vant';
 
 const GenerateQRKidGuardianView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const [loading, setLoading] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [search, setSearch] = useState(false);
   const [urlCode, setUrlCode] = useState<string | undefined>(undefined);
 
@@ -125,7 +125,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
       {guardianLoading || loading ? <LoadingMask /> : ''}
 
       <NavBarApp title="Generar Código QR" />
-      <SearchBar
+      <Search
         placeholder="Colocar Numero de Cedula del Acudiente"
         onSearch={(value) => findGuardian(value)}
       />
@@ -163,7 +163,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
               id="qr-code-generate-kid-guardian-whatsapp"
             />
           </div>
-          <Grid columns={1} gap={8}>
+          <Grid columnNum={1} gutter={8}>
             {/* <Grid.Item>
               <Button onClick={() => sharedCode()} block color="primary">
                 <Space>
@@ -175,7 +175,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
             <Grid.Item>
               <Button onClick={() => downloadCode()} block color="primary">
                 <Space>
-                  <CloudDownloadOutlined />
+                  {/* <CloudDownloadOutlined /> */}
                   <span>Descargar</span>
                 </Space>
               </Button>
@@ -184,7 +184,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
             <Grid.Item>
               <Button block disabled color="primary">
                 <Space>
-                  <PrinterOutlined />
+                  {/* <PrinterOutlined /> */}
                   <span>Imprimir (Proximanente)</span>
                 </Space>
               </Button>
@@ -203,7 +203,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
           />
         </>
       )}
-      {!guardian && (
+      {/* {!guardian && (
         <ErrorBlock
           fullPage
           status="empty"
@@ -218,7 +218,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
               : 'Verifique la cedula digitada'
           }`}
         />
-      )}
+      )} */}
     </Layout>
   );
 };
