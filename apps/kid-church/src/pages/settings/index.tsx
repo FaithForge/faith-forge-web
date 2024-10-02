@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 // import { logout } from '@/redux/slices/user/auth.slice';
-// import { useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 // import {
 //   ChurchRoles,
 //   IsAdminRegisterKidChurch,
@@ -12,12 +12,16 @@ import { useRouter } from 'next/router';
 // import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
 // import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
 // import { hasRequiredPermissions } from '@/components/Permissions';
-import { Cell } from 'react-vant';
+import { Cell, Dialog, Notify, Toast } from 'react-vant';
 import { Layout } from '../../components/Layout';
+import { resetChurchState } from '../../redux/slices/church/church.slice';
+import { resetChurchMeetingState } from '../../redux/slices/church/churchMeeting.slice';
+import { resetChurchPrinterState } from '../../redux/slices/church/churchPrinter.slice';
+import { logout } from '../../redux/slices/user/auth.slice';
 
 const Setting: NextPage = () => {
   const router = useRouter();
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
   return (
     <Layout>
       <Cell
@@ -67,32 +71,30 @@ const Setting: NextPage = () => {
           >
             Actualizar usuarios
           </List.Item>
-        )}
-        <List.Item
-          prefix={<LogoutOutlined />}
-          onClick={() =>
-            Modal.confirm({
-              content: '¿Desea cerrar sesión?',
-              confirmText: 'Cerrar sesión',
-              cancelText: 'Cancelar',
-              onConfirm: async () => {
-                dispatch(resetChurchState());
-                dispatch(resetChurchMeetingState());
-                dispatch(resetChurchPrinterState());
-                await dispatch(logout());
-                Toast.show({
-                  icon: 'success',
-                  content: 'Se ha cerrado la sesión',
-                  position: 'bottom',
-                  duration: 5000,
-                });
-                router.push('/login');
-              },
-            })
-          }
-        >
-          Cerrar Sesión
-        </List.Item> */}
+        )}*/}
+      <Cell
+        title="  Cerrar Sesión"
+        // prefix={<LogoutOutlined />}
+        onClick={() =>
+          Dialog.confirm({
+            title: '¿Desea cerrar sesión?',
+            confirmButtonText: 'Cerrar sesión',
+            cancelButtonText: 'Cancelar',
+            onConfirm: async () => {
+              dispatch(resetChurchState());
+              dispatch(resetChurchMeetingState());
+              dispatch(resetChurchPrinterState());
+              await dispatch(logout());
+              Notify.show({
+                type: 'success',
+                message: 'Se ha cerrado la sesión',
+                duration: 5000,
+              });
+              router.push('/login');
+            },
+          })
+        }
+      />
     </Layout>
   );
 };

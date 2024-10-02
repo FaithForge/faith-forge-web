@@ -4,48 +4,56 @@ import { useEffect, useState } from 'react';
 import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
-import { Button, Form, Popup, Selector } from 'react-vant';
-import { churchGroup } from '../constants/church';
+import { Button, Cell, Popup, Radio, Steps } from 'react-vant';
+import { churchGroup as churchGroupOptions } from '../constants/church';
 import { ChurchMeetingStateEnum } from '../models/Church';
-import { updateCurrentChurch } from '../redux/slices/church/church.slice';
 import { updateCurrentChurchMeeting } from '../redux/slices/church/churchMeeting.slice';
 import { updateCurrentChurchPrinter } from '../redux/slices/church/churchPrinter.slice';
 import { updateUserChurchGroup } from '../redux/slices/user/account.slice';
-import { GetChurches, GetChurchMeetings, GetChurchPrinters } from '../redux/thunks/church/church.thunk';
+import {
+  GetChurches,
+  GetChurchMeetings,
+  GetChurchPrinters,
+} from '../redux/thunks/church/church.thunk';
 import { IsRegisterKidChurch } from '../utils/auth';
 import { parseJwt } from '../utils/jwt';
+import { updateCurrentChurch } from '../redux/slices/church/church.slice';
 
 const Setup: NextPage = () => {
-  const [form] = Form.useForm();
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const accountSlice = useSelector((state: RootState) => state.accountSlice);
   const churchSlice = useSelector((state: RootState) => state.churchSlice);
   const churchMeetingSlice = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
+    (state: RootState) => state.churchMeetingSlice
   );
   const churchPrinterSlice = useSelector(
-    (state: RootState) => state.churchPrinterSlice,
+    (state: RootState) => state.churchPrinterSlice
   );
+
+  // useState
+  const [step, setStep] = useState(0);
+  const [church, setChurch] = useState<string>();
+  const [churchMeeting, setChurchMeeting] = useState<string>();
+  const [churchGroup, setChurchGroup] = useState<string>();
+  const [churchPrinter, setChurchPrinter] = useState<string>();
+
   const router = useRouter();
   const [visible, setVisible] = useState(false);
   const isRegisterKidChurch = IsRegisterKidChurch();
   const dispatch = useDispatch<AppDispatch>();
 
-  const onFinish = async (values: any) => {
-    const church = values.church[0];
-    const churchMeeting = values.churchMeeting[0];
-    const churchGroup = values.churchGroup[0];
+  const onFinish = async () => {
+    if (church && churchMeeting && churchGroup) {
+      await dispatch(updateCurrentChurch(church));
+      await dispatch(updateCurrentChurchMeeting(churchMeeting));
+      await dispatch(updateUserChurchGroup(churchGroup));
 
-    await dispatch(updateCurrentChurch(church));
-    await dispatch(updateCurrentChurchMeeting(churchMeeting));
-    await dispatch(updateUserChurchGroup(churchGroup));
+      if (churchPrinter && isRegisterKidChurch) {
+        await dispatch(updateCurrentChurchPrinter(churchPrinter));
+      }
 
-    if (isRegisterKidChurch) {
-      const churchPrinter = values.churchPrinter[0];
-      await dispatch(updateCurrentChurchPrinter(churchPrinter));
+      router.reload();
     }
-
-    router.reload();
   };
 
   useEffect(() => {
@@ -71,15 +79,27 @@ const Setup: NextPage = () => {
     }
 
     setVisible(false);
-  }, [authSlice.token, dispatch]);
+  }, [
+    accountSlice.churchGroup,
+    authSlice.token,
+    churchMeetingSlice,
+    churchPrinterSlice,
+    churchSlice,
+    dispatch,
+    isRegisterKidChurch,
+  ]);
 
   useEffect(() => {
-    form.setFieldsValue({
-      church: [churchSlice.current?.id],
-      churchMeeting: [churchMeetingSlice.current?.id],
-      churchPrinter: [churchPrinterSlice.current?.id],
-    });
-  }, [form, churchSlice.current?.id, churchMeetingSlice.current?.id]);
+    if (church) {
+      dispatch(
+        GetChurchMeetings({
+          churchId: church,
+          state: ChurchMeetingStateEnum.ACTIVE,
+        })
+      );
+      dispatch(GetChurchPrinters(church));
+    }
+  }, [church, dispatch]);
 
   const churchOptions = churchSlice.data
     ? churchSlice.data.map((church: any) => {
@@ -109,83 +129,115 @@ const Setup: NextPage = () => {
     : [];
 
   return (
-    <Popup
-      visible={visible}
-      // bodyStyle={{
-      //   borderTopLeftRadius: '8px',
-      //   borderTopRightRadius: '8px',
-      //   padding: 5,
-      // }}
-    >
-      <h1>Configuración Inicial</h1>
-      <div
-        style={{ overflowY: 'scroll', minHeight: '80vh', maxHeight: '80vh' }}
-      >
-        <Form
-          layout="vertical"
-          onFinish={onFinish}
-          form={form}
-          footer={
-            <Button block type="primary" size="large">
-              Comenzar
-            </Button>
-          }
-        >
-          <Form.Item
-            name="church"
-            label="Sede"
-            rules={[
-              { required: true, message: 'Por favor selecciona una sede' },
-            ]}
-          >
-            <Selector
-              options={churchOptions}
-              onChange={(arr) => {
-                dispatch(
-                  GetChurchMeetings({
-                    churchId: arr[0] as string,
-                    state: ChurchMeetingStateEnum.ACTIVE,
-                  }),
-                );
-                dispatch(GetChurchPrinters(arr[0] as string));
-              }}
-            />
-          </Form.Item>
-          <Form.Item
-            name="churchMeeting"
-            label="Servicio"
-            rules={[
-              { required: true, message: 'Por favor selecciona una reunión' },
-            ]}
-          >
-            <Selector options={churchMeetingOptions} />
-          </Form.Item>
-          {isRegisterKidChurch && (
-            <Form.Item
-              name="churchPrinter"
-              label="Impresora seleccionada"
-              rules={[
-                {
-                  required: true,
-                  message: 'Por favor selecciona una impresora',
-                },
-              ]}
-            >
-              <Selector options={churchPrinterOptions} />
-            </Form.Item>
+    <>
+      <Popup visible={visible} position="bottom" style={{ height: '90%' }}>
+        <div style={{ padding: 5 }}>
+          <h2 style={{ textAlign: 'center' }}>Configuración Inicial</h2>
+          <Steps active={step}>
+            <Steps.Item>Sede</Steps.Item>
+            <Steps.Item>Servicio</Steps.Item>
+            <Steps.Item>Impresora</Steps.Item>
+            <Steps.Item>Grupo</Steps.Item>
+          </Steps>
+          {step === 0 && (
+            <>
+              <h2>Selecciona Sede</h2>
+
+              <Radio.Group value={church}>
+                <Cell.Group>
+                  {churchOptions.map((churchOption) => (
+                    <Cell
+                      key={churchOption.value}
+                      clickable
+                      title={churchOption.label}
+                      onClick={() => setChurch(churchOption.value)}
+                      rightIcon={<Radio name={churchOption.value} />}
+                    />
+                  ))}
+                </Cell.Group>
+              </Radio.Group>
+
+              <Button.Group block style={{ width: '99%', marginTop: 10 }}>
+                <Button onClick={() => church && setStep(1)}>Siguiente</Button>
+              </Button.Group>
+            </>
           )}
-          <Form.Item
-            name="churchGroup"
-            label="Grupo al que perteneces"
-            rules={[
-              { required: true, message: 'Por favor seleccione un grupo' },
-            ]}
-          >
-            <Selector options={churchGroup} />
-          </Form.Item>
-        </Form>
-      </div>
-    </Popup>
+          {step === 1 && (
+            <>
+              <h2>Selecciona Reunión</h2>
+
+              <Radio.Group value={churchMeeting}>
+                <Cell.Group>
+                  {churchMeetingOptions.map((churchOption) => (
+                    <Cell
+                      key={churchOption.value}
+                      clickable
+                      title={churchOption.label}
+                      onClick={() => setChurchMeeting(churchOption.value)}
+                      rightIcon={<Radio name={churchOption.value} />}
+                    />
+                  ))}
+                </Cell.Group>
+              </Radio.Group>
+              <Button.Group block style={{ width: '99%', marginTop: 10 }}>
+                <Button onClick={() => setStep(0)}>Anterior</Button>
+                <Button onClick={() => churchMeeting && setStep(2)}>
+                  Siguiente
+                </Button>
+              </Button.Group>
+            </>
+          )}
+          {step === 2 && (
+            <>
+              <h2>Selecciona Impresora</h2>
+
+              <Radio.Group value={churchPrinter}>
+                <Cell.Group>
+                  {churchPrinterOptions.map((churchOption) => (
+                    <Cell
+                      key={churchOption.value}
+                      clickable
+                      title={churchOption.label}
+                      onClick={() => setChurchPrinter(churchOption.value)}
+                      rightIcon={<Radio name={churchOption.value} />}
+                    />
+                  ))}
+                </Cell.Group>
+              </Radio.Group>
+              <Button.Group block style={{ width: '99%', marginTop: 10 }}>
+                <Button onClick={() => setStep(1)}>Anterior</Button>
+                <Button onClick={() => churchPrinter && setStep(3)}>
+                  Siguiente
+                </Button>
+              </Button.Group>
+            </>
+          )}
+          {step === 3 && (
+            <>
+              <h2>Selecciona Grupo</h2>
+
+              <Radio.Group value={churchGroup}>
+                <Cell.Group>
+                  {churchGroupOptions.map((churchOption) => (
+                    <Cell
+                      key={churchOption.value}
+                      clickable
+                      title={churchOption.label}
+                      onClick={() => setChurchGroup(churchOption.value)}
+                      rightIcon={<Radio name={churchOption.value} />}
+                    />
+                  ))}
+                </Cell.Group>
+              </Radio.Group>
+              <Button.Group block style={{ width: '99%', marginTop: 10 }}>
+                <Button onClick={() => setStep(2)}>Anterior</Button>
+                <Button onClick={() => onFinish()}>Siguiente</Button>
+              </Button.Group>
+            </>
+          )}
+        </div>
+      </Popup>
+    </>
   );
 };
 

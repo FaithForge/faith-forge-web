@@ -1,4 +1,3 @@
-
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { IChurches } from '../../../models/Church';
 import { GetChurches } from '../../thunks/church/church.thunk';
