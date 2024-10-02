@@ -1,6 +1,7 @@
 {
   "compileOnSave": false,
   "compilerOptions": {
+    "noPropertyAccessFromIndexSignature": false,
     "rootDir": ".",
     "sourceMap": true,
     "declaration": false,
@@ -10,17 +11,18 @@
     "importHelpers": true,
     "target": "es2015",
     "module": "esnext",
-    "lib": [
-      "es2020",
-      "dom"
-    ],
+    "lib": ["es2020", "dom"],
     "skipLibCheck": true,
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
-    "paths": {}
+    "paths": {
+      "@faith-forge-web/common-types/global": [
+        "libs/common-types/global/src/index.ts"
+      ],
+      "@faith-forge-web/state/redux": ["libs/state/redux/src/index.ts"],
+      "@faith-forge-web/utils/auth": ["libs/utils/auth/src/index.ts"],
+      "@faith-forge-web/utils/http": ["libs/utils/http/src/index.ts"]
+    }
   },
-  "exclude": [
-    "node_modules",
-    "tmp"
-  ]
+  "exclude": ["node_modules", "tmp"]
 }

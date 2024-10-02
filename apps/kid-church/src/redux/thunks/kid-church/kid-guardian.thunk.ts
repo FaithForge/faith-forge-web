@@ -1,7 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
-import { ApiVerbs, makeApiRequest, MS_KID_CHURCH_PATH } from '../../../api';
+import { MS_KID_CHURCH_PATH } from '../../../api';
 import { ICreateKidGuardian } from '../../../models/KidChurch';
 import { RootState } from '../../store';
 
@@ -14,14 +16,14 @@ export const CreateKidGuardian = createAsyncThunk(
     try {
       const response = (
         await makeApiRequest(
-          ApiVerbs.POST,
+          HttpRequestMethod.POST,
           `/${MS_KID_CHURCH_PATH}/kid-guardian`,
           {
             data: {
               ...payload,
             },
             headers: { Authorization: `Bearer ${token}` },
-          },
+          }
         )
       ).data;
 
@@ -30,7 +32,7 @@ export const CreateKidGuardian = createAsyncThunk(
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Internal Error');
     }
-  },
+  }
 );
 
 export const GetKidGuardian = createAsyncThunk(
@@ -40,23 +42,23 @@ export const GetKidGuardian = createAsyncThunk(
     const { token } = state.authSlice;
     const response = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_KID_CHURCH_PATH}/kid-guardian/${nationalId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const UpdateKidGuardianPhone = createAsyncThunk(
   'kid-church/UpdateKidGuardianPhone',
   async (
     payload: { id: string; phone: string },
-    { getState, rejectWithValue },
+    { getState, rejectWithValue }
   ) => {
     const { id, phone } = payload;
     const state = getState() as RootState;
@@ -65,14 +67,14 @@ export const UpdateKidGuardianPhone = createAsyncThunk(
     try {
       const response = (
         await makeApiRequest(
-          ApiVerbs.PUT,
+          HttpRequestMethod.PUT,
           `/${MS_KID_CHURCH_PATH}/kid-guardian/${id}`,
           {
             data: {
               phone,
             },
             headers: { Authorization: `Bearer ${token}` },
-          },
+          }
         )
       ).data;
 
@@ -81,7 +83,7 @@ export const UpdateKidGuardianPhone = createAsyncThunk(
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Internal Error');
     }
-  },
+  }
 );
 
 export const UploadQRCodeImage = createAsyncThunk(
@@ -91,7 +93,7 @@ export const UploadQRCodeImage = createAsyncThunk(
     const { token } = state.authSlice;
     const response = (
       await makeApiRequest(
-        ApiVerbs.POST,
+        HttpRequestMethod.POST,
         `/${MS_KID_CHURCH_PATH}/user/upload-qr-code`,
         {
           data: payload.formData,
@@ -99,10 +101,10 @@ export const UploadQRCodeImage = createAsyncThunk(
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
-        },
+        }
       )
     ).data;
 
     return response.key;
-  },
+  }
 );

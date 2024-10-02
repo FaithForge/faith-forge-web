@@ -1,6 +1,8 @@
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
-import { ApiVerbs, makeApiRequest, MS_KID_CHURCH_PATH } from '../../../api';
+import { MS_KID_CHURCH_PATH } from '../../../api';
 import { PAGINATION_REGISTRATION_LIMIT } from '../../../constants/pagination';
 import { ICreateKid, IUpdateKid } from '../../../models/KidChurch';
 import { RootState } from '../../store';
@@ -13,19 +15,19 @@ export const GetKid = createAsyncThunk(
     const churchMeeting = state.churchMeetingSlice;
     const response = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_KID_CHURCH_PATH}/kid/${payload.id}`,
         {
           params: {
             registrationChurchMeetingId: churchMeeting.current?.id,
           },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const GetKids = createAsyncThunk(
@@ -50,20 +52,24 @@ export const GetKids = createAsyncThunk(
     }
 
     const response = (
-      await makeApiRequest(ApiVerbs.GET, `/${MS_KID_CHURCH_PATH}/kids`, {
-        params: {
-          limit: PAGINATION_REGISTRATION_LIMIT,
-          page: 1,
-          registrationChurchMeetingId: churchMeeting.current?.id,
-          filterByFirstName,
-          filterByLastName,
-          filterByFaithForge,
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await makeApiRequest(
+        HttpRequestMethod.GET,
+        `/${MS_KID_CHURCH_PATH}/kids`,
+        {
+          params: {
+            limit: PAGINATION_REGISTRATION_LIMIT,
+            page: 1,
+            registrationChurchMeetingId: churchMeeting.current?.id,
+            filterByFirstName,
+            filterByLastName,
+            filterByFaithForge,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
     ).data;
     return response;
-  },
+  }
 );
 
 export const GetMoreKids = createAsyncThunk(
@@ -87,21 +93,25 @@ export const GetMoreKids = createAsyncThunk(
     }
 
     const response = (
-      await makeApiRequest(ApiVerbs.GET, `/${MS_KID_CHURCH_PATH}/kids`, {
-        params: {
-          limit: PAGINATION_REGISTRATION_LIMIT,
-          page: kid.currentPage + 1,
-          registrationChurchMeetingId: churchMeeting.current?.id,
-          filterByFirstName,
-          filterByLastName,
-          filterByFaithForge,
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await makeApiRequest(
+        HttpRequestMethod.GET,
+        `/${MS_KID_CHURCH_PATH}/kids`,
+        {
+          params: {
+            limit: PAGINATION_REGISTRATION_LIMIT,
+            page: kid.currentPage + 1,
+            registrationChurchMeetingId: churchMeeting.current?.id,
+            filterByFirstName,
+            filterByLastName,
+            filterByFaithForge,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const CreateKid = createAsyncThunk(
@@ -112,12 +122,16 @@ export const CreateKid = createAsyncThunk(
 
     try {
       const response = (
-        await makeApiRequest(ApiVerbs.POST, `/${MS_KID_CHURCH_PATH}/kid`, {
-          data: {
-            ...payload,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        await makeApiRequest(
+          HttpRequestMethod.POST,
+          `/${MS_KID_CHURCH_PATH}/kid`,
+          {
+            data: {
+              ...payload,
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
       ).data;
 
       return response;
@@ -125,7 +139,7 @@ export const CreateKid = createAsyncThunk(
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Internal Error');
     }
-  },
+  }
 );
 
 export const UpdateKid = createAsyncThunk(
@@ -135,13 +149,17 @@ export const UpdateKid = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    await makeApiRequest(ApiVerbs.PUT, `/${MS_KID_CHURCH_PATH}/kid/${id}`, {
-      data: {
-        ...updateKid,
-      },
-      headers: { Authorization: `Bearer ${token}` },
-    });
+    await makeApiRequest(
+      HttpRequestMethod.PUT,
+      `/${MS_KID_CHURCH_PATH}/kid/${id}`,
+      {
+        data: {
+          ...updateKid,
+        },
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
 
     return updateKid;
-  },
+  }
 );

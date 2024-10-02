@@ -4,12 +4,7 @@ import NavBarApp from '../../components/NavBarApp';
 import { useEffect, useState } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
-import {
-  ApiVerbs,
-  MS_CHURCH_PATH,
-  MS_KID_CHURCH_PATH,
-  makeApiRequest,
-} from '../../api';
+import { MS_CHURCH_PATH, MS_KID_CHURCH_PATH } from '../../api';
 import ModalFaithForge from '../../components/ModalFaithForge';
 // import { DateTime } from 'luxon';
 import { labelRendererCalendar } from '../../utils/date';
@@ -17,6 +12,8 @@ import { useSelector } from 'react-redux';
 import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
 import { RootState } from '../../redux/store';
 import { Layout } from '../../components/Layout';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
 
 const GenerateChurchDayReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -31,9 +28,13 @@ const GenerateChurchDayReport: NextPage = () => {
   useEffect(() => {
     (async () => {
       const churchesResponse = (
-        await makeApiRequest(ApiVerbs.GET, `/${MS_CHURCH_PATH}/churches`, {
-          headers: { Authorization: `Bearer ${token}` },
-        })
+        await makeApiRequest(
+          HttpRequestMethod.GET,
+          `/${MS_CHURCH_PATH}/churches`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        )
       ).data;
       setChurches(churchesResponse);
     })();
@@ -47,12 +48,12 @@ const GenerateChurchDayReport: NextPage = () => {
 
     const reportResponse = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_KID_CHURCH_PATH}/report/kid-church-day`,
         {
           params: { date },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
     await setReports(reportResponse);
@@ -77,7 +78,7 @@ const GenerateChurchDayReport: NextPage = () => {
 
   //   const reportResponse = (
   //     await makeApiRequest(
-  //       ApiVerbs.GET,
+  //       HttpRequestMethod.GET,
   //       `/${MS_KID_CHURCH_PATH}/report/kid-church-meeting/download`,
   //       {
   //         params: { churchMeetingId, date },
@@ -216,7 +217,7 @@ const GenerateChurchDayReport: NextPage = () => {
                   </Grid.Item>
                   <Grid.Item>
                     {report.statistics?.byGender?.find(
-                      (d: any) => d.name === 'M',
+                      (d: any) => d.name === 'M'
                     )?.count ?? 0}
                   </Grid.Item>
                 </Grid>
@@ -228,7 +229,7 @@ const GenerateChurchDayReport: NextPage = () => {
                   <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
                   <Grid.Item>
                     {report.statistics?.byGender?.find(
-                      (d: any) => d.name === 'F',
+                      (d: any) => d.name === 'F'
                     )?.count ?? 0}
                   </Grid.Item>
                 </Grid>
