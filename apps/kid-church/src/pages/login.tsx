@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
-import { Button, Card, Form, Input } from 'react-vant';
+import { Button, Card, Form, Input, Image, Dialog } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
 import { UserLogin } from '../redux/thunks/user/auth.thunk';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '../utils/auth';
@@ -42,31 +42,11 @@ const Login: NextPage = () => {
   useEffect(() => {
     if (initialCheckDone) {
       if (authSlice.error || authSlice.token === '') {
-        // Modal.show({
-        //   header: (
-        //     <ExclamationOutlined
-        //       style={{
-        //         fontSize: 64,
-        //         color: 'var(--adm-color-warning)',
-        //       }}
-        //     />
-        //   ),
-        //   title: 'Contraseña o usuario Incorrecto',
-        //   content: (
-        //     <>
-        //       <div>Por favor digita su usuario y contraseña correctamente</div>
-        //     </>
-        //   ),
-        //   closeOnMaskClick: true,
-        //   closeOnAction: true,
-        //   actions: [
-        //     {
-        //       key: 'close',
-        //       text: 'Cerrar',
-        //       primary: true,
-        //     },
-        //   ],
-        // });
+        Dialog.alert({
+          title: 'Contraseña o usuario Incorrecto',
+          message: 'Por favor digita su usuario y contraseña correctamente',
+          confirmButtonText: 'Cerrar',
+        });
         setInitialCheckDone(false);
         return;
       }
@@ -88,9 +68,9 @@ const Login: NextPage = () => {
   return (
     <CenteredContainer>
       {isLoading ? <LoadingMask /> : ''}
-      {/* <AutoCenter>
+      <div>
         <Image alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
-      </AutoCenter> */}
+      </div>
       <Card style={{ width: '350px' }}>
         <Form
           layout="vertical"
