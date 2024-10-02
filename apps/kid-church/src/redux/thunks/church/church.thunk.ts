@@ -1,5 +1,7 @@
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { ApiVerbs, makeApiRequest, MS_CHURCH_PATH } from '../../../api';
+import { MS_CHURCH_PATH } from '../../../api';
 import { RootState } from '../../store';
 
 export const GetChurches = createAsyncThunk(
@@ -8,15 +10,19 @@ export const GetChurches = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(ApiVerbs.GET, `/${MS_CHURCH_PATH}/churches`, {
-        params: {
-          withAdditionalData,
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await makeApiRequest(
+        HttpRequestMethod.GET,
+        `/${MS_CHURCH_PATH}/churches`,
+        {
+          params: {
+            withAdditionalData,
+          },
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
     ).data;
     return response;
-  },
+  }
 );
 
 export const GetChurchMeetings = createAsyncThunk(
@@ -27,18 +33,18 @@ export const GetChurchMeetings = createAsyncThunk(
     const { token } = state.authSlice;
     const response = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_CHURCH_PATH}/church/${churchId}/meetings`,
         {
           params: {
             state: stateMeeting,
           },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
     return response;
-  },
+  }
 );
 
 export const GetChurchPrinters = createAsyncThunk(
@@ -48,13 +54,13 @@ export const GetChurchPrinters = createAsyncThunk(
     const { token } = state.authSlice;
     const response = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_CHURCH_PATH}/church/${churchId}/printers`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
     return response;
-  },
+  }
 );

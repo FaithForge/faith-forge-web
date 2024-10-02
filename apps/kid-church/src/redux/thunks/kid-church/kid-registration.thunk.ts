@@ -1,5 +1,7 @@
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { ApiVerbs, makeApiRequest, MS_KID_CHURCH_PATH } from '../../../api';
+import { MS_KID_CHURCH_PATH } from '../../../api';
 import { ICreateKidRegistration } from '../../../models/KidChurch';
 import { RootState } from '../../store';
 
@@ -16,7 +18,7 @@ export const CreateKidRegistration = createAsyncThunk(
 
     const response = (
       await makeApiRequest(
-        ApiVerbs.POST,
+        HttpRequestMethod.POST,
         `/${MS_KID_CHURCH_PATH}/kid-registration`,
         {
           data: {
@@ -27,12 +29,12 @@ export const CreateKidRegistration = createAsyncThunk(
             log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del grupo ${accountSlice.churchGroup}`,
           },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const ReprintKidRegistration = createAsyncThunk(
@@ -42,7 +44,7 @@ export const ReprintKidRegistration = createAsyncThunk(
       id: string;
       copies: number;
     },
-    { getState },
+    { getState }
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -51,7 +53,7 @@ export const ReprintKidRegistration = createAsyncThunk(
 
     const response = (
       await makeApiRequest(
-        ApiVerbs.POST,
+        HttpRequestMethod.POST,
         `/${MS_KID_CHURCH_PATH}/kid-registration/reprint`,
         {
           data: {
@@ -60,12 +62,12 @@ export const ReprintKidRegistration = createAsyncThunk(
             churchPrinterId: churchPrinterSlice.current?.name,
           },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const RemoveKidRegistration = createAsyncThunk(
@@ -74,7 +76,7 @@ export const RemoveKidRegistration = createAsyncThunk(
     payload: {
       id: string;
     },
-    { getState },
+    { getState }
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -82,16 +84,16 @@ export const RemoveKidRegistration = createAsyncThunk(
 
     const response = (
       await makeApiRequest(
-        ApiVerbs.DELETE,
+        HttpRequestMethod.DELETE,
         `/${MS_KID_CHURCH_PATH}/kid-registration/${id}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const ScanCodeKidRegistration = createAsyncThunk(
@@ -103,7 +105,7 @@ export const ScanCodeKidRegistration = createAsyncThunk(
 
     const response = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_KID_CHURCH_PATH}/kid-registration/scan-code`,
         {
           params: {
@@ -111,10 +113,10 @@ export const ScanCodeKidRegistration = createAsyncThunk(
             registrationChurchMeetingId: churchMeeting.current?.id,
           },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );

@@ -1,6 +1,8 @@
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { DateTime } from 'luxon';
-import { ApiVerbs, makeApiRequest, MS_KID_CHURCH_PATH } from '../../../api';
+import { MS_KID_CHURCH_PATH } from '../../../api';
 import { RootState } from '../../store';
 
 export const GetKidGroups = createAsyncThunk(
@@ -9,13 +11,17 @@ export const GetKidGroups = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(ApiVerbs.GET, `/${MS_KID_CHURCH_PATH}/kid-groups`, {
-        headers: { Authorization: `Bearer ${token}` },
-      })
+      await makeApiRequest(
+        HttpRequestMethod.GET,
+        `/${MS_KID_CHURCH_PATH}/kid-groups`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      )
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const GetKidGroupRegistered = createAsyncThunk(
@@ -27,7 +33,7 @@ export const GetKidGroupRegistered = createAsyncThunk(
     const churchMeetingSlice = state.churchMeetingSlice;
     const response = (
       await makeApiRequest(
-        ApiVerbs.GET,
+        HttpRequestMethod.GET,
         `/${MS_KID_CHURCH_PATH}/kid-group/registered`,
         {
           params: {
@@ -36,10 +42,10 @@ export const GetKidGroupRegistered = createAsyncThunk(
             date: DateTime.fromJSDate(date).toISODate(),
           },
           headers: { Authorization: `Bearer ${token}` },
-        },
+        }
       )
     ).data;
 
     return response;
-  },
+  }
 );

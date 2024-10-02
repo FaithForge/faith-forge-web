@@ -1,5 +1,6 @@
+import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { makeApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { ApiVerbs, makeApiRequest } from '../api';
 import { RootState } from '../redux/store';
 
 export const ReprintRegisterLabelKid = createAsyncThunk(
@@ -9,7 +10,7 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
       kidId: string;
       copies: number;
     },
-    { getState },
+    { getState }
   ) => {
     const state = getState() as RootState;
     const church = state.churchSlice.current;
@@ -19,7 +20,7 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
     const { kidId, copies } = payload;
 
     const response = (
-      await makeApiRequest(ApiVerbs.POST, `/registration/reprint`, {
+      await makeApiRequest(HttpRequestMethod.POST, `/registration/reprint`, {
         data: {
           kidId,
           churchId: church?.id,
@@ -31,7 +32,7 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
     ).data;
 
     return response;
-  },
+  }
 );
 
 export const TestPrintLabel = createAsyncThunk(
@@ -43,7 +44,7 @@ export const TestPrintLabel = createAsyncThunk(
     const churchMeeting = state.churchMeetingSlice.current;
 
     const response = (
-      await makeApiRequest(ApiVerbs.POST, `/registration/testPrint`, {
+      await makeApiRequest(HttpRequestMethod.POST, `/registration/testPrint`, {
         data: {
           churchMeetingId: churchMeeting?.id,
           churchPrinterId: churchPrinter?.name,
@@ -52,5 +53,5 @@ export const TestPrintLabel = createAsyncThunk(
     ).data;
 
     return response;
-  },
+  }
 );
