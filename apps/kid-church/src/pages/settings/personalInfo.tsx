@@ -1,17 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
-import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import { churchGroup } from '../../constants/church';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
 import { Button, Form, Input, Selector } from 'react-vant';
-import { updateUserChurchGroup } from '../../redux/slices/user/account.slice';
 import { UserRole } from '../../utils/auth';
 import { capitalizeWords } from '../../utils/text';
 import { checkLastNameField } from '../../utils/validator';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  RootState,
+  updateUserChurchGroup,
+} from '@faith-forge-web/state/redux';
+import { churchGroup } from '@faith-forge-web/common-types/constants';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();

@@ -1,21 +1,25 @@
 /* eslint-disable no-extra-boolean-cast */
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  UserGenderCode,
-  idGuardianTypeSelect,
-  userGenderSelect,
-} from '../../models/User';
 import LoadingMask from '../LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { useEffect, useState } from 'react';
 import { Button, Form, Input, Popup, Selector, Toast } from 'react-vant';
-import { kidRelationSelect } from '../../models/KidChurch';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kid-church/kid-guardian.slice';
-import { GetKidGuardian, CreateKidGuardian } from '../../redux/thunks/kid-church/kid-guardian.thunk';
-import { GetKid } from '../../redux/thunks/kid-church/kid.thunk';
 import { checkPhoneField } from '../../utils/validator';
+import {
+  RootState,
+  AppDispatch,
+  cleanCurrentKidGuardian,
+  CreateKidGuardian,
+  GetKid,
+  GetKidGuardian,
+} from '@faith-forge-web/state/redux';
+import {
+  UserGenderCode,
+  kidRelationSelect,
+  idGuardianTypeSelect,
+  userGenderSelect,
+} from '@faith-forge-web/models';
 
 type Props = {
   visible: boolean;

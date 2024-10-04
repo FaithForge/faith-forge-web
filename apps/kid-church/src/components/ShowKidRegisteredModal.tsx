@@ -2,8 +2,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import dayjs from 'dayjs';
 import { Grid, NoticeBar } from 'react-vant';
-import { IKid } from '../models/KidChurch';
 import { FFDay } from '../utils/ffDay';
+import { IKid } from '@faith-forge-web/models';
 
 type Props = {
   visible: boolean;

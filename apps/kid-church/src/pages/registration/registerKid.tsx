@@ -4,19 +4,18 @@ import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
 import 'dayjs/locale/es';
 import { useDispatch } from 'react-redux';
-import { AppDispatch } from '../../redux/store';
 import { useRouter } from 'next/router';
 import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
 import { Space } from 'react-vant';
 import KidRegistrationView from '../../components/KidRegistrationView';
 import { Layout } from '../../components/Layout';
+import { AppDispatch } from '@faith-forge-web/state/redux';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
 
-   
   // const actions: Action[] = [
   //   {
   //     key: 'updateKid',

@@ -1,7 +1,6 @@
 /* eslint-disable @nx/enforce-module-boundaries */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
-import { AppDispatch, RootState } from '../../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../../components/NavBarApp';
@@ -9,13 +8,16 @@ import { useEffect } from 'react';
 import { Button, Form, Input, Selector } from 'react-vant';
 import { Layout } from '../../../components/Layout';
 import LoadingMask from '../../../components/LoadingMask';
-import { idGuardianTypeSelect, userGenderSelect } from '../../../models/User';
-import { resetEditUserState } from '../../../redux/slices/user/editUser.slice';
-import { UpdateUser } from '../../../redux/thunks/user/user.thunk';
 import { UserRole } from '../../../utils/auth';
 import { capitalizeWords } from '../../../utils/text';
 import { checkLastNameField, checkPhoneField } from '../../../utils/validator';
-
+import {
+  AppDispatch,
+  RootState,
+  UpdateUser,
+  resetEditUserState,
+} from '@faith-forge-web/state/redux';
+import { idGuardianTypeSelect, userGenderSelect } from '@faith-forge-web/models';
 
 const EditUser: NextPage = () => {
   const [form] = Form.useForm();
@@ -161,7 +163,9 @@ const EditUser: NextPage = () => {
           name="phone"
           label="Telefono"
           rules={
-            !userSlice.current?.roles?.find((role: any) => role === UserRole.KID)
+            !userSlice.current?.roles?.find(
+              (role: any) => role === UserRole.KID,
+            )
               ? [
                   {
                     required: true,

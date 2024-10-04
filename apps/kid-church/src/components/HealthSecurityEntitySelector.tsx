@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { healthSecurityEntitySelect } from '@faith-forge-web/models';
 import { FC, useMemo, useState } from 'react';
-import { healthSecurityEntitySelect } from '../models/User';
 import { Button, Cell, Checkbox, Popup, Search, Space } from 'react-vant';
 
 interface HealthSecurityEntitySelectorProps {

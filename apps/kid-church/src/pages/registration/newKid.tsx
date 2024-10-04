@@ -4,13 +4,7 @@ import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
 // import { RefObject } from 'react';
 // import dayjs from 'dayjs';
-import {
-  UserGenderCode,
-  idGuardianTypeSelect,
-  userGenderSelect,
-} from '../../models/User';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
 import { capitalizeWords } from '../../utils/text';
 import LoadingMask from '../../components/LoadingMask';
 
@@ -35,16 +29,26 @@ import {
   Search,
 } from 'react-vant';
 import KidRegistrationView from '../../components/KidRegistrationView';
-import { kidRelationSelect } from '../../models/KidChurch';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kid-church/kid-guardian.slice';
-import { loadingKidEnable } from '../../redux/slices/kid-church/kid.slice';
-import { GetKidGroups } from '../../redux/thunks/kid-church/kid-group.thunk';
-import { GetKidGuardian, CreateKidGuardian } from '../../redux/thunks/kid-church/kid-guardian.thunk';
-import { GetKidMedicalConditions } from '../../redux/thunks/kid-church/kid-medical-condition.thunk';
-import { CreateKid } from '../../redux/thunks/kid-church/kid.thunk';
-import { UploadUserImage } from '../../redux/thunks/user/user.thunk';
 import { checkLastNameField, checkPhoneField } from '../../utils/validator';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  cleanCurrentKidGuardian,
+  CreateKid,
+  CreateKidGuardian,
+  GetKidGroups,
+  GetKidGuardian,
+  GetKidMedicalConditions,
+  loadingKidEnable,
+  RootState,
+  UploadUserImage,
+} from '@faith-forge-web/state/redux';
+import {
+  UserGenderCode,
+  kidRelationSelect,
+  userGenderSelect,
+  idGuardianTypeSelect,
+} from '@faith-forge-web/models';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();

@@ -1,14 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
-import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, Image, Dialog } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
-import { UserLogin } from '../redux/thunks/user/auth.thunk';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '../utils/auth';
+import { RootState, AppDispatch, UserLogin } from '@faith-forge-web/state/redux';
 
 const CenteredContainer = styled.div`
   display: flex;

@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { capitalizeWords } from '../utils/text';
-import { USER_GENDER_CODE_MAPPER, UserGenderCode } from '../models/User';
 import { useDispatch, useSelector } from 'react-redux';
 
 import LoadingMask from './LoadingMask';
@@ -22,13 +21,24 @@ import {
   Toast,
   Image,
 } from 'react-vant';
-import { IKidGuardian, KID_RELATION_CODE_MAPPER, KidGuardianRelationCodeEnum } from '../models/KidChurch';
-import { AppDispatch, RootState } from '../redux/store';
-import { CreateKidRegistration, RemoveKidRegistration, ReprintKidRegistration } from '../redux/thunks/kid-church/kid-registration.thunk';
-import { GetKid } from '../redux/thunks/kid-church/kid.thunk';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
 import UpdateKidGuardianPhoneModal from './forms/UpdateKidGuardianPhone';
+import {
+  AppDispatch,
+  CreateKidRegistration,
+  GetKid,
+  RemoveKidRegistration,
+  ReprintKidRegistration,
+  RootState,
+} from '@faith-forge-web/state/redux';
+import {
+  IKidGuardian,
+  KID_RELATION_CODE_MAPPER,
+  KidGuardianRelationCodeEnum,
+  USER_GENDER_CODE_MAPPER,
+  UserGenderCode,
+} from '@faith-forge-web/models';
 
 const KidRegistrationView = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -142,8 +152,8 @@ const KidRegistrationView = () => {
           kidSlice.current?.photoUrl
             ? kidSlice.current?.photoUrl
             : kidSlice.current?.gender === UserGenderCode.MALE
-            ? '/icons/boy.png'
-            : '/icons/girl.png'
+              ? '/icons/boy.png'
+              : '/icons/girl.png'
         }
         width={180}
         height={180}
@@ -466,7 +476,13 @@ const KidRegistrationView = () => {
                       {capitalizeWords(kidGuardian.firstName)}{' '}
                       {capitalizeWords(kidGuardian.lastName as '')}
                     </td>
-                    <td>{KID_RELATION_CODE_MAPPER[kidGuardian.relation as KidGuardianRelationCodeEnum]}</td>
+                    <td>
+                      {
+                        KID_RELATION_CODE_MAPPER[
+                          kidGuardian.relation as KidGuardianRelationCodeEnum
+                        ]
+                      }
+                    </td>
                     <td>{kidGuardian.phone}</td>
                   </tr>
                 );

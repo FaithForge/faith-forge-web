@@ -9,10 +9,10 @@ import { DateTime } from 'luxon';
 import { labelRendererCalendar } from '../../utils/date';
 import { useSelector } from 'react-redux';
 import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
-import { RootState } from '../../redux/store';
 import { Layout } from '../../components/Layout';
 import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { RootState } from '@faith-forge-web/state/redux';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();

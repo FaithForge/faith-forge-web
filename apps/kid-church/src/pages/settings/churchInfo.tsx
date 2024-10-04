@@ -1,17 +1,21 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
-import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import { Button, Form, Selector } from 'react-vant';
-import { ChurchMeetingStateEnum } from '../../models/Church';
-import { updateCurrentChurch } from '../../redux/slices/church/church.slice';
-import { updateCurrentChurchMeeting } from '../../redux/slices/church/churchMeeting.slice';
-import { GetChurches, GetChurchMeetings } from '../../redux/thunks/church/church.thunk';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  GetChurches,
+  GetChurchMeetings,
+  RootState,
+  updateCurrentChurch,
+  updateCurrentChurchMeeting,
+} from '@faith-forge-web/state/redux';
+import { ChurchMeetingStateEnum } from '@faith-forge-web/models';
 
 const ChurchInfo: NextPage = () => {
   const [form] = Form.useForm();

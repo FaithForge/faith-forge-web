@@ -1,13 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect } from 'react';
 import { Button, Form, Input, Popup, Toast } from 'react-vant';
-import { UpdateKidGuardianPhone } from '../../redux/thunks/kid-church/kid-guardian.thunk';
-import { GetKid } from '../../redux/thunks/kid-church/kid.thunk';
 import { capitalizeWords } from '../../utils/text';
 import { checkPhoneField } from '../../utils/validator';
+import {
+  RootState,
+  AppDispatch,
+  UpdateKidGuardianPhone,
+  GetKid,
+} from '@faith-forge-web/state/redux';
 
 type Props = {
   visible: boolean;

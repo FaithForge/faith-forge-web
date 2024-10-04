@@ -1,18 +1,22 @@
 import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
 import { useEffect, useState } from 'react';
-import { IUser, UserGenderCode } from '../../models/User';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { Cell, List, Search, Image, Empty } from 'react-vant';
 import NavBarApp from '../../components/NavBarApp';
 import { withRoles } from '../../components/Permissions';
-import { updateCurrentUser } from '../../redux/slices/user/users.slice';
-import { GetUsers, GetMoreUsers } from '../../redux/thunks/user/user.thunk';
 import { UserRole, AdminRoles } from '../../utils/auth';
 import { Layout } from '../../components/Layout';
+import {
+  RootState,
+  AppDispatch,
+  updateCurrentUser,
+  GetMoreUsers,
+  GetUsers,
+} from '@faith-forge-web/state/redux';
+import { IUser, UserGenderCode } from '@faith-forge-web/models';
 
 const Users: NextPage = () => {
   const {
@@ -73,12 +77,12 @@ const Users: NextPage = () => {
                     user.photoUrl
                       ? user.photoUrl
                       : user.roles?.find((role: any) => role === UserRole.KID)
-                      ? user.gender === UserGenderCode.MALE
-                        ? '/icons/boy.png'
-                        : '/icons/girl.png'
-                      : user.gender === UserGenderCode.MALE
-                      ? '/icons/male.png'
-                      : '/icons/female.png'
+                        ? user.gender === UserGenderCode.MALE
+                          ? '/icons/boy.png'
+                          : '/icons/girl.png'
+                        : user.gender === UserGenderCode.MALE
+                          ? '/icons/male.png'
+                          : '/icons/female.png'
                   }
                   style={{ borderRadius: 20 }}
                   fit="cover"

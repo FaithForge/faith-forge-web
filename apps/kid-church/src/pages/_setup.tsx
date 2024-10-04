@@ -1,33 +1,34 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
-import { AppDispatch, RootState } from '../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { Button, Cell, Popup, Radio, Steps } from 'react-vant';
-import { churchGroup as churchGroupOptions } from '../constants/church';
-import { ChurchMeetingStateEnum } from '../models/Church';
-import { updateCurrentChurchMeeting } from '../redux/slices/church/churchMeeting.slice';
-import { updateCurrentChurchPrinter } from '../redux/slices/church/churchPrinter.slice';
-import { updateUserChurchGroup } from '../redux/slices/user/account.slice';
+import { churchGroup as churchGroupOptions } from '@faith-forge-web/common-types/constants';
+import { IsRegisterKidChurch } from '../utils/auth';
+import { parseJwt } from '../utils/jwt';
 import {
+  AppDispatch,
   GetChurches,
   GetChurchMeetings,
   GetChurchPrinters,
-} from '../redux/thunks/church/church.thunk';
-import { IsRegisterKidChurch } from '../utils/auth';
-import { parseJwt } from '../utils/jwt';
-import { updateCurrentChurch } from '../redux/slices/church/church.slice';
+  RootState,
+  updateCurrentChurch,
+  updateCurrentChurchMeeting,
+  updateCurrentChurchPrinter,
+  updateUserChurchGroup,
+} from '@faith-forge-web/state/redux';
+import { ChurchMeetingStateEnum } from '@faith-forge-web/models';
 
 const Setup: NextPage = () => {
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const accountSlice = useSelector((state: RootState) => state.accountSlice);
   const churchSlice = useSelector((state: RootState) => state.churchSlice);
   const churchMeetingSlice = useSelector(
-    (state: RootState) => state.churchMeetingSlice
+    (state: RootState) => state.churchMeetingSlice,
   );
   const churchPrinterSlice = useSelector(
-    (state: RootState) => state.churchPrinterSlice
+    (state: RootState) => state.churchPrinterSlice,
   );
 
   // useState
@@ -95,7 +96,7 @@ const Setup: NextPage = () => {
         GetChurchMeetings({
           churchId: church,
           state: ChurchMeetingStateEnum.ACTIVE,
-        })
+        }),
       );
       dispatch(GetChurchPrinters(church));
     }
@@ -145,7 +146,7 @@ const Setup: NextPage = () => {
 
               <Radio.Group value={church}>
                 <Cell.Group>
-                  {churchOptions.map((churchOption) => (
+                  {churchOptions.map((churchOption: any) => (
                     <Cell
                       key={churchOption.value}
                       clickable
@@ -168,7 +169,7 @@ const Setup: NextPage = () => {
 
               <Radio.Group value={churchMeeting}>
                 <Cell.Group>
-                  {churchMeetingOptions.map((churchOption) => (
+                  {churchMeetingOptions.map((churchOption: any) => (
                     <Cell
                       key={churchOption.value}
                       clickable
@@ -193,7 +194,7 @@ const Setup: NextPage = () => {
 
               <Radio.Group value={churchPrinter}>
                 <Cell.Group>
-                  {churchPrinterOptions.map((churchOption) => (
+                  {churchPrinterOptions.map((churchOption: any) => (
                     <Cell
                       key={churchOption.value}
                       clickable
