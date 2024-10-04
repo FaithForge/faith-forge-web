@@ -3,23 +3,29 @@
 import type { NextPage } from 'next';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
 import { useEffect, useState } from 'react';
-import { UserGenderCode } from '../../models/User';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-import {
-  GENERAL_COPY_DIFFERENT_DAY_MEETING,
-  GENERAL_COPY_LATER_HOURS_MEETING,
-  GENERAL_COPY_LOWER_HOURS_MEETING,
-} from '../../constants/copy';
 import { List, NoticeBar, Search, Selector } from 'react-vant';
-import { hasRequiredPermissions, withRoles } from '../../components/Permissions';
-import { IKid } from '../../models/KidChurch';
-import { GetKidGroups, GetKidGroupRegistered } from '../../redux/thunks/kid-church/kid-group.thunk';
+import {
+  hasRequiredPermissions,
+  withRoles,
+} from '../../components/Permissions';
 import { ChurchRoles, KidChurchSupervisorRoles } from '../../utils/auth';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  GetKidGroupRegistered,
+  GetKidGroups,
+  RootState,
+} from '@faith-forge-web/state/redux';
+import {
+  GENERAL_COPY_LATER_HOURS_MEETING,
+  GENERAL_COPY_LOWER_HOURS_MEETING,
+  GENERAL_COPY_DIFFERENT_DAY_MEETING,
+} from '@faith-forge-web/common-types/constants';
+import { IKid } from '@faith-forge-web/models';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
@@ -51,7 +57,8 @@ const KidChurch: NextPage = () => {
           value: kidGroup.id,
           description: `Total: ${
             kids.length
-              ? kids.filter((kid: any) => kid.kidGroup?.id === kidGroup.id).length
+              ? kids.filter((kid: any) => kid.kidGroup?.id === kidGroup.id)
+                  .length
               : 0
           }`,
         };

@@ -1,7 +1,7 @@
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { RootState } from '@faith-forge-web/state/redux';
 import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { RootState } from '../redux/store';
 
 export const ReprintRegisterLabelKid = createAsyncThunk(
   'kid/reprintRegisterLabelKid',

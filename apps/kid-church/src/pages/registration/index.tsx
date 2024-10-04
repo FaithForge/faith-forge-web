@@ -2,26 +2,32 @@
 import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
 import { useEffect, useState } from 'react';
-import { UserGenderCode } from '../../models/User';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-import {
-  REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
-  REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
-  REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
-} from '../../constants/copy';
 import dayjs from 'dayjs';
 
 import { Cell, Empty, List, NoticeBar, Search, Image } from 'react-vant';
-import { hasRequiredPermissions, withRoles } from '../../components/Permissions';
-import { IKid } from '../../models/KidChurch';
-import { updateCurrentKid } from '../../redux/slices/kid-church/kid.slice';
-import { GetKids, GetMoreKids } from '../../redux/thunks/kid-church/kid.thunk';
+import {
+  hasRequiredPermissions,
+  withRoles,
+} from '../../components/Permissions';
 import { ChurchRoles, KidChurchRegisterRoles } from '../../utils/auth';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  GetKids,
+  GetMoreKids,
+  RootState,
+  updateCurrentKid,
+} from '@faith-forge-web/state/redux';
+import {
+  REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
+  REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
+  REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
+} from '@faith-forge-web/common-types/constants';
+import { IKid, UserGenderCode } from '@faith-forge-web/models';
 
 const Registration: NextPage = () => {
   const {
@@ -143,8 +149,8 @@ const Registration: NextPage = () => {
                 backgroundColor: kid.currentKidRegistration
                   ? '#ebebeb'
                   : kid.age >= 12
-                  ? '#FBDAD7'
-                  : 'white',
+                    ? '#FBDAD7'
+                    : 'white',
               }}
               icon={
                 <Image
@@ -153,8 +159,8 @@ const Registration: NextPage = () => {
                     kid.photoUrl
                       ? kid.photoUrl
                       : kid.gender === UserGenderCode.MALE
-                      ? '/icons/boy.png'
-                      : '/icons/girl.png'
+                        ? '/icons/boy.png'
+                        : '/icons/girl.png'
                   }
                   style={{ borderRadius: 20 }}
                   fit="cover"

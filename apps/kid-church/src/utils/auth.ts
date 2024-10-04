@@ -1,5 +1,5 @@
+import { RootState } from '@faith-forge-web/state/redux';
 import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
 
 /** User Roles Enum */
 export enum UserRole {
@@ -81,7 +81,9 @@ export const IsSupervisorRegisterKidChurch = () => {
 export const IsSupervisorRegisterOrKidChurchSupervisor = () => {
   const roles = GetUserRoles();
   if (!roles) return false;
-  return roles.some((role) => KidChurchAndRegisterSupervisorRoles.includes(role));
+  return roles.some((role) =>
+    KidChurchAndRegisterSupervisorRoles.includes(role),
+  );
 };
 
 export const IsSupervisorKidChurch = () => {

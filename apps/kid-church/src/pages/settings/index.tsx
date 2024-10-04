@@ -14,10 +14,12 @@ import { useDispatch } from 'react-redux';
 // import { hasRequiredPermissions } from '@/components/Permissions';
 import { Cell, Dialog, Notify, Toast } from 'react-vant';
 import { Layout } from '../../components/Layout';
-import { resetChurchState } from '../../redux/slices/church/church.slice';
-import { resetChurchMeetingState } from '../../redux/slices/church/churchMeeting.slice';
-import { resetChurchPrinterState } from '../../redux/slices/church/churchPrinter.slice';
-import { logout } from '../../redux/slices/user/auth.slice';
+import {
+  resetChurchState,
+  resetChurchMeetingState,
+  resetChurchPrinterState,
+  logout,
+} from '@faith-forge-web/state/redux';
 
 const Setting: NextPage = () => {
   const router = useRouter();

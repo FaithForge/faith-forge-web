@@ -1,14 +1,14 @@
 import React from 'react';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
-import { Providers } from '../redux/provider';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore } from 'redux-persist';
-import { store } from '../redux/store';
 import Setup from './_setup';
 import { ConfigProvider } from 'react-vant';
 import './theme.css';
-import { themeVars } from '../constants/theme';
+import { Providers, store } from '@faith-forge-web/state/redux';
+import { themeVars } from '@faith-forge-web/common-types/constants';
+
 function MyApp({ Component, pageProps }: AppProps) {
   const persistor = persistStore(store);
 

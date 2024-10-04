@@ -16,9 +16,13 @@
     "skipDefaultLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@faith-forge-web/common-types/constants": [
+        "libs/common-types/constants/src/index.ts"
+      ],
       "@faith-forge-web/common-types/global": [
         "libs/common-types/global/src/index.ts"
       ],
+      "@faith-forge-web/models": ["libs/models/src/index.ts"],
       "@faith-forge-web/state/redux": ["libs/state/redux/src/index.ts"],
       "@faith-forge-web/utils/auth": ["libs/utils/auth/src/index.ts"],
       "@faith-forge-web/utils/http": ["libs/utils/http/src/index.ts"]

@@ -9,11 +9,15 @@ import { useDispatch, useSelector } from 'react-redux';
 
 import { Button, Grid, Search, Space } from 'react-vant';
 import LoadingMask from '../../components/LoadingMask';
-import { cleanCurrentKidGuardian } from '../../redux/slices/kid-church/kid-guardian.slice';
-import { AppDispatch, RootState } from '../../redux/store';
-import { GetKidGuardian, UploadQRCodeImage } from '../../redux/thunks/kid-church/kid-guardian.thunk';
 import { capitalizeWords } from '../../utils/text';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  GetKidGuardian,
+  RootState,
+  UploadQRCodeImage,
+  cleanCurrentKidGuardian,
+} from '@faith-forge-web/state/redux';
 
 const GenerateQRKidGuardianView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();

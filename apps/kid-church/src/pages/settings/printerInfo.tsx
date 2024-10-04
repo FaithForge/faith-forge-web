@@ -1,16 +1,19 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
-import { AppDispatch, RootState } from '../../redux/store';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import { Button, Form, Selector } from 'react-vant';
-import { updateCurrentChurchPrinter } from '../../redux/slices/church/churchPrinter.slice';
-import { GetChurchPrinters } from '../../redux/thunks/church/church.thunk';
 import { TestPrintLabel } from '../../services/kidService';
 import { Layout } from '../../components/Layout';
+import {
+  AppDispatch,
+  GetChurchPrinters,
+  RootState,
+  updateCurrentChurchPrinter,
+} from '@faith-forge-web/state/redux';
 
 const PrinterInfo: NextPage = () => {
   const [form] = Form.useForm();

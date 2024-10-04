@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
-import { RootState } from '../redux/store';
 import { UserRole } from '../utils/auth';
+import { RootState } from '@faith-forge-web/state/redux';
 
 const GetUserRoles = () => {
   const { user } = useSelector((state: RootState) => state.authSlice);

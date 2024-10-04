@@ -3,15 +3,19 @@ import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
 import LoadingMask from '../../components/LoadingMask';
 import { IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
 import { usePathname, useRouter } from 'next/navigation';
 import { Button, Collapse, Form, Input, Space, Steps, Toast } from 'react-vant';
-import { cleanScanQRSearch } from '../../redux/slices/kid-church/scan-code-kid-registration.slice';
-import { ScanCodeKidRegistration, CreateKidRegistration } from '../../redux/thunks/kid-church/kid-registration.thunk';
 import { capitalizeWords } from '../../utils/text';
 import { Layout } from '../../components/Layout';
+import {
+  RootState,
+  AppDispatch,
+  cleanScanQRSearch,
+  CreateKidRegistration,
+  ScanCodeKidRegistration,
+} from '@faith-forge-web/state/redux';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
@@ -125,7 +129,6 @@ const QRReader: NextPage = () => {
     scanQRKidGuardianSlice.relations,
   ]);
 
-   
   // const actions: Action[] = [
   //   {
   //     key: 'updateKid',

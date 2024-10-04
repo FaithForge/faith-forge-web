@@ -5,9 +5,7 @@ import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
 // import { RefObject } from 'react';
 import dayjs from 'dayjs';
-import { userGenderSelect } from '../../models/User';
 import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '../../redux/store';
 import LoadingMask from '../../components/LoadingMask';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
@@ -29,13 +27,18 @@ import {
   Space,
   Switch,
 } from 'react-vant';
-import { loadingKidEnable } from '../../redux/slices/kid-church/kid.slice';
-import { GetKidGroups } from '../../redux/thunks/kid-church/kid-group.thunk';
-import { GetKidMedicalConditions } from '../../redux/thunks/kid-church/kid-medical-condition.thunk';
-import { UpdateKid } from '../../redux/thunks/kid-church/kid.thunk';
-import { UploadUserImage } from '../../redux/thunks/user/user.thunk';
 import { checkLastNameField } from '../../utils/validator';
 import { Layout } from '../../components/Layout';
+import {
+  RootState,
+  AppDispatch,
+  GetKidMedicalConditions,
+  loadingKidEnable,
+  GetKidGroups,
+  UpdateKid,
+  UploadUserImage,
+} from '@faith-forge-web/state/redux';
+import { userGenderSelect } from '@faith-forge-web/models';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -46,7 +49,6 @@ const UpdateKidPage: NextPage = () => {
     (state: RootState) => state.kidMedicalConditionSlice,
   );
 
-   
   const now = DateTime.local().endOf('year').toJSDate();
 
   const [source, setSource] = useState(kidSlice.current?.photoUrl);
@@ -107,7 +109,7 @@ const UpdateKidPage: NextPage = () => {
     id: kidSlice.current?.medicalCondition?.id ?? '',
     name: kidSlice.current?.medicalCondition?.name ?? '',
   });
-   
+
   const filteredMedicalConditions = useMemo(() => {
     if (searchMedicalCondition) {
       return kidMedicalConditionSlice.data.filter((item: any) =>
