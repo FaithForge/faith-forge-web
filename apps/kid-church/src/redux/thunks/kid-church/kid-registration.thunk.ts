@@ -1,7 +1,6 @@
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { MS_KID_CHURCH_PATH } from '../../../api';
 import { ICreateKidRegistration } from '../../../models/KidChurch';
 import { RootState } from '../../store';
 
@@ -17,10 +16,11 @@ export const CreateKidRegistration = createAsyncThunk(
     const churchPrinterSlice = state.churchPrinterSlice;
 
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.POST,
-        `/${MS_KID_CHURCH_PATH}/kid-registration`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.POST,
+        url: `/kid-registration`,
+        options: {
           data: {
             ...payload,
             churchId: churchSlice.current?.id,
@@ -29,12 +29,12 @@ export const CreateKidRegistration = createAsyncThunk(
             log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del grupo ${accountSlice.churchGroup}`,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const ReprintKidRegistration = createAsyncThunk(
@@ -44,7 +44,7 @@ export const ReprintKidRegistration = createAsyncThunk(
       id: string;
       copies: number;
     },
-    { getState }
+    { getState },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -52,22 +52,23 @@ export const ReprintKidRegistration = createAsyncThunk(
     const churchPrinterSlice = state.churchPrinterSlice;
 
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.POST,
-        `/${MS_KID_CHURCH_PATH}/kid-registration/reprint`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.POST,
+        url: `/kid-registration/reprint`,
+        options: {
           data: {
             id,
             copies,
             churchPrinterId: churchPrinterSlice.current?.name,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const RemoveKidRegistration = createAsyncThunk(
@@ -76,24 +77,25 @@ export const RemoveKidRegistration = createAsyncThunk(
     payload: {
       id: string;
     },
-    { getState }
+    { getState },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const { id } = payload;
 
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.DELETE,
-        `/${MS_KID_CHURCH_PATH}/kid-registration/${id}`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.DELETE,
+        url: `/kid-registration/${id}`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const ScanCodeKidRegistration = createAsyncThunk(
@@ -104,19 +106,20 @@ export const ScanCodeKidRegistration = createAsyncThunk(
     const churchMeeting = state.churchMeetingSlice;
 
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kid-registration/scan-code`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kid-registration/scan-code`,
+        options: {
           params: {
             code,
             registrationChurchMeetingId: churchMeeting.current?.id,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );

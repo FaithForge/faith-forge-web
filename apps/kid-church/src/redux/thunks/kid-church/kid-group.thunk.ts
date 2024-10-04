@@ -1,8 +1,7 @@
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { DateTime } from 'luxon';
-import { MS_KID_CHURCH_PATH } from '../../../api';
 import { RootState } from '../../store';
 
 export const GetKidGroups = createAsyncThunk(
@@ -11,17 +10,18 @@ export const GetKidGroups = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kid-groups`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kid-groups`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const GetKidGroupRegistered = createAsyncThunk(
@@ -32,20 +32,21 @@ export const GetKidGroupRegistered = createAsyncThunk(
     const { token } = state.authSlice;
     const churchMeetingSlice = state.churchMeetingSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kid-group/registered`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kid-group/registered`,
+        options: {
           params: {
             kidGroupId,
             churchMeetingId: churchMeetingSlice.current?.id,
             date: DateTime.fromJSDate(date).toISODate(),
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );

@@ -1,7 +1,6 @@
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { MS_CHURCH_PATH } from '../../../api';
 import { RootState } from '../../store';
 
 export const GetChurches = createAsyncThunk(
@@ -10,19 +9,20 @@ export const GetChurches = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_CHURCH_PATH}/churches`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.GET,
+        url: `/churches`,
+        options: {
           params: {
             withAdditionalData,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
     return response;
-  }
+  },
 );
 
 export const GetChurchMeetings = createAsyncThunk(
@@ -32,19 +32,20 @@ export const GetChurchMeetings = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_CHURCH_PATH}/church/${churchId}/meetings`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.GET,
+        url: `/church/${churchId}/meetings`,
+        options: {
           params: {
             state: stateMeeting,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
     return response;
-  }
+  },
 );
 
 export const GetChurchPrinters = createAsyncThunk(
@@ -53,14 +54,15 @@ export const GetChurchPrinters = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_CHURCH_PATH}/church/${churchId}/printers`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.GET,
+        url: `/church/${churchId}/printers`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
     return response;
-  }
+  },
 );

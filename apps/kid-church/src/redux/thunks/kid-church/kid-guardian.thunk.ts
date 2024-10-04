@@ -1,9 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
-import { MS_KID_CHURCH_PATH } from '../../../api';
 import { ICreateKidGuardian } from '../../../models/KidChurch';
 import { RootState } from '../../store';
 
@@ -15,16 +14,17 @@ export const CreateKidGuardian = createAsyncThunk(
 
     try {
       const response = (
-        await makeApiRequest(
-          HttpRequestMethod.POST,
-          `/${MS_KID_CHURCH_PATH}/kid-guardian`,
-          {
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.POST,
+          url: `/kid-guardian`,
+          options: {
             data: {
               ...payload,
             },
             headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+          },
+        })
       ).data;
 
       return response;
@@ -32,7 +32,7 @@ export const CreateKidGuardian = createAsyncThunk(
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Internal Error');
     }
-  }
+  },
 );
 
 export const GetKidGuardian = createAsyncThunk(
@@ -41,24 +41,25 @@ export const GetKidGuardian = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kid-guardian/${nationalId}`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kid-guardian/${nationalId}`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const UpdateKidGuardianPhone = createAsyncThunk(
   'kid-church/UpdateKidGuardianPhone',
   async (
     payload: { id: string; phone: string },
-    { getState, rejectWithValue }
+    { getState, rejectWithValue },
   ) => {
     const { id, phone } = payload;
     const state = getState() as RootState;
@@ -66,16 +67,17 @@ export const UpdateKidGuardianPhone = createAsyncThunk(
 
     try {
       const response = (
-        await makeApiRequest(
-          HttpRequestMethod.PUT,
-          `/${MS_KID_CHURCH_PATH}/kid-guardian/${id}`,
-          {
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.PUT,
+          url: `/kid-guardian/${id}`,
+          options: {
             data: {
               phone,
             },
             headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+          },
+        })
       ).data;
 
       return response;
@@ -83,7 +85,7 @@ export const UpdateKidGuardianPhone = createAsyncThunk(
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Internal Error');
     }
-  }
+  },
 );
 
 export const UploadQRCodeImage = createAsyncThunk(
@@ -92,19 +94,20 @@ export const UploadQRCodeImage = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.POST,
-        `/${MS_KID_CHURCH_PATH}/user/upload-qr-code`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.POST,
+        url: `/user/upload-qr-code`,
+        options: {
           data: payload.formData,
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
-        }
-      )
+        },
+      })
     ).data;
 
     return response.key;
-  }
+  },
 );
