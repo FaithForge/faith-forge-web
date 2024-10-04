@@ -4,7 +4,6 @@ import NavBarApp from '../../components/NavBarApp';
 import { useEffect, useState } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
-import { MS_CHURCH_PATH, MS_KID_CHURCH_PATH } from '../../api';
 import ModalFaithForge from '../../components/ModalFaithForge';
 import { DateTime } from 'luxon';
 import { labelRendererCalendar } from '../../utils/date';
@@ -12,8 +11,8 @@ import { useSelector } from 'react-redux';
 import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
 import { RootState } from '../../redux/store';
 import { Layout } from '../../components/Layout';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -30,13 +29,14 @@ const GenerateChurchMeetingReport: NextPage = () => {
   useEffect(() => {
     (async () => {
       const churchesResponse = (
-        await makeApiRequest(
-          HttpRequestMethod.GET,
-          `/${MS_CHURCH_PATH}/churches`,
-          {
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: `/churches`,
+          options: {
             headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+          },
+        })
       ).data;
       setChurches(churchesResponse);
     })();
@@ -45,13 +45,14 @@ const GenerateChurchMeetingReport: NextPage = () => {
   const findChurchMeetings = async (meetingId: any) => {
     setIsLoading(true);
     const churchMeetingsResponse = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `${MS_CHURCH_PATH}/church/${meetingId}/meetings`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.GET,
+        url: `/church/${meetingId}/meetings`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
     setChurchMeetings(churchMeetingsResponse);
     setIsLoading(false);
@@ -66,14 +67,15 @@ const GenerateChurchMeetingReport: NextPage = () => {
     setDateCache(date);
 
     const reportResponse = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/report/kid-church-meeting`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/report/kid-church-meeting`,
+        options: {
           params: { churchMeetingId, date },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
     await setReport(reportResponse);
     setIsLoading(false);
@@ -105,14 +107,15 @@ const GenerateChurchMeetingReport: NextPage = () => {
     const date = dateCache;
 
     const reportResponse = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/report/kid-church-meeting/download`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.GET,
+        url: `/report/kid-church-meeting/download`,
+        options: {
           params: { churchMeetingId, date },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     const bufferData = Buffer.from(reportResponse['data']);
@@ -122,13 +125,13 @@ const GenerateChurchMeetingReport: NextPage = () => {
     const url = window.URL.createObjectURL(blob);
 
     const churchMeetingInfo = churchMeetingOptions.find(
-      (churchMeeting) => churchMeeting.value === churchMeetingId
+      (churchMeeting) => churchMeeting.value === churchMeetingId,
     );
     const a = document.createElement('a');
     a.href = url;
     a.download = `${DateTime.local().toISODate()}-${churchMeetingInfo?.label.replace(
       ' ',
-      '-'
+      '-',
     )}.pdf`;
     a.click();
 

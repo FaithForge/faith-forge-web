@@ -26,7 +26,7 @@ const executeApiRequest = async (
   baseURL: string,
   method: HttpRequestMethod,
   url: string,
-  options: ApiRequestOptions = {}
+  options: ApiRequestOptions = {},
 ): Promise<AxiosResponse<any, any>> => {
   const { params = {}, data = {}, headers = {} } = options;
   const instance = axios.create({ baseURL });
@@ -79,7 +79,7 @@ export const microserviceApiRequest = async (payload: {
 export const makeApiRequest = async (
   method: HttpRequestMethod,
   url: string,
-  options?: ApiRequestOptions
+  options?: ApiRequestOptions,
 ): Promise<AxiosResponse<any, any>> => {
   const baseURL = API_BASE_URL;
   return executeApiRequest(baseURL, method, url, options);

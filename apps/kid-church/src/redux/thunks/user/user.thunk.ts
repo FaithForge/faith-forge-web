@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { MS_USER_PATH } from '../../../api';
 import { PAGINATION_REGISTRATION_LIMIT } from '../../../constants/pagination';
 import { IUpdateUser } from '../../../models/User';
 import { RootState } from '../../store';
@@ -13,21 +12,22 @@ export const UploadUserImage = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.POST,
-        `/${MS_USER_PATH}/user/upload-image`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.User,
+        method: HttpRequestMethod.POST,
+        url: `/user/upload-image`,
+        options: {
           data: payload.formData,
           headers: {
             Authorization: `Bearer ${token}`,
             'Content-Type': 'multipart/form-data',
           },
-        }
-      )
+        },
+      })
     ).data;
 
     return response.key;
-  }
+  },
 );
 
 export const GetUserByNationalId = createAsyncThunk(
@@ -36,20 +36,21 @@ export const GetUserByNationalId = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_USER_PATH}/user/search-by-national-id`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.User,
+        method: HttpRequestMethod.GET,
+        url: `/user/search-by-national-id`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             nationalId,
           },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const GetUserByFullName = createAsyncThunk(
@@ -58,20 +59,21 @@ export const GetUserByFullName = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_USER_PATH}/user/search-by-full-name`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.User,
+        method: HttpRequestMethod.GET,
+        url: `/user/search-by-full-name`,
+        options: {
           headers: { Authorization: `Bearer ${token}` },
           params: {
             ...payload,
           },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const UpdateUser = createAsyncThunk(
@@ -81,15 +83,20 @@ export const UpdateUser = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    await makeApiRequest(HttpRequestMethod.PUT, `/${MS_USER_PATH}/user/${id}`, {
-      data: {
-        ...updateUser,
+    await microserviceApiRequest({
+      microservice: MS.User,
+      method: HttpRequestMethod.PUT,
+      url: `/user/${id}`,
+      options: {
+        data: {
+          ...updateUser,
+        },
+        headers: { Authorization: `Bearer ${token}` },
       },
-      headers: { Authorization: `Bearer ${token}` },
     });
 
     return updateUser;
-  }
+  },
 );
 
 export const GetUsers = createAsyncThunk(
@@ -113,19 +120,24 @@ export const GetUsers = createAsyncThunk(
     }
 
     const response = (
-      await makeApiRequest(HttpRequestMethod.GET, `/${MS_USER_PATH}/users`, {
-        params: {
-          limit: PAGINATION_REGISTRATION_LIMIT,
-          page: 1,
-          filterByFirstName,
-          filterByLastName,
-          filterByNationalId,
+      await microserviceApiRequest({
+        microservice: MS.User,
+        method: HttpRequestMethod.GET,
+        url: `/users`,
+        options: {
+          params: {
+            limit: PAGINATION_REGISTRATION_LIMIT,
+            page: 1,
+            filterByFirstName,
+            filterByLastName,
+            filterByNationalId,
+          },
+          headers: { Authorization: `Bearer ${token}` },
         },
-        headers: { Authorization: `Bearer ${token}` },
       })
     ).data;
     return response;
-  }
+  },
 );
 
 export const GetMoreUsers = createAsyncThunk(
@@ -148,18 +160,23 @@ export const GetMoreUsers = createAsyncThunk(
     }
 
     const response = (
-      await makeApiRequest(HttpRequestMethod.GET, `/${MS_USER_PATH}/users`, {
-        params: {
-          limit: PAGINATION_REGISTRATION_LIMIT,
-          page: user.currentPage + 1,
-          filterByFirstName,
-          filterByLastName,
-          filterByNationalId,
+      await microserviceApiRequest({
+        microservice: MS.User,
+        method: HttpRequestMethod.GET,
+        url: `/users`,
+        options: {
+          params: {
+            limit: PAGINATION_REGISTRATION_LIMIT,
+            page: user.currentPage + 1,
+            filterByFirstName,
+            filterByLastName,
+            filterByNationalId,
+          },
+          headers: { Authorization: `Bearer ${token}` },
         },
-        headers: { Authorization: `Bearer ${token}` },
       })
     ).data;
 
     return response;
-  }
+  },
 );

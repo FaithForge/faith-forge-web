@@ -1,8 +1,7 @@
-import { HttpRequestMethod } from '@faith-forge-web/common-types/global';
-import { makeApiRequest } from '@faith-forge-web/utils/http';
+import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
-import { MS_KID_CHURCH_PATH } from '../../../api';
 import { PAGINATION_REGISTRATION_LIMIT } from '../../../constants/pagination';
 import { ICreateKid, IUpdateKid } from '../../../models/KidChurch';
 import { RootState } from '../../store';
@@ -14,20 +13,21 @@ export const GetKid = createAsyncThunk(
     const { token } = state.authSlice;
     const churchMeeting = state.churchMeetingSlice;
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kid/${payload.id}`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kid/${payload.id}`,
+        options: {
           params: {
             registrationChurchMeetingId: churchMeeting.current?.id,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const GetKids = createAsyncThunk(
@@ -52,10 +52,11 @@ export const GetKids = createAsyncThunk(
     }
 
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kids`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kids`,
+        options: {
           params: {
             limit: PAGINATION_REGISTRATION_LIMIT,
             page: 1,
@@ -65,11 +66,11 @@ export const GetKids = createAsyncThunk(
             filterByFaithForge,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
     return response;
-  }
+  },
 );
 
 export const GetMoreKids = createAsyncThunk(
@@ -93,10 +94,11 @@ export const GetMoreKids = createAsyncThunk(
     }
 
     const response = (
-      await makeApiRequest(
-        HttpRequestMethod.GET,
-        `/${MS_KID_CHURCH_PATH}/kids`,
-        {
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.GET,
+        url: `/kids`,
+        options: {
           params: {
             limit: PAGINATION_REGISTRATION_LIMIT,
             page: kid.currentPage + 1,
@@ -106,12 +108,12 @@ export const GetMoreKids = createAsyncThunk(
             filterByFaithForge,
           },
           headers: { Authorization: `Bearer ${token}` },
-        }
-      )
+        },
+      })
     ).data;
 
     return response;
-  }
+  },
 );
 
 export const CreateKid = createAsyncThunk(
@@ -122,16 +124,17 @@ export const CreateKid = createAsyncThunk(
 
     try {
       const response = (
-        await makeApiRequest(
-          HttpRequestMethod.POST,
-          `/${MS_KID_CHURCH_PATH}/kid`,
-          {
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.POST,
+          url: `/kid`,
+          options: {
             data: {
               ...payload,
             },
             headers: { Authorization: `Bearer ${token}` },
-          }
-        )
+          },
+        })
       ).data;
 
       return response;
@@ -139,7 +142,7 @@ export const CreateKid = createAsyncThunk(
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Internal Error');
     }
-  }
+  },
 );
 
 export const UpdateKid = createAsyncThunk(
@@ -149,17 +152,18 @@ export const UpdateKid = createAsyncThunk(
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    await makeApiRequest(
-      HttpRequestMethod.PUT,
-      `/${MS_KID_CHURCH_PATH}/kid/${id}`,
-      {
+    await microserviceApiRequest({
+      microservice: MS.KidChurch,
+      method: HttpRequestMethod.PUT,
+      url: `/kid/${id}`,
+      options: {
         data: {
           ...updateKid,
         },
         headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      },
+    });
 
     return updateKid;
-  }
+  },
 );
