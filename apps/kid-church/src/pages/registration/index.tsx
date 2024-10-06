@@ -8,7 +8,15 @@ import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
 
-import { Cell, Empty, List, NoticeBar, Search, Image } from 'react-vant';
+import {
+  Cell,
+  Empty,
+  List,
+  NoticeBar,
+  Search,
+  Image,
+  Swiper,
+} from 'react-vant';
 import {
   hasRequiredPermissions,
   withRoles,
@@ -28,6 +36,8 @@ import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
 } from '@faith-forge-web/common-types/constants';
 import { IKid, UserGenderCode } from '@faith-forge-web/models';
+import { FaInfo } from 'react-icons/fa';
+import { IoIosArrowForward } from 'react-icons/io';
 
 const Registration: NextPage = () => {
   const {
@@ -110,6 +120,7 @@ const Registration: NextPage = () => {
       <Search
         // showCancelButton
         // cancelText="Cancelar"
+        shape="round"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
         onCancel={() => setFindText('')}
@@ -120,19 +131,19 @@ const Registration: NextPage = () => {
           position: 'sticky',
           top: '0',
           zIndex: 2,
-          height: '49px',
-          padding: '10px 5px',
-          backgroundColor: 'white',
         }}
       />
-      <NoticeBar
-        style={{
-          '--height': '25px',
-        }}
-        // leftIcon={<HomeOutlined />}
-        text={`${churchMeeting?.name} - Impresora: ${churchPrinterSlice.current?.name}`}
-        color="info"
-      />
+      <NoticeBar leftIcon={<FaInfo />}>
+        <Swiper autoplay={3000} indicator={false} className="notice-swipe">
+          <Swiper.Item>Servicio actual: {churchMeeting?.name}</Swiper.Item>
+          <Swiper.Item>
+            Impresora: {churchPrinterSlice.current?.name}
+          </Swiper.Item>
+          <Swiper.Item>
+            Impresora: {churchPrinterSlice.current?.name}
+          </Swiper.Item>
+        </Swiper>
+      </NoticeBar>
       {warningAlert.message && (
         <NoticeBar
           text={warningAlert.message}
@@ -183,6 +194,10 @@ const Registration: NextPage = () => {
                   : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
               }
               isLink
+              size="large"
+              rightIcon={
+                <IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />
+              }
               onClick={() => registerKidViewHandler(kid)}
             />
           ))

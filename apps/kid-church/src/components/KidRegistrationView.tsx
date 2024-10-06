@@ -20,6 +20,11 @@ import {
   Space,
   Toast,
   Image,
+  Flex,
+  Tag,
+  Card,
+  Cell,
+  Badge,
 } from 'react-vant';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
@@ -39,8 +44,11 @@ import {
   USER_GENDER_CODE_MAPPER,
   UserGenderCode,
 } from '@faith-forge-web/models';
+import { AiFillEdit } from 'react-icons/ai';
+import { LiaBirthdayCakeSolid } from 'react-icons/lia';
 
 const KidRegistrationView = () => {
+  const [form] = Form.useForm();
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] =
@@ -128,10 +136,11 @@ const KidRegistrationView = () => {
       })
     : [];
 
-  const kidGuardianRegistration = kidGuardianOptions?.length
-    ? kidGuardianOptions?.find(
-        (item: any) =>
-          item.value === kidSlice.current?.currentKidRegistration?.guardianId,
+  const kidGuardianRegistration = kidSlice.current?.relations?.length
+    ? kidSlice.current?.relations?.find(
+        (kidGuardian: IKidGuardian) =>
+          kidGuardian.id ===
+          kidSlice.current?.currentKidRegistration?.guardianId,
       )
     : null;
 
@@ -143,217 +152,256 @@ const KidRegistrationView = () => {
     : '';
 
   return (
-    <>
+    <div style={{ paddingLeft: 15, paddingRight: 15 }}>
       {kidSlice.loading || kidRegistrationSlice.loading ? <LoadingMask /> : ''}
       {/* <AutoCenter> */}
-      <Image
-        alt="profileImage"
-        src={
-          kidSlice.current?.photoUrl
-            ? kidSlice.current?.photoUrl
-            : kidSlice.current?.gender === UserGenderCode.MALE
-              ? '/icons/boy.png'
-              : '/icons/girl.png'
-        }
-        width={180}
-        height={180}
-        fit="cover"
-        style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
-      />
-      <h1
-        style={{
-          textAlign: 'center',
-          fontSize: 32,
-          marginTop: 5,
-          marginBottom: 5,
-        }}
+
+      <Flex
+        justify="center"
+        align="center"
+        gutter={16}
+        style={{ paddingBottom: 10 }}
       >
-        {capitalizeWords(kidSlice.current?.firstName ?? '')}
-      </h1>
-      <h2
-        style={{
-          textAlign: 'center',
-          fontSize: 22,
-          marginTop: 0,
-          marginBottom: 5,
-        }}
-      >
-        {capitalizeWords(kidSlice.current?.lastName ?? '')}
-      </h2>
-      <p>
-        <b>Código de aplicación:</b> {kidSlice.current?.faithForgeId}
-      </p>
-      {/* </AutoCenter> */}
+        <Flex.Item span={8}>
+          <Image
+            alt="profileImage"
+            src={
+              kidSlice.current?.photoUrl
+                ? kidSlice.current?.photoUrl
+                : kidSlice.current?.gender === UserGenderCode.MALE
+                  ? '/icons/boy.png'
+                  : '/icons/girl.png'
+            }
+            fit="cover"
+            style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
+          />
+        </Flex.Item>
+        <Flex.Item span={16}>
+          <h1
+            style={{
+              fontSize: 28,
+              marginTop: 5,
+              marginBottom: 5,
+            }}
+          >
+            {capitalizeWords(kidSlice.current?.firstName ?? '')}
+          </h1>
+          <h2
+            style={{
+              fontSize: 20,
+              marginTop: 0,
+              marginBottom: 5,
+            }}
+          >
+            {capitalizeWords(kidSlice.current?.lastName ?? '')}
+          </h2>
+          {kidSlice.current?.kidGroup && (
+            <Tag type="primary" size="large" color="#7232dd">
+              {kidSlice.current.kidGroup.name}{' '}
+              {kidSlice.current.staticGroup ? '(Estatico)' : ''}
+            </Tag>
+          )}
+        </Flex.Item>
+      </Flex>
       {birthday.slice(0, -6) ===
         dayjs(new Date()).locale('es').format('MMMM D') && (
         <NoticeBar
           text="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
-          color="info"
-          // leftIcon={<GiftOutlined />}
-          style={{ marginBottom: '10px' }}
+          background="rgb(249, 249, 249)"
+          leftIcon={<LiaBirthdayCakeSolid />}
+          style={{ marginBottom: '10px', textAlign: 'center' }}
         />
       )}
-      <div style={{ fontSize: 16 }}>
-        {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
-          kidSlice.current?.ageInMonths && (
-            <Grid
-              columnNum={2}
-              gutter={8}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
-              <Grid.Item style={{ fontWeight: 'bold' }}>Edad</Grid.Item>
-              <Grid.Item>
-                {`${Math.floor(kidSlice.current?.age ?? 0)} años y ${
-                  kidSlice.current.ageInMonths -
-                  Math.floor(kidSlice.current.age) * 12
-                } meses`}
-              </Grid.Item>
-            </Grid>
-          )}
-        {kidSlice.current?.birthday && (
-          <Grid
-            columnNum={2}
-            gutter={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>
-              Fecha de nacimiento
-            </Grid.Item>
-            <Grid.Item>{`${birthday}`}</Grid.Item>
-          </Grid>
-        )}
-        {kidSlice.current?.gender && (
-          <Grid
-            columnNum={2}
-            gutter={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Género</Grid.Item>
-            <Grid.Item>{`${
-              USER_GENDER_CODE_MAPPER[
-                kidSlice.current.gender as any as UserGenderCode
-              ]
-            }`}</Grid.Item>
-          </Grid>
-        )}
-        {kidSlice.current?.healthSecurityEntity && (
-          <Grid
-            columnNum={2}
-            gutter={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>EPS</Grid.Item>
-            <Grid.Item>{kidSlice.current.healthSecurityEntity}</Grid.Item>
-          </Grid>
-        )}
-        {kidSlice.current?.currentKidRegistration && (
-          <>
-            <Grid
-              columnNum={2}
-              gutter={8}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
-              <Grid.Item style={{ fontWeight: 'bold' }}>
-                Fecha de registro
-              </Grid.Item>
-              <Grid.Item>{`${dayjs(
-                kidSlice.current.currentKidRegistration?.date.toString(),
-              )
-                .locale('es')
-                .format('MMMM D, YYYY h:mm A')}`}</Grid.Item>
-            </Grid>
-            <Grid
-              columnNum={2}
-              gutter={8}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
-              <Grid.Item style={{ fontWeight: 'bold' }}>
-                Acudiente que registro
-              </Grid.Item>
-              <Grid.Item>{`${kidGuardianRegistration?.label}`}</Grid.Item>
-            </Grid>
-            {IsSupervisorRegisterKidChurch() &&
-              kidSlice.current.currentKidRegistration?.log && (
-                <Grid
-                  columnNum={2}
-                  gutter={8}
-                  style={{ paddingBottom: 10, border: '1px' }}
-                >
-                  <Grid.Item style={{ fontWeight: 'bold' }}>
-                    Log de registro
-                  </Grid.Item>
-                  <Grid.Item>{`${kidSlice.current.currentKidRegistration?.log}`}</Grid.Item>
-                </Grid>
-              )}
-            {kidSlice.current.currentKidRegistration?.observation && (
-              <Grid
-                columnNum={2}
-                gutter={8}
-                style={{ paddingBottom: 10, border: '1px' }}
-              >
-                <Grid.Item style={{ fontWeight: 'bold' }}>
-                  Observaciones al registrar
-                </Grid.Item>
-                <Grid.Item>{`${kidSlice.current.currentKidRegistration?.observation}`}</Grid.Item>
-              </Grid>
+      <Card round style={{ backgroundColor: '#f9f9f9', marginBottom: 10 }}>
+        <Card.Header border>Datos del niño</Card.Header>
+        <Card.Body>
+          <Flex gutter={16} wrap="wrap">
+            {kidSlice.current?.faithForgeId && (
+              <>
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Código de aplicación
+                </Flex.Item>
+                <Flex.Item span={12}>
+                  {kidSlice.current?.faithForgeId}
+                </Flex.Item>
+              </>
             )}
-          </>
-        )}
-        {kidSlice.current?.medicalCondition && (
-          <Grid
-            columnNum={2}
-            gutter={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>
-              Condición Medica
-            </Grid.Item>
-            <Grid.Item>{`${kidSlice.current.medicalCondition?.code} - ${kidSlice.current.medicalCondition?.name}`}</Grid.Item>
-          </Grid>
-        )}
-        {kidSlice.current?.observations && (
-          <Grid
-            columnNum={2}
-            gutter={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>
-              Observaciones generales
-            </Grid.Item>
-            <Grid.Item>{kidSlice.current.observations}</Grid.Item>
-          </Grid>
-        )}
-        {kidSlice.current?.kidGroup && (
-          <Grid
-            columnNum={2}
-            gutter={8}
-            style={{ paddingBottom: 10, border: '1px' }}
-          >
-            <Grid.Item style={{ fontWeight: 'bold' }}>Salón</Grid.Item>
-            <Grid.Item>
-              {kidSlice.current.kidGroup.name}{' '}
-              {kidSlice.current.staticGroup ? '(Estatico)' : ''}
-            </Grid.Item>
-          </Grid>
-        )}
-      </div>
+            {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
+              kidSlice.current?.ageInMonths && (
+                <>
+                  <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                    Edad
+                  </Flex.Item>
+                  <Flex.Item span={12}>
+                    {`${Math.floor(kidSlice.current?.age ?? 0)} años y ${
+                      kidSlice.current.ageInMonths -
+                      Math.floor(kidSlice.current.age) * 12
+                    } meses`}
+                  </Flex.Item>
+                </>
+              )}
+            {kidSlice.current?.birthday && (
+              <>
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Fecha de nacimiento
+                </Flex.Item>
+                <Flex.Item span={12}>{`${birthday}`}</Flex.Item>
+              </>
+            )}
+            {kidSlice.current?.gender && (
+              <>
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Género
+                </Flex.Item>
+                <Flex.Item span={12}>{`${
+                  USER_GENDER_CODE_MAPPER[
+                    kidSlice.current.gender as any as UserGenderCode
+                  ]
+                }`}</Flex.Item>
+              </>
+            )}
+            {kidSlice.current?.healthSecurityEntity && (
+              <>
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  EPS
+                </Flex.Item>
+                <Flex.Item span={12}>
+                  {kidSlice.current.healthSecurityEntity}
+                </Flex.Item>
+              </>
+            )}
+            {kidSlice.current?.medicalCondition && (
+              <>
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Condición Medica
+                </Flex.Item>
+                <Flex.Item span={12}>
+                  {`${kidSlice.current.medicalCondition?.code} - ${kidSlice.current.medicalCondition?.name}`}
+                </Flex.Item>
+              </>
+            )}
+            {kidSlice.current?.observations && (
+              <>
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Observaciones generales
+                </Flex.Item>
+                <Flex.Item span={12}>{kidSlice.current.observations}</Flex.Item>
+              </>
+            )}
+          </Flex>
+        </Card.Body>
+      </Card>
+
+      {kidSlice.current?.currentKidRegistration && (
+        <>
+          <Card round style={{ backgroundColor: '#f9f9f9' }}>
+            <Card.Header border>Información del registro</Card.Header>
+            <Card.Body>
+              <Flex gutter={16} wrap="wrap">
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Fecha de registro
+                </Flex.Item>
+                <Flex.Item span={12}>
+                  {`${dayjs(
+                    kidSlice.current?.currentKidRegistration?.date.toString(),
+                  )
+                    .locale('es')
+                    .format('MMMM D, YYYY h:mm A')}`}
+                </Flex.Item>
+                {kidGuardianRegistration && (
+                  <>
+                    <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                      Acudiente que registro
+                    </Flex.Item>
+                    <Flex.Item span={12}>
+                      {`${capitalizeWords(kidGuardianRegistration.firstName)} ${capitalizeWords(
+                        kidGuardianRegistration.lastName as '',
+                      )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${
+                        kidGuardianRegistration.phone
+                      }`}
+                    </Flex.Item>
+                  </>
+                )}
+                {kidSlice.current?.currentKidRegistration?.observation && (
+                  <>
+                    <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                      Observaciones al registrar
+                    </Flex.Item>
+                    <Flex.Item span={12}>
+                      {`${kidSlice.current.currentKidRegistration?.observation}`}
+                    </Flex.Item>
+                  </>
+                )}
+                {IsSupervisorRegisterKidChurch() &&
+                  kidSlice.current?.currentKidRegistration?.log && (
+                    <>
+                      <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                        Log de registro
+                      </Flex.Item>
+                      <Flex.Item span={12}>
+                        {`${kidSlice.current.currentKidRegistration?.log}`}
+                      </Flex.Item>
+                    </>
+                  )}
+              </Flex>
+            </Card.Body>
+          </Card>
+          <Card round style={{ backgroundColor: '#f9f9f9', marginTop: 10 }}>
+            <Card.Header border>Acudientes</Card.Header>
+            <Card.Body>
+              <Flex gutter={8} wrap="wrap">
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Nombre
+                </Flex.Item>
+                <Flex.Item span={5} style={{ fontWeight: 'bold' }}>
+                  Relación
+                </Flex.Item>
+                <Flex.Item span={7} style={{ fontWeight: 'bold' }}>
+                  Teléfono
+                </Flex.Item>
+                {kidSlice.current.relations?.map(
+                  (kidGuardian: IKidGuardian) => {
+                    return (
+                      <>
+                        <Flex.Item span={12}>
+                          {capitalizeWords(kidGuardian.firstName)}{' '}
+                          {capitalizeWords(kidGuardian.lastName as '')}
+                        </Flex.Item>
+                        <Flex.Item span={5}>
+                          {
+                            KID_RELATION_CODE_MAPPER[
+                              kidGuardian.relation as KidGuardianRelationCodeEnum
+                            ]
+                          }
+                        </Flex.Item>
+                        <Flex.Item span={7}>{kidGuardian.phone}</Flex.Item>
+                      </>
+                    );
+                  },
+                )}
+              </Flex>
+            </Card.Body>
+          </Card>
+        </>
+      )}
       {!kidSlice.current?.currentKidRegistration ? (
         <Form
+          form={form}
           layout="vertical"
           onFinish={registerKid}
           footer={
             <>
+              <Button block nativeType="submit" type="primary" size="large">
+                Registrar
+              </Button>
               <NoticeBar
                 style={{
                   '--height': '20px',
                 }}
                 // leftIcon={<HomeOutlined />}
-                text={`Servicio: ${churchMeeting?.name}`}
+                text={`Lo vas a registrar en el Servicio: ${churchMeeting?.name}`}
                 color="info"
               />
-              <Button block type="primary" size="large">
-                Registrar
-              </Button>
             </>
           }
         >
@@ -367,53 +415,62 @@ const KidRegistrationView = () => {
               },
             ]}
           >
-            <Radio.Group defaultValue="1">
-              <Space direction="vertical">
-                {kidGuardianOptions.map((kidGuardian: any) => {
-                  return (
-                    <div
-                      key={kidGuardian.value}
-                      style={{
-                        display: 'flex',
-                        gap: '5px',
-                      }}
-                    >
-                      <Radio
-                        style={{
-                          '--icon-size': '18px',
-                          '--font-size': '14px',
-                          '--gap': '6px',
-                        }}
-                        key={kidGuardian.value}
-                        value={kidGuardian.value}
-                      >
-                        {kidGuardian.label}
-                      </Radio>{' '}
-                      {/* <EditFilled
-                        style={{ fontSize: 18 }}
-                        onClick={() => {
-                          const kidGuardianSearch =
-                            kidSlice.current?.relations?.find(
-                              (item) => item.id === kidGuardian.value,
-                            );
-                          if (kidGuardianSearch) {
-                            setKidGuardianToUpdate(kidGuardianSearch);
-                            setOpenUpdateKidGuardianPhoneModal(true);
+            {kidSlice.current?.relations && (
+              <Radio.Group
+                value={form.getFieldValue('guardian')}
+                style={{ width: '100%' }}
+              >
+                <Cell.Group border={false}>
+                  {kidSlice.current.relations.map(
+                    (kidGuardian: IKidGuardian) => {
+                      return (
+                        <Cell
+                          key={kidGuardian.id}
+                          clickable
+                          title={`${capitalizeWords(kidGuardian.firstName)} ${capitalizeWords(
+                            kidGuardian.lastName as '',
+                          )} (${KID_RELATION_CODE_MAPPER[kidGuardian.relation]})`}
+                          label={`Teléfono: ${kidGuardian.phone}`}
+                          onClick={() =>
+                            form.setFieldValue('guardian', kidGuardian.id)
                           }
-                        }}
-                      /> */}
-                    </div>
-                  );
-                })}
-              </Space>
-            </Radio.Group>
+                          icon={<Radio name={kidGuardian.id} />}
+                          rightIcon={
+                            <AiFillEdit
+                              style={{ width: 24, height: 24 }}
+                              onClick={() => {
+                                const kidGuardianSearch =
+                                  kidSlice.current?.relations?.find(
+                                    (item) => item.id === kidGuardian.id,
+                                  );
+                                if (kidGuardianSearch) {
+                                  setKidGuardianToUpdate(kidGuardianSearch);
+                                  setOpenUpdateKidGuardianPhoneModal(true);
+                                }
+                              }}
+                            />
+                          }
+                          style={{
+                            paddingLeft: 0,
+                            paddingRight: 0,
+                            paddingTop: 5,
+                            paddingBottom: 5,
+                            alignItems: 'center',
+                          }}
+                        />
+                      );
+                    },
+                  )}
+                </Cell.Group>
+              </Radio.Group>
+            )}
           </Form.Item>
 
           <Form.Item name="observations" label="Observaciones al registrar">
             <Input.TextArea
               placeholder="Ejemplo: lleva bolso, lleva merienda, está enfermo de algo en el momento."
               maxLength={300}
-              rows={3}
+              rows={2}
               showWordLimit
             />
           </Form.Item>
@@ -423,7 +480,7 @@ const KidRegistrationView = () => {
           <div style={{ paddingTop: 10 }}>
             <Button
               block
-              color="primary"
+              type="primary"
               size="large"
               onClick={() => reprintRegisterLabelKid(2)}
             >
@@ -431,10 +488,10 @@ const KidRegistrationView = () => {
             </Button>
           </div>
           {IsSupervisorRegisterKidChurch() && (
-            <div style={{ paddingTop: 10 }}>
+            <div style={{ paddingTop: 10, paddingBottom: 10 }}>
               <Button
                 block
-                color="danger"
+                type="danger"
                 size="large"
                 onClick={() => removeKidRegistration()}
               >
@@ -442,53 +499,6 @@ const KidRegistrationView = () => {
               </Button>
             </div>
           )}
-
-          <h2
-            style={{
-              textAlign: 'center',
-              fontSize: 22,
-              marginTop: 25,
-              marginBottom: 5,
-            }}
-          >
-            Acudientes
-          </h2>
-          <table
-            width={'100%'}
-            style={{
-              marginTop: '5px',
-              marginBottom: '10px',
-              border: '1px solid black',
-            }}
-          >
-            <thead>
-              <tr>
-                <th>Nombre</th>
-                <th>Relación</th>
-                <th>Teléfono</th>
-              </tr>
-            </thead>
-            <tbody>
-              {kidSlice.current.relations?.map((kidGuardian: any) => {
-                return (
-                  <tr key={kidGuardian.id}>
-                    <td>
-                      {capitalizeWords(kidGuardian.firstName)}{' '}
-                      {capitalizeWords(kidGuardian.lastName as '')}
-                    </td>
-                    <td>
-                      {
-                        KID_RELATION_CODE_MAPPER[
-                          kidGuardian.relation as KidGuardianRelationCodeEnum
-                        ]
-                      }
-                    </td>
-                    <td>{kidGuardian.phone}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
         </>
       )}
       {kidGuardianToUpdate && (
@@ -500,7 +510,7 @@ const KidRegistrationView = () => {
           kidGuardian={kidGuardianToUpdate}
         />
       )}
-    </>
+    </div>
   );
 };
 
