@@ -3,7 +3,11 @@ import { usePathname, useRouter } from 'next/navigation';
 import { AuthWrapper } from './AuthWrapper';
 import { Tabbar } from 'react-vant';
 import { Search, SettingO, SmileO } from '@react-vant/icons';
-import { IsRegisterKidChurch, IsSupervisorKidChurch, IsAllRole } from '../utils/auth';
+import {
+  IsRegisterKidChurch,
+  IsSupervisorKidChurch,
+  IsAllRole,
+} from '../utils/auth';
 
 type Props = {
   children?: React.ReactNode;
@@ -68,7 +72,6 @@ export const Layout = ({ children }: Props) => {
         >
           {tabs.map((item) =>
             item.show() ? (
-
               <Tabbar.Item key={item.key} name={item.key} icon={item.icon}>
                 {item.title}
               </Tabbar.Item>

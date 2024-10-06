@@ -13,7 +13,7 @@
 .adm-search-bar {
   border-bottom:  1px solid var(--adm-color-border);
 }
-
+  
 body {
   margin: 4px;
 }
@@ -21,4 +21,8 @@ body {
 .rv-selector__item {
   margin-bottom: 5px;
   margin-right: 5px;
+}
+
+body {
+  margin: 0;
 }
