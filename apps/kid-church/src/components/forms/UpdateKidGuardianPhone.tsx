@@ -1,21 +1,33 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
-import { useEffect } from 'react';
-import { Button, Form, Input, Popup, Toast } from 'react-vant';
+import { useEffect, useState } from 'react';
+import {
+  Button,
+  Dialog,
+  Divider,
+  Form,
+  Input,
+  Popup,
+  Selector,
+  Toast,
+  Typography,
+} from 'react-vant';
 import { capitalizeWords } from '../../utils/text';
-import { checkPhoneField } from '../../utils/validator';
 import {
   RootState,
   AppDispatch,
   UpdateKidGuardianPhone,
   GetKid,
 } from '@faith-forge-web/state/redux';
+import { IKidGuardian, kidRelationSelect } from '@faith-forge-web/models';
+import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
+import { IsSupervisorRegisterKidChurch } from '../../utils/auth';
 
 type Props = {
   visible: boolean;
-  onClose: any;
-  kidGuardian: any;
+  onClose: (status: boolean) => void;
+  kidGuardian: IKidGuardian;
 };
 
 const UpdateKidGuardianPhoneModal = ({
@@ -28,6 +40,19 @@ const UpdateKidGuardianPhoneModal = ({
     (state: RootState) => state.kidGuardianSlice,
   );
   const { current: kid } = useSelector((state: RootState) => state.kidSlice);
+  const [kidRelationSelectFilter, setKidRelationSelectFilter] =
+    useState(kidRelationSelect);
+
+  useEffect(() => {
+    if (kidRelationSelectFilter) {
+      setKidRelationSelectFilter(
+        kidRelationSelect.filter(
+          (kidRelation) => kidRelation.gender === kidGuardian.gender,
+        ),
+      );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [kidGuardian.gender]);
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -55,7 +80,12 @@ const UpdateKidGuardianPhoneModal = ({
 
   useEffect(() => {
     if (visible) {
-      form.resetFields(['guardianPhone']);
+      form.resetFields([
+        'firstName',
+        'lastName',
+        'guardianPhone',
+        'guardianRelation',
+      ]);
     }
   }, [form, visible]);
 
@@ -94,28 +124,68 @@ const UpdateKidGuardianPhoneModal = ({
       round
       onClose={closeModal}
       onClickOverlay={closeModal}
-      style={{ height: '50%' }}
+      style={{ height: '90%' }}
       position="bottom"
     >
       {guardianLoading ? <LoadingMask /> : ''}
 
       <div style={{ padding: 5 }}>
-        <h1>Actualizar Nuevo De Telefono</h1>
-        <h3>
-          Acudiente: {capitalizeWords(kidGuardian.firstName)}{' '}
-          {capitalizeWords(kidGuardian.lastName)}
-        </h3>
+        <Typography.Title level={2} center>
+          Actualizar Numero De Telefono y Relación con Niño
+        </Typography.Title>
         <Form
           form={form}
-          layout="vertical"
           onFinish={onFinish}
           footer={
-            <Button block type="primary" size="large">
-              Actualizar Telefono
-            </Button>
+            <>
+              <div style={{ paddingTop: 10 }}>
+                <Button block nativeType="submit" type="primary" size="large">
+                  Actualizar Acudiente
+                </Button>
+                {IsSupervisorRegisterKidChurch() && (
+                  <div style={{ paddingTop: 10, paddingBottom: 10 }}>
+                    <Button
+                      block
+                      type="danger"
+                      size="large"
+                      onClick={() =>
+                        Dialog.confirm({
+                          title: 'Eliminar la relación con el niño',
+                          message: 'Desvincularas al niño de este acudiente',
+                          confirmButtonText: 'Eliminar',
+                          cancelButtonText: 'Cancelar',
+                          onCancel: () => console.log('cancel'),
+                          onConfirm: () => console.log('confirm'),
+                        })
+                      }
+                    >
+                      Eliminar Relación
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </>
           }
         >
           <Form.Item
+            initialValue={capitalizeWords(kidGuardian.firstName)}
+            name="firstName"
+            label="Nombre"
+            disabled
+          >
+            <Input placeholder="Nombre" />
+          </Form.Item>
+          <Form.Item
+            initialValue={capitalizeWords(kidGuardian.lastName)}
+            name="lastName"
+            label="Apellido"
+            disabled
+          >
+            <Input placeholder="Apellido" />
+          </Form.Item>
+          <Divider>Actualizar Datos</Divider>
+          <Form.Item
+            initialValue={{ prefix: '+57', value: kidGuardian.phone }}
             name="guardianPhone"
             label="Telefono"
             rules={[
@@ -130,12 +200,20 @@ const UpdateKidGuardianPhoneModal = ({
               },
             ]}
           >
-            <Input
-              placeholder="Escribir telefono..."
-              type="tel"
-              defaultValue={kidGuardian.phone}
-              autoComplete="false"
-            />
+            <MobileInputApp />
+          </Form.Item>
+          <Form.Item
+            initialValue={[kidGuardian.relation]}
+            name="guardianRelation"
+            label="Relación con el niño"
+            rules={[
+              {
+                required: true,
+                message: 'Por favor seleccione una relación',
+              },
+            ]}
+          >
+            <Selector options={kidRelationSelectFilter} />
           </Form.Item>
         </Form>
       </div>

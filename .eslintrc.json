@@ -10,7 +10,12 @@
           "error",
           {
             "enforceBuildableLibDependency": true,
-            "allow": [],
+            "allow": [
+              "@faith-forge-web/models",
+              "@faith-forge-web/common-types/global",
+              "@faith-forge-web/common-types/constants",
+              "@faith-forge-web/state/redux"
+            ],
             "depConstraints": [
               {
                 "sourceTag": "*",

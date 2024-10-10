@@ -7,12 +7,3 @@ export const checkLastNameField = (_: any, value: string) => {
   }
   return Promise.reject();
 };
-
-export const checkPhoneField = (_: any, value: string) => {
-  const phoneNumber = value.trim();
-
-  if (phoneNumber.length >= 10) {
-    return Promise.resolve();
-  }
-  return Promise.reject();
-};

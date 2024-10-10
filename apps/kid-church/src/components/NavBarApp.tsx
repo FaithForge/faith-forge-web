@@ -21,7 +21,7 @@ const NavBarApp = ({ title, right }: Props) => {
       }}
       onClickLeft={() => router.back()}
       title={title}
-      // right={right}
+      rightText={right}
     />
   );
 };

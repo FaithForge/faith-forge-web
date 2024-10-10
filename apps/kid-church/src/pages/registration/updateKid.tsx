@@ -18,6 +18,7 @@ import { DateTime } from 'luxon';
 import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 import {
   Button,
+  DatetimePicker,
   Form,
   Image,
   Input,
@@ -26,6 +27,8 @@ import {
   Selector,
   Space,
   Switch,
+  Typography,
+  Uploader,
 } from 'react-vant';
 import { checkLastNameField } from '../../utils/validator';
 import { Layout } from '../../components/Layout';
@@ -39,6 +42,9 @@ import {
   UploadUserImage,
 } from '@faith-forge-web/state/redux';
 import { userGenderSelect } from '@faith-forge-web/models';
+import { FiCamera } from 'react-icons/fi';
+import { calculateAge, getAgeInMonths } from '../../utils/date';
+import { TbCameraPlus } from 'react-icons/tb';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -191,30 +197,36 @@ const UpdateKidPage: NextPage = () => {
     <Layout>
       {kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title="Actualizar Niño" />
-      {/* <AutoCenter> */}
-      <label htmlFor="profileImage">
-        {/* {source ? (
-          <Image
-            alt="profileImage"
-            src={source}
-            width={160}
-            height={160}
-            fit="cover"
-            style={{ borderRadius: '50%' }}
-          />
-        ) : (
-          <CameraOutline fontSize={160} />
-        )} */}
-      </label>
-      <input
-        accept="image/*"
-        id="profileImage"
-        type="file"
-        capture="environment"
-        hidden={true}
-        onChange={(e) => handleCapture(e.target)}
-      />
-      {/* </AutoCenter> */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+        }}
+      >
+        <label htmlFor="profileImage" style={{ alignItems: 'center' }}>
+          {source ? (
+            <Image
+              alt="profileImage"
+              src={source}
+              width={160}
+              height={160}
+              fit="cover"
+              radius={100}
+            />
+          ) : (
+            <TbCameraPlus fontSize={160} />
+          )}
+        </label>
+        <input
+          accept="image/*"
+          id="profileImage"
+          type="file"
+          capture="environment"
+          hidden={true}
+          onChange={(e) => handleCapture(e.target)}
+        />
+      </div>
 
       <Form
         form={form}
@@ -226,7 +238,9 @@ const UpdateKidPage: NextPage = () => {
           </Button>
         }
       >
-        <h3>Información Básica</h3>
+        <Form.Item>
+          <Typography.Title level={4}>Información Básica</Typography.Title>
+        </Form.Item>
         <Form.Item
           name="firstName"
           label="Nombre"
@@ -252,27 +266,27 @@ const UpdateKidPage: NextPage = () => {
           <Input placeholder="Escribir apellido..." autoComplete="false" />
         </Form.Item>
         <Form.Item
+          isLink
           name="birthday"
           label="Fecha de nacimiento"
           trigger="onConfirm"
-          // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-          //   datePickerRef.current?.open();
-          // }}
+          onClick={(_, action) => {
+            action?.current?.open();
+          }}
           rules={[
             { required: true, message: 'Fecha de nacimiento es requerida' },
           ]}
         >
-          {/* <DatePicker
-            max={now}
-            min={dayjs().subtract(12, 'year').toDate()}
+          <DatetimePicker
+            popup
+            type="date"
+            minDate={dayjs().subtract(12, 'year').toDate()}
+            maxDate={now}
             title={'Fecha de nacimiento'}
-            cancelText={'Cancelar'}
-            confirmText={'Confirmar'}
-            renderLabel={(type: string, data: number) =>
-              labelRendererCalendar(type, data)
-            }
+            cancelButtonText={'Cancelar'}
+            confirmButtonText={'Confirmar'}
           >
-            {(value) =>
+            {(value: Date) =>
               value
                 ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
                     calculateAge(value) ?? 0,
@@ -281,7 +295,7 @@ const UpdateKidPage: NextPage = () => {
                   } meses)`
                 : 'Seleccionar fecha'
             }
-          </DatePicker> */}
+          </DatetimePicker>
         </Form.Item>
         <Form.Item
           name="gender"
@@ -311,12 +325,12 @@ const UpdateKidPage: NextPage = () => {
             healthSecurityEntity={healthSecurityEntity}
           />
         </Form.Item>
-        <h3>Información Adicional (Opcional)</h3>
-        <Form.Item
-          name="staticGroup"
-          label="Asignar salón estático"
-          // childElementPosition="right"
-        >
+        <Form.Item>
+          <Typography.Title level={4}>
+            Información Adicional (Opcional)
+          </Typography.Title>
+        </Form.Item>
+        <Form.Item name="staticGroup" label="Asignar salón estático">
           <Switch
             onChange={(value) => setStaticGroup(value)}
             defaultChecked={staticGroup}
@@ -337,8 +351,7 @@ const UpdateKidPage: NextPage = () => {
           </Form.Item>
         )}
 
-        <Form.Item>
-          <p>Selecciona condicion medica</p>
+        <Form.Item label="Condición médica">
           <Space align="center">
             <Button
               onClick={() => {
@@ -354,6 +367,8 @@ const UpdateKidPage: NextPage = () => {
             onClickOverlay={() => {
               setVisibleMedicalCondition(false);
             }}
+            position="top"
+            style={{ height: '50%' }}
             destroyOnClose
           >
             <div>

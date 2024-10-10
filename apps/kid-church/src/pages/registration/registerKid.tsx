@@ -9,51 +9,51 @@ import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
 import { Space } from 'react-vant';
 import KidRegistrationView from '../../components/KidRegistrationView';
 import { Layout } from '../../components/Layout';
-import { AppDispatch } from '@faith-forge-web/state/redux';
+import {
+  AppDispatch,
+  cleanCurrentKidGuardian,
+} from '@faith-forge-web/state/redux';
+import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
+import { MdEdit } from 'react-icons/md';
+import { AiOutlineUsergroupAdd } from 'react-icons/ai';
+import { HiDotsVertical } from 'react-icons/hi';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
 
-  // const actions: Action[] = [
-  //   {
-  //     key: 'updateKid',
-  //     icon: <EditOutlined />,
-  //     text: 'Actualizar datos del niño',
-  //     onClick: () => {
-  //       router.push('/registration/updateKid');
-  //     },
-  //   },
-  //   {
-  //     key: 'addNewKidGuardian',
-  //     icon: <TeamOutlined />,
-  //     text: 'Asignar nuevo acudiente',
-  //     onClick: () => {
-  //       dispatch(cleanCurrentKidGuardian());
-  //       setOpenKidGuardianModal(true);
-  //     },
-  //   },
-  // ];
-
-  const right = (
-    <div style={{ fontSize: 24 }}>
-      <Space style={{ '--gap': '16px' }}>
-        {/* <Popover.Menu
-          actions={actions}
-          placement="bottom-start"
-          trigger="click"
-          onAction={(node) => node.onClick}
-        >
-          <MoreOutline />
-        </Popover.Menu> */}
-      </Space>
-    </div>
-  );
+  const registerKidMenu: PopoverAppAction[] = [
+    {
+      key: 'updateKid',
+      icon: <MdEdit />,
+      text: 'Actualizar datos del niño',
+      onClick: () => {
+        router.push('/registration/updateKid');
+      },
+    },
+    {
+      key: 'addNewKidGuardian',
+      icon: <AiOutlineUsergroupAdd />,
+      text: 'Asignar nuevo acudiente',
+      onClick: () => {
+        dispatch(cleanCurrentKidGuardian());
+        setOpenKidGuardianModal(true);
+      },
+    },
+  ];
 
   return (
     <Layout>
-      <NavBarApp right={right} title="Registrar niño" />
+      <NavBarApp
+        right={
+          <PopoverApp
+            actions={registerKidMenu}
+            icon={<HiDotsVertical size={'1.5em'} />}
+          />
+        }
+        title="Registrar niño"
+      />
       <KidRegistrationView />
       <CreateNewKidGuardian
         visible={openKidGuardianModal}
