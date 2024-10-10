@@ -1,20 +1,9 @@
 :root:root {
-  --adm-color-primary: #84298F;
-  --adm-color-text-secondary: #000;
-  --adm-color-wathet: #ebebeb;
-  --adm-color-danger: #d9281e;
-}
-.adm-notice-bar.adm-notice-bar-info {
-  --background-color: #F5F5F5;
-  --border-color: #F5F5F5;
-  color: #000;
-}
-
-.adm-search-bar {
-  border-bottom:  1px solid var(--adm-color-border);
+  --rv-primary-color: #84298F;
 }
   
 body {
+  user-select: none;
   margin: 4px;
 }
 
@@ -23,6 +12,11 @@ body {
   margin-right: 5px;
 }
 
+.rv-popover__wrapper {
+  align-items: center;
+}
+
 body {
   margin: 0;
 }
+

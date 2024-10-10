@@ -13,18 +13,16 @@ import { useRouter } from 'next/router';
 import {
   Button,
   Form,
-  Grid,
   Input,
   NoticeBar,
   Radio,
-  Space,
   Toast,
   Image,
   Flex,
   Tag,
   Card,
   Cell,
-  Badge,
+  Typography,
 } from 'react-vant';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
@@ -70,6 +68,7 @@ const KidRegistrationView = () => {
     if (kidSlice.current?.id) {
       dispatch(GetKid({ id: kidSlice.current.id }));
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, kidSlice.current?.id]);
 
   const registerKid = async (values: any) => {
@@ -394,14 +393,13 @@ const KidRegistrationView = () => {
               <Button block nativeType="submit" type="primary" size="large">
                 Registrar
               </Button>
-              <NoticeBar
-                style={{
-                  '--height': '20px',
-                }}
-                // leftIcon={<HomeOutlined />}
-                text={`Lo vas a registrar en el Servicio: ${churchMeeting?.name}`}
-                color="info"
-              />
+
+              <Typography.Text
+                center={true}
+                style={{ width: '100%', paddingTop: 5, paddingBottom: 5 }}
+              >
+                Lo vas a registrar en el Servicio: {churchMeeting?.name}
+              </Typography.Text>
             </>
           }
         >

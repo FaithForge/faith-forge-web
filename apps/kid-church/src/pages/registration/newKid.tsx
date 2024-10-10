@@ -473,8 +473,7 @@ const NewKid: NextPage = () => {
               </Form.Item>
             )}
 
-            <Form.Item>
-              <p>Selecciona condición médica</p>
+            <Form.Item label="Condición médica">
               <Space align="center">
                 <Button
                   onClick={() => {
@@ -490,7 +489,6 @@ const NewKid: NextPage = () => {
                 onClickOverlay={() => {
                   setVisibleMedicalCondition(false);
                 }}
-                position="top"
                 destroyOnClose
               >
                 <div>

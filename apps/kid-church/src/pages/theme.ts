@@ -4,10 +4,12 @@ const BLACK_COLOR = '#020D14';
 const WHITE_COLOR = '#FFFFFF';
 
 export const themeVars = {
+  primaryColor: PRIMARY_COLOR,
+
   buttonPrimaryBorderColor: PRIMARY_COLOR,
   buttonPrimaryBackgroundColor: PRIMARY_COLOR,
 
-  //Tabbar
+  // Tabbar
   tabbarBackgroundColor: WHITE_COLOR,
   tabbarItemActiveColor: PRIMARY_COLOR,
   tabbarItemTextColor: BLACK_COLOR,
@@ -16,6 +18,9 @@ export const themeVars = {
   noticeBarTextColor: 'black',
   noticeBarBackgroundColor: 'white',
 
-  //SearchBar
+  // SearchBar
   searchInputHeight: '148px',
+
+  // Popover
+  popoverActionWidth: '220px',
 };

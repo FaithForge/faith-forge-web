@@ -4,8 +4,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, Popup, Selector, Toast } from 'react-vant';
-import { checkPhoneField } from '../../utils/validator';
+import {
+  Button,
+  Form,
+  Input,
+  Popup,
+  Selector,
+  Toast,
+  Typography,
+} from 'react-vant';
 import {
   RootState,
   AppDispatch,
@@ -20,6 +27,7 @@ import {
   idGuardianTypeSelect,
   userGenderSelect,
 } from '@faith-forge-web/models';
+import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 
 type Props = {
   visible: boolean;
@@ -164,11 +172,11 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           padding: 5,
         }}
       >
-        <h1>Asignar acudiente</h1>
-
+        <Typography.Title level={2} center>
+          Asignar acudiente
+        </Typography.Title>
         <Form
           form={form}
-          layout="vertical"
           onFinish={onFinish}
           footer={
             <Button block type="primary" size="large">
@@ -240,11 +248,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               },
             ]}
           >
-            <Input
-              placeholder="Escribir telefono..."
-              type="tel"
-              autoComplete="false"
-            />
+            <MobileInputApp />
           </Form.Item>
           <Form.Item
             name="guardianGender"
@@ -278,8 +282,9 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           >
             <Selector options={kidRelationSelectFilter} />
           </Form.Item>
-          <Form.Item>
-            {!!guardian ? (
+
+          {!!guardian ? (
+            <Form.Item>
               <Button
                 block
                 color="default"
@@ -288,8 +293,8 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               >
                 Limpiar formulario acudiente
               </Button>
-            ) : null}
-          </Form.Item>
+            </Form.Item>
+          ) : null}
         </Form>
       </div>
     </Popup>
