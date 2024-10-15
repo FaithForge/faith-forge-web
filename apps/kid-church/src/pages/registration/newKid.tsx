@@ -1,54 +1,53 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useMemo, useState } from 'react';
-import type { NextPage } from 'next';
-import NavBarApp from '../../components/NavBarApp';
-// import { RefObject } from 'react';
-// import dayjs from 'dayjs';
-import { useDispatch, useSelector } from 'react-redux';
-import { capitalizeWords } from '../../utils/text';
-import LoadingMask from '../../components/LoadingMask';
 
-import { useRouter } from 'next/router';
-// import { DateTime } from 'luxon';
-// import {
-//   calculateAge,
-//   getAgeInMonths,
-//   labelRendererCalendar,
-// } from '../../utils/date';
-import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
-import {
-  Steps,
-  Toast,
-  Form,
-  Button,
-  Input,
-  Selector,
-  Switch,
-  Space,
-  Popup,
-  Search,
-} from 'react-vant';
-import KidRegistrationView from '../../components/KidRegistrationView';
-import { checkLastNameField, checkPhoneField } from '../../utils/validator';
-import { Layout } from '../../components/Layout';
-import {
-  AppDispatch,
-  cleanCurrentKidGuardian,
-  CreateKid,
-  CreateKidGuardian,
-  GetKidGroups,
-  GetKidGuardian,
-  GetKidMedicalConditions,
-  loadingKidEnable,
-  RootState,
-  UploadUserImage,
-} from '@faith-forge-web/state/redux';
 import {
   UserGenderCode,
   kidRelationSelect,
   userGenderSelect,
+  healthSecurityEntitySelect,
   idGuardianTypeSelect,
 } from '@faith-forge-web/models';
+import {
+  RootState,
+  AppDispatch,
+  cleanCurrentKidGuardian,
+  GetKidGroups,
+  GetKidMedicalConditions,
+  GetKidGuardian,
+  loadingKidEnable,
+  UploadUserImage,
+  CreateKid,
+  CreateKidGuardian,
+} from '@faith-forge-web/state/redux';
+import { NextPage } from 'next';
+import { useRouter } from 'next/router';
+import { useState, useEffect, useMemo } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import {
+  Form,
+  Toast,
+  Steps,
+  Button,
+  Input,
+  Selector,
+  Switch,
+  Image,
+  Typography,
+  DatetimePicker,
+} from 'react-vant';
+import KidRegistrationView from '../../components/KidRegistrationView';
+import { Layout } from '../../components/Layout';
+import LoadingMask from '../../components/LoadingMask';
+import { checkPhoneField } from '../../components/MobileInputApp';
+import { ModalSelectorApp } from '../../components/ModalSelectorApp';
+import NavBarApp from '../../components/NavBarApp';
+import { capitalizeWords } from '../../utils/text';
+import { checkLastNameField } from '../../utils/validator';
+import { ModalCheckerApp } from '../../components/ModalCheckerApp';
+import { TbCameraPlus } from 'react-icons/tb';
+import dayjs from 'dayjs';
+import { DateTime } from 'luxon';
+import { calculateAge, getAgeInMonths } from '../../utils/date';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -75,6 +74,7 @@ const NewKid: NextPage = () => {
   const [kidRelationSelectFilter, setKidRelationSelectFilter] =
     useState(kidRelationSelect);
   const dispatch = useDispatch<AppDispatch>();
+  const now = DateTime.local().endOf('year').toJSDate();
 
   const handleCapture = (target: any) => {
     if (target.files) {
@@ -318,26 +318,34 @@ const NewKid: NextPage = () => {
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title={titleNavBar} />
       <Steps active={step}>
-        <Steps>Crear niño </Steps>
-        <Steps>Crear Acudiente</Steps>
-        <Steps>Registrar Niño</Steps>
+        <Steps.Item>Crear niño </Steps.Item>
+        <Steps.Item>Crear Acudiente</Steps.Item>
+        <Steps.Item>Registrar Niño</Steps.Item>
       </Steps>
       {step === 0 && (
         <>
-          {/* <label htmlFor="profileImage">
-            {source ? (
-              <Image
-                alt="profileImage"
-                src={source}
-                width={160}
-                height={160}
-                fit="cover"
-                style={{ borderRadius: '50%' }}
-              />
-            ) : (
-              <CameraOutline fontSize={160} />
-            )}
-          </label> */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+            }}
+          >
+            <label htmlFor="profileImage" style={{ alignItems: 'center' }}>
+              {source ? (
+                <Image
+                  alt="profileImage"
+                  src={source}
+                  width={160}
+                  height={160}
+                  fit="cover"
+                  radius={100}
+                />
+              ) : (
+                <TbCameraPlus fontSize={160} />
+              )}
+            </label>
+          </div>
           <input
             accept="image/*"
             id="profileImage"
@@ -352,12 +360,16 @@ const NewKid: NextPage = () => {
             onFinish={addNewKid}
             layout="horizontal"
             footer={
-              <Button block type="primary" size="large">
-                Siguiente
-              </Button>
+              <Form.Item>
+                <Button block type="primary" size="large">
+                  Siguiente
+                </Button>
+              </Form.Item>
             }
           >
-            <h3>Información Básica</h3>
+            <Form.Item>
+              <Typography.Title level={4}>Información Básica</Typography.Title>
+            </Form.Item>
             <Form.Item
               name="firstName"
               label="Nombre"
@@ -383,31 +395,29 @@ const NewKid: NextPage = () => {
               <Input placeholder="Escribir apellido..." autoComplete="false" />
             </Form.Item>
             <Form.Item
+              isLink
               name="birthday"
               label="Fecha de nacimiento"
               trigger="onConfirm"
-              // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-              //   datePickerRef.current?.open();
-              // }}
+              onClick={(_, action) => {
+                action?.current?.open();
+              }}
               rules={[
                 { required: true, message: 'Fecha de nacimiento es requerida' },
               ]}
             >
-              {/* <DatePicker
-                max={now}
-                min={dayjs().subtract(12, 'year').toDate()}
+              <DatetimePicker
+                popup
+                type="date"
+                minDate={dayjs().subtract(12, 'year').toDate()}
+                maxDate={now}
                 title={'Fecha de nacimiento'}
-                cancelText={'Cancelar'}
-                confirmText={'Confirmar'}
-                renderLabel={(type: string, data: number) =>
-                  labelRendererCalendar(type, data)
-                }
+                cancelButtonText={'Cancelar'}
+                confirmButtonText={'Confirmar'}
               >
-                {(value) =>
+                {(value: Date) =>
                   value
-                    ? `${dayjs(value).format(
-                        'YYYY-MM-DD',
-                      )} (Tiene: ${Math.floor(
+                    ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
                         calculateAge(value) ?? 0,
                       )} años y ${
                         getAgeInMonths(value) -
@@ -415,7 +425,7 @@ const NewKid: NextPage = () => {
                       } meses)`
                     : 'Seleccionar fecha'
                 }
-              </DatePicker> */}
+              </DatetimePicker>
             </Form.Item>
             <Form.Item
               name="gender"
@@ -442,17 +452,20 @@ const NewKid: NextPage = () => {
                 },
               ]}
             >
-              <HealthSecurityEntitySelector
-                healthSecurityEntity={healthSecurityEntity}
+              <ModalSelectorApp
+                options={healthSecurityEntitySelect}
+                placeholder="Buscar EPS"
+                value={healthSecurityEntity}
+                emptyOption={{ id: 'NO TIENE EPS', name: 'NO TIENE EPS' }}
               />
             </Form.Item>
 
-            <h3>Información Adicional (Opcional)</h3>
-            <Form.Item
-              name="staticGroup"
-              label="Asignar salón estático"
-              // childElementPosition="right"
-            >
+            <Form.Item>
+              <Typography.Title level={4}>
+                Información Adicional (Opcional)
+              </Typography.Title>
+            </Form.Item>
+            <Form.Item name="staticGroup" label="Asignar salón estático">
               <Switch
                 onChange={(value) => setStaticGroup(value)}
                 defaultChecked={staticGroup}
@@ -473,90 +486,19 @@ const NewKid: NextPage = () => {
               </Form.Item>
             )}
 
-            <Form.Item label="Condición médica">
-              <Space align="center">
-                <Button
-                  onClick={() => {
-                    setVisibleMedicalCondition(true);
-                  }}
-                >
-                  Buscar...
-                </Button>
-                <div>{medicalCondition.name}</div>
-              </Space>
-              <Popup
-                visible={visibleMedicalCondition}
-                onClickOverlay={() => {
-                  setVisibleMedicalCondition(false);
+            <Form.Item label="Condición médica" name="medicalCondition">
+              <ModalCheckerApp
+                options={kidMedicalConditionSlice.data.filter(
+                  (d) => d.id !== 'a18647b1-3455-4407-ada0-c94f39251e8c',
+                )}
+                placeholder="Buscar condición médica"
+                value={medicalCondition}
+                onChange={setMedicalCondition}
+                emptyOption={{
+                  id: 'a18647b1-3455-4407-ada0-c94f39251e8c',
+                  name: 'Otra',
                 }}
-                destroyOnClose
-              >
-                <div>
-                  <Search
-                    placeholder="Buscar condición médica"
-                    value={searchMedicalCondition}
-                    onChange={(v) => {
-                      setSearchMedicalCondition(v);
-                    }}
-                    style={{
-                      padding: '12px',
-                      borderBottom: 'solid 1px var(--adm-color-border)',
-                    }}
-                  />
-                </div>
-                {/* <div style={{ height: '300px', overflowY: 'scroll' }}>
-                  <CheckList
-                    style={{ '--border-top': '0', '--border-bottom': '0' }}
-                    defaultValue={medicalCondition ? [medicalCondition.id] : []}
-                    onChange={(val) => {
-                      let medicalConditionSelected =
-                        kidMedicalConditionSlice.data
-                          .map((kidMedicalCondition) => {
-                            return {
-                              id: kidMedicalCondition.id,
-                              name: `${kidMedicalCondition.name} - ${kidMedicalCondition.code}`,
-                            };
-                          })
-                          .find((item) => item.id === val[0]);
-                      if (
-                        !medicalConditionSelected &&
-                        val[0] === 'a18647b1-3455-4407-ada0-c94f39251e8c'
-                      ) {
-                        medicalConditionSelected = {
-                          id: 'a18647b1-3455-4407-ada0-c94f39251e8c',
-                          name: 'Otra',
-                        };
-                      }
-                      setMedicalCondition(
-                        medicalConditionSelected
-                          ? {
-                              id: medicalConditionSelected.id,
-                              name: medicalConditionSelected.name,
-                            }
-                          : { id: '', name: '' },
-                      );
-                      setVisibleMedicalCondition(false);
-                    }}
-                  >
-                    {filteredMedicalConditions
-                      ? filteredMedicalConditions.map((condition) => (
-                          <CheckList.Item
-                            key={condition.id}
-                            value={condition.id}
-                          >
-                            {condition.name} - {condition.code}
-                          </CheckList.Item>
-                        ))
-                      : null}
-                    <CheckList.Item
-                      key={'a18647b1-3455-4407-ada0-c94f39251e8c'}
-                      value={'a18647b1-3455-4407-ada0-c94f39251e8c'}
-                    >
-                      Otra
-                    </CheckList.Item>
-                  </CheckList>
-                </div> */}
-              </Popup>
+              />
             </Form.Item>
             <Form.Item name="observations" label="Observaciones">
               <Input.TextArea
@@ -582,7 +524,11 @@ const NewKid: NextPage = () => {
               </Button>
             }
           >
-            <h3>Información del Acudiente</h3>
+            <Form.Item>
+              <Typography.Title level={4}>
+                Información del Acudiente
+              </Typography.Title>
+            </Form.Item>
             <Form.Item
               name="guardianNationalIdType"
               label="Tipo de documento"

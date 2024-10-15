@@ -1,5 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { NextPage } from 'next';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -7,7 +5,15 @@ import { useEffect, useState } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-import { List, NoticeBar, Search, Selector } from 'react-vant';
+import {
+  Grid,
+  NoticeBar,
+  Search,
+  Image,
+  Typography,
+  Empty,
+  Cell,
+} from 'react-vant';
 import {
   hasRequiredPermissions,
   withRoles,
@@ -20,12 +26,18 @@ import {
   GetKidGroups,
   RootState,
 } from '@faith-forge-web/state/redux';
+
+import { IKid, IKidGroup, UserGenderCode } from '@faith-forge-web/models';
 import {
   GENERAL_COPY_LATER_HOURS_MEETING,
   GENERAL_COPY_LOWER_HOURS_MEETING,
   GENERAL_COPY_DIFFERENT_DAY_MEETING,
 } from '@faith-forge-web/common-types/constants';
-import { IKid } from '@faith-forge-web/models';
+import { PRIMARY_COLOR_APP } from '../theme';
+import { IoIosArrowForward } from 'react-icons/io';
+import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
+import FloatingBubbleApp from '../../components/FloatingBubbleApp';
+import { TbReload } from 'react-icons/tb';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
@@ -49,21 +61,6 @@ const KidChurch: NextPage = () => {
     blockRegister: false,
   });
   const isAdmin = hasRequiredPermissions(ChurchRoles);
-
-  const kidGroupsSelect = kidGroupSlice.data
-    ? kidGroupSlice.data.map((kidGroup: any) => {
-        return {
-          label: kidGroup.name,
-          value: kidGroup.id,
-          description: `Total: ${
-            kids.length
-              ? kids.filter((kid: any) => kid.kidGroup?.id === kidGroup.id)
-                  .length
-              : 0
-          }`,
-        };
-      })
-    : [];
 
   useEffect(() => {
     const currentDate = DateTime.local().toJSDate();
@@ -111,17 +108,18 @@ const KidChurch: NextPage = () => {
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, pathname]);
 
   useEffect(() => {
     const findTextSearch = findText.toLowerCase();
 
-    let kidsFiltered = kids.filter((kid: any) => {
+    let kidsFiltered = kids.filter((kid: IKid) => {
       const fullName = `${kid.firstName} ${kid.lastName}`.toLowerCase();
       return fullName.includes(findTextSearch);
     });
 
-    kidsFiltered = kidsFiltered.filter((kid: any) =>
+    kidsFiltered = kidsFiltered.filter((kid: IKid) =>
       selectedKidGroup !== '' ? kid.kidGroup?.id === selectedKidGroup : true,
     );
 
@@ -134,13 +132,10 @@ const KidChurch: NextPage = () => {
 
       <div style={{ position: 'sticky', top: '0', zIndex: 2 }}>
         <Search
-          // showCancelButton
-          // cancelText="Cancelar"
-          // placeholder="Buscar Niño"
+          placeholder="Buscar Niño"
           onChange={(value) => setFindText(value)}
           onSearch={(value) => setFindText(value)}
           onCancel={() => setFindText('')}
-          // icon={<SearchOutlined />}
           style={{
             height: '49px',
             padding: '10px 5px 5px 5px',
@@ -151,28 +146,53 @@ const KidChurch: NextPage = () => {
           style={{
             '--height': '25px',
           }}
-          // icon={<HomeOutlined />}
           text={`${churchMeeting?.name} Total Niños: ${kids.length}`}
           color="info"
         />
-        <Selector
-          columns={3}
-          style={{
-            border: 'solid transparent 1px',
-            padding: '5px 5px 5px 5px',
-            backgroundColor: 'white',
-          }}
-          showCheckMark={false}
-          options={kidGroupsSelect}
-          onChange={(v) => {
-            if (v.length) {
-              setSelectedKidGroup(v[0] as string);
-            } else {
-              setSelectedKidGroup('');
-            }
-          }}
-        />
       </div>
+      <Grid
+        columnNum={3}
+        gutter={8}
+        style={{ backgroundColor: 'white', paddingBottom: 10 }}
+      >
+        {kidGroupSlice.data &&
+          kidGroupSlice.data.map((kidGroup: IKidGroup) => {
+            return (
+              <Grid.Item
+                key={kidGroup.id}
+                contentStyle={{
+                  backgroundColor:
+                    selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
+                }}
+                onClick={() => {
+                  if (selectedKidGroup !== kidGroup.id) {
+                    setSelectedKidGroup(kidGroup.id);
+                  } else {
+                    setSelectedKidGroup('');
+                  }
+                }}
+              >
+                <Typography.Text
+                  style={{
+                    color:
+                      selectedKidGroup === kidGroup.id
+                        ? PRIMARY_COLOR_APP
+                        : '#323232',
+                  }}
+                >
+                  {kidGroup.name}
+                </Typography.Text>
+                <Typography.Text style={{ color: '#969799' }}>{`Total: ${
+                  kids.length
+                    ? kids.filter(
+                        (kid: IKid) => kid.kidGroup?.id === kidGroup.id,
+                      ).length
+                    : 0
+                }`}</Typography.Text>
+              </Grid.Item>
+            );
+          })}
+      </Grid>
 
       {warningAlert.message && (
         <NoticeBar
@@ -180,74 +200,73 @@ const KidChurch: NextPage = () => {
           color={warningAlert.blockRegister ? 'error' : 'alert'}
         />
       )}
-      {/* <List>
-        {kidList.length ? (
-          kidList.map((kid) => (
-            <>
-              <List.Item
-                disabled={warningAlert.blockRegister && !isAdmin}
-                key={kid.faithForgeId}
-                style={{
-                  backgroundColor: 'white',
-                }}
-                prefix={
-                  <Image
-                    alt={`${kid.firstName} ${kid.lastName}`}
-                    src={
-                      kid.photoUrl
-                        ? kid.photoUrl
-                        : kid.gender === UserGenderCode.MALE
+      {kidList.length ? (
+        kidList.map((kid) => (
+          <>
+            <Cell
+              clickable={warningAlert.blockRegister && !isAdmin}
+              key={kid.faithForgeId}
+              style={{
+                backgroundColor: kid.currentKidRegistration
+                  ? '#ebebeb'
+                  : kid.age >= 12
+                    ? '#FBDAD7'
+                    : 'white',
+              }}
+              icon={
+                <Image
+                  alt={`${kid.firstName} ${kid.lastName}`}
+                  src={
+                    kid.photoUrl
+                      ? kid.photoUrl
+                      : kid.gender === UserGenderCode.MALE
                         ? '/icons/boy.png'
                         : '/icons/girl.png'
-                    }
-                    style={{ borderRadius: 20 }}
-                    fit="cover"
-                    width={40}
-                    height={40}
-                  />
-                }
-                description={`Salon: ${
-                  kid.kidGroup ? `${kid.kidGroup?.name}` : ''
-                } | Edad: ${Math.floor(kid.age ?? 0)} años y ${
-                  kid.ageInMonths - Math.floor(kid.age) * 12
-                } meses`}
-                onClick={() => {
-                  setKidToUpdate(kid);
-                  setOpenShowKidRegisteredModal(true);
-                }}
-              >
-                {capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-              </List.Item>
-            </>
-          ))
-        ) : (
-          <ErrorBlock
-            status="empty"
-            title="No hay registros"
-            description="No se encontraron registros"
-          />
-        )}
-      </List> */}
-      {/* {kidToUpdate && (
+                  }
+                  style={{ borderRadius: 20 }}
+                  fit="cover"
+                  width={44}
+                  height={44}
+                />
+              }
+              title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+              label={`Salon: ${
+                kid.kidGroup ? `${kid.kidGroup?.name}` : ''
+              } | Edad: ${Math.floor(kid.age ?? 0)} años y ${
+                kid.ageInMonths - Math.floor(kid.age) * 12
+              } meses`}
+              isLink
+              size="large"
+              rightIcon={
+                <IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />
+              }
+              onClick={() => {
+                setKidToUpdate(kid);
+                setOpenShowKidRegisteredModal(true);
+              }}
+            />
+          </>
+        ))
+      ) : (
+        <Empty description="No se encontraron registros" />
+      )}
+      {kidToUpdate && (
         <ShowKidRegisteredModal
           visible={openShowKidRegisteredModal}
           onClose={(status: boolean) => setOpenShowKidRegisteredModal(status)}
           kid={kidToUpdate}
         />
-      )} */}
-      {/* <FloatingBubble
-        style={{
-          '--initial-position-bottom': '70px',
-          '--initial-position-right': '20px',
-          '--edge-distance': '24px',
-        }}
+      )}
+      <FloatingBubbleApp
+        icon={<TbReload style={{ fontSize: '32px', color: 'white' }} />}
+        right={20}
+        bottom={70}
+        size={50}
         onClick={() => {
           const currentDate = DateTime.local().toJSDate();
           dispatch(GetKidGroupRegistered({ date: currentDate }));
         }}
-      >
-        <ReloadOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble> */}
+      />
     </Layout>
   );
 };
