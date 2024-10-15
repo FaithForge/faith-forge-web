@@ -1,3 +1,4 @@
+import { SelectorOptionApp } from '@faith-forge-web/common-types/global';
 import { ReduxDefaultStateWithoutData } from './Redux';
 
 export enum UserGender {
@@ -105,7 +106,7 @@ export interface IUpdateUser {
   healthSecurityEntity?: string;
 }
 
-export const healthSecurityEntitySelect = [
+export const healthSecurityEntitySelect: SelectorOptionApp[] = [
   { id: 'COOSALUD EPS-S', name: 'COOSALUD EPS-S' },
   { id: 'NUEVA EPS', name: 'NUEVA EPS' },
   { id: 'MUTUAL SER', name: 'MUTUAL SER' },

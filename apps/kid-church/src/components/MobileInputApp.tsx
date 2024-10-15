@@ -20,7 +20,6 @@ type MobileInputAppProps = {
 };
 
 export const checkPhoneField = (_: any, value: MobileInputValue) => {
-  console.log(value);
   const phoneNumber = value.value.trim();
   if (value.prefix && phoneNumber.length >= 10) {
     return Promise.resolve();

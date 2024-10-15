@@ -23,6 +23,7 @@ import {
   Card,
   Cell,
   Typography,
+  Notify,
 } from 'react-vant';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
@@ -84,10 +85,9 @@ const KidRegistrationView = () => {
           observation,
         }),
       );
-      Toast.info({
+      Notify.show({
+        type: 'success',
         message: 'Se ha registrado al niño con exito',
-        position: 'bottom',
-        duration: 3000,
       });
       router.back();
     }
@@ -101,10 +101,9 @@ const KidRegistrationView = () => {
         }),
       );
 
-      Toast.info({
+      Notify.show({
+        type: 'success',
         message: 'Se ha eliminado el registro del niño con exito',
-        position: 'bottom',
-        duration: 3000,
       });
       router.back();
     }
@@ -121,19 +120,6 @@ const KidRegistrationView = () => {
       router.back();
     }
   };
-
-  const kidGuardianOptions = kidSlice.current?.relations
-    ? kidSlice.current.relations.map((relation: IKidGuardian) => {
-        return {
-          label: `${capitalizeWords(relation.firstName)} ${capitalizeWords(
-            relation.lastName as '',
-          )} (${KID_RELATION_CODE_MAPPER[relation.relation]}) - Teléfono: ${
-            relation.phone
-          }`,
-          value: relation.id,
-        };
-      })
-    : [];
 
   const kidGuardianRegistration = kidSlice.current?.relations?.length
     ? kidSlice.current?.relations?.find(
@@ -153,8 +139,6 @@ const KidRegistrationView = () => {
   return (
     <div style={{ paddingLeft: 15, paddingRight: 15 }}>
       {kidSlice.loading || kidRegistrationSlice.loading ? <LoadingMask /> : ''}
-      {/* <AutoCenter> */}
-
       <Flex
         justify="center"
         align="center"
@@ -172,6 +156,7 @@ const KidRegistrationView = () => {
                   : '/icons/girl.png'
             }
             fit="cover"
+            radius={100}
             style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
           />
         </Flex.Item>

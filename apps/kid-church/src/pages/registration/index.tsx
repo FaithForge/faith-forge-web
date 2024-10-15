@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
@@ -38,6 +37,9 @@ import {
 import { IKid, UserGenderCode } from '@faith-forge-web/models';
 import { FaInfo } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
+import { AiOutlineQrcode } from 'react-icons/ai';
+import FloatingBubbleApp from '../../components/FloatingBubbleApp';
+import { AiOutlineUserAdd } from 'react-icons/ai';
 
 const Registration: NextPage = () => {
   const {
@@ -102,6 +104,7 @@ const Registration: NextPage = () => {
         });
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, findText, pathname]);
 
   const getMoreKids = async () => {
@@ -118,15 +121,10 @@ const Registration: NextPage = () => {
       {loading ? <LoadingMask /> : ''}
 
       <Search
-        // showCancelButton
-        // cancelText="Cancelar"
         shape="round"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
         onCancel={() => setFindText('')}
-        // icon={<SearchOutlined />}
-        // showAction
-        // actionText="Buscar"
         style={{
           position: 'sticky',
           top: '0',
@@ -152,7 +150,7 @@ const Registration: NextPage = () => {
       )}
       <List onLoad={getMoreKids} finished={currentPage >= totalPages}>
         {kids.length ? (
-          kids.map((kid: any) => (
+          kids.map((kid: IKid) => (
             <Cell
               clickable={warningAlert.blockRegister && !isAdmin}
               key={kid.faithForgeId}
@@ -205,27 +203,21 @@ const Registration: NextPage = () => {
           <Empty description="No se encontraron registros" />
         )}
       </List>
-      {/* <FloatingBubble
-        style={{
-          '--initial-position-bottom': '70px',
-          '--initial-position-right': '20px',
-          '--edge-distance': '24px',
-        }}
+      <FloatingBubbleApp
+        icon={<AiOutlineUserAdd style={{ fontSize: '32px', color: 'white' }} />}
+        right={20}
+        bottom={70}
+        size={50}
         onClick={() => router.push('/registration/newKid')}
-      >
-        <UserAddOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble>
-      <FloatingBubble
-        style={{
-          '--initial-position-bottom': '140px',
-          '--initial-position-right': '20px',
-          '--edge-distance': '24px',
-          '--background': 'black',
-        }}
+      />
+      <FloatingBubbleApp
+        icon={<AiOutlineQrcode style={{ fontSize: '32px', color: 'white' }} />}
+        right={20}
+        bottom={140}
+        size={50}
+        backgroundColor="#000000"
         onClick={() => router.push('/registration/qrReader')}
-      >
-        <QrcodeOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble> */}
+      />
     </Layout>
   );
 };

@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Toast } from 'react-vant';
+import { Notify, Toast } from 'react-vant';
 import { parseJwt } from '../utils/jwt';
 import {
   RootState,
@@ -15,9 +15,9 @@ type Props = {
 };
 
 const toastLogout = () => {
-  Toast.info({
+  Notify.show({
+    type: 'success',
     message: 'Se ha cerrado su sesión',
-    position: 'bottom',
     duration: 5000,
   });
 };

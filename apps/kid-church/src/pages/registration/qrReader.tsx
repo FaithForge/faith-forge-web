@@ -16,6 +16,9 @@ import {
   CreateKidRegistration,
   ScanCodeKidRegistration,
 } from '@faith-forge-web/state/redux';
+import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
+import { HiDotsVertical } from 'react-icons/hi';
+import { AiOutlineQrcode } from 'react-icons/ai';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
@@ -129,36 +132,29 @@ const QRReader: NextPage = () => {
     scanQRKidGuardianSlice.relations,
   ]);
 
-  // const actions: Action[] = [
-  //   {
-  //     key: 'updateKid',
-  //     icon: <QrcodeOutlined />,
-  //     text: 'Generar QR Acudiente',
-  //     onClick: () => {
-  //       router.push('/registration/generateQRKidGuardian');
-  //     },
-  //   },
-  // ];
-
-  const right = (
-    <div style={{ fontSize: 24 }}>
-      <Space style={{ '--gap': '16px' }}>
-        {/* <Popover.Menu
-          actions={actions}
-          placement="bottom-start"
-          trigger="click"
-          onAction={(node) => node.onClick}
-        >
-          <MoreOutline />
-        </Popover.Menu> */}
-      </Space>
-    </div>
-  );
+  const actions: PopoverAppAction[] = [
+    {
+      key: 'updateKid',
+      icon: <AiOutlineQrcode />,
+      text: 'Generar QR Acudiente',
+      onClick: () => {
+        router.push('/registration/generateQRKidGuardian');
+      },
+    },
+  ];
 
   return (
     <Layout>
       {scanQRKidGuardianSlice.loading ? <LoadingMask /> : ''}
-      <NavBarApp title={titleNavBar} right={right} />
+      <NavBarApp
+        title={titleNavBar}
+        right={
+          <PopoverApp
+            actions={actions}
+            icon={<HiDotsVertical size={'1.5em'} />}
+          />
+        }
+      />
       <Steps active={step}>
         <Steps.Item>Escanear Codigo</Steps.Item>
         <Steps.Item>Escoger Niños a Registrar</Steps.Item>

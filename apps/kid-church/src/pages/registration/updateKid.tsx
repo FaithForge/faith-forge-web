@@ -1,34 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
-// import { RefObject } from 'react';
 import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../../components/LoadingMask';
 import { useRouter } from 'next/router';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
-// import {
-//   calculateAge,
-//   getAgeInMonths,
-//   labelRendererCalendar,
-// } from '../../utils/date';
-import { HealthSecurityEntitySelector } from '../../components/HealthSecurityEntitySelector';
 import {
   Button,
   DatetimePicker,
   Form,
   Image,
   Input,
-  Popup,
-  Search,
   Selector,
-  Space,
   Switch,
   Typography,
-  Uploader,
 } from 'react-vant';
 import { checkLastNameField } from '../../utils/validator';
 import { Layout } from '../../components/Layout';
@@ -41,10 +29,15 @@ import {
   UpdateKid,
   UploadUserImage,
 } from '@faith-forge-web/state/redux';
-import { userGenderSelect } from '@faith-forge-web/models';
-import { FiCamera } from 'react-icons/fi';
+import {
+  healthSecurityEntitySelect,
+  IKidGroup,
+  userGenderSelect,
+} from '@faith-forge-web/models';
 import { calculateAge, getAgeInMonths } from '../../utils/date';
 import { TbCameraPlus } from 'react-icons/tb';
+import { ModalSelectorApp } from '../../components/ModalSelectorApp';
+import { ModalCheckerApp } from '../../components/ModalCheckerApp';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -54,17 +47,26 @@ const UpdateKidPage: NextPage = () => {
   const kidMedicalConditionSlice = useSelector(
     (state: RootState) => state.kidMedicalConditionSlice,
   );
-
   const now = DateTime.local().endOf('year').toJSDate();
 
+  const dispatch = useDispatch<AppDispatch>();
+
+  //useState
+  const [medicalCondition, setMedicalCondition] = useState({
+    id: kidSlice.current?.medicalCondition?.id ?? '',
+    name: kidSlice.current?.medicalCondition?.name ?? '',
+  });
+  const [healthSecurityEntity, setHealthSecurityEntity] = useState({
+    id: kidSlice.current?.healthSecurityEntity ?? '',
+    name: kidSlice.current?.healthSecurityEntity ?? '',
+  });
   const [source, setSource] = useState(kidSlice.current?.photoUrl);
-  const [photo, setPhoto] = useState<any>(null);
+  const [photo, setPhoto] = useState<File>();
   const [staticGroup, setStaticGroup] = useState(
     kidSlice.current?.staticGroup as boolean,
   );
-  const dispatch = useDispatch<AppDispatch>();
 
-  const handleCapture = (target: any) => {
+  const handleCapture = (target: HTMLInputElement) => {
     if (target.files) {
       if (target.files.length !== 0) {
         const file = target.files[0];
@@ -93,6 +95,8 @@ const UpdateKidPage: NextPage = () => {
         lastName: capitalizeWords(kidSlice.current.lastName ?? ''),
         birthday: dayjs(kidSlice.current.birthday?.toString()).toDate(),
         gender: kidSlice.current.gender,
+        healthSecurityEntity: healthSecurityEntity,
+        medicalCondition: medicalCondition,
         staticGroup: kidSlice.current.staticGroup,
         kidGroup: [kidSlice.current.kidGroup?.id],
         observations: kidSlice.current.observations,
@@ -107,31 +111,9 @@ const UpdateKidPage: NextPage = () => {
         name: kidSlice.current?.healthSecurityEntity ?? '',
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, kidSlice]);
 
-  const [searchMedicalCondition, setSearchMedicalCondition] = useState('');
-  const [visibleMedicalCondition, setVisibleMedicalCondition] = useState(false);
-  const [medicalCondition, setMedicalCondition] = useState({
-    id: kidSlice.current?.medicalCondition?.id ?? '',
-    name: kidSlice.current?.medicalCondition?.name ?? '',
-  });
-
-  const filteredMedicalConditions = useMemo(() => {
-    if (searchMedicalCondition) {
-      return kidMedicalConditionSlice.data.filter((item: any) =>
-        item.name
-          .toLocaleLowerCase()
-          .includes(searchMedicalCondition.toLocaleLowerCase()),
-      );
-    } else {
-      return kidMedicalConditionSlice.data;
-    }
-  }, [kidMedicalConditionSlice.data, searchMedicalCondition]);
-
-  const [healthSecurityEntity, setHealthSecurityEntity] = useState({
-    id: '',
-    name: '',
-  });
   const checkHealthSecurityEntity = (
     _: any,
     value: { id: string; name: string },
@@ -151,7 +133,7 @@ const UpdateKidPage: NextPage = () => {
     dispatch(loadingKidEnable());
 
     let photoUrl = undefined;
-    if (photo && photo !== kidSlice.current?.photoUrl) {
+    if (photo && source !== kidSlice.current?.photoUrl) {
       const formData = new FormData();
       formData.append('file', photo);
 
@@ -185,7 +167,7 @@ const UpdateKidPage: NextPage = () => {
   };
 
   const kidGroupsSelect = kidGroupSlice.data
-    ? kidGroupSlice.data.map((kidGroup: any) => {
+    ? kidGroupSlice.data.map((kidGroup: IKidGroup) => {
         return {
           label: kidGroup.name,
           value: kidGroup.id,
@@ -233,7 +215,7 @@ const UpdateKidPage: NextPage = () => {
         onFinish={updatedKid}
         layout="horizontal"
         footer={
-          <Button block type="primary" size="large">
+          <Button block type="primary" nativeType="submit" size="large">
             Actualizar
           </Button>
         }
@@ -321,8 +303,12 @@ const UpdateKidPage: NextPage = () => {
             },
           ]}
         >
-          <HealthSecurityEntitySelector
-            healthSecurityEntity={healthSecurityEntity}
+          <ModalSelectorApp
+            options={healthSecurityEntitySelect}
+            placeholder="Buscar EPS"
+            value={healthSecurityEntity}
+            onChange={setHealthSecurityEntity}
+            emptyOption={{ id: 'NO TIENE EPS', name: 'NO TIENE EPS' }}
           />
         </Form.Item>
         <Form.Item>
@@ -351,88 +337,19 @@ const UpdateKidPage: NextPage = () => {
           </Form.Item>
         )}
 
-        <Form.Item label="Condición médica">
-          <Space align="center">
-            <Button
-              onClick={() => {
-                setVisibleMedicalCondition(true);
-              }}
-            >
-              Buscar...
-            </Button>
-            <div>{medicalCondition.name}</div>
-          </Space>
-          <Popup
-            visible={visibleMedicalCondition}
-            onClickOverlay={() => {
-              setVisibleMedicalCondition(false);
+        <Form.Item label="Condición médica" name="medicalCondition">
+          <ModalCheckerApp
+            options={kidMedicalConditionSlice.data.filter(
+              (d) => d.id !== 'a18647b1-3455-4407-ada0-c94f39251e8c',
+            )}
+            placeholder="Buscar condición médica"
+            value={medicalCondition}
+            onChange={setMedicalCondition}
+            emptyOption={{
+              id: 'a18647b1-3455-4407-ada0-c94f39251e8c',
+              name: 'Otra',
             }}
-            position="top"
-            style={{ height: '50%' }}
-            destroyOnClose
-          >
-            <div>
-              <Search
-                placeholder="Buscar condición medica"
-                value={searchMedicalCondition}
-                onChange={(v) => {
-                  setSearchMedicalCondition(v);
-                }}
-                style={{
-                  padding: '12px',
-                  borderBottom: 'solid 1px var(--adm-color-border)',
-                }}
-              />
-            </div>
-            {/* <div style={{ height: '300px', overflowY: 'scroll' }}>
-              <CheckList
-                style={{ '--border-top': '0', '--border-bottom': '0' }}
-                defaultValue={medicalCondition ? [medicalCondition.id] : []}
-                onChange={(val) => {
-                  let medicalConditionSelected = kidMedicalConditionSlice.data
-                    .map((kidMedicalCondition) => {
-                      return {
-                        id: kidMedicalCondition.id,
-                        name: `${kidMedicalCondition.name} - ${kidMedicalCondition.code}`,
-                      };
-                    })
-                    .find((item) => item.id === val[0]);
-                  if (
-                    !medicalConditionSelected &&
-                    val[0] === 'a18647b1-3455-4407-ada0-c94f39251e8c'
-                  ) {
-                    medicalConditionSelected = {
-                      id: 'a18647b1-3455-4407-ada0-c94f39251e8c',
-                      name: 'Otra',
-                    };
-                  }
-                  setMedicalCondition(
-                    medicalConditionSelected
-                      ? {
-                          id: medicalConditionSelected.id,
-                          name: medicalConditionSelected.name,
-                        }
-                      : { id: '', name: '' },
-                  );
-                  setVisibleMedicalCondition(false);
-                }}
-              >
-                {filteredMedicalConditions
-                  ? filteredMedicalConditions.map((condition) => (
-                      <CheckList.Item key={condition.id} value={condition.id}>
-                        {condition.name}
-                      </CheckList.Item>
-                    ))
-                  : null}
-                <CheckList.Item
-                  key={'a18647b1-3455-4407-ada0-c94f39251e8c'}
-                  value={'a18647b1-3455-4407-ada0-c94f39251e8c'}
-                >
-                  Otra
-                </CheckList.Item>
-              </CheckList>
-            </div> */}
-          </Popup>
+          />
         </Form.Item>
         <Form.Item
           name="observations"

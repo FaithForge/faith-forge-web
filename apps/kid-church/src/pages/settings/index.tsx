@@ -20,6 +20,21 @@ import {
   resetChurchPrinterState,
   logout,
 } from '@faith-forge-web/state/redux';
+import {
+  FaUserGear,
+  FaChurch,
+  FaPrint,
+  FaRightFromBracket,
+  FaFileInvoice,
+  FaUserGroup,
+} from 'react-icons/fa6';
+import {
+  ChurchRoles,
+  IsAdminRegisterKidChurch,
+  IsRegisterKidChurch,
+  IsSupervisorRegisterOrKidChurchSupervisor,
+} from '../../utils/auth';
+import { hasRequiredPermissions } from '../../components/Permissions';
 
 const Setting: NextPage = () => {
   const router = useRouter();
@@ -27,56 +42,47 @@ const Setting: NextPage = () => {
   return (
     <Layout>
       <Cell
-        // icon={<UserOutlined />}
+        icon={<FaUserGear />}
         onClick={() => router.push('/settings/personalInfo')}
         title="Configuración Personal"
       />
       <Cell
-        // icon={<HomeOutlined />}
+        icon={<FaChurch />}
         onClick={() => router.push('/settings/churchInfo')}
         title="Configuración de Iglesia"
       />
-      <Cell
-        // icon={<UserOutlined />}
-        onClick={() => router.push('/settings/personalInfo')}
-        title="Configuración Personal"
-      />
+      {IsRegisterKidChurch() && (
+        <Cell
+          icon={<FaPrint />}
+          onClick={() => router.push('/settings/printerInfo')}
+          title="Configuración de Impresora"
+        />
+      )}
+      {IsSupervisorRegisterOrKidChurchSupervisor() && (
+        <Cell
+          icon={<FaFileInvoice />}
+          onClick={() => router.push('/settings/generateChurchMeetingReport')}
+          title="Generar Reporte de Servicio"
+        />
+      )}
+      {IsAdminRegisterKidChurch() && (
+        <Cell
+          icon={<FaFileInvoice />}
+          onClick={() => router.push('/settings/generateChurchDayReport')}
+          title="Generar Reporte del dia"
+        />
+      )}
+      {hasRequiredPermissions(ChurchRoles) && (
+        <Cell
+          icon={<FaUserGroup />}
+          onClick={() => router.push('/settings/users')}
+          title="Actualizar usuarios"
+        />
+      )}
 
-      {/* {IsRegisterKidChurch() && (
-          <List.Item
-            prefix={<PrinterOutlined />}
-            onClick={() => router.push('/settings/printerInfo')}
-          >
-            Configuración de Impresora
-          </List.Item>
-        )}
-        {IsSupervisorRegisterOrKidChurchSupervisor() && (
-          <List.Item
-            prefix={<FileSearchOutlined />}
-            onClick={() => router.push('/settings/generateChurchMeetingReport')}
-          >
-            Generar Reporte de Servicio
-          </List.Item>
-        )}
-        {IsAdminRegisterKidChurch() && (
-          <List.Item
-            prefix={<FileSearchOutlined />}
-            onClick={() => router.push('/settings/generateChurchDayReport')}
-          >
-            Generar Reporte del dia
-          </List.Item>
-        )}
-        {hasRequiredPermissions(ChurchRoles) && (
-          <List.Item
-            prefix={<EditOutlined />}
-            onClick={() => router.push('/settings/users')}
-          >
-            Actualizar usuarios
-          </List.Item>
-        )}*/}
       <Cell
         title="  Cerrar Sesión"
-        // prefix={<LogoutOutlined />}
+        icon={<FaRightFromBracket />}
         onClick={() =>
           Dialog.confirm({
             title: '¿Desea cerrar sesión?',

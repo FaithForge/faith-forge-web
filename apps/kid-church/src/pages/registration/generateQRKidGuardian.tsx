@@ -7,7 +7,7 @@ import 'dayjs/locale/es';
 import { QRCode } from 'react-qrcode-logo';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Button, Grid, Search, Space } from 'react-vant';
+import { Button, Grid, Search, Space, Typography } from 'react-vant';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { Layout } from '../../components/Layout';
@@ -123,6 +123,26 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
     }
   };
 
+  const [windowSize, setWindowSize] = useState({
+    width: window.innerWidth * 0.9,
+    height: window.innerHeight * 0.9,
+  });
+
+  const handleResize = () => {
+    setWindowSize({
+      width: window.innerWidth * 0.9,
+      height: window.innerHeight * 0.9,
+    });
+  };
+
+  // Monitorea cambios en el tamaño de la ventana
+  useEffect(() => {
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
   return (
     <Layout>
       {guardianLoading || loading ? <LoadingMask /> : ''}
@@ -134,39 +154,37 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
       />
       {guardian && (
         <>
-          <p
-            style={{ textAlign: 'center', marginBottom: 0, fontWeight: 'bold' }}
-          >
-            {capitalizeWords(guardian.firstName)}{' '}
-            {capitalizeWords(guardian.lastName)}
-          </p>
-          <p style={{ textAlign: 'center', margin: 0 }}>
-            Telefono: {guardian.phone}
-          </p>
-          <p
-            style={{ textAlign: 'center', marginBottom: 0, fontWeight: 'bold' }}
-          >
-            Pide al acudiente que lea este código con su celular y se autoenvíe
-            el mensaje generado (Este debe tener Whatsapp instalado con el
-            número de teléfono que aparece arriba)
-          </p>
-          <div
-            style={{
-              marginTop: 10,
-              marginBottom: 10,
-              justifyContent: 'center',
-              alignItems: 'center',
-              display: 'flex',
-            }}
-          >
-            <QRCode
-              qrStyle="dots"
-              value={urlCode}
-              size={365}
-              id="qr-code-generate-kid-guardian-whatsapp"
-            />
-          </div>
-          <Grid columnNum={1} gutter={8}>
+          <Grid columnNum={1} border={false}>
+            <Grid.Item>
+              <Typography.Title
+                level={3}
+                style={{
+                  textAlign: 'center',
+                  marginTop: '0px',
+                  marginBottom: '0px',
+                }}
+              >
+                {capitalizeWords(guardian.firstName)}{' '}
+                {capitalizeWords(guardian.lastName)}
+              </Typography.Title>
+              <Typography.Title
+                level={4}
+                style={{ textAlign: 'center', marginTop: '5px' }}
+              >
+                Telefono: {guardian.phone}
+              </Typography.Title>
+              <Typography.Text style={{ textAlign: 'center' }}>
+                Pide al acudiente que lea este código con su celular y se
+                autoenvíe el mensaje generado (Este debe tener Whatsapp
+                instalado con el número de teléfono que aparece arriba)
+              </Typography.Text>
+              <QRCode
+                qrStyle="dots"
+                value={urlCode}
+                size={windowSize.width}
+                id="qr-code-generate-kid-guardian-whatsapp"
+              />
+            </Grid.Item>
             {/* <Grid.Item>
               <Button onClick={() => sharedCode()} block color="primary">
                 <Space>
@@ -176,16 +194,13 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
               </Button>
             </Grid.Item> */}
             <Grid.Item>
-              <Button onClick={() => downloadCode()} block color="primary">
+              <Button onClick={() => downloadCode()} block type="primary">
                 <Space>
                   {/* <CloudDownloadOutlined /> */}
                   <span>Descargar</span>
                 </Space>
               </Button>
-            </Grid.Item>
-
-            <Grid.Item>
-              <Button block disabled color="primary">
+              <Button block disabled type="primary">
                 <Space>
                   {/* <PrinterOutlined /> */}
                   <span>Imprimir (Proximanente)</span>

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
@@ -6,7 +5,6 @@ import 'dayjs/locale/es';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/router';
 import CreateNewKidGuardian from '../../components/forms/CreateNewKidGuardian';
-import { Space } from 'react-vant';
 import KidRegistrationView from '../../components/KidRegistrationView';
 import { Layout } from '../../components/Layout';
 import {
