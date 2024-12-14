@@ -18,10 +18,10 @@ export enum KidGuardianRelationCodeEnum {
   AUNT = 'AUNT', // Tia
   MALE_COUSIN = 'MALE_COUSIN', // Primo
   FEMALE_COUSIN = 'FEMALE_COUSIN', // Prima
-  MALE_ACQUAINTANCE = 'MALE_ACQUAINTANCE', // Conocido
-  FEMALE_ACQUAINTANCE = 'FEMALE_ACQUAINTANCE', // Conocida
   STEPMOTHER = 'STEPMOTHER', // Madrastra
   STEPFATHER = 'STEPFATHER', // Padrastro
+  MALE_ACQUAINTANCE = 'MALE_ACQUAINTANCE', // Conocido
+  FEMALE_ACQUAINTANCE = 'FEMALE_ACQUAINTANCE', // Conocida
 }
 
 export enum KidGuardianRelationEnum {
@@ -35,10 +35,10 @@ export enum KidGuardianRelationEnum {
   AUNT = 'Tía', // Tía
   MALE_COUSIN = 'Primo', // Primo
   FEMALE_COUSIN = 'Prima', // Prima
-  MALE_ACQUAINTANCE = 'Conocido', // Conocido
-  FEMALE_ACQUAINTANCE = 'Conocida', // Conocida
   STEPMOTHER = 'Madrastra', // Madrastra
   STEPFATHER = 'Padrastro', // Padrastro
+  MALE_ACQUAINTANCE = 'Conocido', // Conocido
+  FEMALE_ACQUAINTANCE = 'Conocida', // Conocida
 }
 
 export const KID_RELATION_CODE_MAPPER = {
@@ -56,12 +56,12 @@ export const KID_RELATION_CODE_MAPPER = {
     KidGuardianRelationEnum.MALE_COUSIN,
   [KidGuardianRelationCodeEnum.FEMALE_COUSIN]:
     KidGuardianRelationEnum.FEMALE_COUSIN,
+  [KidGuardianRelationCodeEnum.STEPMOTHER]: KidGuardianRelationEnum.STEPMOTHER,
+  [KidGuardianRelationCodeEnum.STEPFATHER]: KidGuardianRelationEnum.STEPFATHER,
   [KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE]:
     KidGuardianRelationEnum.MALE_ACQUAINTANCE,
   [KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE]:
     KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
-  [KidGuardianRelationCodeEnum.STEPMOTHER]: KidGuardianRelationEnum.STEPMOTHER,
-  [KidGuardianRelationCodeEnum.STEPFATHER]: KidGuardianRelationEnum.STEPFATHER,
 };
 
 // Select list of relations
@@ -117,16 +117,6 @@ export const kidRelationSelect = [
     gender: UserGenderCode.FEMALE,
   },
   {
-    value: KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE,
-    label: KidGuardianRelationEnum.MALE_ACQUAINTANCE,
-    gender: UserGenderCode.MALE,
-  },
-  {
-    value: KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE,
-    label: KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
-    gender: UserGenderCode.FEMALE,
-  },
-  {
     value: KidGuardianRelationCodeEnum.STEPMOTHER,
     label: KidGuardianRelationEnum.STEPMOTHER,
     gender: UserGenderCode.FEMALE,
@@ -135,6 +125,16 @@ export const kidRelationSelect = [
     value: KidGuardianRelationCodeEnum.STEPFATHER,
     label: KidGuardianRelationEnum.STEPFATHER,
     gender: UserGenderCode.MALE,
+  },
+  {
+    value: KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE,
+    label: KidGuardianRelationEnum.MALE_ACQUAINTANCE,
+    gender: UserGenderCode.MALE,
+  },
+  {
+    value: KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE,
+    label: KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
+    gender: UserGenderCode.FEMALE,
   },
 ];
 
