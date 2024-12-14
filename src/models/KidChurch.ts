@@ -64,6 +64,7 @@ export const KID_RELATION_CODE_MAPPER = {
   [KidGuardianRelationCodeEnum.STEPFATHER]: KidGuardianRelationEnum.STEPFATHER,
 };
 
+// Select list of relations
 export const kidRelationSelect = [
   {
     value: KidGuardianRelationCodeEnum.FATHER,
