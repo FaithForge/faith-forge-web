@@ -16,3 +16,10 @@ export const churchGroup = [
     value: '4',
   },
 ];
+
+export const churchGroupArray = [
+  'Grupo #1',
+  'Grupo #2',
+  'Grupo #3',
+  'Grupo #4',
+];

@@ -81,8 +81,15 @@ const ChurchInfo: NextPage = () => {
             layout="vertical"
             onFinish={onFinish}
             form={form}
+            style={{ paddingLeft: 15, paddingRight: 15 }}
             footer={
-              <Button block type="primary" size="large">
+              <Button
+                block
+                type="primary"
+                size="large"
+                nativeType="submit"
+                style={{ paddingTop: 5, paddingBottom: 5, marginTop: 5 }}
+              >
                 Guardar
               </Button>
             }

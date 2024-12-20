@@ -38,7 +38,6 @@ export const Layout = ({ children }: Props) => {
   const [paddingSize, setPaddingSize] = useState({ width: 0, height: 0 });
   const pathname = usePathname();
   const router = useRouter();
-
   useEffect(() => {
     const TabBar = document.querySelector('.TabBarApp') as HTMLElement;
     if (TabBar) {
@@ -62,6 +61,7 @@ export const Layout = ({ children }: Props) => {
           value={`/${pathname.split('/')[1]}`}
           onChange={(value) => router.push(value as string)}
           className="TabBarApp"
+          zIndex={10}
           // style={{
           //   position: 'fixed',
           //   bottom: '0',

@@ -1,6 +1,7 @@
 import { useRouter } from 'next/router';
 import { ReactNode } from 'react';
 import { NavBar } from 'react-vant';
+import { FaChevronLeft } from 'react-icons/fa6';
 
 type Props = {
   title: string;
@@ -20,6 +21,7 @@ const NavBarApp = ({ title, right }: Props) => {
         '--height': '49px',
       }}
       onClickLeft={() => router.back()}
+      leftArrow={<FaChevronLeft />}
       title={title}
       rightText={right}
     />

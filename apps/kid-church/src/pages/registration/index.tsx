@@ -14,7 +14,8 @@ import {
   NoticeBar,
   Search,
   Image,
-  Swiper,
+  Skeleton,
+  Overlay,
 } from 'react-vant';
 import {
   hasRequiredPermissions,
@@ -118,7 +119,17 @@ const Registration: NextPage = () => {
 
   return (
     <Layout>
-      {loading ? <LoadingMask /> : ''}
+      {warningAlert.message && (
+        <NoticeBar
+          wrapable
+          mode="link"
+          text={warningAlert.message}
+          background={warningAlert.blockRegister ? '#da342e' : 'alert'}
+          color={warningAlert.blockRegister ? 'white' : 'alert'}
+          onClick={() => router.push('/settings/churchInfo')}
+          style={{ zIndex: 3 }}
+        />
+      )}
 
       <Search
         shape="round"
@@ -131,78 +142,95 @@ const Registration: NextPage = () => {
           zIndex: 2,
         }}
       />
-      <NoticeBar leftIcon={<FaInfo />}>
-        <Swiper autoplay={3000} indicator={false} className="notice-swipe">
-          <Swiper.Item>Servicio actual: {churchMeeting?.name}</Swiper.Item>
-          <Swiper.Item>
-            Impresora: {churchPrinterSlice.current?.name}
-          </Swiper.Item>
-          <Swiper.Item>
-            Impresora: {churchPrinterSlice.current?.name}
-          </Swiper.Item>
-        </Swiper>
-      </NoticeBar>
-      {warningAlert.message && (
-        <NoticeBar
-          text={warningAlert.message}
-          color={warningAlert.blockRegister ? 'error' : 'alert'}
-        />
-      )}
-      <List onLoad={getMoreKids} finished={currentPage >= totalPages}>
-        {kids.length ? (
-          kids.map((kid: IKid) => (
-            <Cell
-              clickable={warningAlert.blockRegister && !isAdmin}
-              key={kid.faithForgeId}
-              style={{
-                backgroundColor: kid.currentKidRegistration
-                  ? '#ebebeb'
-                  : kid.age >= 12
-                    ? '#FBDAD7'
-                    : 'white',
-              }}
-              icon={
-                <Image
-                  alt={`${kid.firstName} ${kid.lastName}`}
-                  src={
-                    kid.photoUrl
-                      ? kid.photoUrl
-                      : kid.gender === UserGenderCode.MALE
-                        ? '/icons/boy.png'
-                        : '/icons/girl.png'
-                  }
-                  style={{ borderRadius: 20 }}
-                  fit="cover"
-                  width={44}
-                  height={44}
-                />
-              }
-              title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-              label={
-                kid.age < 12
-                  ? `Codigo: ${kid.faithForgeId} ${
-                      kid.currentKidRegistration
-                        ? `(Registrado a las ${dayjs(
-                            kid.currentKidRegistration.date.toString(),
-                          )
-                            .locale('es')
-                            .format('h:mm:ss A')})`
-                        : ''
-                    }`
-                  : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
-              }
-              isLink
-              size="large"
-              rightIcon={
-                <IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />
-              }
-              onClick={() => registerKidViewHandler(kid)}
+
+      {loading ? (
+        <>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              avatar
+              avatarSize={44}
+              row={2}
+              style={{ padding: '10px' }}
             />
-          ))
-        ) : (
-          <Empty description="No se encontraron registros" />
-        )}
-      </List>
+          ))}
+        </>
+      ) : (
+        <>
+          <Overlay
+            zIndex={2}
+            visible={!isAdmin}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          />
+          <List
+            onLoad={getMoreKids}
+            finished={currentPage >= totalPages}
+            loadingText={'Buscando...'}
+            finishedText={'Hemos llegado al final :)'}
+          >
+            {kids.length ? (
+              kids.map((kid: IKid) => (
+                <Cell
+                  clickable={warningAlert.blockRegister && !isAdmin}
+                  key={kid.faithForgeId}
+                  border={true}
+                  style={{
+                    backgroundColor: kid.currentKidRegistration
+                      ? '#ebebeb'
+                      : kid.age >= 12
+                        ? '#ffdad6'
+                        : 'white',
+                  }}
+                  icon={
+                    <Image
+                      alt={`${kid.firstName} ${kid.lastName}`}
+                      src={
+                        kid.photoUrl
+                          ? kid.photoUrl
+                          : kid.gender === UserGenderCode.MALE
+                            ? '/icons/boy-v2.png'
+                            : '/icons/girl-v2.png'
+                      }
+                      style={{ borderRadius: 20 }}
+                      fit="cover"
+                      width={44}
+                      height={44}
+                    />
+                  }
+                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+                  label={
+                    kid.age < 12
+                      ? `Codigo: ${kid.faithForgeId} ${
+                          kid.currentKidRegistration
+                            ? `(Registrado a las ${dayjs(
+                                kid.currentKidRegistration.date.toString(),
+                              )
+                                .locale('es')
+                                .format('h:mm:ss A')})`
+                            : ''
+                        }`
+                      : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
+                  }
+                  isLink
+                  size="large"
+                  rightIcon={
+                    <IoIosArrowForward
+                      style={{ height: '3em', width: '1.2em' }}
+                    />
+                  }
+                  onClick={() => registerKidViewHandler(kid)}
+                />
+              ))
+            ) : (
+              <Empty description="No se encontraron registros" />
+            )}
+          </List>
+        </>
+      )}
       <FloatingBubbleApp
         icon={<AiOutlineUserAdd style={{ fontSize: '32px', color: 'white' }} />}
         right={20}
@@ -215,9 +243,20 @@ const Registration: NextPage = () => {
         right={20}
         bottom={140}
         size={50}
-        backgroundColor="#000000"
+        backgroundColor="#334551"
         onClick={() => router.push('/registration/qrReader')}
       />
+      {/* <NoticeBar leftIcon={<FaInfo />}>
+        <Swiper autoplay={3000} indicator={false} className="notice-swipe">
+          <Swiper.Item>Servicio actual: {churchMeeting?.name}</Swiper.Item>
+          <Swiper.Item>
+            Impresora: {churchPrinterSlice.current?.name}
+          </Swiper.Item>
+          <Swiper.Item>
+            Impresora: {churchPrinterSlice.current?.name}
+          </Swiper.Item>
+        </Swiper>
+      </NoticeBar> */}
     </Layout>
   );
 };

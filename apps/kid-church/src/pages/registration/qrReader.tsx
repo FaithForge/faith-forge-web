@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
@@ -6,7 +5,17 @@ import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../../components/LoadingMask';
 import { IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
 import { usePathname, useRouter } from 'next/navigation';
-import { Button, Collapse, Form, Input, Space, Steps, Toast } from 'react-vant';
+import {
+  Button,
+  Cell,
+  Checkbox,
+  Collapse,
+  Form,
+  Input,
+  Space,
+  Steps,
+  Toast,
+} from 'react-vant';
 import { capitalizeWords } from '../../utils/text';
 import { Layout } from '../../components/Layout';
 import {
@@ -19,6 +28,8 @@ import {
 import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
 import { HiDotsVertical } from 'react-icons/hi';
 import { AiOutlineQrcode } from 'react-icons/ai';
+import { FaRegCheckCircle } from 'react-icons/fa';
+import { FaArrowRight } from 'react-icons/fa';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
@@ -29,7 +40,6 @@ const QRReader: NextPage = () => {
   const [relationsToRegister, setRelationsToRegister] = useState(
     scanQRKidGuardianSlice.relations,
   );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [relationSelectToRegister, setRelationSelectToRegister] = useState<
     string[]
   >([]);
@@ -143,6 +153,13 @@ const QRReader: NextPage = () => {
     },
   ];
 
+  const toggle = (name: string) => {
+    const newValue = relationSelectToRegister.includes(name)
+      ? relationSelectToRegister.filter((el) => el !== name)
+      : [...relationSelectToRegister, name];
+    setRelationSelectToRegister(newValue);
+  };
+
   return (
     <Layout>
       {scanQRKidGuardianSlice.loading ? <LoadingMask /> : ''}
@@ -155,10 +172,10 @@ const QRReader: NextPage = () => {
           />
         }
       />
-      <Steps active={step}>
+      <Steps active={step} activeColor="#397b9d">
         <Steps.Item>Escanear Codigo</Steps.Item>
-        <Steps.Item>Escoger Niños a Registrar</Steps.Item>
-        <Steps.Item>Añadir Observaciones</Steps.Item>
+        <Steps.Item>Niños a Registrar</Steps.Item>
+        <Steps.Item>Observaciones</Steps.Item>
       </Steps>
       {step === 0 && (
         <Scanner
@@ -206,39 +223,48 @@ const QRReader: NextPage = () => {
             Confirme que sea el acudiente y luego seleccione los niños a
             registrar
           </h3>
-
-          {/* <CheckList
-            multiple
-            style={{ marginBottom: 10 }}
-            activeIcon={<CheckCircleTwoTone />}
-            onChange={(values: any[]) => setRelationSelectToRegister(values)}
+          <Checkbox.Group
+            value={relationSelectToRegister}
+            onChange={setRelationSelectToRegister}
           >
-            {relationsToRegister.map((relation: any) => (
-              <CheckList.Item
-                value={relation.id}
-                key={relation.id}
-                disabled={
-                  !!relation.currentKidRegistration || relation.age >= 12
-                }
-                description={`Codigo: ${relation.faithForgeId} - Salon: ${
-                  relation.kidGroup.name
-                } ${relation.staticGroup ? '(Estatico)' : ''}`}
-              >
-                {capitalizeWords(relation.firstName)}{' '}
-                {capitalizeWords(relation.lastName)}{' '}
-                {!!relation.currentKidRegistration ? '(Registrado)' : ''}
-              </CheckList.Item>
-            ))}
-          </CheckList> */}
+            <Cell.Group style={{ marginBottom: 10 }}>
+              {relationsToRegister.map((relation: any) => (
+                <Cell
+                  key={relation.id}
+                  style={{
+                    backgroundColor: relation.currentKidRegistration
+                      ? '#ebebeb'
+                      : 'white',
+                  }}
+                  clickable
+                  title={`${capitalizeWords(relation.firstName)} 
+                ${capitalizeWords(relation.lastName)}
+                ${relation.currentKidRegistration ? '(Registrado)' : ''}`}
+                  label={`Codigo: ${relation.faithForgeId} - Salon: ${
+                    relation.kidGroup.name
+                  } ${relation.staticGroup ? '(Estatico)' : ''}`}
+                  onClick={() =>
+                    relation.currentKidRegistration ? null : toggle(relation.id)
+                  }
+                  rightIcon={
+                    relation.currentKidRegistration ? null : (
+                      <Checkbox name={relation.id} />
+                    )
+                  }
+                  size="large"
+                />
+              ))}
+            </Cell.Group>
+          </Checkbox.Group>
           <Button
             block
-            color="primary"
             size="large"
+            type="primary"
             onClick={confirmKidToRegister}
           >
             <Space>
               <span>Siguiente</span>
-              {/* <ArrowRightOutlined /> */}
+              <FaArrowRight />
             </Space>
           </Button>
         </>
@@ -249,10 +275,10 @@ const QRReader: NextPage = () => {
           layout="vertical"
           onFinish={onRegisterKids}
           footer={
-            <Button block type="primary" size="large">
+            <Button block type="primary" size="large" nativeType="submit">
               <Space>
                 <span>Registrar niños</span>
-                {/* <CheckCircleOutlined /> */}
+                <FaRegCheckCircle />
               </Space>
             </Button>
           }
@@ -271,7 +297,6 @@ const QRReader: NextPage = () => {
 
           <Collapse
             accordion
-            // arrow={(active) => (active ? <MinusOutlined /> : <PlusOutlined />)}
             style={{
               marginTop: 10,
               marginBottom: 10,

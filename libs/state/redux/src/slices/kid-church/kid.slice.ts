@@ -56,7 +56,7 @@ const kidSlice = createSlice({
       state.totalPages = initialState.totalPages;
     });
     builder.addCase(GetMoreKids.pending, (state) => {
-      state.loading = true;
+      state.loading = false;
     });
     builder.addCase(GetMoreKids.fulfilled, (state, action) => {
       state.data = Array.from(state.data).concat(action.payload.data);

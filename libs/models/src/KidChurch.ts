@@ -168,6 +168,7 @@ export interface IKidGuardian {
   nationalIdType: UserIdType;
   firstName: string;
   lastName: string;
+  dialCodePhone: string;
   phone: string;
   gender: UserGenderCode;
   relation: KidGuardianRelationCodeEnum;

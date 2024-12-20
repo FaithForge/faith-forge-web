@@ -1,10 +1,11 @@
 :root:root {
-  --rv-primary-color: #84298F;
+  --rv-primary-color: #004863;
 }
-  
+
 body {
   user-select: none;
   margin: 4px;
+  color: #334551;
 }
 
 .rv-selector__item {
@@ -15,6 +16,35 @@ body {
 .rv-popover__wrapper {
   align-items: center;
 }
+
+/* Tabbar */
+.rv-tabbar-item {
+  .rv-tabbar-item__icon{
+    border-radius: 40%;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+
+  }
+}
+
+.rv-tabbar-item--active {
+  font-weight: 700 !important;
+  
+  .rv-tabbar-item__icon{
+    border-radius: 40%;
+    padding-right: 10px;
+    padding-left: 10px;
+    padding-top: 5px;
+    padding-bottom: 5px;
+
+    color: white;
+    background-color: #397b9d;
+  }
+}
+
+/* */
 
 body {
   margin: 0;

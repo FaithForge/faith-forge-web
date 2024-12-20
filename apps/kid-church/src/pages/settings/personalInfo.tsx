@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
-import { Button, Form, Input, Selector } from 'react-vant';
+import { Button, Form, Input, Picker, Selector } from 'react-vant';
 import { UserRole } from '../../utils/auth';
 import { capitalizeWords } from '../../utils/text';
 import { checkLastNameField } from '../../utils/validator';
@@ -14,7 +14,10 @@ import {
   RootState,
   updateUserChurchGroup,
 } from '@faith-forge-web/state/redux';
-import { churchGroup } from '@faith-forge-web/common-types/constants';
+import {
+  churchGroup,
+  churchGroupArray,
+} from '@faith-forge-web/common-types/constants';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -24,7 +27,7 @@ const PersonalInfo: NextPage = () => {
   const accountSlice = useSelector((state: RootState) => state.accountSlice);
 
   const onFinish = (values: any) => {
-    const churchGroup = values.churchGroup[0];
+    const churchGroup = values.churchGroup;
 
     dispatch(updateUserChurchGroup(churchGroup));
     router.back();
@@ -60,14 +63,19 @@ const PersonalInfo: NextPage = () => {
     <Layout>
       <NavBarApp title="Configuración Personal" />
       <Form
-        layout="vertical"
         onFinish={onFinish}
         form={form}
         footer={
-          <Button block type="primary" size="large">
+          <Button
+            nativeType="submit"
+            type="primary"
+            block
+            style={{ paddingTop: 5, paddingBottom: 5, marginTop: 5 }}
+          >
             Guardar
           </Button>
         }
+        style={{ paddingLeft: 15, paddingRight: 15 }}
       >
         <Form.Item name="role" label="Rol">
           <Input placeholder="" disabled />
@@ -97,11 +105,23 @@ const PersonalInfo: NextPage = () => {
           <Input placeholder="Ingresa tu apellido" disabled />
         </Form.Item>
         <Form.Item
+          isLink
           name="churchGroup"
           label="Grupo al que perteneces"
           rules={[{ required: true, message: 'Por favor seleccione un grupo' }]}
+          onClick={(_, action) => {
+            action?.current?.open();
+          }}
         >
-          <Selector options={churchGroup} />
+          <Picker
+            popup
+            columns={churchGroupArray}
+            placeholder={'Seleccione un grupo'}
+            confirmButtonText={'Confirmar'}
+            cancelButtonText={'Cancelar'}
+          >
+            {(val) => val || 'Seleccione un grupo'}
+          </Picker>
         </Form.Item>
       </Form>
     </Layout>
