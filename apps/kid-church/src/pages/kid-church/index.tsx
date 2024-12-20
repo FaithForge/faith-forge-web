@@ -13,6 +13,7 @@ import {
   Typography,
   Empty,
   Cell,
+  Skeleton,
 } from 'react-vant';
 import {
   hasRequiredPermissions,
@@ -128,8 +129,6 @@ const KidChurch: NextPage = () => {
 
   return (
     <Layout>
-      {loading ? <LoadingMask /> : ''}
-
       <div style={{ position: 'sticky', top: '0', zIndex: 2 }}>
         <Search
           placeholder="Buscar Niño"
@@ -142,13 +141,22 @@ const KidChurch: NextPage = () => {
             backgroundColor: 'white',
           }}
         />
-        <NoticeBar
-          style={{
-            '--height': '25px',
-          }}
-          text={`${churchMeeting?.name} Total Niños: ${kids.length}`}
-          color="info"
-        />
+
+        {loading ? (
+          <Skeleton
+            row={1}
+            rowHeight={25}
+            style={{ marginTop: 5, marginBottom: 5 }}
+          />
+        ) : (
+          <NoticeBar
+            style={{
+              '--height': '25px',
+            }}
+            text={`${churchMeeting?.name} Total Niños: ${kids.length}`}
+            color="info"
+          />
+        )}
       </div>
       <Grid
         columnNum={3}
@@ -182,13 +190,21 @@ const KidChurch: NextPage = () => {
                 >
                   {kidGroup.name}
                 </Typography.Text>
-                <Typography.Text style={{ color: '#969799' }}>{`Total: ${
-                  kids.length
-                    ? kids.filter(
-                        (kid: IKid) => kid.kidGroup?.id === kidGroup.id,
-                      ).length
-                    : 0
-                }`}</Typography.Text>
+                {loading ? (
+                  <Skeleton
+                    row={1}
+                    rowHeight={15}
+                    style={{ backgroundColor: '#EBEBEB' }}
+                  />
+                ) : (
+                  <Typography.Text style={{ color: '#969799' }}>{`Total: ${
+                    kids.length
+                      ? kids.filter(
+                          (kid: IKid) => kid.kidGroup?.id === kidGroup.id,
+                        ).length
+                      : 0
+                  }`}</Typography.Text>
+                )}
               </Grid.Item>
             );
           })}
@@ -200,55 +216,73 @@ const KidChurch: NextPage = () => {
           color={warningAlert.blockRegister ? 'error' : 'alert'}
         />
       )}
-      {kidList.length ? (
-        kidList.map((kid) => (
-          <>
-            <Cell
-              clickable={warningAlert.blockRegister && !isAdmin}
-              key={kid.faithForgeId}
-              style={{
-                backgroundColor: kid.currentKidRegistration
-                  ? '#ebebeb'
-                  : kid.age >= 12
-                    ? '#FBDAD7'
-                    : 'white',
-              }}
-              icon={
-                <Image
-                  alt={`${kid.firstName} ${kid.lastName}`}
-                  src={
-                    kid.photoUrl
-                      ? kid.photoUrl
-                      : kid.gender === UserGenderCode.MALE
-                        ? '/icons/boy-v2.png'
-                        : '/icons/girl-v2.png'
-                  }
-                  style={{ borderRadius: 20 }}
-                  fit="cover"
-                  width={44}
-                  height={44}
-                />
-              }
-              title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-              label={`Salon: ${
-                kid.kidGroup ? `${kid.kidGroup?.name}` : ''
-              } | Edad: ${Math.floor(kid.age ?? 0)} años y ${
-                kid.ageInMonths - Math.floor(kid.age) * 12
-              } meses`}
-              isLink
-              size="large"
-              rightIcon={
-                <IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />
-              }
-              onClick={() => {
-                setKidToUpdate(kid);
-                setOpenShowKidRegisteredModal(true);
-              }}
+      {loading ? (
+        <>
+          {Array.from({ length: 6 }).map((_, index) => (
+            <Skeleton
+              key={index}
+              avatar
+              avatarSize={44}
+              row={2}
+              style={{ padding: '10px' }}
             />
-          </>
-        ))
+          ))}
+        </>
       ) : (
-        <Empty description="No se encontraron registros" />
+        <>
+          {kidList.length ? (
+            kidList.map((kid) => (
+              <>
+                <Cell
+                  clickable={warningAlert.blockRegister && !isAdmin}
+                  key={kid.faithForgeId}
+                  style={{
+                    backgroundColor: kid.currentKidRegistration
+                      ? '#ebebeb'
+                      : kid.age >= 12
+                        ? '#FBDAD7'
+                        : 'white',
+                  }}
+                  icon={
+                    <Image
+                      alt={`${kid.firstName} ${kid.lastName}`}
+                      src={
+                        kid.photoUrl
+                          ? kid.photoUrl
+                          : kid.gender === UserGenderCode.MALE
+                            ? '/icons/boy-v2.png'
+                            : '/icons/girl-v2.png'
+                      }
+                      style={{ borderRadius: 20 }}
+                      fit="cover"
+                      width={44}
+                      height={44}
+                    />
+                  }
+                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+                  label={`Salon: ${
+                    kid.kidGroup ? `${kid.kidGroup?.name}` : ''
+                  } | Edad: ${Math.floor(kid.age ?? 0)} años y ${
+                    kid.ageInMonths - Math.floor(kid.age) * 12
+                  } meses`}
+                  isLink
+                  size="large"
+                  rightIcon={
+                    <IoIosArrowForward
+                      style={{ height: '3em', width: '1.2em' }}
+                    />
+                  }
+                  onClick={() => {
+                    setKidToUpdate(kid);
+                    setOpenShowKidRegisteredModal(true);
+                  }}
+                />
+              </>
+            ))
+          ) : (
+            <Empty description="No se encontraron registros" />
+          )}
+        </>
       )}
       {kidToUpdate && (
         <ShowKidRegisteredModal

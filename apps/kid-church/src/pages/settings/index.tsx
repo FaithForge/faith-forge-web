@@ -65,13 +65,6 @@ const Setting: NextPage = () => {
           title="Generar Reporte de Servicio"
         />
       )}
-      {IsAdminRegisterKidChurch() && (
-        <Cell
-          icon={<FaFileInvoice />}
-          onClick={() => router.push('/settings/generateChurchDayReport')}
-          title="Generar Reporte del dia"
-        />
-      )}
       {hasRequiredPermissions(ChurchRoles) && (
         <Cell
           icon={<FaUserGroup />}
@@ -94,9 +87,9 @@ const Setting: NextPage = () => {
               dispatch(resetChurchPrinterState());
               await dispatch(logout());
               Notify.show({
-                type: 'success',
                 message: 'Se ha cerrado la sesión',
                 duration: 5000,
+                type: 'success',
               });
               router.push('/login');
             },
