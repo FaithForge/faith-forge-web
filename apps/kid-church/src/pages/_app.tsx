@@ -7,8 +7,8 @@ import Setup from './_setup';
 import { ConfigProvider } from 'react-vant';
 import './theme.css';
 import { Providers, store } from '@faith-forge-web/state/redux';
-import { themeVars } from '@faith-forge-web/common-types/constants';
 import { DM_Sans } from 'next/font/google';
+import { themeVars } from '../utils/theme';
 const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
 
 function MyApp({ Component, pageProps }: AppProps) {

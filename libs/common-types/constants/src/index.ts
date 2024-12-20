@@ -1,4 +1,3 @@
-export * from '../../../../apps/kid-church/src/pages/theme';
 export * from './api';
 export * from './church';
 export * from './copy';

@@ -1,6 +1,6 @@
 // FloatingBubble.tsx
 import React from 'react';
-import { PRIMARY_COLOR_APP } from '../pages/theme';
+import { PRIMARY_COLOR_APP } from '../utils/theme';
 
 type FloatingBubbleProps = {
   icon: React.ReactNode;
