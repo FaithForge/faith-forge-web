@@ -219,10 +219,15 @@ const Registration: NextPage = () => {
                   size="large"
                   rightIcon={
                     <IoIosArrowForward
-                      style={{ height: '3em', width: '1.2em' }}
+                      style={{
+                        height: kid.age < 12 ? '3em' : '0em',
+                        width: '1.2em',
+                      }}
                     />
                   }
-                  onClick={() => registerKidViewHandler(kid)}
+                  onClick={() =>
+                    kid.age < 12 || isAdmin ? registerKidViewHandler(kid) : null
+                  }
                 />
               ))
             ) : (

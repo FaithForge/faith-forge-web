@@ -38,7 +38,9 @@ import {
 import KidRegistrationView from '../../components/KidRegistrationView';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
-import { checkPhoneField } from '../../components/MobileInputApp';
+import MobileInputApp, {
+  checkPhoneField,
+} from '../../components/MobileInputApp';
 import { ModalSelectorApp } from '../../components/ModalSelectorApp';
 import NavBarApp from '../../components/NavBarApp';
 import { capitalizeWords } from '../../utils/text';
@@ -106,7 +108,10 @@ const NewKid: NextPage = () => {
         guardianNationalId: kidGuardianSlice.current?.nationalId,
         guardianFirstName: capitalizeWords(kidGuardianSlice.current?.firstName),
         guardianLastName: capitalizeWords(kidGuardianSlice.current?.lastName),
-        guardianPhone: kidGuardianSlice.current?.phone,
+        guardianPhone: {
+          prefix: kidGuardianSlice.current?.dialCodePhone,
+          value: kidGuardianSlice.current?.phone,
+        },
         guardianGender: [kidGuardianSlice.current?.gender],
         guardianRelation: [kidGuardianSlice.current?.relation],
       });
@@ -260,7 +265,8 @@ const NewKid: NextPage = () => {
           nationalId,
           firstName,
           lastName,
-          phone,
+          dialCodePhone: phone.prefix,
+          phone: phone.value,
           gender,
           relation,
         }),
@@ -361,7 +367,7 @@ const NewKid: NextPage = () => {
             layout="horizontal"
             footer={
               <Form.Item>
-                <Button block type="primary" size="large">
+                <Button block type="primary" size="large" nativeType="submit">
                   Siguiente
                 </Button>
               </Form.Item>
@@ -519,7 +525,7 @@ const NewKid: NextPage = () => {
             onFinish={addNewKidGuardian}
             layout="horizontal"
             footer={
-              <Button block type="primary" size="large">
+              <Button block type="primary" size="large" nativeType="submit">
                 Guardar Acudiente
               </Button>
             }
@@ -584,20 +590,16 @@ const NewKid: NextPage = () => {
               rules={[
                 {
                   required: true,
-                  message: 'Por favor digite el número teléfono del acudiente',
+                  message: 'Por favor digite el numero telefono del acudiente',
                 },
                 {
                   required: true,
-                  message: 'El telefono debe tener minimo 10 digitos',
+                  message: 'El telefono debe tener minimo 7 digitos',
                   validator: checkPhoneField,
                 },
               ]}
             >
-              <Input
-                placeholder="Escribir telefono..."
-                type="tel"
-                autoComplete="false"
-              />
+              <MobileInputApp disabled={!!kidGuardianSlice.current} />
             </Form.Item>
             <Form.Item
               name="guardianGender"
@@ -635,7 +637,7 @@ const NewKid: NextPage = () => {
               {kidGuardianSlice.current ? (
                 <Button
                   block
-                  color="default"
+                  type="default"
                   onClick={cleanGuardian}
                   size="large"
                 >

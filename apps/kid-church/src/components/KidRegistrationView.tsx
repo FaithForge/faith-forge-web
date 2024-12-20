@@ -86,8 +86,8 @@ const KidRegistrationView = () => {
         }),
       );
       Notify.show({
-        type: 'success',
         message: 'Se ha registrado al niño con exito',
+        type: 'success',
       });
       router.back();
     }

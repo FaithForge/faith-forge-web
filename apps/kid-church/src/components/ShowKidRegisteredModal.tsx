@@ -87,7 +87,7 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
               {capitalizeWords(kid.lastName ?? '')}
             </h2>
             {kid.kidGroup && (
-              <Tag type="primary" size="large" color="#7232dd">
+              <Tag type="primary" size="large" color="#94d3f8">
                 {kid.kidGroup.name} {kid.staticGroup ? '(Estatico)' : ''}
               </Tag>
             )}

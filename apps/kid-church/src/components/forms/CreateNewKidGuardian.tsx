@@ -73,7 +73,10 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
         guardianNationalId: guardian.nationalId,
         guardianFirstName: capitalizeWords(guardian.firstName),
         guardianLastName: capitalizeWords(guardian.lastName),
-        guardianPhone: guardian.phone,
+        guardianPhone: {
+          prefix: guardian.dialCodePhone,
+          value: guardian.phone,
+        },
         guardianGender: [guardian.gender],
         guardianRelation: [guardian.relation],
       });
@@ -131,7 +134,8 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           nationalId,
           firstName,
           lastName,
-          phone,
+          dialCodePhone: phone.prefix,
+          phone: phone.value,
           gender,
           relation,
         }),
@@ -179,7 +183,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           form={form}
           onFinish={onFinish}
           footer={
-            <Button block type="primary" size="large">
+            <Button block type="primary" size="large" nativeType="submit">
               Asignar
             </Button>
           }
@@ -243,12 +247,12 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               },
               {
                 required: true,
-                message: 'El telefono debe tener minimo 10 digitos',
+                message: 'El telefono debe tener minimo 7 digitos',
                 validator: checkPhoneField,
               },
             ]}
           >
-            <MobileInputApp />
+            <MobileInputApp disabled={!!guardian} />
           </Form.Item>
           <Form.Item
             name="guardianGender"
@@ -285,12 +289,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
           {!!guardian ? (
             <Form.Item>
-              <Button
-                block
-                color="default"
-                onClick={cleanGuardian}
-                size="large"
-              >
+              <Button block type="default" onClick={cleanGuardian} size="large">
                 Limpiar formulario acudiente
               </Button>
             </Form.Item>

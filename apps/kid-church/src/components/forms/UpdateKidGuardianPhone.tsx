@@ -194,7 +194,7 @@ const UpdateKidGuardianPhoneModal = ({
               },
               {
                 required: true,
-                message: 'El telefono debe tener minimo 10 digitos',
+                message: 'El telefono debe tener minimo 7 digitos',
                 validator: checkPhoneField,
               },
             ]}

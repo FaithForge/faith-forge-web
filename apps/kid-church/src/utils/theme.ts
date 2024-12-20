@@ -39,4 +39,8 @@ export const themeVars = {
   stepActiveColor: '#397b9d',
   stepIconSize: '20px',
   stepHorizontalTitleFontSize: '14px',
+
+  // Notify
+  notifySuccessBackgroundColor: '#d6e3ff',
+  notifyDangerBackgroundColor: '#ffdad6',
 };

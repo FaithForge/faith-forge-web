@@ -238,6 +238,7 @@ export interface ICreateKidGuardian {
   nationalIdType: UserIdType;
   firstName: string;
   lastName: string;
+  dialCodePhone: string;
   phone: string;
   gender: UserGenderCode;
   relation: KidGuardianRelationEnum;
