@@ -33,7 +33,7 @@ import {
   GENERAL_COPY_LOWER_HOURS_MEETING,
   GENERAL_COPY_DIFFERENT_DAY_MEETING,
 } from '@faith-forge-web/common-types/constants';
-import { PRIMARY_COLOR_APP } from '../theme';
+import { PRIMARY_COLOR_APP } from '../../utils/theme';
 import { IoIosArrowForward } from 'react-icons/io';
 import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
 import FloatingBubbleApp from '../../components/FloatingBubbleApp';

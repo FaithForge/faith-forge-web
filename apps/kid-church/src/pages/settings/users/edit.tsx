@@ -10,14 +10,19 @@ import { Layout } from '../../../components/Layout';
 import LoadingMask from '../../../components/LoadingMask';
 import { UserRole } from '../../../utils/auth';
 import { capitalizeWords } from '../../../utils/text';
-import { checkLastNameField, checkPhoneField } from '../../../utils/validator';
+import { checkLastNameField } from '../../../utils/validator';
+import { checkPhoneField } from '../../../components/MobileInputApp';
+
 import {
   AppDispatch,
   RootState,
   UpdateUser,
   resetEditUserState,
 } from '@faith-forge-web/state/redux';
-import { idGuardianTypeSelect, userGenderSelect } from '@faith-forge-web/models';
+import {
+  idGuardianTypeSelect,
+  userGenderSelect,
+} from '@faith-forge-web/models';
 
 const EditUser: NextPage = () => {
   const [form] = Form.useForm();
@@ -159,6 +164,7 @@ const EditUser: NextPage = () => {
             disabled={!userSlice.current}
           />
         </Form.Item>
+
         <Form.Item
           name="phone"
           label="Telefono"
