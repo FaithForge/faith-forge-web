@@ -35,7 +35,7 @@ interface MobileInputValue {
 
 type MobileInputAppProps = {
   value?: MobileInputValue;
-  disabled: boolean;
+  disabled?: boolean;
   onChange?: (value: MobileInputValue) => void;
 };
 
