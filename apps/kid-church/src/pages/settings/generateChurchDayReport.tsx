@@ -7,7 +7,14 @@ import dayjs from 'dayjs';
 import ModalFaithForge from '../../components/ModalFaithForge';
 import { labelRendererCalendar } from '../../utils/date';
 import { useSelector } from 'react-redux';
-import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
+import {
+  Button,
+  DatetimePicker,
+  Field,
+  Form,
+  Grid,
+  Selector,
+} from 'react-vant';
 import { Layout } from '../../components/Layout';
 import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
@@ -22,6 +29,7 @@ const GenerateChurchDayReport: NextPage = () => {
   const now = new Date();
   const [isLoading, setIsLoading] = useState(false);
   // const [dateCache, setDateCache] = useState(null);
+  const [value, setValue] = useState(new Date());
 
   useEffect(() => {
     (async () => {
@@ -136,9 +144,9 @@ const GenerateChurchDayReport: NextPage = () => {
             name="date"
             label="Fecha de reporte"
             trigger="onConfirm"
-            // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-            //   datePickerRef.current?.open();
-            // }}
+            onClick={(_, action) => {
+              action?.current?.open();
+            }}
             rules={[
               {
                 required: true,
@@ -147,15 +155,20 @@ const GenerateChurchDayReport: NextPage = () => {
             ]}
           >
             <DatetimePicker
-              maxDate={now}
+              popup
+              type="date"
               minDate={dayjs().subtract(12, 'year').toDate()}
-              title={'Fecha de reporte'}
+              maxDate={now}
+              title={'Fecha de nacimiento'}
               cancelButtonText={'Cancelar'}
               confirmButtonText={'Confirmar'}
-              formatter={(type: string, val: string) =>
-                labelRendererCalendar(type, Number(val))
+            >
+              {(value: Date) =>
+                value
+                  ? `${dayjs(value).format('YYYY-MM-DD')}`
+                  : 'Seleccionar fecha'
               }
-            />
+            </DatetimePicker>
           </Form.Item>
         </Form>
       </>

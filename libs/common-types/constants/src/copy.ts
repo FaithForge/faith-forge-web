@@ -1,16 +1,16 @@
 // Registration Confirm
 export const REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING = {
-  message: `Estás intentando registrar a un niño en un servicio posterior al actual. Por favor elige un servicio adecuado.`,
+  message: `Estás en un servicio posterior al actual. Por favor elige un servicio adecuado.`,
   icon: 'cancel',
 };
 
 export const REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING = {
-  message: `Estás intentando registrar a un niño en un servicio que ya pasó. No podrás registrarlo, por favor elige un servicio adecuado.`,
+  message: `Estás en un servicio que ya pasó. No podrás registrarlo, por favor elige un servicio adecuado.`,
   icon: 'cancel',
 };
 
 export const REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING = {
-  message: `Estás intentando registrar a un niño en un día diferente al servicio actual. Por favor cambia a un servicio correcto.`,
+  message: `Está en un día diferente al servicio actual. Por favor cambia a un servicio correcto.`,
   icon: 'cancel',
 };
 

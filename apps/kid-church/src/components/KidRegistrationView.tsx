@@ -152,8 +152,8 @@ const KidRegistrationView = () => {
               kidSlice.current?.photoUrl
                 ? kidSlice.current?.photoUrl
                 : kidSlice.current?.gender === UserGenderCode.MALE
-                  ? '/icons/boy.png'
-                  : '/icons/girl.png'
+                  ? '/icons/boy-v2.png'
+                  : '/icons/girl-v2.png'
             }
             fit="cover"
             radius={100}
@@ -165,7 +165,7 @@ const KidRegistrationView = () => {
             style={{
               fontSize: 28,
               marginTop: 5,
-              marginBottom: 5,
+              marginBottom: 0,
             }}
           >
             {capitalizeWords(kidSlice.current?.firstName ?? '')}
@@ -180,7 +180,7 @@ const KidRegistrationView = () => {
             {capitalizeWords(kidSlice.current?.lastName ?? '')}
           </h2>
           {kidSlice.current?.kidGroup && (
-            <Tag type="primary" size="large" color="#7232dd">
+            <Tag type="primary" size="large" color="#94d3f8">
               {kidSlice.current.kidGroup.name}{' '}
               {kidSlice.current.staticGroup ? '(Estatico)' : ''}
             </Tag>
@@ -300,7 +300,7 @@ const KidRegistrationView = () => {
                     <Flex.Item span={12}>
                       {`${capitalizeWords(kidGuardianRegistration.firstName)} ${capitalizeWords(
                         kidGuardianRegistration.lastName as '',
-                      )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${
+                      )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${kidGuardianRegistration.dialCodePhone} ${
                         kidGuardianRegistration.phone
                       }`}
                     </Flex.Item>
@@ -358,7 +358,9 @@ const KidRegistrationView = () => {
                             ]
                           }
                         </Flex.Item>
-                        <Flex.Item span={7}>{kidGuardian.phone}</Flex.Item>
+                        <Flex.Item span={7}>
+                          {kidGuardian.dialCodePhone} {kidGuardian.phone}
+                        </Flex.Item>
                       </>
                     );
                   },
@@ -375,16 +377,21 @@ const KidRegistrationView = () => {
           onFinish={registerKid}
           footer={
             <>
-              <Button block nativeType="submit" type="primary" size="large">
-                Registrar
-              </Button>
-
               <Typography.Text
                 center={true}
                 style={{ width: '100%', paddingTop: 5, paddingBottom: 5 }}
               >
-                Lo vas a registrar en el Servicio: {churchMeeting?.name}
+                El registro sera para: {churchMeeting?.name}
               </Typography.Text>
+              <Button
+                block
+                nativeType="submit"
+                type="primary"
+                size="large"
+                style={{ paddingTop: 5, paddingBottom: 5 }}
+              >
+                Registrar
+              </Button>
             </>
           }
         >
@@ -413,7 +420,7 @@ const KidRegistrationView = () => {
                           title={`${capitalizeWords(kidGuardian.firstName)} ${capitalizeWords(
                             kidGuardian.lastName as '',
                           )} (${KID_RELATION_CODE_MAPPER[kidGuardian.relation]})`}
-                          label={`Teléfono: ${kidGuardian.phone}`}
+                          label={`Teléfono: ${kidGuardian.dialCodePhone} ${kidGuardian.phone}`}
                           onClick={() =>
                             form.setFieldValue('guardian', kidGuardian.id)
                           }

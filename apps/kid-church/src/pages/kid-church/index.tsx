@@ -220,8 +220,8 @@ const KidChurch: NextPage = () => {
                     kid.photoUrl
                       ? kid.photoUrl
                       : kid.gender === UserGenderCode.MALE
-                        ? '/icons/boy.png'
-                        : '/icons/girl.png'
+                        ? '/icons/boy-v2.png'
+                        : '/icons/girl-v2.png'
                   }
                   style={{ borderRadius: 20 }}
                   fit="cover"

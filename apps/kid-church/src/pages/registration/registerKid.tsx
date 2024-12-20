@@ -15,6 +15,7 @@ import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
 import { MdEdit } from 'react-icons/md';
 import { AiOutlineUsergroupAdd } from 'react-icons/ai';
 import { HiDotsVertical } from 'react-icons/hi';
+import { HiOutlineDotsVertical } from 'react-icons/hi';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -47,7 +48,7 @@ const RegisterKidView: NextPage = () => {
         right={
           <PopoverApp
             actions={registerKidMenu}
-            icon={<HiDotsVertical size={'1.5em'} />}
+            icon={<HiOutlineDotsVertical size={'1.5em'} />}
           />
         }
         title="Registrar niño"

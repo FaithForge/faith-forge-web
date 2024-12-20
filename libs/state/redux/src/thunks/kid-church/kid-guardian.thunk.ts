@@ -1,6 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
-import { ICreateKidGuardian } from '@faith-forge-web/models';
+import {
+  ICreateKidGuardian,
+  KidGuardianRelationCodeEnum,
+} from '@faith-forge-web/models';
 import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
@@ -58,10 +61,16 @@ export const GetKidGuardian = createAsyncThunk(
 export const UpdateKidGuardianPhone = createAsyncThunk(
   'kid-church/UpdateKidGuardianPhone',
   async (
-    payload: { id: string; phone: string },
+    payload: {
+      id: string;
+      dialCodePhone: string;
+      phone: string;
+      relation: KidGuardianRelationCodeEnum.FATHER;
+      kidId: string;
+    },
     { getState, rejectWithValue },
   ) => {
-    const { id, phone } = payload;
+    const { id, phone, dialCodePhone, relation, kidId } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
@@ -74,6 +83,9 @@ export const UpdateKidGuardianPhone = createAsyncThunk(
           options: {
             data: {
               phone,
+              dialCodePhone,
+              relation,
+              kidId,
             },
             headers: { Authorization: `Bearer ${token}` },
           },

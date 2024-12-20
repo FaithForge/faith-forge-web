@@ -66,8 +66,15 @@ const PrinterInfo: NextPage = () => {
             layout="vertical"
             onFinish={onFinish}
             form={form}
+            style={{ paddingLeft: 15, paddingRight: 15 }}
             footer={
-              <Button block type="primary" size="large">
+              <Button
+                block
+                type="primary"
+                size="large"
+                nativeType="submit"
+                style={{ paddingLeft: 15, paddingRight: 15 }}
+              >
                 Guardar
               </Button>
             }
@@ -84,10 +91,15 @@ const PrinterInfo: NextPage = () => {
             >
               <Selector options={printerOptions} />
             </Form.Item>
+            <Button
+              block
+              size="large"
+              onClick={testPrintLabel}
+              style={{ marginBottom: 15 }}
+            >
+              Probar impresora
+            </Button>
           </Form>
-          <Button block color="success" size="large" onClick={testPrintLabel}>
-            Probar impresora
-          </Button>
         </>
       ) : null}
     </Layout>

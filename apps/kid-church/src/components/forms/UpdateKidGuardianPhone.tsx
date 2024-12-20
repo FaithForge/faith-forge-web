@@ -71,14 +71,6 @@ const UpdateKidGuardianPhoneModal = ({
   };
 
   useEffect(() => {
-    if (kidGuardian) {
-      form.setFieldsValue({
-        guardianPhone: kidGuardian.phone,
-      });
-    }
-  }, [form, kidGuardian]);
-
-  useEffect(() => {
     if (visible) {
       form.resetFields([
         'firstName',
@@ -92,6 +84,7 @@ const UpdateKidGuardianPhoneModal = ({
   const onFinish = async (values: any) => {
     if (kid?.id) {
       const guardianPhone = values.guardianPhone;
+      const relation = values.guardianRelation[0];
       const kidGuardianId = kidGuardian.id;
       const kidId = kid.id;
 
@@ -99,7 +92,10 @@ const UpdateKidGuardianPhoneModal = ({
         const response = await dispatch(
           UpdateKidGuardianPhone({
             id: kidGuardianId,
-            phone: guardianPhone,
+            dialCodePhone: guardianPhone.prefix,
+            phone: guardianPhone.value,
+            relation,
+            kidId,
           }),
         );
 
@@ -142,7 +138,7 @@ const UpdateKidGuardianPhoneModal = ({
                 <Button block nativeType="submit" type="primary" size="large">
                   Actualizar Acudiente
                 </Button>
-                {IsSupervisorRegisterKidChurch() && (
+                {/* {IsSupervisorRegisterKidChurch() && (
                   <div style={{ paddingTop: 10, paddingBottom: 10 }}>
                     <Button
                       block
@@ -162,7 +158,7 @@ const UpdateKidGuardianPhoneModal = ({
                       Eliminar Relación
                     </Button>
                   </div>
-                )}
+                )} */}
               </div>
             </>
           }
@@ -185,7 +181,10 @@ const UpdateKidGuardianPhoneModal = ({
           </Form.Item>
           <Divider>Actualizar Datos</Divider>
           <Form.Item
-            initialValue={{ prefix: '+57', value: kidGuardian.phone }}
+            initialValue={{
+              prefix: kidGuardian.dialCodePhone,
+              value: kidGuardian.phone,
+            }}
             name="guardianPhone"
             label="Telefono"
             rules={[

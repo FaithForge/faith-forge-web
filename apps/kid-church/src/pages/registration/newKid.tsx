@@ -317,7 +317,7 @@ const NewKid: NextPage = () => {
     <Layout>
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title={titleNavBar} />
-      <Steps active={step}>
+      <Steps active={step} activeColor="#397b9d">
         <Steps.Item>Crear niño </Steps.Item>
         <Steps.Item>Crear Acudiente</Steps.Item>
         <Steps.Item>Registrar Niño</Steps.Item>

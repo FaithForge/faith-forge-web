@@ -106,7 +106,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
       const photoUrl = (await dispatch(UploadQRCodeImage({ formData })))
         .payload as string;
 
-      const url = `https://api.whatsapp.com/send?phone=57${
+      const url = `https://api.whatsapp.com/send?phone=${guardian.dialCodePhone.slice(1)}${
         guardian.phone
       }&text=${encodeURIComponent(
         `¡Hola *${capitalizeWords(guardian.firstName)} ${capitalizeWords(
@@ -171,7 +171,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
                 level={4}
                 style={{ textAlign: 'center', marginTop: '5px' }}
               >
-                Telefono: {guardian.phone}
+                Telefono: {guardian.dialCodePhone} {guardian.phone}
               </Typography.Title>
               <Typography.Text style={{ textAlign: 'center' }}>
                 Pide al acudiente que lea este código con su celular y se

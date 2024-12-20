@@ -49,7 +49,7 @@ const ModalFaithForge = ({ kidGroup }: any) => {
         style={{ marginTop: 5 }}
         // onClick={toggleModal}
         block
-        color="primary"
+        type="primary"
       >{`Ver listado ${kidGroup.kidGroup}`}</Button>
     </>
   );

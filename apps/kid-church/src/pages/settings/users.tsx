@@ -78,8 +78,8 @@ const Users: NextPage = () => {
                       ? user.photoUrl
                       : user.roles?.find((role: any) => role === UserRole.KID)
                         ? user.gender === UserGenderCode.MALE
-                          ? '/icons/boy.png'
-                          : '/icons/girl.png'
+                          ? '/icons/boy-v2.png'
+                          : '/icons/girl-v2.png'
                         : user.gender === UserGenderCode.MALE
                           ? '/icons/male.png'
                           : '/icons/female.png'

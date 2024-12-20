@@ -134,7 +134,7 @@ const Setup: NextPage = () => {
       <Popup visible={visible} position="bottom" style={{ height: '90%' }}>
         <div style={{ padding: 5 }}>
           <h2 style={{ textAlign: 'center' }}>Configuración Inicial</h2>
-          <Steps active={step}>
+          <Steps active={step} activeColor="#397b9d">
             <Steps.Item>Sede</Steps.Item>
             <Steps.Item>Servicio</Steps.Item>
             <Steps.Item>Impresora</Steps.Item>
@@ -142,7 +142,7 @@ const Setup: NextPage = () => {
           </Steps>
           {step === 0 && (
             <>
-              <h2>Selecciona Sede</h2>
+              <h2>Selecciona sede</h2>
 
               <Radio.Group value={church}>
                 <Cell.Group>

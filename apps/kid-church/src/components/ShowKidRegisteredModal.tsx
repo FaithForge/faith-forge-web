@@ -59,8 +59,8 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                 kid.photoUrl
                   ? kid.photoUrl
                   : kid.gender === UserGenderCode.MALE
-                    ? '/icons/boy.png'
-                    : '/icons/girl.png'
+                    ? '/icons/boy-v2.png'
+                    : '/icons/girl-v2.png'
               }
               fit="cover"
               radius={100}
@@ -196,7 +196,7 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                       <Flex.Item span={12}>
                         {`${capitalizeWords(kidGuardianRegistration.firstName)} ${capitalizeWords(
                           kidGuardianRegistration.lastName as '',
-                        )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${
+                        )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${kidGuardianRegistration.dialCodePhone} ${
                           kidGuardianRegistration.phone
                         }`}
                       </Flex.Item>
@@ -226,23 +226,30 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                 </Flex>
               </Card.Body>
             </Card>
-            <Card round style={{ backgroundColor: '#f9f9f9', marginTop: 10 }}>
+            <Card
+              round
+              style={{
+                backgroundColor: '#f9f9f9',
+                marginTop: 10,
+                marginBottom: 10,
+              }}
+            >
               <Card.Header border>Acudientes</Card.Header>
               <Card.Body>
                 <Flex gutter={8} wrap="wrap">
-                  <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  <Flex.Item span={10} style={{ fontWeight: 'bold' }}>
                     Nombre
                   </Flex.Item>
                   <Flex.Item span={5} style={{ fontWeight: 'bold' }}>
                     Relación
                   </Flex.Item>
-                  <Flex.Item span={7} style={{ fontWeight: 'bold' }}>
+                  <Flex.Item span={9} style={{ fontWeight: 'bold' }}>
                     Teléfono
                   </Flex.Item>
                   {kid.relations?.map((kidGuardian: IKidGuardian) => {
                     return (
                       <>
-                        <Flex.Item span={12}>
+                        <Flex.Item span={10}>
                           {capitalizeWords(kidGuardian.firstName)}{' '}
                           {capitalizeWords(kidGuardian.lastName as '')}
                         </Flex.Item>
@@ -253,7 +260,9 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                             ]
                           }
                         </Flex.Item>
-                        <Flex.Item span={7}>{kidGuardian.phone}</Flex.Item>
+                        <Flex.Item span={9}>
+                          {kidGuardian.dialCodePhone} {kidGuardian.phone}
+                        </Flex.Item>
                       </>
                     );
                   })}

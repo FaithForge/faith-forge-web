@@ -51,6 +51,8 @@ const MobileInputApp = ({
         placeholder={false}
         columns={columns}
         onConfirm={onPrefixChange}
+        confirmButtonText={'Seleccionar'}
+        cancelButtonText={'Cancelar'}
       >
         {(_, selectRow: any, actions) => {
           return (

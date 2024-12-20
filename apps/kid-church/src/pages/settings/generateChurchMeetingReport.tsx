@@ -149,7 +149,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
           onFinish={onFinish}
           form={form}
           footer={
-            <Button block type="primary" size="large">
+            <Button block type="primary" size="large" nativeType="submit">
               Generar reporte
             </Button>
           }
@@ -188,9 +188,9 @@ const GenerateChurchMeetingReport: NextPage = () => {
             name="date"
             label="Fecha de reporte"
             trigger="onConfirm"
-            // onClick={(e, datePickerRef: RefObject<DatePickerRef>) => {
-            //   datePickerRef.current?.open();
-            // }}
+            onClick={(_, action) => {
+              action?.current?.open();
+            }}
             rules={[
               {
                 required: true,
@@ -199,18 +199,20 @@ const GenerateChurchMeetingReport: NextPage = () => {
             ]}
           >
             <DatetimePicker
-              maxDate={now}
+              popup
+              type="date"
               minDate={dayjs().subtract(12, 'year').toDate()}
-              title={'Fecha de reporte'}
+              maxDate={now}
+              title={'Fecha de nacimiento'}
               cancelButtonText={'Cancelar'}
               confirmButtonText={'Confirmar'}
-              formatter={(type: string, val: string) =>
-                labelRendererCalendar(type, Number(val))
+            >
+              {(value: Date) =>
+                value
+                  ? `${dayjs(value).format('YYYY-MM-DD')}`
+                  : 'Seleccionar fecha'
               }
-            />
-            {/* {(value) =>
-              value ? dayjs(value).format('YYYY-MM-DD') : 'Seleccionar fecha'
-            } */}
+            </DatetimePicker>
           </Form.Item>
         </Form>
       </>
@@ -222,6 +224,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
               <Grid
                 columnNum={2}
                 gutter={8}
+                border={false}
                 style={{ paddingBottom: 10, border: '1px' }}
               >
                 <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -232,6 +235,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
               <Grid
                 columnNum={2}
                 gutter={8}
+                border={false}
                 style={{ paddingBottom: 10, border: '1px' }}
               >
                 <Grid.Item style={{ fontWeight: 'bold' }}>
@@ -245,6 +249,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
             {report.statistics.byKidGroup.map((kidGroup: any) => {
               return (
                 <Grid
+                  border={false}
                   columnNum={2}
                   gutter={8}
                   style={{ paddingBottom: 10, border: '1px' }}
@@ -262,6 +267,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
             <Grid
               columnNum={2}
               gutter={8}
+              border={false}
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
@@ -273,6 +279,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
             <Grid
               columnNum={2}
               gutter={8}
+              border={false}
               style={{ paddingBottom: 10, border: '1px' }}
             >
               <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
@@ -287,7 +294,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
             })}
             <Button
               block
-              color="success"
+              type="primary"
               style={{ marginTop: 5 }}
               size="large"
               onClick={downloadFile}
