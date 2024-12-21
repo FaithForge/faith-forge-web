@@ -1,7 +1,6 @@
-import * as Pica from 'pica';
+const pica = require('pica')();
 
 export const resizeImage = async (file: File): Promise<Blob> => {
-  const pica = new Pica();
   const img = document.createElement('img');
   const canvas = document.createElement('canvas');
 
@@ -18,7 +17,7 @@ export const resizeImage = async (file: File): Promise<Blob> => {
         try {
           const resizedCanvas = await pica.resize(img, canvas);
           resizedCanvas.toBlob(
-            (blob) => {
+            (blob: Blob) => {
               if (blob) resolve(blob);
               else reject(new Error('Error al crear el blob'));
             },
@@ -40,7 +39,6 @@ export const resizeAndCropImageToSquare = async (
   targetSizeInPixels = 800, // Tamaño final (ancho y alto)
   maxSizeInBytes: number = 500 * 1024, // Tamaño máximo en bytes
 ): Promise<Blob> => {
-  const pica = new Pica();
   const img = document.createElement('img');
   const canvas = document.createElement('canvas');
   const tempCanvas = document.createElement('canvas');
