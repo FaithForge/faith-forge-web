@@ -33,7 +33,7 @@ const Login: NextPage = () => {
 
   const onLogin = async (values: any) => {
     setIsLoading(true);
-    const username = values.username.toLowerCase();
+    const username = values.username.toLowerCase().trim();
     const password = values.password;
 
     await dispatch(UserLogin({ username, password }));
