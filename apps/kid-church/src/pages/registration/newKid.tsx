@@ -21,7 +21,7 @@ import {
 } from '@faith-forge-web/state/redux';
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Form,
@@ -65,8 +65,6 @@ const NewKid: NextPage = () => {
     (state: RootState) => state.kidMedicalConditionSlice,
   );
 
-  // const now = DateTime.local().endOf('year').toJSDate();
-
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
@@ -94,7 +92,7 @@ const NewKid: NextPage = () => {
     return () => {
       dispatch(cleanCurrentKidGuardian());
     };
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     dispatch(GetKidGroups());
@@ -170,25 +168,10 @@ const NewKid: NextPage = () => {
     ]);
   };
 
-  const [searchMedicalCondition, setSearchMedicalCondition] = useState('');
-  const [visibleMedicalCondition, setVisibleMedicalCondition] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [medicalCondition, setMedicalCondition] = useState({
     id: '',
     name: '',
   });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const filteredMedicalConditions = useMemo(() => {
-    if (searchMedicalCondition) {
-      return kidMedicalConditionSlice.data.filter((item: any) =>
-        item.name
-          .toLocaleLowerCase()
-          .includes(searchMedicalCondition.toLocaleLowerCase()),
-      );
-    } else {
-      return kidMedicalConditionSlice.data;
-    }
-  }, [kidMedicalConditionSlice.data, searchMedicalCondition]);
 
   const [healthSecurityEntity, setHealthSecurityEntity] = useState({
     id: '',
@@ -238,7 +221,7 @@ const NewKid: NextPage = () => {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
         setStep(1);
       }
-    } catch (error) {
+    } catch {
       Toast.fail({
         message: 'Ha ocurrido un error al crear el niño.',
         position: 'bottom',

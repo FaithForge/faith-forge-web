@@ -1,6 +1,6 @@
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Notify, Toast } from 'react-vant';
+import { Notify } from 'react-vant';
 import { parseJwt } from '../utils/jwt';
 import {
   RootState,

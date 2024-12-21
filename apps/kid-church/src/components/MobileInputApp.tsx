@@ -1,6 +1,6 @@
 import { ArrowDown } from '@react-vant/icons';
 import React from 'react';
-import { Input, Picker, Space } from 'react-vant';
+import { Input, Picker, PickerColumnOption, Space } from 'react-vant';
 
 const columns = [
   { text: '57 🇨🇴', value: '+57' }, // Colombia (América del Sur)
@@ -39,7 +39,7 @@ type MobileInputAppProps = {
   onChange?: (value: MobileInputValue) => void;
 };
 
-export const checkPhoneField = (_: any, value: MobileInputValue) => {
+export const checkPhoneField = (_: unknown, value: MobileInputValue) => {
   const phoneNumber = value.value.trim();
   if (value.prefix && phoneNumber.length >= 7) {
     return Promise.resolve();
@@ -75,7 +75,7 @@ const MobileInputApp = ({
         confirmButtonText={'Seleccionar'}
         cancelButtonText={'Cancelar'}
       >
-        {(_, selectRow: any, actions) => {
+        {(_, selectRow: PickerColumnOption, actions) => {
           return (
             <Space>
               <Space

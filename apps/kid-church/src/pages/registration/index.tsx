@@ -2,7 +2,6 @@ import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
@@ -36,7 +35,6 @@ import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
 } from '@faith-forge-web/common-types/constants';
 import { IKid, UserGenderCode } from '@faith-forge-web/models';
-import { FaInfo } from 'react-icons/fa';
 import { IoIosArrowForward } from 'react-icons/io';
 import { AiOutlineQrcode } from 'react-icons/ai';
 import FloatingBubbleApp from '../../components/FloatingBubbleApp';

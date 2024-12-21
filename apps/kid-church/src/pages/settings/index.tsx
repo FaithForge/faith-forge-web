@@ -1,18 +1,7 @@
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
-// import { logout } from '@/redux/slices/user/auth.slice';
 import { useDispatch } from 'react-redux';
-// import {
-//   ChurchRoles,
-//   IsAdminRegisterKidChurch,
-//   IsRegisterKidChurch,
-//   IsSupervisorRegisterOrKidChurchSupervisor,
-// } from '@/utils/auth';
-// import { resetChurchState } from '@/redux/slices/church/church.slice';
-// import { resetChurchMeetingState } from '@/redux/slices/church/churchMeeting.slice';
-// import { resetChurchPrinterState } from '@/redux/slices/church/churchPrinter.slice';
-// import { hasRequiredPermissions } from '@/components/Permissions';
-import { Cell, Dialog, Notify, Toast } from 'react-vant';
+import { Cell, Dialog, Notify } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import {
   resetChurchState,
@@ -30,7 +19,6 @@ import {
 } from 'react-icons/fa6';
 import {
   ChurchRoles,
-  IsAdminRegisterKidChurch,
   IsRegisterKidChurch,
   IsSupervisorRegisterOrKidChurchSupervisor,
 } from '../../utils/auth';

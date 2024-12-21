@@ -36,7 +36,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
 
   useEffect(() => {
     dispatch(cleanCurrentKidGuardian());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchUrl = async () => {
@@ -50,6 +50,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
     };
 
     fetchUrl();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [guardian]);
 
   const downloadCode = () => {
