@@ -20,6 +20,7 @@ import {
 import { capitalizeWords } from '../utils/text';
 import { LiaBirthdayCakeSolid } from 'react-icons/lia';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
+import TagKidGroupApp from './TagKidGroupApp';
 
 type Props = {
   visible: boolean;
@@ -102,9 +103,10 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
               {capitalizeWords(kid.lastName ?? '')}
             </h2>
             {kid.kidGroup && (
-              <Tag type="primary" size="large" color="#94d3f8">
-                {kid.kidGroup.name} {kid.staticGroup ? '(Estatico)' : ''}
-              </Tag>
+              <TagKidGroupApp
+                kidGroup={kid.kidGroup.name}
+                staticGroup={kid.staticGroup}
+              />
             )}
           </Flex.Item>
         </Flex>

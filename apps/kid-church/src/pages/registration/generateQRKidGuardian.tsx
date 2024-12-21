@@ -7,7 +7,7 @@ import 'dayjs/locale/es';
 import { QRCode } from 'react-qrcode-logo';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Button, Grid, Search, Space, Typography } from 'react-vant';
+import { Button, Empty, Grid, Search, Space, Typography } from 'react-vant';
 import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { Layout } from '../../components/Layout';
@@ -222,22 +222,16 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
           />
         </>
       )}
-      {/* {!guardian && (
-        <ErrorBlock
-          fullPage
-          status="empty"
-          title={`${
+      {!guardian && (
+        <Empty
+          image={search ? 'error' : 'search'}
+          description={`${
             search
               ? 'No se ha encontrado acudiente'
               : 'Por favor buscar el acudiente a generar QR'
           }`}
-          description={`${
-            search
-              ? 'Digite cedula para buscar'
-              : 'Verifique la cedula digitada'
-          }`}
         />
-      )} */}
+      )}
     </Layout>
   );
 };

@@ -218,7 +218,7 @@ const Registration: NextPage = () => {
                   rightIcon={
                     <IoIosArrowForward
                       style={{
-                        height: kid.age < 12 ? '3em' : '0em',
+                        height: kid.age < 12 || isAdmin ? '3em' : '0em',
                         width: '1.2em',
                       }}
                     />

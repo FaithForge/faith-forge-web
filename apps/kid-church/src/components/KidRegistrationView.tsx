@@ -43,6 +43,7 @@ import {
 } from '@faith-forge-web/models';
 import { AiFillEdit } from 'react-icons/ai';
 import { LiaBirthdayCakeSolid } from 'react-icons/lia';
+import TagKidGroupApp from './TagKidGroupApp';
 
 const KidRegistrationView = () => {
   const [form] = Form.useForm();
@@ -195,10 +196,10 @@ const KidRegistrationView = () => {
               style={{ padding: 0 }}
             />
           ) : (
-            <Tag type="primary" size="large" color="#94d3f8">
-              {kidSlice.current.kidGroup.name}{' '}
-              {kidSlice.current.staticGroup ? '(Estatico)' : ''}
-            </Tag>
+            <TagKidGroupApp
+              kidGroup={kidSlice.current.kidGroup.name}
+              staticGroup={kidSlice.current.staticGroup}
+            />
           )}
         </Flex.Item>
       </Flex>
@@ -476,7 +477,7 @@ const KidRegistrationView = () => {
             <Card.Body>
               <Flex gutter={8} wrap="wrap">
                 <Flex.Item
-                  span={12}
+                  span={10}
                   style={{ fontWeight: 'bold' }}
                   key={'Nombre'}
                 >
@@ -490,7 +491,7 @@ const KidRegistrationView = () => {
                   Relación
                 </Flex.Item>
                 <Flex.Item
-                  span={7}
+                  span={9}
                   style={{ fontWeight: 'bold' }}
                   key={'naTeléfonome'}
                 >
@@ -500,7 +501,7 @@ const KidRegistrationView = () => {
                   (kidGuardian: IKidGuardian) => {
                     return (
                       <>
-                        <Flex.Item span={12}>
+                        <Flex.Item span={10}>
                           {capitalizeWords(kidGuardian.firstName)}{' '}
                           {capitalizeWords(kidGuardian.lastName as '')}
                         </Flex.Item>
@@ -511,7 +512,7 @@ const KidRegistrationView = () => {
                             ]
                           }
                         </Flex.Item>
-                        <Flex.Item span={7}>
+                        <Flex.Item span={9}>
                           {kidGuardian.dialCodePhone} {kidGuardian.phone}
                         </Flex.Item>
                       </>
