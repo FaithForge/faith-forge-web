@@ -5,7 +5,9 @@ import {
   kidRelationSelect,
   userGenderSelect,
   healthSecurityEntitySelect,
-  idGuardianTypeSelect,
+  IdType,
+  UserIdType,
+  ID_TYPE_CODE_MAPPER,
 } from '@faith-forge-web/models';
 import {
   RootState,
@@ -51,6 +53,8 @@ import dayjs from 'dayjs';
 import { DateTime } from 'luxon';
 import { calculateAge, getAgeInMonths } from '../../utils/date';
 import { resizeAndCropImageToSquare } from '@faith-forge-web/utils/image';
+import { MdKeyboardArrowRight } from 'react-icons/md';
+import NationalIdTypeInputApp from '../../components/NationalIdTypeInputApp';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -116,7 +120,10 @@ const NewKid: NextPage = () => {
   useEffect(() => {
     if (kidGuardianSlice.current) {
       formKidGuardian.setFieldsValue({
-        guardianNationalIdType: [kidGuardianSlice.current?.nationalIdType],
+        guardianNationalIdType: {
+          value: kidGuardianSlice.current?.nationalIdType,
+          label: ID_TYPE_CODE_MAPPER[kidGuardianSlice.current?.nationalIdType],
+        },
         guardianNationalId: kidGuardianSlice.current?.nationalId,
         guardianFirstName: capitalizeWords(kidGuardianSlice.current?.firstName),
         guardianLastName: capitalizeWords(kidGuardianSlice.current?.lastName),
@@ -246,7 +253,7 @@ const NewKid: NextPage = () => {
 
   const addNewKidGuardian = async (values: any) => {
     if (kidSlice.current?.id) {
-      const nationalIdType = values.guardianNationalIdType[0];
+      const nationalIdType = values.guardianNationalIdType.value;
       const nationalId = values.guardianNationalId;
       const firstName = values.guardianFirstName;
       const lastName = values.guardianLastName;
@@ -363,8 +370,8 @@ const NewKid: NextPage = () => {
             onFinish={addNewKid}
             layout="horizontal"
             footer={
-              <Form.Item>
-                <Button block type="primary" size="large" nativeType="submit">
+              <Form.Item style={{ paddingBottom: 20 }}>
+                <Button type="primary" size="large" nativeType="submit">
                   Siguiente
                 </Button>
               </Form.Item>
@@ -522,9 +529,11 @@ const NewKid: NextPage = () => {
             onFinish={addNewKidGuardian}
             layout="horizontal"
             footer={
-              <Button block type="primary" size="large" nativeType="submit">
-                Guardar Acudiente
-              </Button>
+              <Form.Item style={{ paddingBottom: 20 }}>
+                <Button type="primary" size="large" nativeType="submit">
+                  Guardar Acudiente
+                </Button>
+              </Form.Item>
             }
           >
             <Form.Item>
@@ -533,9 +542,11 @@ const NewKid: NextPage = () => {
               </Typography.Title>
             </Form.Item>
             <Form.Item
+              initialValue={{ label: IdType.CC, value: UserIdType.CC }}
               name="guardianNationalIdType"
               label="Tipo de documento"
               disabled={!!kidGuardianSlice.current}
+              rightIcon={<MdKeyboardArrowRight size={24} />}
               rules={[
                 {
                   required: true,
@@ -543,7 +554,7 @@ const NewKid: NextPage = () => {
                 },
               ]}
             >
-              <Selector options={idGuardianTypeSelect} />
+              <NationalIdTypeInputApp disabled={!!kidGuardianSlice.current} />
             </Form.Item>
             <Form.Item
               name="guardianNationalId"
@@ -630,8 +641,9 @@ const NewKid: NextPage = () => {
             >
               <Selector options={kidRelationSelectFilter} />
             </Form.Item>
-            <Form.Item>
-              {kidGuardianSlice.current ? (
+
+            {kidGuardianSlice.current ? (
+              <Form.Item>
                 <Button
                   block
                   type="default"
@@ -640,8 +652,8 @@ const NewKid: NextPage = () => {
                 >
                   Limpiar formulario acudiente
                 </Button>
-              ) : null}
-            </Form.Item>
+              </Form.Item>
+            ) : null}
           </Form>
         </>
       )}

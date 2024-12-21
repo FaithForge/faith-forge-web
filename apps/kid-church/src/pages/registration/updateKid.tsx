@@ -229,9 +229,11 @@ const UpdateKidPage: NextPage = () => {
         onFinish={updatedKid}
         layout="horizontal"
         footer={
-          <Button block type="primary" nativeType="submit" size="large">
-            Actualizar
-          </Button>
+          <Form.Item style={{ paddingBottom: 20 }}>
+            <Button type="primary" nativeType="submit" size="large">
+              Actualizar
+            </Button>
+          </Form.Item>
         }
       >
         <Form.Item>

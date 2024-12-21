@@ -164,7 +164,6 @@ const KidRegistrationView = () => {
                 closeable: true,
                 showIndex: false,
                 images: [imageProfile],
-                onChange: (index) => console.log(`当前展示第${index + 1}张`),
               })
             }
           />

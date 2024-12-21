@@ -24,10 +24,14 @@ import {
 import {
   UserGenderCode,
   kidRelationSelect,
-  idGuardianTypeSelect,
   userGenderSelect,
+  IdType,
+  UserIdType,
+  ID_TYPE_CODE_MAPPER,
 } from '@faith-forge-web/models';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
+import NationalIdTypeInputApp from '../NationalIdTypeInputApp';
+import { MdKeyboardArrowRight } from 'react-icons/md';
 
 type Props = {
   visible: boolean;
@@ -68,8 +72,12 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   useEffect(() => {
     if (guardian) {
+      console.log(guardian);
       form.setFieldsValue({
-        guardianNationalIdType: [guardian.nationalIdType],
+        guardianNationalIdType: {
+          value: guardian.nationalIdType,
+          label: ID_TYPE_CODE_MAPPER[guardian.nationalIdType],
+        },
         guardianNationalId: guardian.nationalId,
         guardianFirstName: capitalizeWords(guardian.firstName),
         guardianLastName: capitalizeWords(guardian.lastName),
@@ -118,7 +126,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   const onFinish = async (values: any) => {
     if (kid?.id) {
-      const nationalIdType = values.guardianNationalIdType[0];
+      const nationalIdType = values.guardianNationalIdType.value;
       const nationalId = values.guardianNationalId;
       const firstName = values.guardianFirstName;
       const lastName = values.guardianLastName;
@@ -189,9 +197,11 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           }
         >
           <Form.Item
+            initialValue={{ label: IdType.CC, value: UserIdType.CC }}
             name="guardianNationalIdType"
             label="Tipo de documento"
             disabled={!!guardian}
+            rightIcon={<MdKeyboardArrowRight size={24} />}
             rules={[
               {
                 required: true,
@@ -199,8 +209,9 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
               },
             ]}
           >
-            <Selector options={idGuardianTypeSelect} />
+            <NationalIdTypeInputApp disabled={!!guardian} />
           </Form.Item>
+
           <Form.Item
             name="guardianNationalId"
             label="Numero de documento"

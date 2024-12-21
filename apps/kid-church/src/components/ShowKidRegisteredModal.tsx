@@ -1,5 +1,13 @@
 import dayjs from 'dayjs';
-import { Card, Flex, Image, NoticeBar, Popup, Tag } from 'react-vant';
+import {
+  Card,
+  Flex,
+  Image,
+  ImagePreview,
+  NoticeBar,
+  Popup,
+  Tag,
+} from 'react-vant';
 import { FFDay } from '../utils/ffDay';
 import {
   IKid,
@@ -35,6 +43,12 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
     (relation) => relation.id === kid.currentKidRegistration?.guardianId,
   );
 
+  const imageProfile = kid.photoUrl
+    ? kid.photoUrl
+    : kid.gender === UserGenderCode.MALE
+      ? '/icons/boy-v2.png'
+      : '/icons/girl-v2.png';
+
   return (
     <Popup
       visible={visible}
@@ -55,16 +69,17 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
           <Flex.Item span={8}>
             <Image
               alt="profileImage"
-              src={
-                kid.photoUrl
-                  ? kid.photoUrl
-                  : kid.gender === UserGenderCode.MALE
-                    ? '/icons/boy-v2.png'
-                    : '/icons/girl-v2.png'
-              }
+              src={imageProfile}
               fit="cover"
               radius={100}
               style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
+              onClick={() =>
+                ImagePreview.open({
+                  closeable: true,
+                  showIndex: false,
+                  images: [imageProfile],
+                })
+              }
             />
           </Flex.Item>
           <Flex.Item span={16}>
