@@ -3,7 +3,7 @@ import type { NextPage } from 'next';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
-import { Button, Cell, Popup, Radio, Steps } from 'react-vant';
+import { Button, Cell, Popup, Radio, Skeleton, Steps, Toast } from 'react-vant';
 import { churchGroup as churchGroupOptions } from '@faith-forge-web/common-types/constants';
 import { IsRegisterKidChurch } from '../utils/auth';
 import { parseJwt } from '../utils/jwt';
@@ -19,6 +19,8 @@ import {
   updateUserChurchGroup,
 } from '@faith-forge-web/state/redux';
 import { ChurchMeetingStateEnum } from '@faith-forge-web/models';
+import { MdKeyboardArrowLeft, MdKeyboardArrowRight } from 'react-icons/md';
+import { FaRegCheckCircle } from 'react-icons/fa';
 
 const Setup: NextPage = () => {
   const authSlice = useSelector((state: RootState) => state.authSlice);
@@ -80,15 +82,7 @@ const Setup: NextPage = () => {
     }
 
     setVisible(false);
-  }, [
-    accountSlice.churchGroup,
-    authSlice.token,
-    churchMeetingSlice,
-    churchPrinterSlice,
-    churchSlice,
-    dispatch,
-    isRegisterKidChurch,
-  ]);
+  }, [authSlice.token, dispatch]);
 
   useEffect(() => {
     if (church) {
@@ -146,20 +140,41 @@ const Setup: NextPage = () => {
 
               <Radio.Group value={church}>
                 <Cell.Group>
-                  {churchOptions.map((churchOption: any) => (
-                    <Cell
-                      key={churchOption.value}
-                      clickable
-                      title={churchOption.label}
-                      onClick={() => setChurch(churchOption.value)}
-                      rightIcon={<Radio name={churchOption.value} />}
+                  {churchSlice?.loading ? (
+                    <Skeleton
+                      row={4}
+                      rowHeight={25}
+                      style={{ marginTop: 5, marginBottom: 5 }}
                     />
-                  ))}
+                  ) : (
+                    churchOptions.map((churchOption: any) => (
+                      <Cell
+                        key={churchOption.value}
+                        clickable
+                        title={churchOption.label}
+                        onClick={() => setChurch(churchOption.value)}
+                        rightIcon={<Radio name={churchOption.value} />}
+                      />
+                    ))
+                  )}
                 </Cell.Group>
               </Radio.Group>
 
               <Button.Group block style={{ width: '99%', marginTop: 10 }}>
-                <Button onClick={() => church && setStep(1)}>Siguiente</Button>
+                <Button
+                  onClick={() =>
+                    church
+                      ? setStep(1)
+                      : Toast.info({
+                          message: 'Elige una opción',
+                          position: 'bottom',
+                        })
+                  }
+                  iconPosition="right"
+                  icon={<MdKeyboardArrowRight />}
+                >
+                  Siguiente
+                </Button>
               </Button.Group>
             </>
           )}
@@ -169,20 +184,45 @@ const Setup: NextPage = () => {
 
               <Radio.Group value={churchMeeting}>
                 <Cell.Group>
-                  {churchMeetingOptions.map((churchOption: any) => (
-                    <Cell
-                      key={churchOption.value}
-                      clickable
-                      title={churchOption.label}
-                      onClick={() => setChurchMeeting(churchOption.value)}
-                      rightIcon={<Radio name={churchOption.value} />}
+                  {churchMeetingSlice?.loading ? (
+                    <Skeleton
+                      row={4}
+                      rowHeight={25}
+                      style={{ marginTop: 5, marginBottom: 5 }}
                     />
-                  ))}
+                  ) : (
+                    churchMeetingOptions.map((churchOption: any) => (
+                      <Cell
+                        key={churchOption.value}
+                        clickable
+                        title={churchOption.label}
+                        onClick={() => setChurchMeeting(churchOption.value)}
+                        rightIcon={<Radio name={churchOption.value} />}
+                      />
+                    ))
+                  )}
                 </Cell.Group>
               </Radio.Group>
               <Button.Group block style={{ width: '99%', marginTop: 10 }}>
-                <Button onClick={() => setStep(0)}>Anterior</Button>
-                <Button onClick={() => churchMeeting && setStep(2)}>
+                <Button
+                  onClick={() => setStep(0)}
+                  iconPosition="left"
+                  icon={<MdKeyboardArrowLeft />}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  onClick={() =>
+                    churchMeeting
+                      ? setStep(2)
+                      : Toast.info({
+                          message: 'Elige una opción',
+                          position: 'bottom',
+                        })
+                  }
+                  iconPosition="right"
+                  icon={<MdKeyboardArrowRight />}
+                >
                   Siguiente
                 </Button>
               </Button.Group>
@@ -194,20 +234,45 @@ const Setup: NextPage = () => {
 
               <Radio.Group value={churchPrinter}>
                 <Cell.Group>
-                  {churchPrinterOptions.map((churchOption: any) => (
-                    <Cell
-                      key={churchOption.value}
-                      clickable
-                      title={churchOption.label}
-                      onClick={() => setChurchPrinter(churchOption.value)}
-                      rightIcon={<Radio name={churchOption.value} />}
+                  {churchPrinterSlice?.loading ? (
+                    <Skeleton
+                      row={4}
+                      rowHeight={25}
+                      style={{ marginTop: 5, marginBottom: 5 }}
                     />
-                  ))}
+                  ) : (
+                    churchPrinterOptions.map((churchOption: any) => (
+                      <Cell
+                        key={churchOption.value}
+                        clickable
+                        title={churchOption.label}
+                        onClick={() => setChurchPrinter(churchOption.value)}
+                        rightIcon={<Radio name={churchOption.value} />}
+                      />
+                    ))
+                  )}
                 </Cell.Group>
               </Radio.Group>
               <Button.Group block style={{ width: '99%', marginTop: 10 }}>
-                <Button onClick={() => setStep(1)}>Anterior</Button>
-                <Button onClick={() => churchPrinter && setStep(3)}>
+                <Button
+                  onClick={() => setStep(1)}
+                  iconPosition="left"
+                  icon={<MdKeyboardArrowLeft />}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  onClick={() =>
+                    churchPrinter
+                      ? setStep(3)
+                      : Toast.info({
+                          message: 'Elige una opción',
+                          position: 'bottom',
+                        })
+                  }
+                  iconPosition="right"
+                  icon={<MdKeyboardArrowRight />}
+                >
                   Siguiente
                 </Button>
               </Button.Group>
@@ -221,18 +286,37 @@ const Setup: NextPage = () => {
                 <Cell.Group>
                   {churchGroupOptions.map((churchOption) => (
                     <Cell
-                      key={churchOption.value}
+                      key={churchOption}
                       clickable
-                      title={churchOption.label}
-                      onClick={() => setChurchGroup(churchOption.value)}
-                      rightIcon={<Radio name={churchOption.value} />}
+                      title={churchOption}
+                      onClick={() => setChurchGroup(churchOption)}
+                      rightIcon={<Radio name={churchOption} />}
                     />
                   ))}
                 </Cell.Group>
               </Radio.Group>
               <Button.Group block style={{ width: '99%', marginTop: 10 }}>
-                <Button onClick={() => setStep(2)}>Anterior</Button>
-                <Button onClick={() => onFinish()}>Siguiente</Button>
+                <Button
+                  onClick={() => setStep(2)}
+                  iconPosition="left"
+                  icon={<MdKeyboardArrowLeft />}
+                >
+                  Anterior
+                </Button>
+                <Button
+                  onClick={() =>
+                    churchGroup
+                      ? onFinish()
+                      : Toast.info({
+                          message: 'Elige una opción',
+                          position: 'bottom',
+                        })
+                  }
+                  iconPosition="right"
+                  icon={<FaRegCheckCircle />}
+                >
+                  Finalizar
+                </Button>
               </Button.Group>
             </>
           )}

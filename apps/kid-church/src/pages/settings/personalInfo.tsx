@@ -14,7 +14,7 @@ import {
   RootState,
   updateUserChurchGroup,
 } from '@faith-forge-web/state/redux';
-import { churchGroupArray } from '@faith-forge-web/common-types/constants';
+import { churchGroup as churchGroupOptions } from '@faith-forge-web/common-types/constants';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();
@@ -112,7 +112,7 @@ const PersonalInfo: NextPage = () => {
         >
           <Picker
             popup
-            columns={churchGroupArray}
+            columns={churchGroupOptions}
             placeholder={'Seleccione un grupo'}
             confirmButtonText={'Confirmar'}
             cancelButtonText={'Cancelar'}
