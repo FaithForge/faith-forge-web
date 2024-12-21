@@ -193,7 +193,7 @@ const Registration: NextPage = () => {
                             ? '/icons/boy-v2.png'
                             : '/icons/girl-v2.png'
                       }
-                      style={{ borderRadius: 20 }}
+                      style={{ borderRadius: '50%' }}
                       fit="cover"
                       width={44}
                       height={44}

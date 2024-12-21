@@ -1,12 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import React, { useEffect, useState } from 'react';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { capitalizeWords } from '../utils/text';
 import { useDispatch, useSelector } from 'react-redux';
-
-import LoadingMask from './LoadingMask';
 
 import { useRouter } from 'next/router';
 
@@ -16,7 +13,6 @@ import {
   Input,
   NoticeBar,
   Radio,
-  Toast,
   Image,
   Flex,
   Tag,
@@ -24,6 +20,7 @@ import {
   Cell,
   Typography,
   Notify,
+  Skeleton,
 } from 'react-vant';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
@@ -50,6 +47,7 @@ const KidRegistrationView = () => {
   const [form] = Form.useForm();
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
+  const [action, setAction] = useState<string>();
   const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] =
     useState(false);
   const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<
@@ -73,6 +71,7 @@ const KidRegistrationView = () => {
   }, [dispatch, kidSlice.current?.id]);
 
   const registerKid = async (values: any) => {
+    setAction('register');
     const kidGuardianId = values.guardian;
     const observation = values.observations;
 
@@ -94,6 +93,7 @@ const KidRegistrationView = () => {
   };
 
   const removeKidRegistration = async () => {
+    setAction('remove');
     if (kidSlice.current?.currentKidRegistration?.id) {
       await dispatch(
         RemoveKidRegistration({
@@ -110,6 +110,7 @@ const KidRegistrationView = () => {
   };
 
   const reprintRegisterLabelKid = async (copies: number) => {
+    setAction('reprint');
     if (kidSlice.current?.currentKidRegistration?.id) {
       await dispatch(
         ReprintKidRegistration({
@@ -138,7 +139,6 @@ const KidRegistrationView = () => {
 
   return (
     <div style={{ paddingLeft: 15, paddingRight: 15 }}>
-      {kidSlice.loading || kidRegistrationSlice.loading ? <LoadingMask /> : ''}
       <Flex
         justify="center"
         align="center"
@@ -179,7 +179,14 @@ const KidRegistrationView = () => {
           >
             {capitalizeWords(kidSlice.current?.lastName ?? '')}
           </h2>
-          {kidSlice.current?.kidGroup && (
+          {!kidSlice.current?.kidGroup ? (
+            <Skeleton
+              row={1}
+              rowWidth={120}
+              rowHeight={25}
+              style={{ padding: 0 }}
+            />
+          ) : (
             <Tag type="primary" size="large" color="#94d3f8">
               {kidSlice.current.kidGroup.name}{' '}
               {kidSlice.current.staticGroup ? '(Estatico)' : ''}
@@ -244,132 +251,64 @@ const KidRegistrationView = () => {
                 }`}</Flex.Item>
               </>
             )}
-            {kidSlice.current?.healthSecurityEntity && (
-              <>
-                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                  EPS
-                </Flex.Item>
-                <Flex.Item span={12}>
-                  {kidSlice.current.healthSecurityEntity}
-                </Flex.Item>
-              </>
+            {kidSlice.loading && !kidSlice.current?.healthSecurityEntity ? (
+              <Skeleton
+                row={1}
+                rowHeight={25}
+                style={{ paddingLeft: 0, paddingBottom: 10, width: '100%' }}
+              />
+            ) : (
+              kidSlice.current?.healthSecurityEntity && (
+                <>
+                  <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                    EPS
+                  </Flex.Item>
+                  <Flex.Item span={12}>
+                    {kidSlice.current.healthSecurityEntity}
+                  </Flex.Item>
+                </>
+              )
             )}
-            {kidSlice.current?.medicalCondition && (
-              <>
-                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                  Condición Medica
-                </Flex.Item>
-                <Flex.Item span={12}>
-                  {`${kidSlice.current.medicalCondition?.code} - ${kidSlice.current.medicalCondition?.name}`}
-                </Flex.Item>
-              </>
+            {kidSlice.loading && !kidSlice.current?.medicalCondition ? (
+              <Skeleton
+                row={1}
+                rowHeight={25}
+                style={{ paddingLeft: 0, paddingBottom: 10, width: '100%' }}
+              />
+            ) : (
+              kidSlice.current?.medicalCondition && (
+                <>
+                  <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                    Condición Medica
+                  </Flex.Item>
+                  <Flex.Item span={12}>
+                    {`${kidSlice.current.medicalCondition?.code} - ${kidSlice.current.medicalCondition?.name}`}
+                  </Flex.Item>
+                </>
+              )
             )}
-            {kidSlice.current?.observations && (
-              <>
-                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                  Observaciones generales
-                </Flex.Item>
-                <Flex.Item span={12}>{kidSlice.current.observations}</Flex.Item>
-              </>
+            {kidSlice.loading && !kidSlice.current?.observations ? (
+              <Skeleton
+                row={1}
+                rowHeight={25}
+                style={{ paddingLeft: 0, paddingBottom: 10, width: '100%' }}
+              />
+            ) : (
+              kidSlice.current?.observations && (
+                <>
+                  <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                    Observaciones generales
+                  </Flex.Item>
+                  <Flex.Item span={12}>
+                    {kidSlice.current.observations}
+                  </Flex.Item>
+                </>
+              )
             )}
           </Flex>
         </Card.Body>
       </Card>
 
-      {kidSlice.current?.currentKidRegistration && (
-        <>
-          <Card round style={{ backgroundColor: '#f9f9f9' }}>
-            <Card.Header border>Información del registro</Card.Header>
-            <Card.Body>
-              <Flex gutter={16} wrap="wrap">
-                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                  Fecha de registro
-                </Flex.Item>
-                <Flex.Item span={12}>
-                  {`${dayjs(
-                    kidSlice.current?.currentKidRegistration?.date.toString(),
-                  )
-                    .locale('es')
-                    .format('MMMM D, YYYY h:mm A')}`}
-                </Flex.Item>
-                {kidGuardianRegistration && (
-                  <>
-                    <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                      Acudiente que registro
-                    </Flex.Item>
-                    <Flex.Item span={12}>
-                      {`${capitalizeWords(kidGuardianRegistration.firstName)} ${capitalizeWords(
-                        kidGuardianRegistration.lastName as '',
-                      )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${kidGuardianRegistration.dialCodePhone} ${
-                        kidGuardianRegistration.phone
-                      }`}
-                    </Flex.Item>
-                  </>
-                )}
-                {kidSlice.current?.currentKidRegistration?.observation && (
-                  <>
-                    <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                      Observaciones al registrar
-                    </Flex.Item>
-                    <Flex.Item span={12}>
-                      {`${kidSlice.current.currentKidRegistration?.observation}`}
-                    </Flex.Item>
-                  </>
-                )}
-                {IsSupervisorRegisterKidChurch() &&
-                  kidSlice.current?.currentKidRegistration?.log && (
-                    <>
-                      <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                        Log de registro
-                      </Flex.Item>
-                      <Flex.Item span={12}>
-                        {`${kidSlice.current.currentKidRegistration?.log}`}
-                      </Flex.Item>
-                    </>
-                  )}
-              </Flex>
-            </Card.Body>
-          </Card>
-          <Card round style={{ backgroundColor: '#f9f9f9', marginTop: 10 }}>
-            <Card.Header border>Acudientes</Card.Header>
-            <Card.Body>
-              <Flex gutter={8} wrap="wrap">
-                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                  Nombre
-                </Flex.Item>
-                <Flex.Item span={5} style={{ fontWeight: 'bold' }}>
-                  Relación
-                </Flex.Item>
-                <Flex.Item span={7} style={{ fontWeight: 'bold' }}>
-                  Teléfono
-                </Flex.Item>
-                {kidSlice.current.relations?.map(
-                  (kidGuardian: IKidGuardian) => {
-                    return (
-                      <>
-                        <Flex.Item span={12}>
-                          {capitalizeWords(kidGuardian.firstName)}{' '}
-                          {capitalizeWords(kidGuardian.lastName as '')}
-                        </Flex.Item>
-                        <Flex.Item span={5}>
-                          {
-                            KID_RELATION_CODE_MAPPER[
-                              kidGuardian.relation as KidGuardianRelationCodeEnum
-                            ]
-                          }
-                        </Flex.Item>
-                        <Flex.Item span={7}>
-                          {kidGuardian.dialCodePhone} {kidGuardian.phone}
-                        </Flex.Item>
-                      </>
-                    );
-                  },
-                )}
-              </Flex>
-            </Card.Body>
-          </Card>
-        </>
-      )}
       {!kidSlice.current?.currentKidRegistration ? (
         <Form
           form={form}
@@ -384,6 +323,9 @@ const KidRegistrationView = () => {
                 El registro sera para: {churchMeeting?.name}
               </Typography.Text>
               <Button
+                loading={kidRegistrationSlice.loading && action === 'reprint'}
+                loadingText="Registrando..."
+                disabled={kidRegistrationSlice.loading}
                 block
                 nativeType="submit"
                 type="primary"
@@ -405,7 +347,9 @@ const KidRegistrationView = () => {
               },
             ]}
           >
-            {kidSlice.current?.relations && (
+            {!kidSlice.current?.relations ? (
+              <Skeleton row={3} style={{ width: '100%' }} />
+            ) : (
               <Radio.Group
                 value={form.getFieldValue('guardian')}
                 style={{ width: '100%' }}
@@ -467,8 +411,113 @@ const KidRegistrationView = () => {
         </Form>
       ) : (
         <>
+          <Card round style={{ backgroundColor: '#f9f9f9' }}>
+            <Card.Header border>Información del registro</Card.Header>
+            <Card.Body>
+              <Flex gutter={16} wrap="wrap">
+                <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                  Fecha de registro
+                </Flex.Item>
+                <Flex.Item span={12}>
+                  {`${dayjs(
+                    kidSlice.current?.currentKidRegistration?.date.toString(),
+                  )
+                    .locale('es')
+                    .format('MMMM D, YYYY h:mm A')}`}
+                </Flex.Item>
+                {kidGuardianRegistration && (
+                  <>
+                    <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                      Acudiente que registro
+                    </Flex.Item>
+                    <Flex.Item span={12}>
+                      {`${capitalizeWords(kidGuardianRegistration.firstName)} ${capitalizeWords(
+                        kidGuardianRegistration.lastName as '',
+                      )} (${KID_RELATION_CODE_MAPPER[kidGuardianRegistration.relation]}) - Teléfono: ${kidGuardianRegistration.dialCodePhone} ${
+                        kidGuardianRegistration.phone
+                      }`}
+                    </Flex.Item>
+                  </>
+                )}
+                {kidSlice.current?.currentKidRegistration?.observation && (
+                  <>
+                    <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                      Observaciones al registrar
+                    </Flex.Item>
+                    <Flex.Item span={12}>
+                      {`${kidSlice.current.currentKidRegistration?.observation}`}
+                    </Flex.Item>
+                  </>
+                )}
+                {IsSupervisorRegisterKidChurch() &&
+                  kidSlice.current?.currentKidRegistration?.log && (
+                    <>
+                      <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                        Log de registro
+                      </Flex.Item>
+                      <Flex.Item span={12}>
+                        {`${kidSlice.current.currentKidRegistration?.log}`}
+                      </Flex.Item>
+                    </>
+                  )}
+              </Flex>
+            </Card.Body>
+          </Card>
+          <Card round style={{ backgroundColor: '#f9f9f9', marginTop: 10 }}>
+            <Card.Header border>Acudientes</Card.Header>
+            <Card.Body>
+              <Flex gutter={8} wrap="wrap">
+                <Flex.Item
+                  span={12}
+                  style={{ fontWeight: 'bold' }}
+                  key={'Nombre'}
+                >
+                  Nombre
+                </Flex.Item>
+                <Flex.Item
+                  span={5}
+                  style={{ fontWeight: 'bold' }}
+                  key={'Relación'}
+                >
+                  Relación
+                </Flex.Item>
+                <Flex.Item
+                  span={7}
+                  style={{ fontWeight: 'bold' }}
+                  key={'naTeléfonome'}
+                >
+                  Teléfono
+                </Flex.Item>
+                {kidSlice.current.relations?.map(
+                  (kidGuardian: IKidGuardian) => {
+                    return (
+                      <>
+                        <Flex.Item span={12}>
+                          {capitalizeWords(kidGuardian.firstName)}{' '}
+                          {capitalizeWords(kidGuardian.lastName as '')}
+                        </Flex.Item>
+                        <Flex.Item span={5}>
+                          {
+                            KID_RELATION_CODE_MAPPER[
+                              kidGuardian.relation as KidGuardianRelationCodeEnum
+                            ]
+                          }
+                        </Flex.Item>
+                        <Flex.Item span={7}>
+                          {kidGuardian.dialCodePhone} {kidGuardian.phone}
+                        </Flex.Item>
+                      </>
+                    );
+                  },
+                )}
+              </Flex>
+            </Card.Body>
+          </Card>
           <div style={{ paddingTop: 10 }}>
             <Button
+              loading={kidRegistrationSlice.loading && action === 'reprint'}
+              loadingText="Reimprimiendo..."
+              disabled={kidRegistrationSlice.loading}
               block
               type="primary"
               size="large"
@@ -480,6 +529,9 @@ const KidRegistrationView = () => {
           {IsSupervisorRegisterKidChurch() && (
             <div style={{ paddingTop: 10, paddingBottom: 10 }}>
               <Button
+                loading={kidRegistrationSlice.loading && action === 'remove'}
+                loadingText="Eliminando registro..."
+                disabled={kidRegistrationSlice.loading}
                 block
                 type="danger"
                 size="large"
