@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect } from 'react';
-import { Button, Form, Input, Picker, Selector } from 'react-vant';
+import { Button, Form, Input, Picker } from 'react-vant';
 import { UserRole } from '../../utils/auth';
 import { capitalizeWords } from '../../utils/text';
 import { checkLastNameField } from '../../utils/validator';
@@ -14,10 +14,7 @@ import {
   RootState,
   updateUserChurchGroup,
 } from '@faith-forge-web/state/redux';
-import {
-  churchGroup,
-  churchGroupArray,
-} from '@faith-forge-web/common-types/constants';
+import { churchGroupArray } from '@faith-forge-web/common-types/constants';
 
 const PersonalInfo: NextPage = () => {
   const [form] = Form.useForm();

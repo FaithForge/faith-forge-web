@@ -31,6 +31,7 @@ const ChurchInfo: NextPage = () => {
       church: [churchSlice.current?.id],
       churchMeeting: [churchMeetingSlice.current?.id],
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, churchSlice.current?.id, churchMeetingSlice.current?.id]);
 
   const onFinish = async (values: any) => {

@@ -64,7 +64,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   useEffect(() => {
     dispatch(cleanCurrentKidGuardian());
-  }, []);
+  }, [dispatch]);
 
   useEffect(() => {
     if (guardian) {

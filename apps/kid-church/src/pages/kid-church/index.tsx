@@ -2,7 +2,6 @@ import type { NextPage } from 'next';
 import { usePathname } from 'next/navigation';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import LoadingMask from '../../components/LoadingMask';
 import { capitalizeWords } from '../../utils/text';
 import { DateTime } from 'luxon';
 import {

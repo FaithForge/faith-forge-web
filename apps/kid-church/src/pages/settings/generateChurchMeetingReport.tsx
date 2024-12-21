@@ -6,7 +6,6 @@ import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
 import ModalFaithForge from '../../components/ModalFaithForge';
 import { DateTime } from 'luxon';
-import { labelRendererCalendar } from '../../utils/date';
 import { useSelector } from 'react-redux';
 import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
 import { Layout } from '../../components/Layout';

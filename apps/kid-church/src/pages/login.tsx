@@ -7,7 +7,11 @@ import { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, Image, Dialog } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '../utils/auth';
-import { RootState, AppDispatch, UserLogin } from '@faith-forge-web/state/redux';
+import {
+  RootState,
+  AppDispatch,
+  UserLogin,
+} from '@faith-forge-web/state/redux';
 
 const CenteredContainer = styled.div`
   display: flex;
@@ -62,6 +66,7 @@ const Login: NextPage = () => {
       }
       router.push('/settings');
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authSlice.token, authSlice.error, initialCheckDone]);
 
   return (

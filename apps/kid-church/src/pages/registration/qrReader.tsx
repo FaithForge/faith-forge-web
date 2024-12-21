@@ -86,6 +86,7 @@ const QRReader: NextPage = () => {
     setStep(2);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const onRegisterKids = async (values: any) => {
     for (const relationToRegister of relationsToRegister) {
       if (relationToRegister?.id && relationToRegister.kidGroup?.id) {

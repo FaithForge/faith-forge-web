@@ -4,7 +4,6 @@ import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
 import {
   Button,
-  Dialog,
   Divider,
   Form,
   Input,
@@ -22,7 +21,6 @@ import {
 } from '@faith-forge-web/state/redux';
 import { IKidGuardian, kidRelationSelect } from '@faith-forge-web/models';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
-import { IsSupervisorRegisterKidChurch } from '../../utils/auth';
 
 type Props = {
   visible: boolean;
