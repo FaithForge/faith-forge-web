@@ -49,3 +49,7 @@ body {
 body {
   margin: 0;
 }
+
+.rv-cell__left-icon img {
+  border-radius: 50%;
+}

@@ -3,6 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 import {
   CreateKidRegistration,
   RemoveKidRegistration,
+  ReprintKidRegistration,
 } from '../../thunks/kid-church/kid-registration.thunk';
 
 const initialState: ReduxDefaultStateWithoutData = {
@@ -39,18 +40,18 @@ const kidRegistrationSlice = createSlice({
       state.error = action.error.message;
       state.loading = false;
     });
-    // builder.addCase(ReprintRegisterLabelKid.pending, (state) => {
-    //   state.error = undefined;
-    //   state.loading = true;
-    // });
-    // builder.addCase(ReprintRegisterLabelKid.fulfilled, (state) => {
-    //   state.error = undefined;
-    //   state.loading = false;
-    // });
-    // builder.addCase(ReprintRegisterLabelKid.rejected, (state, action) => {
-    //   state.error = action.error.message;
-    //   state.loading = false;
-    // });
+    builder.addCase(ReprintKidRegistration.pending, (state) => {
+      state.error = undefined;
+      state.loading = true;
+    });
+    builder.addCase(ReprintKidRegistration.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(ReprintKidRegistration.rejected, (state, action) => {
+      state.error = action.error.message;
+      state.loading = false;
+    });
   },
 });
 
