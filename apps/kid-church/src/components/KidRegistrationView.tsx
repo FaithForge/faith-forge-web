@@ -21,6 +21,7 @@ import {
   Typography,
   Notify,
   Skeleton,
+  ImagePreview,
 } from 'react-vant';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
@@ -137,6 +138,12 @@ const KidRegistrationView = () => {
         .format('MMMM D, YYYY')
     : '';
 
+  const imageProfile = kidSlice.current?.photoUrl
+    ? kidSlice.current.photoUrl
+    : kidSlice.current?.gender === UserGenderCode.MALE
+      ? '/icons/boy-v2.png'
+      : '/icons/girl-v2.png';
+
   return (
     <div style={{ paddingLeft: 15, paddingRight: 15 }}>
       <Flex
@@ -148,16 +155,18 @@ const KidRegistrationView = () => {
         <Flex.Item span={8}>
           <Image
             alt="profileImage"
-            src={
-              kidSlice.current?.photoUrl
-                ? kidSlice.current?.photoUrl
-                : kidSlice.current?.gender === UserGenderCode.MALE
-                  ? '/icons/boy-v2.png'
-                  : '/icons/girl-v2.png'
-            }
+            src={imageProfile}
             fit="cover"
             radius={100}
             style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
+            onClick={() =>
+              ImagePreview.open({
+                closeable: true,
+                showIndex: false,
+                images: [imageProfile],
+                onChange: (index) => console.log(`当前展示第${index + 1}张`),
+              })
+            }
           />
         </Flex.Item>
         <Flex.Item span={16}>
