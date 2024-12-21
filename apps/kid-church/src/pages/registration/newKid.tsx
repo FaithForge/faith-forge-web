@@ -50,6 +50,7 @@ import { TbCameraPlus } from 'react-icons/tb';
 import dayjs from 'dayjs';
 import { DateTime } from 'luxon';
 import { calculateAge, getAgeInMonths } from '../../utils/date';
+import { resizeAndCropImageToSquare } from '@faith-forge-web/utils/image';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -76,13 +77,26 @@ const NewKid: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const now = DateTime.local().endOf('year').toJSDate();
 
-  const handleCapture = (target: any) => {
+  const handleCapture = async (target: HTMLInputElement) => {
     if (target.files) {
       if (target.files.length !== 0) {
         const file = target.files[0];
-        const newUrl = URL.createObjectURL(file);
-        setSource(newUrl);
-        setPhoto(file);
+
+        try {
+          // Redimensiona la imagen
+          const resizedBlob = await resizeAndCropImageToSquare(
+            file,
+            500,
+            500 * 1024,
+          ); // 800px, 500 KB
+          const resizedUrl = URL.createObjectURL(resizedBlob);
+
+          // Guarda la imagen redimensionada
+          setSource(resizedUrl);
+          setPhoto(resizedBlob);
+        } catch (err) {
+          console.error('Error al redimensionar la imagen:', err);
+        }
       }
     }
   };

@@ -38,6 +38,7 @@ import { calculateAge, getAgeInMonths } from '../../utils/date';
 import { TbCameraPlus } from 'react-icons/tb';
 import { ModalSelectorApp } from '../../components/ModalSelectorApp';
 import { ModalCheckerApp } from '../../components/ModalCheckerApp';
+import { resizeAndCropImageToSquare } from '@faith-forge-web/utils/image';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -61,18 +62,31 @@ const UpdateKidPage: NextPage = () => {
     name: kidSlice.current?.healthSecurityEntity ?? '',
   });
   const [source, setSource] = useState(kidSlice.current?.photoUrl);
-  const [photo, setPhoto] = useState<File>();
+  const [photo, setPhoto] = useState<Blob>();
   const [staticGroup, setStaticGroup] = useState(
     kidSlice.current?.staticGroup as boolean,
   );
 
-  const handleCapture = (target: HTMLInputElement) => {
+  const handleCapture = async (target: HTMLInputElement) => {
     if (target.files) {
       if (target.files.length !== 0) {
         const file = target.files[0];
-        const newUrl = URL.createObjectURL(file);
-        setSource(newUrl);
-        setPhoto(file);
+
+        try {
+          // Redimensiona la imagen
+          const resizedBlob = await resizeAndCropImageToSquare(
+            file,
+            500,
+            500 * 1024,
+          ); // 800px, 500 KB
+          const resizedUrl = URL.createObjectURL(resizedBlob);
+
+          // Guarda la imagen redimensionada
+          setSource(resizedUrl);
+          setPhoto(resizedBlob);
+        } catch (err) {
+          console.error('Error al redimensionar la imagen:', err);
+        }
       }
     }
   };
