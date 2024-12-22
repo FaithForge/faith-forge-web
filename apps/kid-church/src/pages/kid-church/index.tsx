@@ -134,6 +134,7 @@ const KidChurch: NextPage = () => {
           onChange={(value) => setFindText(value)}
           onSearch={(value) => setFindText(value)}
           onCancel={() => setFindText('')}
+          background="#fbfcff"
           style={{
             height: '49px',
             padding: '10px 5px 5px 5px',

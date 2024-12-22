@@ -134,6 +134,7 @@ const Registration: NextPage = () => {
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
         onCancel={() => setFindText('')}
+        background="#fbfcff"
         style={{
           position: 'sticky',
           top: '0',

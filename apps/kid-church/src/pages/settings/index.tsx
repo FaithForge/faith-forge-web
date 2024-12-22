@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Cell, Dialog, Grid, Notify, Typography } from 'react-vant';
+import { Button, Cell, Dialog, Grid, Notify, Typography } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import {
   resetChurchState,
@@ -88,6 +88,7 @@ const Setting: NextPage = () => {
           key="Cerrar Sesión"
           text="Cerrar Sesión"
           icon={<FaRightFromBracket />}
+          style={{ borderColor: 'red' }}
           onClick={() =>
             Dialog.confirm({
               title: '¿Desea cerrar sesión?',

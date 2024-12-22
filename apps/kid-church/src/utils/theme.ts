@@ -20,8 +20,8 @@ export const themeVars = {
   // Tabbar
   tabbarHeight: '60px',
   tabbarItemFontSize: '12px',
-  tabbarBackgroundColor: WHITE_COLOR_APP,
-  tabbarItemActiveBackgroundColor: WHITE_COLOR_APP,
+  tabbarBackgroundColor: '#fbfcff',
+  tabbarItemActiveBackgroundColor: '#fbfcff',
   tabbarItemActiveColor: ANOTHER_BLACK_COLOR,
   tabbarItemTextColor: ANOTHER_BLACK_COLOR,
 

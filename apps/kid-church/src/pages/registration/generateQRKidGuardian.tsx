@@ -152,6 +152,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
       <Search
         placeholder="Colocar Numero de Cedula del Acudiente"
         onSearch={(value) => findGuardian(value)}
+        background="#fbfcff"
       />
       {guardian && (
         <>

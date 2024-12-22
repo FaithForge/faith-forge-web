@@ -4,7 +4,15 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
-import { Button, Card, Form, Input, Image, Dialog } from 'react-vant';
+import {
+  Button,
+  Card,
+  Form,
+  Input,
+  Image,
+  Dialog,
+  Typography,
+} from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '../utils/auth';
 import {
@@ -72,7 +80,7 @@ const Login: NextPage = () => {
   return (
     <CenteredContainer>
       {isLoading ? <LoadingMask /> : ''}
-      <div>
+      <div style={{ paddingBottom: 20 }}>
         <Image alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
       </div>
       <Card style={{ width: '350px' }}>
@@ -80,9 +88,15 @@ const Login: NextPage = () => {
           layout="vertical"
           onFinish={async (values) => await onLogin(values)}
           footer={
-            <Button block nativeType="submit" type="primary" size="large">
-              Iniciar sesión
-            </Button>
+            <>
+              <Form.Item style={{ paddingTop: 20 }}>
+                <Button block nativeType="submit" type="primary" size="large">
+                  Iniciar sesión
+                </Button>
+              </Form.Item>
+
+              <p style={{ textAlign: 'center' }}>V. 2.0 Beta</p>
+            </>
           }
         >
           <Form.Item

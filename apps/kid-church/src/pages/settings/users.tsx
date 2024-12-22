@@ -55,6 +55,7 @@ const Users: NextPage = () => {
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
         onCancel={() => setFindText('')}
+        background="#fbfcff"
         // icon={<SearchOutlined />}
         style={{
           position: 'sticky',
