@@ -138,7 +138,7 @@ const Setup: NextPage = () => {
             <>
               <h2>Selecciona sede</h2>
 
-              <Radio.Group value={church}>
+              <Radio.Group value={church} onChange={() => setStep(1)}>
                 <Cell.Group>
                   {churchSlice?.loading ? (
                     <Skeleton
@@ -152,7 +152,10 @@ const Setup: NextPage = () => {
                         key={churchOption.value}
                         clickable
                         title={churchOption.label}
-                        onClick={() => setChurch(churchOption.value)}
+                        onClick={() => {
+                          setChurch(churchOption.value);
+                          setStep(1);
+                        }}
                         rightIcon={<Radio name={churchOption.value} />}
                       />
                     ))
@@ -182,7 +185,7 @@ const Setup: NextPage = () => {
             <>
               <h2>Selecciona Reunión</h2>
 
-              <Radio.Group value={churchMeeting}>
+              <Radio.Group value={churchMeeting} onChange={() => setStep(2)}>
                 <Cell.Group>
                   {churchMeetingSlice?.loading ? (
                     <Skeleton
@@ -196,7 +199,10 @@ const Setup: NextPage = () => {
                         key={churchOption.value}
                         clickable
                         title={churchOption.label}
-                        onClick={() => setChurchMeeting(churchOption.value)}
+                        onClick={() => {
+                          setChurchMeeting(churchOption.value);
+                          setStep(2);
+                        }}
                         rightIcon={<Radio name={churchOption.value} />}
                       />
                     ))
@@ -232,7 +238,7 @@ const Setup: NextPage = () => {
             <>
               <h2>Selecciona Impresora</h2>
 
-              <Radio.Group value={churchPrinter}>
+              <Radio.Group value={churchPrinter} onChange={() => setStep(3)}>
                 <Cell.Group>
                   {churchPrinterSlice?.loading ? (
                     <Skeleton
@@ -246,7 +252,10 @@ const Setup: NextPage = () => {
                         key={churchOption.value}
                         clickable
                         title={churchOption.label}
-                        onClick={() => setChurchPrinter(churchOption.value)}
+                        onClick={() => {
+                          setChurchPrinter(churchOption.value);
+                          setStep(3);
+                        }}
                         rightIcon={<Radio name={churchOption.value} />}
                       />
                     ))
