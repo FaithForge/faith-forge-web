@@ -183,7 +183,14 @@ const Setup: NextPage = () => {
           )}
           {step === 1 && (
             <>
-              <h2>Selecciona Reunión</h2>
+              <h2>
+                Selecciona Reunión de{' '}
+                {
+                  churchOptions.find(
+                    (churchOption) => churchOption.value === church,
+                  )?.label
+                }
+              </h2>
 
               <Radio.Group value={churchMeeting} onChange={() => setStep(2)}>
                 <Cell.Group>
@@ -236,7 +243,14 @@ const Setup: NextPage = () => {
           )}
           {step === 2 && (
             <>
-              <h2>Selecciona Impresora</h2>
+              <h2>
+                Selecciona Impresora de{' '}
+                {
+                  churchOptions.find(
+                    (churchOption) => churchOption.value === church,
+                  )?.label
+                }
+              </h2>
 
               <Radio.Group value={churchPrinter} onChange={() => setStep(3)}>
                 <Cell.Group>
