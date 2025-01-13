@@ -1,7 +1,7 @@
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Cell, Dialog, Grid, Notify, Typography } from 'react-vant';
+import { Dialog, Grid, Notify, Typography } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import {
   resetChurchState,
@@ -24,8 +24,9 @@ import {
   IsSupervisorRegisterOrKidChurchSupervisor,
 } from '../../utils/auth';
 import { hasRequiredPermissions } from '../../components/Permissions';
-import { FaHouseFloodWaterCircleArrowRight } from 'react-icons/fa6';
 import { capitalizeWords } from '../../utils/text';
+import { TbStatusChange } from 'react-icons/tb';
+import { GiLoveMystery } from 'react-icons/gi';
 
 const Setting: NextPage = () => {
   const router = useRouter();
@@ -82,6 +83,18 @@ const Setting: NextPage = () => {
             text="Actualizar usuarios"
           />
         )}
+        <Grid.Item
+          key={'Registro de Cambios'}
+          icon={<TbStatusChange />}
+          text="Registro de Cambios"
+          onClick={() => router.push('/settings/changelog')}
+        />
+        <Grid.Item
+          key={'Creditos'}
+          icon={<GiLoveMystery />}
+          text="Creditos"
+          onClick={() => router.push('/settings/credits')}
+        />
       </Grid>
       <Grid gutter={10} columnNum={1} style={{ paddingTop: 10 }}>
         <Grid.Item

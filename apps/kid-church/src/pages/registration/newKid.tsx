@@ -598,11 +598,11 @@ const NewKid: NextPage = () => {
               rules={[
                 {
                   required: true,
-                  message: 'Por favor digite el numero telefono del acudiente',
+                  message: 'Por favor digite el numero teléfono del acudiente',
                 },
                 {
                   required: true,
-                  message: 'El telefono debe tener minimo 7 digitos',
+                  message: 'El teléfono debe tener minimo 7 digitos',
                   validator: checkPhoneField,
                 },
               ]}

@@ -87,7 +87,7 @@ const MobileInputApp = ({
               </Space>
               <Input
                 value={value.value}
-                placeholder="Escribir telefono..."
+                placeholder="Escribir teléfono..."
                 type="tel"
                 autoComplete="false"
                 onChange={onMobileChange}

@@ -249,16 +249,16 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           </Form.Item>
           <Form.Item
             name="guardianPhone"
-            label="Telefono"
+            label="Teléfono"
             disabled={!!guardian}
             rules={[
               {
                 required: true,
-                message: 'Por favor digite el numero telefono del acudiente',
+                message: 'Por favor digite el numero teléfono del acudiente',
               },
               {
                 required: true,
-                message: 'El telefono debe tener minimo 7 digitos',
+                message: 'El teléfono debe tener minimo 7 digitos',
                 validator: checkPhoneField,
               },
             ]}

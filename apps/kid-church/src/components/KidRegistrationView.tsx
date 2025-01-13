@@ -89,6 +89,7 @@ const KidRegistrationView = () => {
       Notify.show({
         message: 'Se ha registrado al niño con exito',
         type: 'success',
+        duration: 1000,
       });
       router.back();
     }
@@ -106,6 +107,7 @@ const KidRegistrationView = () => {
       Notify.show({
         type: 'success',
         message: 'Se ha eliminado el registro del niño con exito',
+        duration: 1000,
       });
       router.back();
     }
@@ -493,7 +495,7 @@ const KidRegistrationView = () => {
                 <Flex.Item
                   span={9}
                   style={{ fontWeight: 'bold' }}
-                  key={'naTeléfonome'}
+                  key={'Teléfono'}
                 >
                   Teléfono
                 </Flex.Item>

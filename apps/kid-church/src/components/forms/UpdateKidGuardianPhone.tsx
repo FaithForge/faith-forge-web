@@ -57,7 +57,7 @@ const UpdateKidGuardianPhoneModal = ({
   useEffect(() => {
     if (error) {
       Toast.fail({
-        message: `Ha ocurrido un error al actualizar el telefono del acudiente: ${error}`,
+        message: `Ha ocurrido un error al actualizar el teléfono del acudiente: ${error}`,
         position: 'bottom',
         duration: 5000,
       });
@@ -102,7 +102,7 @@ const UpdateKidGuardianPhoneModal = ({
           await onClose(false);
         } else {
           Toast.fail({
-            message: `El Telefono que intenta ingresar ya existe en la base de datos`,
+            message: `El teléfono que intenta ingresar ya existe en la base de datos`,
             position: 'bottom',
             duration: 5000,
           });
@@ -125,7 +125,7 @@ const UpdateKidGuardianPhoneModal = ({
 
       <div style={{ padding: 5 }}>
         <Typography.Title level={2} center>
-          Actualizar Numero De Telefono y Relación con Niño
+          Actualizar Numero De teléfono y Relación con Niño
         </Typography.Title>
         <Form
           form={form}
@@ -184,15 +184,15 @@ const UpdateKidGuardianPhoneModal = ({
               value: kidGuardian.phone,
             }}
             name="guardianPhone"
-            label="Telefono"
+            label="Teléfono"
             rules={[
               {
                 required: true,
-                message: 'Por favor digite el numero telefono del acudiente',
+                message: 'Por favor digite el numero teléfono del acudiente',
               },
               {
                 required: true,
-                message: 'El telefono debe tener minimo 7 digitos',
+                message: 'El teléfono debe tener minimo 7 digitos',
                 validator: checkPhoneField,
               },
             ]}

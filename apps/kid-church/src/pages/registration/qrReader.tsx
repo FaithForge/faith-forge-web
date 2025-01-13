@@ -103,14 +103,14 @@ const QRReader: NextPage = () => {
         Toast.info({
           message: 'Se ha registrado al niño con exito',
           position: 'bottom',
-          duration: 3000,
+          duration: 1000,
         });
       }
     }
     Toast.info({
       message: 'Se ha registrado con exito a todos los niños',
       position: 'bottom',
-      duration: 3000,
+      duration: 1000,
     });
     router.back();
   };

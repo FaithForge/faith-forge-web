@@ -173,7 +173,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
                 level={4}
                 style={{ textAlign: 'center', marginTop: '5px' }}
               >
-                Telefono: {guardian.dialCodePhone} {guardian.phone}
+                Teléfono: {guardian.dialCodePhone} {guardian.phone}
               </Typography.Title>
               <Typography.Text style={{ textAlign: 'center' }}>
                 Pide al acudiente que lea este código con su celular y se

@@ -167,7 +167,7 @@ const EditUser: NextPage = () => {
 
         <Form.Item
           name="phone"
-          label="Telefono"
+          label="Teléfono"
           rules={
             !userSlice.current?.roles?.find(
               (role: any) => role === UserRole.KID,
@@ -176,11 +176,11 @@ const EditUser: NextPage = () => {
                   {
                     required: true,
                     message:
-                      'Por favor digite el numero telefono del acudiente',
+                      'Por favor digite el numero teléfono del acudiente',
                   },
                   {
                     required: true,
-                    message: 'El telefono debe tener minimo 7 digitos',
+                    message: 'El teléfono debe tener minimo 7 digitos',
                     validator: checkPhoneField,
                   },
                 ]
@@ -188,7 +188,7 @@ const EditUser: NextPage = () => {
           }
         >
           <Input
-            placeholder="Escribir telefono..."
+            placeholder="Escribir teléfono..."
             type="tel"
             autoComplete="false"
             disabled={!userSlice.current}
