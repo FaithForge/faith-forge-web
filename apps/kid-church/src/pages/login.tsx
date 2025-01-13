@@ -95,7 +95,7 @@ const Login: NextPage = () => {
                 </Button>
               </Form.Item>
 
-              <p style={{ textAlign: 'center' }}>V. 2.0 Beta</p>
+              <p style={{ textAlign: 'center' }}>V. 2.0.0</p>
             </>
           }
         >
