@@ -4,7 +4,6 @@ import NavBarApp from '../../components/NavBarApp';
 import { useEffect, useState } from 'react';
 import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
-import ModalFaithForge from '../../components/ModalFaithForge';
 import { DateTime } from 'luxon';
 import { useSelector } from 'react-redux';
 import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
@@ -12,6 +11,7 @@ import { Layout } from '../../components/Layout';
 import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
 import { RootState } from '@faith-forge-web/state/redux';
+import React from 'react';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -107,7 +107,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
 
     const reportResponse = (
       await microserviceApiRequest({
-        microservice: MS.Church,
+        microservice: MS.KidChurch,
         method: HttpRequestMethod.GET,
         url: `/report/kid-church-meeting/download`,
         options: {
@@ -147,8 +147,15 @@ const GenerateChurchMeetingReport: NextPage = () => {
           layout="vertical"
           onFinish={onFinish}
           form={form}
+          style={{ paddingLeft: 15, paddingRight: 15 }}
           footer={
-            <Button block type="primary" size="large" nativeType="submit">
+            <Button
+              block
+              type="primary"
+              size="large"
+              nativeType="submit"
+              style={{ paddingLeft: 15, paddingRight: 15 }}
+            >
               Generar reporte
             </Button>
           }
@@ -215,88 +222,61 @@ const GenerateChurchMeetingReport: NextPage = () => {
           </Form.Item>
         </Form>
       </>
-      <div style={{ fontSize: 16 }} id="report">
+      <div style={{ fontSize: 16, paddingLeft: 15, paddingRight: 15 }}>
         {report && (
           <>
             <h2>Totales generales</h2>
-            <>
-              <Grid
-                columnNum={2}
-                gutter={8}
-                border={false}
-                style={{ paddingBottom: 10, border: '1px' }}
-              >
-                <Grid.Item style={{ fontWeight: 'bold' }}>
-                  Total niños registrados
-                </Grid.Item>
-                <Grid.Item>{report.totalKids}</Grid.Item>
-              </Grid>
-              <Grid
-                columnNum={2}
-                gutter={8}
-                border={false}
-                style={{ paddingBottom: 10, border: '1px' }}
-              >
-                <Grid.Item style={{ fontWeight: 'bold' }}>
-                  Total niños nuevos
-                </Grid.Item>
-                <Grid.Item>{report.totalNewKids}</Grid.Item>
-              </Grid>
-            </>
+            <Grid columnNum={2} gutter={0} border={true} center={false}>
+              <Grid.Item style={{ fontWeight: 'bold' }}>
+                Total niños registrados
+              </Grid.Item>
+              <Grid.Item>{report.totalKids}</Grid.Item>
+              <Grid.Item style={{ fontWeight: 'bold' }}>
+                Total niños nuevos
+              </Grid.Item>
+              <Grid.Item>{report.totalNewKids}</Grid.Item>
+            </Grid>
 
             <h2>Totales por salones</h2>
-            {report.statistics.byKidGroup.map((kidGroup: any) => {
-              return (
-                <Grid
-                  border={false}
-                  columnNum={2}
-                  gutter={8}
-                  style={{ paddingBottom: 10, border: '1px' }}
-                  key={kidGroup.name}
-                >
-                  <Grid.Item style={{ fontWeight: 'bold' }}>
-                    {kidGroup.name}
-                  </Grid.Item>
-                  <Grid.Item>{kidGroup.count}</Grid.Item>
-                </Grid>
-              );
-            })}
+            <Grid columnNum={2} gutter={0} border={true} center={false}>
+              {report.statistics.byKidGroup.map((kidGroup: any) => {
+                return (
+                  <React.Fragment key={kidGroup.name}>
+                    <Grid.Item style={{ fontWeight: 'bold', flexBasis: '50%' }}>
+                      {kidGroup.name}
+                    </Grid.Item>
+                    <Grid.Item style={{ flexBasis: '50%' }}>
+                      {kidGroup.count}
+                    </Grid.Item>
+                  </React.Fragment>
+                );
+              })}
+            </Grid>
 
             <h2>Totales por genero</h2>
-            <Grid
-              columnNum={2}
-              gutter={8}
-              border={false}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
+            <Grid columnNum={2} gutter={0} border={true} center={false}>
               <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
               <Grid.Item>
                 {report.statistics?.byGender?.find((d: any) => d.name === 'M')
                   ?.count ?? 0}
               </Grid.Item>
-            </Grid>
-            <Grid
-              columnNum={2}
-              gutter={8}
-              border={false}
-              style={{ paddingBottom: 10, border: '1px' }}
-            >
               <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
               <Grid.Item>
                 {report.statistics?.byGender?.find((d: any) => d.name === 'F')
                   ?.count ?? 0}
               </Grid.Item>
             </Grid>
-            <h2>Lista niños por salones</h2>
+            {/* <h2>Lista niños por salones</h2>
             {report.list.byKidGroup.map((kidGroup: any, index: any) => {
               return <ModalFaithForge key={index} kidGroup={kidGroup} />;
-            })}
+            })} */}
             <Button
               block
               type="primary"
               style={{ marginTop: 5 }}
               size="large"
               onClick={downloadFile}
+              id="report"
             >
               Descargar reporte
             </Button>
