@@ -1,0 +1,9 @@
+{
+  "name": "common-types-constants",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/common-types/constants/src",
+  "projectType": "library",
+  "tags": [],
+  "// targets": "to see all targets run: nx show project common-types-constants --web",
+  "targets": {}
+}
