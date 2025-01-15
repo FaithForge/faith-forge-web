@@ -4,15 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import styled from 'styled-components';
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Card,
-  Form,
-  Input,
-  Image,
-  Dialog,
-  Typography,
-} from 'react-vant';
+import { Button, Card, Form, Input, Image, Dialog } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
 import { IsRegisterKidChurch, IsSupervisorKidChurch } from '../utils/auth';
 import {

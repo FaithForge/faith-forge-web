@@ -5,7 +5,7 @@ import {
   UserIdType,
 } from '@faith-forge-web/models';
 import React from 'react';
-import { Picker, PickerColumnOption, Field, Form } from 'react-vant';
+import { Picker, PickerColumnOption, Field } from 'react-vant';
 
 interface NationalIdTypeInputAppValue {
   label: string;

@@ -15,7 +15,6 @@ import {
   Radio,
   Image,
   Flex,
-  Tag,
   Card,
   Cell,
   Typography,

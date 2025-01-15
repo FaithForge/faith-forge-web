@@ -1,13 +1,5 @@
 import dayjs from 'dayjs';
-import {
-  Card,
-  Flex,
-  Image,
-  ImagePreview,
-  NoticeBar,
-  Popup,
-  Tag,
-} from 'react-vant';
+import { Card, Flex, Image, ImagePreview, NoticeBar, Popup } from 'react-vant';
 import { FFDay } from '../utils/ffDay';
 import {
   IKid,
