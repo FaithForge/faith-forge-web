@@ -16,15 +16,7 @@
         "name": "next"
       }
     ],
-    "types": [
-      "jest",
-      "node"
-    ],
-    "paths": {
-      "@/*": [
-        "apps/admin/src/*"
-      ]
-    }
+    "types": ["jest", "node"]
   },
   "include": [
     "**/*.ts",
@@ -33,13 +25,7 @@
     "**/*.jsx",
     "../../apps/admin/.next/types/**/*.ts",
     "../../dist/apps/admin/.next/types/**/*.ts",
-    "next-env.d.ts",
-    ".next/types/**/*.ts"
+    "next-env.d.ts"
   ],
-  "exclude": [
-    "node_modules",
-    "jest.config.ts",
-    "**/*.spec.ts",
-    "**/*.test.ts"
-  ]
+  "exclude": ["node_modules", "jest.config.ts", "**/*.spec.ts", "**/*.test.ts"]
 }
