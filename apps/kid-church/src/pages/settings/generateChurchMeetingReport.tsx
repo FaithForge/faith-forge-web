@@ -12,6 +12,7 @@ import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
 import { RootState } from '@faith-forge-web/state/redux';
 import React from 'react';
+import { FFDay } from '../../utils/ffDay';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -20,7 +21,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
   const [report, setReport] = useState<any>(null);
   const { token } = useSelector((state: RootState) => state.authSlice);
 
-  const now = new Date();
+  const now = FFDay.utc().tz('America/Bogota').startOf('day').toDate();
   const [isLoading, setIsLoading] = useState(false);
   const [dateCache, setDateCache] = useState(null);
   const [churchMeetingCache, setChurchMeetingCache] = useState(null);

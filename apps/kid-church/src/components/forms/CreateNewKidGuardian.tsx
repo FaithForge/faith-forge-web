@@ -121,7 +121,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   const findGuardian = async () => {
     const guardianNationalId = form.getFieldsValue().guardianNationalId;
-    dispatch(GetKidGuardian(guardianNationalId));
+    if (guardianNationalId) dispatch(GetKidGuardian(guardianNationalId));
   };
 
   const onFinish = async (values: any) => {
