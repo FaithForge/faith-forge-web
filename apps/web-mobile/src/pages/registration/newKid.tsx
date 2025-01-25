@@ -173,7 +173,7 @@ const NewKid: NextPage = () => {
   const findGuardian = async () => {
     const guardianNationalId =
       formKidGuardian.getFieldsValue().guardianNationalId;
-    dispatch(GetKidGuardian(guardianNationalId));
+    if (guardianNationalId) dispatch(GetKidGuardian(guardianNationalId));
   };
 
   const cleanGuardian = async () => {

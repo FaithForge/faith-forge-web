@@ -31,7 +31,7 @@ const GenerateQRKidGuardianView: NextPage = () => {
   );
 
   const findGuardian = async (guardianNationalId: string) => {
-    dispatch(GetKidGuardian(guardianNationalId));
+    if (guardianNationalId) dispatch(GetKidGuardian(guardianNationalId));
   };
 
   useEffect(() => {

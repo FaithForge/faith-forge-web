@@ -2,7 +2,6 @@
 import type { NextPage } from 'next';
 import NavBarApp from '../../components/NavBarApp';
 import { useEffect, useState } from 'react';
-import LoadingMask from '../../components/LoadingMask';
 import dayjs from 'dayjs';
 import { DateTime } from 'luxon';
 import { useSelector } from 'react-redux';
@@ -12,6 +11,7 @@ import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
 import { RootState } from '@faith-forge-web/state/redux';
 import React from 'react';
+import { FFDay } from '../../utils/ffDay';
 
 const GenerateChurchMeetingReport: NextPage = () => {
   const [form] = Form.useForm();
@@ -20,7 +20,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
   const [report, setReport] = useState<any>(null);
   const { token } = useSelector((state: RootState) => state.authSlice);
 
-  const now = new Date();
+  const now = FFDay.utc().tz('America/Bogota').startOf('day').toDate();
   const [isLoading, setIsLoading] = useState(false);
   const [dateCache, setDateCache] = useState(null);
   const [churchMeetingCache, setChurchMeetingCache] = useState(null);
@@ -141,7 +141,6 @@ const GenerateChurchMeetingReport: NextPage = () => {
   return (
     <Layout>
       <>
-        {isLoading ? <LoadingMask /> : ''}
         <NavBarApp title="Generar reporte servicio" />
         <Form
           layout="vertical"
@@ -150,6 +149,9 @@ const GenerateChurchMeetingReport: NextPage = () => {
           style={{ paddingLeft: 15, paddingRight: 15 }}
           footer={
             <Button
+              loading={isLoading}
+              loadingText="Generando reporte..."
+              disabled={isLoading}
               block
               type="primary"
               size="large"
@@ -271,6 +273,9 @@ const GenerateChurchMeetingReport: NextPage = () => {
               return <ModalFaithForge key={index} kidGroup={kidGroup} />;
             })} */}
             <Button
+              loading={isLoading}
+              loadingText="Descargando reporte..."
+              disabled={isLoading}
               block
               type="primary"
               style={{ marginTop: 5 }}

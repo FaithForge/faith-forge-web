@@ -2,7 +2,9 @@
   "name": "@faith-forge-web/source",
   "version": "2.0.0",
   "license": "MIT",
-  "scripts": {},
+  "scripts": {
+    "web-mobile:dev": "nx dev web-mobile"
+  },
   "private": true,
   "dependencies": {
     "@next/font": "^14.2.14",

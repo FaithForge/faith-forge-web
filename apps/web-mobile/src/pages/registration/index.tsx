@@ -47,6 +47,9 @@ const Registration: NextPage = () => {
     totalPages,
     loading,
   } = useSelector((state: RootState) => state.kidSlice);
+  const { current: church } = useSelector(
+    (state: RootState) => state.churchSlice,
+  );
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -142,6 +145,26 @@ const Registration: NextPage = () => {
         }}
       />
 
+      <NoticeBar
+        color="#fff"
+        background="#397b9d"
+        wrapable={true}
+        scrollable={false}
+      >
+        <b>Impresora:</b> {churchPrinterSlice.current?.name}
+        <br />
+        <div
+          style={{
+            whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '100%',
+          }}
+        >
+          <b>Reunión:</b> {churchMeeting?.name} ({church?.name})
+        </div>
+      </NoticeBar>
+
       {loading ? (
         <>
           {Array.from({ length: 6 }).map((_, index) => (
@@ -158,7 +181,7 @@ const Registration: NextPage = () => {
         <>
           <Overlay
             zIndex={2}
-            visible={!isAdmin}
+            visible={warningAlert.blockRegister && !isAdmin}
             style={{
               display: 'flex',
               alignItems: 'center',
