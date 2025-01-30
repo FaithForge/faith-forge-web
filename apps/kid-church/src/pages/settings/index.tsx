@@ -17,6 +17,7 @@ import {
   FaRightFromBracket,
   FaFileInvoice,
   FaUserGroup,
+  FaListCheck,
 } from 'react-icons/fa6';
 import {
   ChurchRoles,
@@ -73,6 +74,14 @@ const Setting: NextPage = () => {
             icon={<FaFileInvoice />}
             onClick={() => router.push('/settings/generateChurchMeetingReport')}
             text="Generar Reporte de Servicio"
+          />
+        )}
+        {IsSupervisorRegisterOrKidChurchSupervisor() && (
+          <Grid.Item
+            key="Crear Reporte Regikids"
+            icon={<FaListCheck />}
+            onClick={() => router.push('/settings/reportRegistrationGroup')}
+            text="Crear Reporte Regikids"
           />
         )}
         {hasRequiredPermissions(ChurchRoles) && (
