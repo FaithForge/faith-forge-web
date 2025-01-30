@@ -98,13 +98,13 @@ const ReportRegistrationGroup: NextPage = () => {
   }, []);
 
   const generateReport = () => {
-    return `*Reporte de servicio*
+    return `*Reporte de servicio 📝*
 *- Fecha:* ${now}
 *- Sede:* ${state.church}
 *- Servicio:* ${state.meetingChurch}
 *- Grupo:* ${state.group}
     
-*Inventario*
+*Inventario ✅*
 *- Computadores*: ${state.computer}
 *- Forro de computadores*: ${state.computerCase}
 *- Cargadores de computadores*: ${state.computerCharger}
@@ -121,26 +121,26 @@ const ReportRegistrationGroup: NextPage = () => {
 *- Stickers cumpleaños (Niños)*: ${state.birthdayStickerBoy}
 *- Stickers cumpleaños (Niñas)*: ${state.birthdayStickerGirl}
 
-*Observaciones Generales*
+*Observaciones generales ℹ️*
 ${state.observationGeneral}
 
 ${
   state.observationComputer
-    ? `*Observaciones de computador*
+    ? `*Observaciones de computador 🖥️*
 ${state.observationComputer}
 
 `
     : ''
 }${
       state.observationPrinter
-        ? `*Observaciones de impresoras*
+        ? `*Observaciones de impresoras 🖨️*
 ${state.observationPrinter}
 
 `
         : ''
     }${
       state.observationElements
-        ? `*Observaciones de elementos*
+        ? `*Observaciones de elementos ✂️*
 ${state.observationElements}`
         : ''
     }`;
