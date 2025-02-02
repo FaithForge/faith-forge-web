@@ -106,16 +106,16 @@ const ReportRegistrationGroup: NextPage = () => {
     
 *Inventario ✅*
 *- Computadores*: ${state.computer}
-*- Forro de computadores*: ${state.computerCase}
+*- Forros de computadores*: ${state.computerCase}
 *- Cargadores de computadores*: ${state.computerCharger}
-*- Computador*: ${state.printerRolls}
 *- Impresoras*: ${state.printer}
 *- Cables de impresoras*: ${state.printerCables}
 *- Cargador de impresoras*: ${state.printerCharger}
+*- Rollos de Impresoras*: ${state.printerRolls}
 *- Tijeras*: ${state.scissors}
 *- Marcadores*: ${state.markers}
 *- Lapiceros*: ${state.pencils}
-*- Paquetes de stickers (Provisionales)*: ${state.stickerPacks}
+*- Paquetes de stickers provisionales*: ${state.stickerPacks}
 *- Stickers bienvenidos (Niños)*: ${state.welcomeStickerBoy}
 *- Stickers bienvenidos (Niñas)*: ${state.welcomeStickerGirl}
 *- Stickers cumpleaños (Niños)*: ${state.birthdayStickerBoy}
@@ -454,7 +454,7 @@ ${state.observationElements}`
         </Form.Item>
         <Form.Item
           name="stickerPacks"
-          label="Cantidad de paquetes de stickers"
+          label="Cantidad de paquetes de stickers provisionales"
           rules={[
             {
               required: true,
