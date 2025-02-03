@@ -29,6 +29,9 @@ const TagKidGroupApp = ({
     case 'Titos':
       color = '#00344D';
       break;
+    case 'Yo Soy Iglekids':
+      color = '#EFCB68';
+      break;
   }
 
   return (

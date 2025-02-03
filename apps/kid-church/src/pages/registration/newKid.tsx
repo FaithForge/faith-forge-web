@@ -113,7 +113,7 @@ const NewKid: NextPage = () => {
   }, [dispatch]);
 
   useEffect(() => {
-    dispatch(GetKidGroups());
+    dispatch(GetKidGroups({}));
     dispatch(GetKidMedicalConditions());
   }, [dispatch]);
 

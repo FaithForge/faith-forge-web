@@ -6,6 +6,7 @@ import { capitalizeWords } from '../utils/text';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { useRouter } from 'next/router';
+import { PiUserSwitchFill } from 'react-icons/pi';
 
 import {
   Button,
@@ -21,6 +22,7 @@ import {
   Notify,
   Skeleton,
   ImagePreview,
+  Dialog,
 } from 'react-vant';
 import { IsSupervisorRegisterKidChurch } from '../utils/auth';
 import { FFDay } from '../utils/ffDay';
@@ -29,6 +31,7 @@ import {
   AppDispatch,
   CreateKidRegistration,
   GetKid,
+  GetKidGroups,
   RemoveKidRegistration,
   ReprintKidRegistration,
   RootState,
@@ -36,6 +39,7 @@ import {
 import {
   IKidGuardian,
   KID_RELATION_CODE_MAPPER,
+  KidGroupType,
   KidGuardianRelationCodeEnum,
   USER_GENDER_CODE_MAPPER,
   UserGenderCode,
@@ -54,6 +58,8 @@ const KidRegistrationView = () => {
   const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<
     IKidGuardian | undefined
   >();
+  const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
+  const [isKidVolunteer, setIsKidVolunteer] = useState(false);
 
   const kidSlice = useSelector((state: RootState) => state.kidSlice);
   const kidRegistrationSlice = useSelector(
@@ -67,6 +73,7 @@ const KidRegistrationView = () => {
   useEffect(() => {
     if (kidSlice.current?.id) {
       dispatch(GetKid({ id: kidSlice.current.id }));
+      dispatch(GetKidGroups({ type: KidGroupType.SPECIAL }));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch, kidSlice.current?.id]);
@@ -80,7 +87,9 @@ const KidRegistrationView = () => {
       await dispatch(
         CreateKidRegistration({
           kidId: kidSlice.current.id,
-          kidGroupId: kidSlice.current.kidGroup?.id,
+          kidGroupId: isKidVolunteer
+            ? kidGroupSlice.data[0].id
+            : kidSlice.current.kidGroup?.id,
           kidGuardianId,
           observation,
         }),
@@ -197,10 +206,55 @@ const KidRegistrationView = () => {
               style={{ padding: 0 }}
             />
           ) : (
-            <TagKidGroupApp
-              kidGroup={kidSlice.current.kidGroup.name}
-              staticGroup={kidSlice.current.staticGroup}
-            />
+            <>
+              {kidSlice.current?.currentKidRegistration ? (
+                <>
+                  <TagKidGroupApp
+                    kidGroup={
+                      kidSlice.current?.currentKidRegistration.groupId !==
+                      kidSlice.current.kidGroup.id
+                        ? 'Yo Soy Iglekids'
+                        : kidSlice.current.kidGroup.name
+                    }
+                    staticGroup={
+                      kidSlice.current?.currentKidRegistration.groupId !==
+                      kidSlice.current.kidGroup.id
+                        ? false
+                        : kidSlice.current.staticGroup
+                    }
+                  />
+                </>
+              ) : (
+                <>
+                  <TagKidGroupApp
+                    kidGroup={
+                      isKidVolunteer
+                        ? kidGroupSlice.data[0].name
+                        : kidSlice.current.kidGroup.name
+                    }
+                    staticGroup={
+                      isKidVolunteer ? false : kidSlice.current.staticGroup
+                    }
+                  />
+                  <PiUserSwitchFill
+                    size={24}
+                    style={{
+                      paddingLeft: 10,
+                      verticalAlign: 'bottom',
+                    }}
+                    onClick={() =>
+                      Dialog.confirm({
+                        confirmButtonText: 'Confirmar',
+                        cancelButtonText: 'Cancelar',
+                        title: `Cambiar niño a ${isKidVolunteer ? 'recibir en Iglekids' : 'Yo Soy Iglekids'}`,
+                        message: `El niño sera cambiado ${isKidVolunteer ? 'para recibir en Iglekids' : 'al area de Yo Soy Iglekids'}. Por favor confirmar si desea realizar esta acción`,
+                        onConfirm: () => setIsKidVolunteer(!isKidVolunteer),
+                      })
+                    }
+                  />
+                </>
+              )}
+            </>
           )}
         </Flex.Item>
       </Flex>

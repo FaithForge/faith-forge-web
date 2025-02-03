@@ -64,7 +64,7 @@ const KidChurch: NextPage = () => {
 
   useEffect(() => {
     const currentDate = DateTime.local().toJSDate();
-    dispatch(GetKidGroups());
+    dispatch(GetKidGroups({}));
     dispatch(GetKidGroupRegistered({ date: currentDate }));
     const currentDay = DateTime.local().toFormat('EEEE');
     if (churchMeeting) {
@@ -158,13 +158,14 @@ const KidChurch: NextPage = () => {
           />
         )}
       </div>
+      {/* Bebes, Caminadores y Zaqueos */}
       <Grid
-        columnNum={3}
+        columnNum={2}
         gutter={8}
         style={{ backgroundColor: 'white', paddingBottom: 10 }}
       >
         {kidGroupSlice.data &&
-          kidGroupSlice.data.map((kidGroup: IKidGroup) => {
+          kidGroupSlice.data.slice(0, 4).map((kidGroup: IKidGroup) => {
             return (
               <Grid.Item
                 key={kidGroup.id}
@@ -209,7 +210,58 @@ const KidChurch: NextPage = () => {
             );
           })}
       </Grid>
-
+      {/*Jeremias, Timoteos, Titos y Yo Soy Iglekids */}
+      <Grid
+        columnNum={3}
+        gutter={8}
+        style={{ backgroundColor: 'white', paddingBottom: 10 }}
+      >
+        {kidGroupSlice.data &&
+          kidGroupSlice.data.slice(4).map((kidGroup: IKidGroup) => {
+            return (
+              <Grid.Item
+                key={kidGroup.id}
+                contentStyle={{
+                  backgroundColor:
+                    selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
+                }}
+                onClick={() => {
+                  if (selectedKidGroup !== kidGroup.id) {
+                    setSelectedKidGroup(kidGroup.id);
+                  } else {
+                    setSelectedKidGroup('');
+                  }
+                }}
+              >
+                <Typography.Text
+                  style={{
+                    color:
+                      selectedKidGroup === kidGroup.id
+                        ? PRIMARY_COLOR_APP
+                        : '#323232',
+                  }}
+                >
+                  {kidGroup.name}
+                </Typography.Text>
+                {loading ? (
+                  <Skeleton
+                    row={1}
+                    rowHeight={15}
+                    style={{ backgroundColor: '#EBEBEB' }}
+                  />
+                ) : (
+                  <Typography.Text style={{ color: '#969799' }}>{`Total: ${
+                    kids.length
+                      ? kids.filter(
+                          (kid: IKid) => kid.kidGroup?.id === kidGroup.id,
+                        ).length
+                      : 0
+                  }`}</Typography.Text>
+                )}
+              </Grid.Item>
+            );
+          })}
+      </Grid>
       {warningAlert.message && (
         <NoticeBar
           text={warningAlert.message}

@@ -3,6 +3,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Days } from '@faith-forge-web/common-types/constants';
 import { ReduxDefaultState } from './Redux';
+
+export enum ChurchMeetingStateEnum {
+  ACTIVE = 'ACTIVE',
+  ACTIVE_WITHOUT_DISPLAY = 'ACTIVE_WITHOUT_DISPLAY',
+  DISABLE = 'DISABLE',
+}
+
 export interface IChurch {
   id: string;
   name: string;
@@ -21,7 +28,7 @@ export interface IChurchMeeting {
   finalHour: Date;
   initialRegistrationHour: any;
   finalRegistrationHour: any;
-  active?: boolean;
+  state?: ChurchMeetingStateEnum;
 }
 
 export interface IPrinters {
@@ -29,12 +36,6 @@ export interface IPrinters {
   churchId?: string;
   name: string;
   active?: boolean;
-}
-
-export enum ChurchMeetingStateEnum {
-  ACTIVE = 'ACTIVE',
-  ACTIVE_WITHOUT_DISPLAY = 'ACTIVE_WITHOUT_DISPLAY',
-  DISABLE = 'DISABLE',
 }
 
 export interface IChurches extends ReduxDefaultState<IChurch> {}

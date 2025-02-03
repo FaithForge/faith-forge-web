@@ -8,6 +8,24 @@ const Changelog: NextPage = () => {
     <Layout>
       <NavBarApp title="Registros de Cambios" />
       <Collapse initExpanded={['1']}>
+        <Collapse.Item title="V 2.1.0 - 02 de febrero del 2025" name="1">
+          <ul>
+            <li>
+              1. Se añade reporte de area para Regikids (Opción solamente para
+              supervisores y coordinadores del area)
+            </li>
+            <li>
+              2. Se añade un nuevo grupo de niños llamado &quot;Yo Soy
+              Iglekids&quot;. Son un grupo especial de niños que sirven en el
+              area de Iglekids.
+            </li>
+            <li>
+              3. Se añade switch para marcar si un niño va servir en la iglesia
+              de niños o va a servir en &quot;Yo Soy Iglekids&quot;
+            </li>
+            <li>4. Cambios y fixes menores.</li>
+          </ul>
+        </Collapse.Item>
         <Collapse.Item title="V 2.0.0 - 13 de enero del 2025" name="1">
           <ul>
             <li>

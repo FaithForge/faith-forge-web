@@ -1,4 +1,5 @@
 import { HttpRequestMethod, MS } from '@faith-forge-web/common-types/global';
+import { KidGroupType } from '@faith-forge-web/models';
 import { microserviceApiRequest } from '@faith-forge-web/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { DateTime } from 'luxon';
@@ -6,7 +7,7 @@ import { RootState } from '../../store';
 
 export const GetKidGroups = createAsyncThunk(
   'kid-church/GetKidGroups',
-  async (_, { getState }) => {
+  async (payload: { type?: KidGroupType }, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -15,6 +16,11 @@ export const GetKidGroups = createAsyncThunk(
         method: HttpRequestMethod.GET,
         url: `/kid-groups`,
         options: {
+          params: payload
+            ? {
+                type: payload.type,
+              }
+            : {},
           headers: { Authorization: `Bearer ${token}` },
         },
       })

@@ -140,6 +140,12 @@ export const kidRelationSelect = [
   },
 ];
 
+/** Kid Group Type Enum */
+export enum KidGroupType {
+  NORMAL = 'NORMAL',
+  SPECIAL = 'SPECIAL',
+}
+
 // GET
 
 export interface IKid {
@@ -199,6 +205,7 @@ export interface IKidGroup {
   description?: string;
   initialMonth?: string;
   finalMonth?: string;
+  type?: KidGroupType;
   active?: boolean;
 }
 
