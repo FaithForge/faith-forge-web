@@ -1,7 +1,3 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
 :root:root {
   --rv-primary-color: #004863;
 }
