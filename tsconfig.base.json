@@ -26,7 +26,10 @@
       "@faith-forge-web/state/redux": ["libs/state/redux/src/index.ts"],
       "@faith-forge-web/utils/auth": ["libs/utils/auth/src/index.ts"],
       "@faith-forge-web/utils/http": ["libs/utils/http/src/index.ts"],
-      "@faith-forge-web/utils/image": ["libs/utils/image/src/index.ts"]
+      "@faith-forge-web/utils/image": ["libs/utils/image/src/index.ts"],
+      "@faith-forge/web-mobile-ui": [
+        "libs/faith-forge/web-mobile-ui/src/index.ts"
+      ]
     }
   },
   "exclude": ["node_modules", "tmp"]

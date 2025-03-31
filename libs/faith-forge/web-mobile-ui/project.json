@@ -1,0 +1,32 @@
+{
+  "name": "web-mobile-ui",
+  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/faith-forge/web-mobile-ui/src",
+  "projectType": "library",
+  "release": {
+    "version": {
+      "generatorOptions": {
+        "packageRoot": "dist/{projectRoot}",
+        "currentVersionResolver": "git-tag"
+      }
+    }
+  },
+  "tags": [],
+  "targets": {
+    "build": {
+      "executor": "@nx/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "options": {
+        "outputPath": "dist/libs/faith-forge/web-mobile-ui",
+        "main": "libs/faith-forge/web-mobile-ui/src/index.ts",
+        "tsConfig": "libs/faith-forge/web-mobile-ui/tsconfig.lib.json",
+        "assets": ["libs/faith-forge/web-mobile-ui/*.md"]
+      }
+    },
+    "nx-release-publish": {
+      "options": {
+        "packageRoot": "dist/{projectRoot}"
+      }
+    }
+  }
+}
