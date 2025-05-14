@@ -1,9 +1,0 @@
-{
-  "name": "utils-http",
-  "$schema": "../../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "libs/utils/http/src",
-  "projectType": "library",
-  "tags": [],
-  "// targets": "to see all targets run: nx show project utils-http --web",
-  "targets": {}
-}
