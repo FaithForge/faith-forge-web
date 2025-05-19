@@ -24,11 +24,7 @@ import { FaShareAlt } from 'react-icons/fa';
 import { churchGroupOptions } from '@/libs/common-types/constants';
 import { MS, HttpRequestMethod } from '@/libs/common-types/global';
 import { ChurchMeetingStateEnum } from '@/libs/models';
-import {
-  AppDispatch,
-  RootState,
-  updateUserChurchGroup,
-} from '@/libs/state/redux';
+import { AppDispatch, RootState } from '@/libs/state/redux';
 import { FFDay } from '@/libs/utils/ffDay';
 import { microserviceApiRequest } from '@/libs/utils/http';
 
@@ -72,11 +68,8 @@ const ReportRegistrationGroup: NextPage = () => {
   });
   const [visible, setVisible] = useState(false);
 
-  const onFinish = (values: any) => {
-    const churchGroup = values.churchGroup;
-
+  const onFinish = () => {
     setVisible(true);
-    dispatch(updateUserChurchGroup(churchGroup));
   };
 
   useEffect(() => {

@@ -27,7 +27,7 @@ function MyApp({ Component, pageProps }: AppProps) {
           </Head>
           {/* <SafeArea position="top" /> */}
           <Component {...pageProps} />
-          <Setup />
+          {/* <Setup /> */}
           {/* <SafeArea position="bottom" /> */}
         </PersistGate>
       </ConfigProvider>

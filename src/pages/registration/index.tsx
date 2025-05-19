@@ -5,25 +5,13 @@ import { useEffect, useState } from 'react';
 import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
 
-import {
-  Cell,
-  Empty,
-  List,
-  NoticeBar,
-  Search,
-  Image,
-  Skeleton,
-  Overlay,
-} from 'react-vant';
+import { Cell, Empty, List, Image, Skeleton, Overlay } from 'react-vant';
 import {
   hasRequiredPermissions,
   withRoles,
 } from '../../components/Permissions';
 import { Layout } from '../../components/Layout';
 import { IoIosArrowForward } from 'react-icons/io';
-import { AiOutlineQrcode } from 'react-icons/ai';
-import FloatingBubbleApp from '../../components/FloatingBubbleApp';
-import { AiOutlineUserAdd } from 'react-icons/ai';
 import {
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
@@ -39,6 +27,10 @@ import {
 } from '@/libs/state/redux';
 import { ChurchRoles, KidChurchRegisterRoles } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
+import { PiCaretRight, PiWarning, PiX } from 'react-icons/pi';
+import Alert from '@/components/Alert';
+import HomeNavBar from '@/components/navbar/HomeNavBar';
+import { ColorType } from '@/libs/common-types/constants/theme';
 
 const Registration: NextPage = () => {
   const {
@@ -69,6 +61,9 @@ const Registration: NextPage = () => {
 
   useEffect(() => {
     dispatch(GetKids({ findText }));
+  }, [dispatch, pathname]);
+
+  useEffect(() => {
     const currentDay = DateTime.local().toFormat('EEEE');
     if (churchMeeting && churchPrinterSlice.current) {
       let warning = false;
@@ -107,7 +102,7 @@ const Registration: NextPage = () => {
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dispatch, findText, pathname]);
+  }, [churchMeeting, churchPrinterSlice.current]);
 
   const getMoreKids = async () => {
     dispatch(GetMoreKids({ findText }));
@@ -120,19 +115,22 @@ const Registration: NextPage = () => {
 
   return (
     <Layout>
+      <HomeNavBar findText={findText} setFindText={setFindText} />
       {warningAlert.message && (
-        <NoticeBar
-          wrapable
-          mode="link"
-          text={warningAlert.message}
-          background={warningAlert.blockRegister ? '#da342e' : 'alert'}
-          color={warningAlert.blockRegister ? 'white' : 'alert'}
+        <Alert
+          title={warningAlert.message}
+          type={
+            warningAlert.blockRegister ? ColorType.ERROR : ColorType.WARNING
+          }
           onClick={() => router.push('/settings/churchInfo')}
-          style={{ zIndex: 3 }}
+          icon={warningAlert.blockRegister ? <PiX /> : <PiWarning />}
+          iconRight={
+            warningAlert.blockRegister ? <PiCaretRight /> : <PiCaretRight />
+          }
         />
       )}
 
-      <Search
+      {/* <Search
         shape="round"
         placeholder="Buscar Niño"
         onSearch={(value) => setFindText(value)}
@@ -143,27 +141,12 @@ const Registration: NextPage = () => {
           top: '0',
           zIndex: 2,
         }}
+      /> */}
+      <Alert
+        title={`Impresora: ${churchPrinterSlice.current?.name}`}
+        subtitle={`Reunión: ${churchMeeting?.name} (${church?.name})`}
+        type={ColorType.INFO}
       />
-
-      <NoticeBar
-        color="#fff"
-        background="#397b9d"
-        wrapable={true}
-        scrollable={false}
-      >
-        <b>Impresora:</b> {churchPrinterSlice.current?.name}
-        <br />
-        <div
-          style={{
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            maxWidth: '100%',
-          }}
-        >
-          <b>Reunión:</b> {churchMeeting?.name} ({church?.name})
-        </div>
-      </NoticeBar>
 
       {loading ? (
         <>
@@ -258,21 +241,6 @@ const Registration: NextPage = () => {
           </List>
         </>
       )}
-      <FloatingBubbleApp
-        icon={<AiOutlineUserAdd style={{ fontSize: '32px', color: 'white' }} />}
-        right={20}
-        bottom={70}
-        size={50}
-        onClick={() => router.push('/registration/newKid')}
-      />
-      <FloatingBubbleApp
-        icon={<AiOutlineQrcode style={{ fontSize: '32px', color: 'white' }} />}
-        right={20}
-        bottom={140}
-        size={50}
-        backgroundColor="#334551"
-        onClick={() => router.push('/registration/qrReader')}
-      />
       {/* <NoticeBar leftIcon={<FaInfo />}>
         <Swiper autoplay={3000} indicator={false} className="notice-swipe">
           <Swiper.Item>Servicio actual: {churchMeeting?.name}</Swiper.Item>

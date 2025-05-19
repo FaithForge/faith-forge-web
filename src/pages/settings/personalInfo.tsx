@@ -7,11 +7,7 @@ import { useEffect } from 'react';
 import { Button, Form, Input, Picker } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import { churchGroupOptions } from '@/libs/common-types/constants';
-import {
-  AppDispatch,
-  RootState,
-  updateUserChurchGroup,
-} from '@/libs/state/redux';
+import { AppDispatch, RootState } from '@/libs/state/redux';
 import { UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { checkLastNameField } from '@/libs/utils/validator';
@@ -26,7 +22,6 @@ const PersonalInfo: NextPage = () => {
   const onFinish = (values: any) => {
     const churchGroup = values.churchGroup;
 
-    dispatch(updateUserChurchGroup(churchGroup));
     router.back();
   };
 

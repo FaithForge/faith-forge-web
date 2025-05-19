@@ -1,4 +1,4 @@
-export interface SelectorOptionApp {
+export interface SelectorOption {
   id: string;
   name: string;
 }

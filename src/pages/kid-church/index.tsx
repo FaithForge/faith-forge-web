@@ -37,6 +37,7 @@ import {
 import { ChurchRoles, KidChurchSupervisorRoles } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { PRIMARY_COLOR_APP } from '@/libs/utils/theme';
+import HomeNavBar from '@/components/navbar/HomeNavBar';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
@@ -128,19 +129,7 @@ const KidChurch: NextPage = () => {
   return (
     <Layout>
       <div style={{ position: 'sticky', top: '0', zIndex: 2 }}>
-        <Search
-          placeholder="Buscar Niño"
-          onChange={(value) => setFindText(value)}
-          onSearch={(value) => setFindText(value)}
-          onCancel={() => setFindText('')}
-          background="#fbfcff"
-          style={{
-            height: '49px',
-            padding: '10px 5px 5px 5px',
-            backgroundColor: 'white',
-          }}
-        />
-
+        <HomeNavBar findText={findText} setFindText={setFindText} />
         {loading ? (
           <Skeleton
             row={1}

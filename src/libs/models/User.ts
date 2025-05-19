@@ -1,4 +1,5 @@
-import { SelectorOptionApp } from '../common-types/global';
+import { SelectorOption } from '../common-types/global';
+import { UserRole } from '../utils/auth';
 import { ReduxDefaultStateWithoutData } from './Redux';
 
 export enum UserGender {
@@ -88,7 +89,7 @@ export interface IUser {
   photoUrl?: string;
   username?: string;
   healthSecurityEntity?: string;
-  roles: string[];
+  roles: UserRole[];
 }
 
 export interface IUpdateUser {
@@ -106,7 +107,7 @@ export interface IUpdateUser {
   healthSecurityEntity?: string;
 }
 
-export const healthSecurityEntitySelect: SelectorOptionApp[] = [
+export const healthSecurityEntitySelect: SelectorOption[] = [
   { id: 'COOSALUD EPS-S', name: 'COOSALUD EPS-S' },
   { id: 'NUEVA EPS', name: 'NUEVA EPS' },
   { id: 'MUTUAL SER', name: 'MUTUAL SER' },

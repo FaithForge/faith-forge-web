@@ -1,3 +1,4 @@
+import _ from 'lodash';
 import { useSelector } from 'react-redux';
 import { RootState } from '../state/redux';
 
@@ -47,7 +48,6 @@ export const KidChurchAndRegisterSupervisorRoles = [
 ];
 
 export const KidChurchRegisterRoles = [
-  ...AdminRoles,
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
   UserRole.KID_REGISTER_USER,
@@ -64,6 +64,12 @@ export const Test = [UserRole.KID_GROUP_USER];
 const GetUserRoles = () => {
   const { user } = useSelector((state: RootState) => state.authSlice);
   return user?.roles as UserRole[];
+};
+
+export const IsAdmin = () => {
+  const roles = GetUserRoles();
+  if (!roles) return false;
+  return roles.some((role) => AdminRoles.includes(role));
 };
 
 export const IsAdminRegisterKidChurch = () => {
@@ -100,4 +106,35 @@ export const IsRegisterKidChurch = () => {
 
 export const IsAllRole = () => {
   return true;
+};
+
+const userRolePriority: Record<UserRole, number> = {
+  SUPER_ADMIN: 1,
+  ADMIN: 2,
+  STAFF: 3,
+  KID_CHURCH_ADMIN: 4,
+  KID_REGISTER_ADMIN: 5,
+  KID_GROUP_ADMIN: 5,
+  KID_REGISTER_SUPERVISOR: 6,
+  KID_GROUP_SUPERVISOR: 6,
+  KID_REGISTER_USER: 7,
+  KID_GROUP_USER: 7,
+  USER: 8,
+  KID: 9,
+};
+
+export const sortUserRolesByPriority = (roles: UserRole[]): UserRole[] => {
+  return _.orderBy(
+    roles,
+    (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER,
+    'asc',
+  );
+};
+
+export const getMainUserRole = (roles?: UserRole[]): UserRole | undefined => {
+  if (!roles) roles = GetUserRoles();
+  return _.minBy(
+    roles,
+    (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER,
+  );
 };

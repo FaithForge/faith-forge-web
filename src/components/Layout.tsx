@@ -1,13 +1,22 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { AuthWrapper } from './AuthWrapper';
-import { Tabbar } from 'react-vant';
 import { Search, SettingO, SmileO } from '@react-vant/icons';
 import {
   IsAllRole,
   IsRegisterKidChurch,
   IsSupervisorKidChurch,
+  UserRole,
 } from '@/libs/utils/auth';
+import { PiGearSix, PiPlusCircle, PiPrinter, PiQrCode } from 'react-icons/pi';
+import KidRegistrationSettingsModal from './modal/KidRegistrationSettingsModal';
+import { useSelector } from 'react-redux';
+import { RootState } from '@/libs/state/redux';
+import KidRegistrationLayout from './layouts/KidRegistrationLayout';
+import React from 'react';
+import DefaultLayout from './layouts/DefaultLayout';
+import KidChurchLayout from './layouts/KidChurchLayout';
+import AdminLayout from './layouts/AdminLayout';
 
 type Props = {
   children?: React.ReactNode;
@@ -34,51 +43,36 @@ const tabs = [
   },
 ];
 
+const userRoleLayoutMap: Record<
+  UserRole,
+  React.ComponentType<{ children: React.ReactNode }>
+> = {
+  [UserRole.KID_REGISTER_ADMIN]: KidRegistrationLayout,
+  [UserRole.KID_REGISTER_SUPERVISOR]: KidRegistrationLayout,
+  [UserRole.KID_REGISTER_USER]: KidRegistrationLayout,
+  [UserRole.KID_GROUP_ADMIN]: KidChurchLayout,
+  [UserRole.KID_GROUP_SUPERVISOR]: KidChurchLayout,
+  [UserRole.KID_GROUP_USER]: KidChurchLayout,
+  [UserRole.SUPER_ADMIN]: AdminLayout,
+  [UserRole.ADMIN]: AdminLayout,
+  [UserRole.STAFF]: DefaultLayout,
+  [UserRole.KID]: DefaultLayout,
+  [UserRole.USER]: DefaultLayout,
+  [UserRole.KID_CHURCH_ADMIN]: DefaultLayout,
+};
+
 export const Layout = ({ children }: Props) => {
-  const [paddingSize, setPaddingSize] = useState({ width: 0, height: 0 });
-  const pathname = usePathname();
-  const router = useRouter();
-  useEffect(() => {
-    const TabBar = document.querySelector('.TabBarApp') as HTMLElement;
-    if (TabBar) {
-      const width = TabBar.offsetWidth;
-      const height = TabBar.offsetHeight;
-      setPaddingSize({ width, height });
-    }
-  }, []);
+  const authSlice = useSelector((state: RootState) => state.authSlice);
+  const currentRole = authSlice.currentRole;
+
+  let layoutComponent = currentRole && userRoleLayoutMap[currentRole];
+  let LayoutComponent = layoutComponent as React.ComponentType<{
+    children: React.ReactNode;
+  }>;
 
   return (
     <AuthWrapper>
-      <div style={{ minHeight: '100vh' }}>
-        <div
-          style={{
-            paddingBottom: paddingSize.height > 0 ? paddingSize.height : 50,
-          }}
-        >
-          {children}
-        </div>
-        <Tabbar
-          value={`/${pathname.split('/')[1]}`}
-          onChange={(value) => router.push(value as string)}
-          className="TabBarApp"
-          zIndex={10}
-          // style={{
-          //   position: 'fixed',
-          //   bottom: '0',
-          //   left: '0',
-          //   width: '100%',
-          //   backgroundColor: '#f5f5f5',
-          // }}
-        >
-          {tabs.map((item) =>
-            item.show() ? (
-              <Tabbar.Item key={item.key} name={item.key} icon={item.icon}>
-                {item.title}
-              </Tabbar.Item>
-            ) : null,
-          )}
-        </Tabbar>
-      </div>
+      <LayoutComponent>{children}</LayoutComponent>
     </AuthWrapper>
   );
 };

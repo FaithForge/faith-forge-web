@@ -9,15 +9,15 @@ import {
   Typography,
 } from 'react-vant';
 import { CiSearch } from 'react-icons/ci';
-import { SelectorOptionApp } from '@/libs/common-types/global';
+import { SelectorOption } from '@/libs/common-types/global';
 
 interface ModalCheckerProps {
-  options: SelectorOptionApp[];
+  options: SelectorOption[];
   placeholder: string;
-  emptyOption?: SelectorOptionApp;
+  emptyOption?: SelectorOption;
   searchButtonText?: string;
-  value?: SelectorOptionApp;
-  onChange?: (value: SelectorOptionApp) => void;
+  value?: SelectorOption;
+  onChange?: (value: SelectorOption) => void;
 }
 
 export const ModalCheckerApp: FC<ModalCheckerProps> = ({

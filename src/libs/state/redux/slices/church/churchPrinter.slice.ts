@@ -32,6 +32,7 @@ const churchPrinterSlice = createSlice({
     });
     builder.addCase(GetChurchPrinters.fulfilled, (state, action) => {
       state.data = action.payload;
+      state.current = action.payload[0];
       state.error = initialState.error;
       state.loading = false;
     });

@@ -1,6 +1,6 @@
+import { IChurchMeetings } from '@/libs/models';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { GetChurchMeetings } from '../../thunks/church/church.thunk';
-import { IChurchMeetings } from '@/libs/models';
 
 const initialState: IChurchMeetings = {
   data: [],
@@ -32,6 +32,7 @@ const churchMeetingSlice = createSlice({
     });
     builder.addCase(GetChurchMeetings.fulfilled, (state, action) => {
       state.data = action.payload;
+      state.current = action.payload[0];
       state.error = undefined;
       state.loading = false;
     });

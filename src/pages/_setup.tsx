@@ -12,7 +12,6 @@ import {
   AppDispatch,
   updateCurrentChurch,
   updateCurrentChurchMeeting,
-  updateUserChurchGroup,
   updateCurrentChurchPrinter,
   GetChurches,
   GetChurchMeetings,
@@ -49,7 +48,6 @@ const Setup: NextPage = () => {
     if (church && churchMeeting && churchGroup) {
       await dispatch(updateCurrentChurch(church));
       await dispatch(updateCurrentChurchMeeting(churchMeeting));
-      await dispatch(updateUserChurchGroup(churchGroup));
 
       if (churchPrinter && isRegisterKidChurch) {
         await dispatch(updateCurrentChurchPrinter(churchPrinter));

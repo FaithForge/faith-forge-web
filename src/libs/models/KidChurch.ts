@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
+import { UserRole } from '../utils/auth';
 import {
   ReduxDefaultState,
   ReduxDefaultStateWithPagination,
@@ -218,6 +219,7 @@ export interface IKidMedicalCondition {
 
 export interface IAuth extends ReduxDefaultStateWithoutData {
   user?: IUser;
+  currentRole?: UserRole;
   token: string;
 }
 

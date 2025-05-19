@@ -6,8 +6,13 @@ import styled from 'styled-components';
 import { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, Image, Dialog } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
-import { RootState, AppDispatch, UserLogin } from '@/libs/state/redux';
-import { IsRegisterKidChurch, IsSupervisorKidChurch } from '@/libs/utils/auth';
+import {
+  RootState,
+  AppDispatch,
+  UserLogin,
+  GetChurches,
+} from '@/libs/state/redux';
+import { getMainUserRole, UserRole } from '@/libs/utils/auth';
 
 const CenteredContainer = styled.div`
   display: flex;
@@ -24,8 +29,7 @@ const Login: NextPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const isRegisterKidChurch = IsRegisterKidChurch();
-  const isSupervisorKidChurch = IsSupervisorKidChurch();
+  const mainRole = getMainUserRole();
 
   const onLogin = async (values: any) => {
     setIsLoading(true);
@@ -51,16 +55,53 @@ const Login: NextPage = () => {
       }
 
       setInitialCheckDone(false);
+      dispatch(GetChurches(false));
 
-      if (isRegisterKidChurch) {
-        router.push('/registration');
-        return;
+      switch (mainRole) {
+        case UserRole.SUPER_ADMIN:
+          router.push('/admin');
+          break;
+        case UserRole.ADMIN:
+          router.push('/admin');
+          break;
+        case UserRole.STAFF:
+          router.push('/');
+          break;
+
+        case UserRole.KID:
+          router.push('/');
+          break;
+        case UserRole.USER:
+          router.push('/');
+          break;
+
+        // Kid MS Roles
+        case UserRole.KID_CHURCH_ADMIN:
+          router.push('/kid-church');
+          break;
+        case UserRole.KID_REGISTER_ADMIN:
+          router.push('/registration');
+          break;
+        case UserRole.KID_REGISTER_SUPERVISOR:
+          router.push('/registration');
+          break;
+        case UserRole.KID_REGISTER_USER:
+          router.push('/registration');
+          break;
+        case UserRole.KID_GROUP_ADMIN:
+          router.push('/kid-church');
+          break;
+        case UserRole.KID_GROUP_SUPERVISOR:
+          router.push('/kid-church');
+          break;
+        case UserRole.KID_GROUP_USER:
+          router.push('/kid-church');
+          break;
+
+        default:
+          router.push('/');
+          break;
       }
-      if (isSupervisorKidChurch) {
-        router.push('/kid-church');
-        return;
-      }
-      router.push('/settings');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authSlice.token, authSlice.error, initialCheckDone]);

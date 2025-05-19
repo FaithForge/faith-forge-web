@@ -1,3 +1,8 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: winter --default;
+ };
+
 :root:root {
   --rv-primary-color: #004863;
 }

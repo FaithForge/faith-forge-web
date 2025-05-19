@@ -14,7 +14,7 @@ export interface IChurch {
   name: string;
   description?: string;
   meetings?: IChurchMeeting[];
-  printers?: IPrinters[];
+  printers?: IChurchPrinter[];
 }
 
 export interface IChurchMeeting {
@@ -30,7 +30,7 @@ export interface IChurchMeeting {
   state?: ChurchMeetingStateEnum;
 }
 
-export interface IPrinters {
+export interface IChurchPrinter {
   id: string;
   churchId?: string;
   name: string;
@@ -39,4 +39,4 @@ export interface IPrinters {
 
 export interface IChurches extends ReduxDefaultState<IChurch> {}
 export interface IChurchMeetings extends ReduxDefaultState<IChurchMeeting> {}
-export interface IChurchPrinters extends ReduxDefaultState<IPrinters> {}
+export interface IChurchPrinters extends ReduxDefaultState<IChurchPrinter> {}
