@@ -1,18 +1,30 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { PersistGate } from 'redux-persist/integration/react';
 import { persistStore } from 'redux-persist';
-import Setup from './_setup';
 import { ConfigProvider } from 'react-vant';
 import './theme.css';
 import { DM_Sans } from 'next/font/google';
 import { store, Providers } from '@/libs/state/redux';
 import { themeVars } from '@/libs/utils/theme';
 const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
+import { useRouter } from 'next/router';
+
+const BLOCKED_ROUTES = ['/', '/admin', '/registration', '/kid-church'];
 
 function MyApp({ Component, pageProps }: AppProps) {
   const persistor = persistStore(store);
+  const router = useRouter();
+
+  useEffect(() => {
+    router.beforePopState(() => {
+      if (BLOCKED_ROUTES.includes(router.pathname)) {
+        return false;
+      }
+      return true;
+    });
+  }, [router.pathname]);
 
   return (
     <Providers>
