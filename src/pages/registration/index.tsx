@@ -122,7 +122,12 @@ const Registration: NextPage = () => {
           type={
             warningAlert.blockRegister ? ColorType.ERROR : ColorType.WARNING
           }
-          onClick={() => router.push('/settings/churchInfo')}
+          onClick={() => {
+            const dialog = document.getElementById(
+              'settingsKidRegistrationModal',
+            ) as HTMLDialogElement | null;
+            dialog?.showModal();
+          }}
           icon={warningAlert.blockRegister ? <PiX /> : <PiWarning />}
           iconRight={
             warningAlert.blockRegister ? <PiCaretRight /> : <PiCaretRight />

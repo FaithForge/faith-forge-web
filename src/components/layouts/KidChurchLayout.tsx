@@ -30,10 +30,6 @@ const KidChurchLayout = ({ children }: Props) => {
       <div style={{ minHeight: '100vh' }}>
         {children}
         <div className="dock">
-          <button onClick={() => router.push('/registration/qrReader')}>
-            <PiQrCode className="h-8 w-8" />
-            <span className="dock-label">Escanear QR</span>
-          </button>
           <button onClick={() => router.push('/kid-church')}>
             <PiUserList className="h-8 w-8" />
             <span className="dock-label">Niños Registrados</span>

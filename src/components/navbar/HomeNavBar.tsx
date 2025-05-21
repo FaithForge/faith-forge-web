@@ -190,19 +190,16 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
 
         <div className="flex-none">
           <div className="dropdown dropdown-end">
-            <div
-              tabIndex={0}
-              role="button"
-              className="btn btn-ghost btn-circle avatar"
-            >
-              <div className="w-8 rounded-full">
-                <img
-                  alt="Tailwind CSS Navbar component"
-                  src="https://img.daisyui.com/images/stock/photo-1534528741775-53994a69daeb.webp"
-                />
+            <div tabIndex={0} className="avatar avatar-placeholder">
+              <div
+                className={`text-black w-8 rounded-full ${currentRole && userRolesNavBarConfig[currentRole]?.color}`}
+              >
+                <span>
+                  {authSlice.user?.firstName?.charAt(0).toUpperCase() ?? ''}
+                  {authSlice.user?.lastName?.charAt(0).toUpperCase() ?? ''}
+                </span>
               </div>
             </div>
-
             <ul
               tabIndex={0}
               className="menu menu-md dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
