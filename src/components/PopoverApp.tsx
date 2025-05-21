@@ -1,6 +1,5 @@
 import React, { ReactNode } from 'react';
 import { Popover } from 'react-vant';
-import { PopoverAction } from 'react-vant/es/popover/PropsType';
 
 export interface PopoverAppAction {
   key: string;
@@ -14,7 +13,7 @@ export const PopoverApp = (payload: {
   icon: ReactNode;
 }) => {
   const { actions, icon } = payload;
-  const select = (option: PopoverAction) => {
+  const select = (option: any) => {
     const action = actions.find(
       (action: PopoverAppAction) => action.text === option.text,
     );
