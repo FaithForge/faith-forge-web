@@ -126,7 +126,7 @@ const Setting: NextPage = () => {
                   duration: 5000,
                   type: 'success',
                 });
-                router.push('/login');
+                router.push('/');
               },
             })
           }

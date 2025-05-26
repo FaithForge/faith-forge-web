@@ -48,7 +48,7 @@ const userRolesNavBarConfig: Partial<
   KID_REGISTER_ADMIN: {
     color: 'bg-green-600',
     text: 'Coordinador Regikids',
-    dashboardUrl: '/registration',
+    dashboardUrl: '/kid-registration',
   },
   KID_GROUP_ADMIN: {
     color: 'bg-pink-600',
@@ -58,7 +58,7 @@ const userRolesNavBarConfig: Partial<
   KID_REGISTER_SUPERVISOR: {
     color: 'bg-green-600',
     text: 'Supervisor Regikids',
-    dashboardUrl: '/registration',
+    dashboardUrl: '/kid-registration',
   },
   KID_GROUP_SUPERVISOR: {
     color: 'bg-amber-400',
@@ -68,12 +68,12 @@ const userRolesNavBarConfig: Partial<
   KID_REGISTER_USER: {
     color: 'bg-green-600',
     text: 'Maestro Regikids',
-    dashboardUrl: '/registration',
+    dashboardUrl: '/kid-registration',
   },
   KID_GROUP_USER: {
     color: 'bg-amber-400',
     text: 'Maestro Iglekids',
-    dashboardUrl: '/registration',
+    dashboardUrl: '/kid-registration',
   },
   // USER: {
   //   color: 'bg-amber-400',
@@ -252,7 +252,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
             duration: 5000,
             type: 'success',
           });
-          router.push('/login');
+          router.push('/');
         }}
         cancelButtonText="Cancelar"
         cancelButtonType={ColorType.INFO}

@@ -149,7 +149,7 @@ const QRReader: NextPage = () => {
       icon: <AiOutlineQrcode />,
       text: 'Generar QR Acudiente',
       onClick: () => {
-        router.push('/registration/generateQRKidGuardian');
+        router.push('/kid-registration/generateQRKidGuardian');
       },
     },
   ];

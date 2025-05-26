@@ -101,17 +101,6 @@ const Users: NextPage = () => {
           <Empty description="No se encontraron registros" />
         )}
       </List>
-
-      {/* <FloatingBubble
-        style={{
-          '--initial-position-bottom': '70px',
-          '--initial-position-right': '20px',
-          '--edge-distance': '24px',
-        }}
-        onClick={() => router.push('/registration/newKid')}
-      >
-        <UserAddOutlined style={{ fontSize: '28px' }} />
-      </FloatingBubble> */}
     </Layout>
   );
 };

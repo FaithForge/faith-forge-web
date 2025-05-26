@@ -3,7 +3,7 @@
   "background_color": "#ffffff",
   "display": "standalone",
   "scope": "/",
-  "start_url": "/registration",
+  "start_url": "/",
   "name": "DEV - Iglekids",
   "short_name": "DEV -Iglekids",
   "description": "Aplicativo para el registro y control de niños en Rios de Vida - AMBIENTE DEV",

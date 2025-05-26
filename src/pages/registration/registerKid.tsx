@@ -24,7 +24,7 @@ const RegisterKidView: NextPage = () => {
       icon: <MdEdit />,
       text: 'Actualizar datos del niño',
       onClick: () => {
-        router.push('/registration/updateKid');
+        router.push('/kid-registration/updateKid');
       },
     },
     {

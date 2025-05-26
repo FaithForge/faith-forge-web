@@ -3,7 +3,7 @@
   "background_color": "#ffffff",
   "display": "standalone",
   "scope": "/",
-  "start_url": "/registration",
+  "start_url": "/",
   "name": "Iglekids",
   "short_name": "Iglekids",
   "description": "Aplicativo para el registro y control de niños en Rios de Vida",

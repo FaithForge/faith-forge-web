@@ -28,7 +28,7 @@ export const AuthWrapper = ({ children }: Props) => {
   const authSlice = useSelector((state: RootState) => state.authSlice);
 
   if (!authSlice.token || authSlice.token === '') {
-    push('/login');
+    push('/');
     dispatch(logout());
     toastLogout();
     return;
@@ -41,7 +41,7 @@ export const AuthWrapper = ({ children }: Props) => {
     dispatch(resetChurchState());
     dispatch(resetChurchMeetingState());
     dispatch(resetChurchPrinterState());
-    push('/login');
+    push('/');
     toastLogout();
     dispatch(logout());
   }

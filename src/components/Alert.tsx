@@ -18,7 +18,14 @@ const Alert: React.FC<AlertProps> = ({
   iconRight,
   onClick,
 }) => {
-  const confirmAlertTheme = `alert-${type}`;
+  const alertThemes: Record<ColorType, string> = {
+    success: 'alert-success',
+    error: 'alert-error',
+    warning: 'alert-warning',
+    info: 'alert-info',
+  };
+
+  const confirmAlertTheme = alertThemes[type];
 
   return (
     <div

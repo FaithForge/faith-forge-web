@@ -24,7 +24,7 @@ type Props = {
 
 const tabs = [
   {
-    key: '/registration',
+    key: '/kid-registration',
     title: 'Registro',
     icon: <Search />,
     show: () => IsRegisterKidChurch(),

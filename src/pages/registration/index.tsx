@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
 
-import { Cell, Empty, List, Image, Skeleton, Overlay } from 'react-vant';
+import { Empty, List, Image, Skeleton, Overlay } from 'react-vant';
 import {
   hasRequiredPermissions,
   withRoles,
@@ -31,6 +31,7 @@ import { PiCaretRight, PiWarning, PiX } from 'react-icons/pi';
 import Alert from '@/components/Alert';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import { ColorType } from '@/libs/common-types/constants/theme';
+import Cell from '@/components/Cell';
 
 const Registration: NextPage = () => {
   const {
@@ -110,7 +111,7 @@ const Registration: NextPage = () => {
 
   const registerKidViewHandler = (kid: IKid) => {
     dispatch(updateCurrentKid(kid));
-    router.push('/registration/registerKid');
+    router.push('/kid-registration/registerKid');
   };
 
   return (
@@ -182,81 +183,61 @@ const Registration: NextPage = () => {
             loadingText={'Buscando...'}
             finishedText={'Hemos llegado al final :)'}
           >
-            {kids.length ? (
-              kids.map((kid: IKid) => (
-                <Cell
-                  clickable={warningAlert.blockRegister && !isAdmin}
-                  key={kid.faithForgeId}
-                  border={true}
-                  style={{
-                    backgroundColor: kid.currentKidRegistration
-                      ? '#ebebeb'
-                      : kid.age >= 12
-                        ? '#ffdad6'
-                        : 'white',
-                  }}
-                  icon={
-                    <Image
-                      alt={`${kid.firstName} ${kid.lastName}`}
-                      src={
-                        kid.photoUrl
-                          ? kid.photoUrl
-                          : kid.gender === UserGenderCode.MALE
-                            ? '/icons/boy-v2.png'
-                            : '/icons/girl-v2.png'
-                      }
-                      style={{ borderRadius: '50%' }}
-                      fit="cover"
-                      width={44}
-                      height={44}
-                    />
-                  }
-                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-                  label={
-                    kid.age < 12
-                      ? `Codigo: ${kid.faithForgeId} ${
-                          kid.currentKidRegistration
-                            ? `(Registrado a las ${dayjs(
-                                kid.currentKidRegistration.date.toString(),
-                              )
-                                .locale('es')
-                                .format('h:mm:ss A')})`
-                            : ''
-                        }`
-                      : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
-                  }
-                  isLink
-                  size="large"
-                  rightIcon={
-                    <IoIosArrowForward
-                      style={{
-                        height: kid.age < 12 || isAdmin ? '3em' : '0em',
-                        width: '1.2em',
-                      }}
-                    />
-                  }
-                  onClick={() =>
-                    kid.age < 12 || isAdmin ? registerKidViewHandler(kid) : null
-                  }
-                />
-              ))
-            ) : (
-              <Empty description="No se encontraron registros" />
-            )}
+            <ul className="list bg-base-100 rounded-box">
+              {kids.length ? (
+                kids.map((kid: IKid) => (
+                  <Cell
+                    disable={warningAlert.blockRegister && !isAdmin}
+                    key={kid.faithForgeId}
+                    title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+                    urlImage={
+                      kid.photoUrl
+                        ? kid.photoUrl
+                        : kid.gender === UserGenderCode.MALE
+                          ? '/icons/boy-v2.png'
+                          : '/icons/girl-v2.png'
+                    }
+                    label={
+                      kid.age < 12
+                        ? `Codigo: ${kid.faithForgeId} ${
+                            kid.currentKidRegistration
+                              ? `(Registrado a las ${dayjs(
+                                  kid.currentKidRegistration.date.toString(),
+                                )
+                                  .locale('es')
+                                  .format('h:mm:ss A')})`
+                              : ''
+                          }`
+                        : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
+                    }
+                    bgColorClass={
+                      kid.currentKidRegistration && 'bg-neutral-200'
+                    }
+                    bgHoverColorClass={
+                      kid.currentKidRegistration && 'hover:bg-neutral-300'
+                    }
+                    onClick={() =>
+                      kid.age < 12 || isAdmin
+                        ? registerKidViewHandler(kid)
+                        : null
+                    }
+                    iconRight={
+                      <IoIosArrowForward
+                        style={{
+                          height: kid.age < 12 || isAdmin ? '3em' : '0em',
+                          width: '1.2em',
+                        }}
+                      />
+                    }
+                  />
+                ))
+              ) : (
+                <Empty description="No se encontraron registros" />
+              )}
+            </ul>
           </List>
         </>
       )}
-      {/* <NoticeBar leftIcon={<FaInfo />}>
-        <Swiper autoplay={3000} indicator={false} className="notice-swipe">
-          <Swiper.Item>Servicio actual: {churchMeeting?.name}</Swiper.Item>
-          <Swiper.Item>
-            Impresora: {churchPrinterSlice.current?.name}
-          </Swiper.Item>
-          <Swiper.Item>
-            Impresora: {churchPrinterSlice.current?.name}
-          </Swiper.Item>
-        </Swiper>
-      </NoticeBar> */}
     </Layout>
   );
 };

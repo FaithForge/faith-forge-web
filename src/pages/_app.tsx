@@ -11,7 +11,7 @@ import { themeVars } from '@/libs/utils/theme';
 const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
 import { useRouter } from 'next/router';
 
-const BLOCKED_ROUTES = ['/', '/admin', '/registration', '/kid-church'];
+const BLOCKED_ROUTES = ['/', '/admin', '/kid-registration', '/kid-church'];
 
 function MyApp({ Component, pageProps }: AppProps) {
   const persistor = persistStore(store);
@@ -39,7 +39,6 @@ function MyApp({ Component, pageProps }: AppProps) {
           </Head>
           {/* <SafeArea position="top" /> */}
           <Component {...pageProps} />
-          {/* <Setup /> */}
           {/* <SafeArea position="bottom" /> */}
         </PersistGate>
       </ConfigProvider>

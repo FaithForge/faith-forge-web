@@ -38,11 +38,11 @@ const KidRegistrationLayout = ({ children }: Props) => {
       <div className="pb-20" style={{ minHeight: '100vh' }}>
         {children}
         <div className="dock">
-          <button onClick={() => router.push('/registration/qrReader')}>
+          <button onClick={() => router.push('/kid-registration/qrReader')}>
             <PiQrCode className="h-8 w-8" />
             <span className="dock-label">Escanear QR</span>
           </button>
-          <button onClick={() => router.push('/registration/newKid')}>
+          <button onClick={() => router.push('/kid-registration/newKid')}>
             <PiPlusCircle className="h-8 w-8" />
             <span className="dock-label">Crear niño</span>
           </button>
