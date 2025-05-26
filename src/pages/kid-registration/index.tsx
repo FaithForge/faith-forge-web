@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
 
-import { Empty, List, Image, Skeleton, Overlay } from 'react-vant';
+import { Empty, List, Skeleton, Overlay } from 'react-vant';
 import {
   hasRequiredPermissions,
   withRoles,

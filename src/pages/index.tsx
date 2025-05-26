@@ -18,9 +18,61 @@ const Login: NextPage = () => {
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const redirect = () => {
+    switch (mainRole) {
+      case UserRole.SUPER_ADMIN:
+        router.push('/admin');
+        break;
+      case UserRole.ADMIN:
+        router.push('/admin');
+        break;
+      case UserRole.STAFF:
+        router.push('/');
+        break;
+
+      case UserRole.KID:
+        router.push('/');
+        break;
+      case UserRole.USER:
+        router.push('/');
+        break;
+
+      // Kid MS Roles
+      case UserRole.KID_CHURCH_ADMIN:
+        router.push('/kid-church');
+        break;
+      case UserRole.KID_REGISTER_ADMIN:
+        router.push('/kid-registration');
+        break;
+      case UserRole.KID_REGISTER_SUPERVISOR:
+        router.push('/kid-registration');
+        break;
+      case UserRole.KID_REGISTER_USER:
+        router.push('/kid-registration');
+        break;
+      case UserRole.KID_GROUP_ADMIN:
+        router.push('/kid-church');
+        break;
+      case UserRole.KID_GROUP_SUPERVISOR:
+        router.push('/kid-church');
+        break;
+      case UserRole.KID_GROUP_USER:
+        router.push('/kid-church');
+        break;
+
+      default:
+        router.push('/');
+        break;
+    }
+  };
+
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
   const mainRole = getMainUserRole();
+
+  useEffect(() => {
+    if (mainRole) redirect();
+  }, []);
 
   const onLogin = async (values: any) => {
     setIsLoading(true);
@@ -47,55 +99,12 @@ const Login: NextPage = () => {
 
       setInitialCheckDone(false);
       dispatch(GetChurches(false));
-
-      switch (mainRole) {
-        case UserRole.SUPER_ADMIN:
-          router.push('/admin');
-          break;
-        case UserRole.ADMIN:
-          router.push('/admin');
-          break;
-        case UserRole.STAFF:
-          router.push('/');
-          break;
-
-        case UserRole.KID:
-          router.push('/');
-          break;
-        case UserRole.USER:
-          router.push('/');
-          break;
-
-        // Kid MS Roles
-        case UserRole.KID_CHURCH_ADMIN:
-          router.push('/kid-church');
-          break;
-        case UserRole.KID_REGISTER_ADMIN:
-          router.push('/kid-registration');
-          break;
-        case UserRole.KID_REGISTER_SUPERVISOR:
-          router.push('/kid-registration');
-          break;
-        case UserRole.KID_REGISTER_USER:
-          router.push('/kid-registration');
-          break;
-        case UserRole.KID_GROUP_ADMIN:
-          router.push('/kid-church');
-          break;
-        case UserRole.KID_GROUP_SUPERVISOR:
-          router.push('/kid-church');
-          break;
-        case UserRole.KID_GROUP_USER:
-          router.push('/kid-church');
-          break;
-
-        default:
-          router.push('/');
-          break;
-      }
+      redirect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [authSlice.token, authSlice.error, initialCheckDone]);
+
+  if (mainRole) return null;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen">

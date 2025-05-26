@@ -243,10 +243,10 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
         confirmButtonText="Cerrar sesión"
         confirmButtonType={ColorType.SUCCESS}
         onConfirm={async () => {
+          dispatch(logout());
           dispatch(resetChurchState());
           dispatch(resetChurchMeetingState());
           dispatch(resetChurchPrinterState());
-          await dispatch(logout());
           Notify.show({
             message: 'Se ha cerrado la sesión',
             duration: 5000,
