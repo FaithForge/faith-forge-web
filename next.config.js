@@ -11,4 +11,13 @@ const withPWA = require('next-pwa')({
 module.exports = withPWA({
   reactStrictMode: true,
   transpilePackages: ['react-vant'],
+  async redirects() {
+    return [
+      {
+        source: '/login',
+        destination: '/', // reemplaza con la nueva ruta
+        permanent: true,
+      },
+    ];
+  },
 });

@@ -29,7 +29,7 @@ export function withRoles(Component: any, requiredPermissions: UserRole[]) {
     if (hasPermission) {
       return <Component {...props} />;
     } else {
-      router.push('/settings');
+      router.push('/');
       return null;
     }
   };

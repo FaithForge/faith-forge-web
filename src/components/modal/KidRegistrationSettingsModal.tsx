@@ -9,6 +9,7 @@ import {
   AppDispatch,
   GetChurchMeetings,
   GetChurchPrinters,
+  GetKids,
   RootState,
   updateCurrentChurch,
   updateCurrentChurchMeeting,
@@ -74,7 +75,10 @@ const KidRegistrationSettingsModal = () => {
     <dialog id="settingsKidRegistrationModal" className="modal modal-center">
       <div className="modal-box">
         <form method="dialog">
-          <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+          <button
+            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            onClick={() => dispatch(GetKids({ findText: '' }))}
+          >
             ✕
           </button>
         </form>
@@ -177,7 +181,12 @@ const KidRegistrationSettingsModal = () => {
           </fieldset>
           <div className="divider"></div>
           <form method="dialog">
-            <button className="btn btn-block btn-success">Finalizar</button>
+            <button
+              className="btn btn-block btn-success"
+              onClick={() => dispatch(GetKids({ findText: '' }))}
+            >
+              Finalizar
+            </button>
           </form>
         </div>
       </div>

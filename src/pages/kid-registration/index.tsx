@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
 
-import { Empty, List, Skeleton, Overlay } from 'react-vant';
+import { Empty, List, Skeleton } from 'react-vant';
 import {
   hasRequiredPermissions,
   withRoles,
@@ -168,15 +168,6 @@ const Registration: NextPage = () => {
         </>
       ) : (
         <>
-          <Overlay
-            zIndex={2}
-            visible={warningAlert.blockRegister && !isAdmin}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          />
           <List
             onLoad={getMoreKids}
             finished={currentPage >= totalPages}
@@ -190,12 +181,17 @@ const Registration: NextPage = () => {
                     disable={warningAlert.blockRegister && !isAdmin}
                     key={kid.faithForgeId}
                     title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-                    urlImage={
-                      kid.photoUrl
-                        ? kid.photoUrl
-                        : kid.gender === UserGenderCode.MALE
-                          ? '/icons/boy-v2.png'
-                          : '/icons/girl-v2.png'
+                    icon={
+                      <img
+                        className="size-10 rounded-box"
+                        src={
+                          kid.photoUrl
+                            ? kid.photoUrl
+                            : kid.gender === UserGenderCode.MALE
+                              ? '/icons/boy-v2.png'
+                              : '/icons/girl-v2.png'
+                        }
+                      />
                     }
                     label={
                       kid.age < 12

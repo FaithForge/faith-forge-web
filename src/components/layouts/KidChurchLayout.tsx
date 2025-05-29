@@ -1,9 +1,10 @@
 import { RootState } from '@/libs/state/redux';
 import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
-import { PiGearSix, PiQrCode, PiUserList } from 'react-icons/pi';
+import { PiFileText, PiGearSix, PiQrCode, PiUserList } from 'react-icons/pi';
 import { useSelector } from 'react-redux';
 import KidChurchSettingsModal from '../modal/KidChurchSettingsModal';
+import KidChurchReportModal from '../modal/KidChurchReportModal';
 
 type Props = {
   children?: React.ReactNode;
@@ -44,6 +45,10 @@ const KidChurchLayout = ({ children }: Props) => {
           >
             <PiGearSix className="h-8 w-8" />
             <span className="dock-label">Configurar</span>
+          </button>
+          <button onClick={() => router.push('/kid-church/report')}>
+            <PiFileText className="h-8 w-8" />
+            <span className="dock-label">Reporte</span>
           </button>
         </div>
       </div>

@@ -7,7 +7,6 @@ type AlertProps = {
   bgColorClass?: string;
   bgHoverColorClass?: string;
   label?: string;
-  urlImage: string;
   icon?: React.ReactNode;
   iconRight?: React.ReactNode;
   onClick?: () => void;
@@ -19,7 +18,6 @@ const Cell: React.FC<AlertProps> = ({
   disable = false,
   title,
   label,
-  urlImage,
   icon,
   iconRight,
   onClick,
@@ -33,9 +31,7 @@ const Cell: React.FC<AlertProps> = ({
 
   return (
     <li className={classList} onClick={disable ? undefined : onClick}>
-      <div>
-        <img className="size-10 rounded-box" src={urlImage} />
-      </div>
+      <div>{icon}</div>
       <div>
         <div>{title}</div>
         {label && <div className="text-xs opacity-60">{label}</div>}

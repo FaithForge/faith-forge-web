@@ -13,7 +13,11 @@ import {
   resetChurchState,
   RootState,
 } from '@/libs/state/redux';
-import { IsRegisterKidChurch, UserRole } from '@/libs/utils/auth';
+import {
+  IsRegisterKidChurch,
+  IsSupervisorRegisterOrKidChurchSupervisor,
+  UserRole,
+} from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import ConfirmationModal from '../modal/ConfirmationModal';
 import { ColorType } from '@/libs/common-types/constants/theme';
@@ -61,7 +65,7 @@ const userRolesNavBarConfig: Partial<
     dashboardUrl: '/kid-registration',
   },
   KID_GROUP_SUPERVISOR: {
-    color: 'bg-amber-400',
+    color: 'bg-purple-600',
     text: 'Supervisor Iglekids',
     dashboardUrl: '/kid-church',
   },
@@ -154,7 +158,8 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
           ) : null}
         </div>
 
-        {IsRegisterKidChurch() && (
+        {(IsSupervisorRegisterOrKidChurchSupervisor() ||
+          IsRegisterKidChurch()) && (
           <div className="flex-1 mx-2">
             <label className="input input-ghost">
               <svg

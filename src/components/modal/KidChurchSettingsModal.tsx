@@ -9,11 +9,13 @@ import {
   AppDispatch,
   GetChurchMeetings,
   GetChurchPrinters,
+  GetKidGroupRegistered,
   RootState,
   updateCurrentChurch,
   updateCurrentChurchMeeting,
   updateCurrentChurchPrinter,
 } from '@/libs/state/redux';
+import { DateTime } from 'luxon';
 import React, { useEffect } from 'react';
 import { PiPrinter } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
@@ -61,7 +63,13 @@ const KidChurchSettingsModal = () => {
     <dialog id="settingsKidChurchModal" className="modal modal-center">
       <div className="modal-box">
         <form method="dialog">
-          <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
+          <button
+            className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+            onClick={() => {
+              const currentDate = DateTime.local().toJSDate();
+              dispatch(GetKidGroupRegistered({ date: currentDate }));
+            }}
+          >
             ✕
           </button>
         </form>
@@ -131,7 +139,15 @@ const KidChurchSettingsModal = () => {
           </fieldset>
           <div className="divider"></div>
           <form method="dialog">
-            <button className="btn btn-block btn-success">Finalizar</button>
+            <button
+              className="btn btn-block btn-success"
+              onClick={() => {
+                const currentDate = DateTime.local().toJSDate();
+                dispatch(GetKidGroupRegistered({ date: currentDate }));
+              }}
+            >
+              Finalizar
+            </button>
           </form>
         </div>
       </div>
