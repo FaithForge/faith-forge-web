@@ -12,8 +12,30 @@ import {
   GetChurches,
 } from '@/libs/state/redux';
 import { getMainUserRole, UserRole } from '@/libs/utils/auth';
+import { SubmitHandler, useForm } from 'react-hook-form';
+
+interface IFormLoginInput {
+  username: string;
+  password: string;
+}
 
 const Login: NextPage = () => {
+  const {
+    register,
+    formState: { errors },
+    handleSubmit,
+  } = useForm<IFormLoginInput>();
+  const onSubmit: SubmitHandler<IFormLoginInput> = async (data) => {
+    setIsLoading(true);
+    const username = data.username.toLowerCase().trim();
+    const password = data.password;
+
+    await dispatch(UserLogin({ username, password }));
+
+    setInitialCheckDone(true);
+    setIsLoading(false);
+  };
+
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -74,17 +96,6 @@ const Login: NextPage = () => {
     if (mainRole) redirect();
   }, []);
 
-  const onLogin = async (values: any) => {
-    setIsLoading(true);
-    const username = values.username.toLowerCase().trim();
-    const password = values.password;
-
-    await dispatch(UserLogin({ username, password }));
-
-    setInitialCheckDone(true);
-    setIsLoading(false);
-  };
-
   useEffect(() => {
     if (initialCheckDone) {
       if (authSlice.error || authSlice.token === '') {
@@ -107,55 +118,48 @@ const Login: NextPage = () => {
   if (mainRole) return null;
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen">
+    <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
       {isLoading ? <LoadingMask /> : ''}
       <div style={{ paddingBottom: 20 }}>
         <Image alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
       </div>
-      <Card style={{ width: '350px' }}>
-        <Form
-          layout="vertical"
-          onFinish={async (values) => await onLogin(values)}
-          footer={
-            <>
-              <Form.Item style={{ paddingTop: 20 }}>
-                <Button block nativeType="submit" type="primary" size="large">
-                  Iniciar sesión
-                </Button>
-              </Form.Item>
-
-              <p style={{ textAlign: 'center' }}>V 2.2.0 Beta</p>
-            </>
-          }
+      <form onSubmit={handleSubmit(onSubmit)} className="w-4/5 md:w-1/3 px-4">
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Usuario/Email</legend>
+          <input
+            type="text"
+            className={`input ${errors.username && 'input-error'} w-full`}
+            placeholder="Ingresa tu usuario/email"
+            {...register('username', { required: true })}
+          />
+          {errors.username && (
+            <p className="label text-red-700">
+              Por favor escribe tu email o usuario
+            </p>
+          )}
+        </fieldset>
+        <fieldset className="fieldset">
+          <legend className="fieldset-legend">Contraseña</legend>
+          <input
+            type="password"
+            className={`input ${errors.password && 'input-error'} w-full`}
+            placeholder="Ingresa tu contraseña"
+            {...register('password', { min: 6, required: true })}
+          />
+          {errors.password && (
+            <p className="label text-red-700">
+              Por favor, escribe tu contraseña
+            </p>
+          )}
+        </fieldset>
+        <button
+          className={'btn btn-block mt-4 btn-lg bg-blue-950'}
+          type="submit"
         >
-          <Form.Item
-            name="username"
-            label="Usuario/Email"
-            rules={[
-              {
-                required: true,
-                message: 'Por favor escribe tu email o usuario',
-              },
-            ]}
-          >
-            <Input placeholder="Ingresa tu usuario/email" />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label="Contraseña"
-            rules={[
-              { required: true, message: 'Por favor, escribe tu contraseña' },
-            ]}
-          >
-            <Input
-              placeholder="Ingresa tu contraseña"
-              type="password"
-              minLength={6}
-              maxLength={16}
-            />
-          </Form.Item>
-        </Form>
-      </Card>
+          <span className="text-white">Iniciar sesión</span>
+        </button>
+        <p className="text-center pt-4">V 2.2.0 Beta</p>
+      </form>
     </div>
   );
 };
