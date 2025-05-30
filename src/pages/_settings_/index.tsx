@@ -26,6 +26,7 @@ import {
   IsRegisterKidChurch,
   IsSupervisorRegisterOrKidChurchSupervisor,
   ChurchRoles,
+  GetUserRoles,
 } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 
@@ -33,6 +34,7 @@ const Setting: NextPage = () => {
   const router = useRouter();
   const dispatch = useDispatch();
   const authSlice = useSelector((state: RootState) => state.authSlice);
+  const roles = GetUserRoles();
 
   return (
     <Layout>
@@ -60,7 +62,7 @@ const Setting: NextPage = () => {
           text="Configuración de Iglesia"
           onClick={() => router.push('/settings/churchInfo')}
         />
-        {IsRegisterKidChurch() && (
+        {IsRegisterKidChurch(roles) && (
           <Grid.Item
             key="Configuración de Impresora"
             icon={<FaPrint />}
@@ -68,7 +70,7 @@ const Setting: NextPage = () => {
             text="Configuración de Impresora"
           />
         )}
-        {IsSupervisorRegisterOrKidChurchSupervisor() && (
+        {IsSupervisorRegisterOrKidChurchSupervisor(roles) && (
           <Grid.Item
             key="Generar Reporte de Servicio"
             icon={<FaFileInvoice />}
@@ -76,7 +78,7 @@ const Setting: NextPage = () => {
             text="Generar Reporte de Servicio"
           />
         )}
-        {IsSupervisorRegisterOrKidChurchSupervisor() && (
+        {IsSupervisorRegisterOrKidChurchSupervisor(roles) && (
           <Grid.Item
             key="Crear Reporte Regikids"
             icon={<FaListCheck />}

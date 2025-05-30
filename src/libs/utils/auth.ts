@@ -61,46 +61,42 @@ export const KidChurchGroupRoles = [
 
 export const Test = [UserRole.KID_GROUP_USER];
 
-const GetUserRoles = () => {
+export const GetUserRoles = () => {
   const { user } = useSelector((state: RootState) => state.authSlice);
   return user?.roles as UserRole[];
 };
 
-export const IsAdmin = () => {
-  const roles = GetUserRoles();
-  if (!roles) return false;
+export const IsAdmin = (roles: UserRole[]) => {
+  if (!roles?.length) return false;
   return roles.some((role) => AdminRoles.includes(role));
 };
 
-export const IsAdminRegisterKidChurch = () => {
-  const roles = GetUserRoles();
-  if (!roles) return false;
+export const IsAdminRegisterKidChurch = (roles: UserRole[]) => {
+  if (!roles?.length) return false;
   return roles.some((role) => KidChurchAdminRoles.includes(role));
 };
 
-export const IsSupervisorRegisterKidChurch = () => {
-  const roles = GetUserRoles();
-  if (!roles) return false;
+export const IsSupervisorRegisterKidChurch = (roles: UserRole[]) => {
+  if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterSupervisorRoles.includes(role));
 };
 
-export const IsSupervisorRegisterOrKidChurchSupervisor = () => {
-  const roles = GetUserRoles();
-  if (!roles) return false;
+export const IsSupervisorRegisterOrKidChurchSupervisor = (
+  roles: UserRole[],
+) => {
+  if (!roles?.length) return false;
   return roles.some((role) =>
     KidChurchAndRegisterSupervisorRoles.includes(role),
   );
 };
 
-export const IsSupervisorKidChurch = () => {
-  const roles = GetUserRoles();
-  if (!roles) return false;
+export const IsSupervisorKidChurch = (roles: UserRole[]) => {
+  if (!roles?.length) return false;
   return roles.some((role) => KidChurchSupervisorRoles.includes(role));
 };
 
-export const IsRegisterKidChurch = () => {
-  const roles = GetUserRoles();
-  if (!roles) return false;
+export const IsRegisterKidChurch = (roles: UserRole[]) => {
+  if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterRoles.includes(role));
 };
 
@@ -131,8 +127,7 @@ export const sortUserRolesByPriority = (roles: UserRole[]): UserRole[] => {
   );
 };
 
-export const getMainUserRole = (roles?: UserRole[]): UserRole | undefined => {
-  if (!roles) roles = GetUserRoles();
+export const getMainUserRole = (roles: UserRole[]): UserRole | undefined => {
   return _.minBy(
     roles,
     (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER,

@@ -14,6 +14,7 @@ import {
   RootState,
 } from '@/libs/state/redux';
 import {
+  GetUserRoles,
   IsRegisterKidChurch,
   IsSupervisorRegisterOrKidChurchSupervisor,
   UserRole,
@@ -90,6 +91,7 @@ const userRolesNavBarConfig: Partial<
 };
 
 const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
+  const roles = GetUserRoles();
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const currentRole = authSlice.currentRole;
   const userRoles = authSlice.user?.roles;
@@ -158,8 +160,8 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
           ) : null}
         </div>
 
-        {(IsSupervisorRegisterOrKidChurchSupervisor() ||
-          IsRegisterKidChurch()) && (
+        {(IsSupervisorRegisterOrKidChurchSupervisor(roles) ||
+          IsRegisterKidChurch(roles)) && (
           <div className="flex-1 mx-2">
             <label className="input input-ghost">
               <svg
@@ -249,15 +251,16 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
         confirmButtonType={ColorType.SUCCESS}
         onConfirm={async () => {
           dispatch(logout());
-          dispatch(resetChurchState());
-          dispatch(resetChurchMeetingState());
-          dispatch(resetChurchPrinterState());
+          router.push('/');
           Notify.show({
             message: 'Se ha cerrado la sesión',
             duration: 5000,
             type: 'success',
           });
-          router.push('/');
+
+          dispatch(resetChurchState());
+          dispatch(resetChurchMeetingState());
+          dispatch(resetChurchPrinterState());
         }}
         cancelButtonText="Cancelar"
         cancelButtonType={ColorType.INFO}

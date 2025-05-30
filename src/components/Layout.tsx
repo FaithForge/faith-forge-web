@@ -1,15 +1,5 @@
-import { useEffect, useState } from 'react';
-import { usePathname, useRouter } from 'next/navigation';
 import { AuthWrapper } from './AuthWrapper';
-import { Search, SettingO, SmileO } from '@react-vant/icons';
-import {
-  IsAllRole,
-  IsRegisterKidChurch,
-  IsSupervisorKidChurch,
-  UserRole,
-} from '@/libs/utils/auth';
-import { PiGearSix, PiPlusCircle, PiPrinter, PiQrCode } from 'react-icons/pi';
-import KidRegistrationSettingsModal from './modal/KidRegistrationSettingsModal';
+import { UserRole } from '@/libs/utils/auth';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/state/redux';
 import KidRegistrationLayout from './layouts/KidRegistrationLayout';
@@ -21,27 +11,6 @@ import AdminLayout from './layouts/AdminLayout';
 type Props = {
   children?: React.ReactNode;
 };
-
-const tabs = [
-  {
-    key: '/kid-registration',
-    title: 'Registro',
-    icon: <Search />,
-    show: () => IsRegisterKidChurch(),
-  },
-  {
-    key: '/kid-church',
-    title: 'Iglekids',
-    icon: <SmileO />,
-    show: () => IsSupervisorKidChurch(),
-  },
-  {
-    key: '/settings',
-    title: 'Configuración',
-    icon: <SettingO />,
-    show: () => IsAllRole(),
-  },
-];
 
 const userRoleLayoutMap: Record<
   UserRole,

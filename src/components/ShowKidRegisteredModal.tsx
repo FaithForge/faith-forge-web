@@ -10,7 +10,7 @@ import {
   IKidGuardian,
   KidGuardianRelationCodeEnum,
 } from '@/libs/models';
-import { IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
+import { GetUserRoles, IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
 import { FFDay } from '@/libs/utils/ffDay';
 import { capitalizeWords } from '@/libs/utils/text';
 
@@ -21,6 +21,7 @@ type Props = {
 };
 
 const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
+  const roles = GetUserRoles();
   const closeModal = () => {
     onClose(false);
   };
@@ -221,7 +222,7 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                       </Flex.Item>
                     </>
                   )}
-                  {IsSupervisorRegisterKidChurch() &&
+                  {IsSupervisorRegisterKidChurch(roles) &&
                     kid.currentKidRegistration?.log && (
                       <>
                         <Flex.Item span={12} style={{ fontWeight: 'bold' }}>

@@ -44,7 +44,7 @@ import {
   RemoveKidRegistration,
   ReprintKidRegistration,
 } from '@/libs/state/redux';
-import { IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
+import { GetUserRoles, IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
 import { FFDay } from '@/libs/utils/ffDay';
 import { capitalizeWords } from '@/libs/utils/text';
 
@@ -53,6 +53,7 @@ const KidRegistrationView = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [action, setAction] = useState<string>();
+  const roles = GetUserRoles();
   const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] =
     useState(false);
   const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<
@@ -513,7 +514,7 @@ const KidRegistrationView = () => {
                     </Flex.Item>
                   </>
                 )}
-                {IsSupervisorRegisterKidChurch() &&
+                {IsSupervisorRegisterKidChurch(roles) &&
                   kidSlice.current?.currentKidRegistration?.log && (
                     <>
                       <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
@@ -590,7 +591,7 @@ const KidRegistrationView = () => {
               Reimprimir registro
             </Button>
           </div>
-          {IsSupervisorRegisterKidChurch() && (
+          {IsSupervisorRegisterKidChurch(roles) && (
             <div style={{ paddingTop: 10, paddingBottom: 10 }}>
               <Button
                 loading={kidRegistrationSlice.loading && action === 'remove'}

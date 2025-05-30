@@ -11,7 +11,7 @@ import {
   UserLogin,
   GetChurches,
 } from '@/libs/state/redux';
-import { getMainUserRole, UserRole } from '@/libs/utils/auth';
+import { getMainUserRole, GetUserRoles, UserRole } from '@/libs/utils/auth';
 import { SubmitHandler, useForm } from 'react-hook-form';
 
 interface IFormLoginInput {
@@ -36,6 +36,7 @@ const Login: NextPage = () => {
     setIsLoading(false);
   };
 
+  const roles = GetUserRoles();
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -90,7 +91,7 @@ const Login: NextPage = () => {
 
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const mainRole = getMainUserRole();
+  const mainRole = getMainUserRole(roles);
 
   useEffect(() => {
     if (mainRole) redirect();
