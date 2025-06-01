@@ -25,24 +25,15 @@ export enum UserRole {
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
 export const KidChurchAdminRoles = [
-  ...AdminRoles,
   UserRole.KID_CHURCH_ADMIN,
   UserRole.KID_REGISTER_ADMIN,
 ];
-export const KidGroupAdminRoles = [
-  ...KidChurchAdminRoles,
-  UserRole.KID_GROUP_ADMIN,
-];
+export const KidGroupAdminRoles = [UserRole.KID_GROUP_ADMIN];
 export const KidChurchRegisterSupervisorRoles = [
-  ...KidGroupAdminRoles,
   UserRole.KID_REGISTER_SUPERVISOR,
 ];
-export const KidChurchSupervisorRoles = [
-  ...KidGroupAdminRoles,
-  UserRole.KID_GROUP_SUPERVISOR,
-];
+export const KidChurchSupervisorRoles = [UserRole.KID_GROUP_SUPERVISOR];
 export const KidChurchAndRegisterSupervisorRoles = [
-  ...KidGroupAdminRoles,
   UserRole.KID_GROUP_SUPERVISOR,
   UserRole.KID_REGISTER_SUPERVISOR,
 ];
@@ -53,7 +44,6 @@ export const KidChurchRegisterRoles = [
   UserRole.KID_REGISTER_USER,
 ];
 export const KidChurchGroupRoles = [
-  ...KidGroupAdminRoles,
   UserRole.KID_GROUP_ADMIN,
   UserRole.KID_GROUP_SUPERVISOR,
   UserRole.KID_GROUP_USER,

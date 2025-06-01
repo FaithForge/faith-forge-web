@@ -45,13 +45,13 @@ const userRolesNavBarConfig: Partial<
   //   color: 'bg-amber-400',
   //   text: 'Staff',
   // },
-  KID_CHURCH_ADMIN: {
-    color: 'bg-amber-400',
-    text: 'Administrador Iglekids',
-    dashboardUrl: '/kid-church',
-  },
+  // KID_CHURCH_ADMIN: {
+  //   color: 'bg-amber-400',
+  //   text: 'Administrador Iglesia',
+  //   dashboardUrl: '/kid-church',
+  // },
   KID_REGISTER_ADMIN: {
-    color: 'bg-green-600',
+    color: 'bg-green-800',
     text: 'Coordinador Regikids',
     dashboardUrl: '/kid-registration',
   },
@@ -61,7 +61,7 @@ const userRolesNavBarConfig: Partial<
     dashboardUrl: '/kid-church',
   },
   KID_REGISTER_SUPERVISOR: {
-    color: 'bg-green-600',
+    color: 'bg-green-700',
     text: 'Supervisor Regikids',
     dashboardUrl: '/kid-registration',
   },

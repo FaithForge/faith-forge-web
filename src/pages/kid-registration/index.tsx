@@ -25,7 +25,11 @@ import {
   GetMoreKids,
   updateCurrentKid,
 } from '@/libs/state/redux';
-import { ChurchRoles, KidChurchRegisterRoles } from '@/libs/utils/auth';
+import {
+  ChurchRoles,
+  KidChurchRegisterRoles,
+  UserRole,
+} from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { PiCaretRight, PiWarning, PiX } from 'react-icons/pi';
 import Alert from '@/components/Alert';
@@ -49,7 +53,9 @@ const Registration: NextPage = () => {
   const churchPrinterSlice = useSelector(
     (state: RootState) => state.churchPrinterSlice,
   );
-  const isAdmin = hasRequiredPermissions(ChurchRoles);
+  const authSlice = useSelector((state: RootState) => state.authSlice);
+  const currentRole = authSlice.currentRole;
+
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
   const router = useRouter();
@@ -178,7 +184,10 @@ const Registration: NextPage = () => {
               {kids.length ? (
                 kids.map((kid: IKid) => (
                   <Cell
-                    disable={warningAlert.blockRegister && !isAdmin}
+                    disable={
+                      warningAlert.blockRegister &&
+                      currentRole !== UserRole.KID_REGISTER_ADMIN
+                    }
                     key={kid.faithForgeId}
                     title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
                     icon={
@@ -213,14 +222,19 @@ const Registration: NextPage = () => {
                       kid.currentKidRegistration && 'hover:bg-neutral-300'
                     }
                     onClick={() =>
-                      kid.age < 12 || isAdmin
+                      kid.age < 12 ||
+                      currentRole === UserRole.KID_REGISTER_ADMIN
                         ? registerKidViewHandler(kid)
                         : null
                     }
                     iconRight={
                       <IoIosArrowForward
                         style={{
-                          height: kid.age < 12 || isAdmin ? '3em' : '0em',
+                          height:
+                            kid.age < 12 ||
+                            currentRole === UserRole.KID_REGISTER_ADMIN
+                              ? '3em'
+                              : '0em',
                           width: '1.2em',
                         }}
                       />
