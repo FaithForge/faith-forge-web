@@ -22,34 +22,43 @@ export enum UserRole {
   KID_GROUP_USER = 'KID_GROUP_USER',
 }
 
+// ADMIN ROLES
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
+
+
 export const KidChurchAdminRoles = [
   UserRole.KID_CHURCH_ADMIN,
   UserRole.KID_REGISTER_ADMIN,
 ];
+
 export const KidGroupAdminRoles = [UserRole.KID_GROUP_ADMIN];
-export const KidChurchRegisterSupervisorRoles = [
-  UserRole.KID_REGISTER_SUPERVISOR,
+
+export const KidChurchSupervisorRoles = [
+  ...KidChurchAdminRoles,
+  UserRole.KID_GROUP_SUPERVISOR,
 ];
-export const KidChurchSupervisorRoles = [UserRole.KID_GROUP_SUPERVISOR];
+
 export const KidChurchAndRegisterSupervisorRoles = [
   UserRole.KID_GROUP_SUPERVISOR,
   UserRole.KID_REGISTER_SUPERVISOR,
 ];
 
+// Kid Registration
+export const KidChurchRegisterSupervisorRoles = [
+  UserRole.KID_REGISTER_SUPERVISOR,
+];
 export const KidChurchRegisterRoles = [
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
   UserRole.KID_REGISTER_USER,
 ];
+
 export const KidChurchGroupRoles = [
   UserRole.KID_GROUP_ADMIN,
   UserRole.KID_GROUP_SUPERVISOR,
   UserRole.KID_GROUP_USER,
 ];
-
-export const Test = [UserRole.KID_GROUP_USER];
 
 export const GetUserRoles = () => {
   const { user } = useSelector((state: RootState) => state.authSlice);
