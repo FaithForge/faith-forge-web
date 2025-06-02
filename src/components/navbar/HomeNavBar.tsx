@@ -99,7 +99,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
 
   return (
     <>
-      <div className="navbar bg-base-100 shadow-sm sticky top-0 z-100">
+      <div className="navbar bg-base-100 border-b border-gray-50 sticky top-0 z-100">
         <div className="flex-none">
           {userRoles &&
           userRoles.filter((role) => role in userRolesNavBarConfig).length >

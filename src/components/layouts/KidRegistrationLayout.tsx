@@ -1,6 +1,12 @@
 import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
-import { PiFileText, PiGearSix, PiPlusCircle, PiQrCode } from 'react-icons/pi';
+import {
+  PiFileText,
+  PiGearSix,
+  PiHouse,
+  PiPlusCircle,
+  PiQrCode,
+} from 'react-icons/pi';
 import KidRegistrationSettingsModal from '../modal/KidRegistrationSettingsModal';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/state/redux';
@@ -44,6 +50,10 @@ const KidRegistrationLayout = ({ children }: Props) => {
       <div className="pb-20" style={{ minHeight: '100vh' }}>
         {children}
         <div className="dock">
+          <button onClick={() => router.push('/kid-registration')}>
+            <PiHouse className="h-8 w-8" />
+            <span className="dock-label">Inicio</span>
+          </button>
           <button onClick={() => router.push('/kid-registration/qrReader')}>
             <PiQrCode className="h-8 w-8" />
             <span className="dock-label">Escanear QR</span>
