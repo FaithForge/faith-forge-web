@@ -1,7 +1,7 @@
 import {
   RootState,
   logout,
-  resetChurchState,
+  resetChurchCampusState,
   resetChurchMeetingState,
   resetChurchPrinterState,
 } from '@/libs/state/redux';
@@ -38,7 +38,7 @@ export const AuthWrapper = ({ children }: Props) => {
   const currentTime = Date.now() / 1000;
 
   if (decodedToken.exp && decodedToken.exp < currentTime) {
-    dispatch(resetChurchState());
+    dispatch(resetChurchCampusState());
     dispatch(resetChurchMeetingState());
     dispatch(resetChurchPrinterState());
     push('/');

@@ -10,7 +10,7 @@ import {
   logout,
   resetChurchMeetingState,
   resetChurchPrinterState,
-  resetChurchState,
+  resetChurchCampusState,
   RootState,
 } from '@/libs/state/redux';
 import {
@@ -258,7 +258,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
             type: 'success',
           });
 
-          dispatch(resetChurchState());
+          dispatch(resetChurchCampusState());
           dispatch(resetChurchMeetingState());
           dispatch(resetChurchPrinterState());
         }}

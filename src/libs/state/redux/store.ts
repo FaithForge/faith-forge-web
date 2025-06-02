@@ -9,7 +9,7 @@ import {
   persistReducer,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
-import churchSlice from './slices/church/church.slice';
+import churchCampusSlice from './slices/church/churchCampus.slice';
 import churchMeetingSlice from './slices/church/churchMeeting.slice';
 import churchPrinterSlice from './slices/church/churchPrinter.slice';
 import kidGroupRegisteredSlice from './slices/kid-church/kid-group-registered.slice';
@@ -25,7 +25,7 @@ import editUserSlice from './slices/user/editUser.slice';
 import userSlice from './slices/user/users.slice';
 
 const reducers = combineReducers({
-  churchSlice,
+  churchCampusSlice,
   churchMeetingSlice,
   churchPrinterSlice,
   kidGroupSlice,

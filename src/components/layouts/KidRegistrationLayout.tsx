@@ -13,7 +13,9 @@ type Props = {
 
 const KidRegistrationLayout = ({ children }: Props) => {
   const router = useRouter();
-  const churchSlice = useSelector((state: RootState) => state.churchSlice);
+  const churchCampusSlice = useSelector(
+    (state: RootState) => state.churchCampusSlice,
+  );
   const churchMeetingSlice = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -26,7 +28,7 @@ const KidRegistrationLayout = ({ children }: Props) => {
 
   useEffect(() => {
     if (
-      !churchSlice.current ||
+      !churchCampusSlice.current ||
       !churchMeetingSlice.current ||
       !churchPrinterSlice.current
     ) {

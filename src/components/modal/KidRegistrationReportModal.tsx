@@ -18,7 +18,9 @@ import {
 } from 'react-vant';
 
 const KidRegistrationReportModal = () => {
-  const churchSlice = useSelector((state: RootState) => state.churchSlice);
+  const churchCampusSlice = useSelector(
+    (state: RootState) => state.churchCampusSlice,
+  );
   const churchMeetingSlice = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -63,7 +65,7 @@ const KidRegistrationReportModal = () => {
   const generateReport = () => {
     return `*📝 Reporte de Servicio*
 📅 ${now}
-📍 ${churchSlice.current?.name}
+📍 ${churchCampusSlice.current?.name}
 ⛪ ${churchMeetingSlice.current?.name}
 👥 Grupo: ${state.group}
 
@@ -184,7 +186,7 @@ ${state.observationGeneral}`;
               </h2>
               <p>
                 <span className="font-bold">Sede para el reporte:</span>{' '}
-                {churchSlice.current?.name}
+                {churchCampusSlice.current?.name}
               </p>
               <p>
                 <span className="font-bold">Reunión para el reporte:</span>{' '}

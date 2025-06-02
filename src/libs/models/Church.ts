@@ -9,7 +9,7 @@ export enum ChurchMeetingStateEnum {
   DISABLE = 'DISABLE',
 }
 
-export interface IChurch {
+export interface IChurchCampus {
   id: string;
   name: string;
   description?: string;
@@ -37,6 +37,6 @@ export interface IChurchPrinter {
   active?: boolean;
 }
 
-export interface IChurches extends ReduxDefaultState<IChurch> {}
+export interface IChurchCampuses extends ReduxDefaultState<IChurchCampus> {}
 export interface IChurchMeetings extends ReduxDefaultState<IChurchMeeting> {}
 export interface IChurchPrinters extends ReduxDefaultState<IChurchPrinter> {}

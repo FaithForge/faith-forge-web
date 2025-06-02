@@ -1,7 +1,7 @@
 import { SelectorOption } from '@/libs/common-types/global';
 import {
   ChurchMeetingStateEnum,
-  IChurch,
+  IChurchCampus,
   IChurchMeeting,
   IChurchPrinter,
 } from '@/libs/models';
@@ -11,7 +11,7 @@ import {
   GetChurchPrinters,
   GetKids,
   RootState,
-  updateCurrentChurch,
+  updateCurrentChurchCampus,
   updateCurrentChurchMeeting,
   updateCurrentChurchPrinter,
 } from '@/libs/state/redux';
@@ -21,7 +21,9 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const KidRegistrationSettingsModal = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const churchSlice = useSelector((state: RootState) => state.churchSlice);
+  const churchCampusSlice = useSelector(
+    (state: RootState) => state.churchCampusSlice,
+  );
   const churchMeetingSlice = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
@@ -30,22 +32,23 @@ const KidRegistrationSettingsModal = () => {
   );
 
   useEffect(() => {
-    const churchId = churchSlice.current?.id;
+    const churchCampusId = churchCampusSlice.current?.id;
 
-    if (churchId) {
+    if (churchCampusId) {
       if (!churchMeetingSlice.current)
         dispatch(
           GetChurchMeetings({
-            churchId,
+            churchCampusId,
             state: ChurchMeetingStateEnum.ACTIVE,
           }),
         );
-      if (!churchPrinterSlice.current) dispatch(GetChurchPrinters(churchId));
+      if (!churchPrinterSlice.current)
+        dispatch(GetChurchPrinters(churchCampusId));
     }
   }, []);
 
-  const churchOptions: SelectorOption[] = churchSlice.data
-    ? churchSlice.data.map((church: IChurch) => {
+  const churchOptions: SelectorOption[] = churchCampusSlice.data
+    ? churchCampusSlice.data.map((church: IChurchCampus) => {
         return {
           id: church.id,
           name: church.name,
@@ -92,13 +95,13 @@ const KidRegistrationSettingsModal = () => {
             <select
               className="select"
               onChange={async (event) => {
-                const churchId = event.target.value;
+                const churchCampusId = event.target.value;
                 await Promise.all([
-                  dispatch(updateCurrentChurch(churchId)),
-                  dispatch(GetChurchPrinters(churchId)),
+                  dispatch(updateCurrentChurchCampus(churchCampusId)),
+                  dispatch(GetChurchPrinters(churchCampusId)),
                   dispatch(
                     GetChurchMeetings({
-                      churchId,
+                      churchCampusId,
                       state: ChurchMeetingStateEnum.ACTIVE,
                     }),
                   ),
@@ -109,7 +112,7 @@ const KidRegistrationSettingsModal = () => {
                 <option
                   key={churchOption.id}
                   value={churchOption.id}
-                  selected={churchOption.id === churchSlice.current?.id}
+                  selected={churchOption.id === churchCampusSlice.current?.id}
                 >
                   {churchOption.name}
                 </option>

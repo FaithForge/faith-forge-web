@@ -13,8 +13,8 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
     { getState },
   ) => {
     const state = getState() as RootState;
-    const church = state.churchSlice.current;
-    const churchPrinter = state.churchSlice.current;
+    const churchCampus = state.churchCampusSlice.current;
+    const churchPrinter = state.churchCampusSlice.current;
 
     const churchMeeting = state.churchMeetingSlice.current;
     const { kidId, copies } = payload;
@@ -27,7 +27,7 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
         options: {
           data: {
             kidId,
-            churchId: church?.id,
+            churchId: churchCampus?.id,
             churchMeetingId: churchMeeting?.id,
             churchPrinterId: churchPrinter?.name,
             copies,
@@ -44,8 +44,7 @@ export const TestPrintLabel = createAsyncThunk(
   'kid/testPrintLabel',
   async (_, { getState }) => {
     const state = getState() as RootState;
-    const churchPrinter = state.churchSlice.current;
-
+    const churchPrinter = state.churchCampusSlice.current;
     const churchMeeting = state.churchMeetingSlice.current;
 
     const response = (

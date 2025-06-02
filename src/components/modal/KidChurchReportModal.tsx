@@ -26,8 +26,9 @@ const KidChurchReportModal = () => {
         await microserviceApiRequest({
           microservice: MS.Church,
           method: HttpRequestMethod.GET,
-          url: `/church`,
+          url: `/church-campus`,
           options: {
+            params: { churchId: process.env.NEXT_PUBLIC_CHURCH_ID },
             headers: { Authorization: `Bearer ${token}` },
           },
         })
@@ -36,14 +37,15 @@ const KidChurchReportModal = () => {
     })();
   }, []);
 
-  const findChurchMeetings = async (meetingId: any) => {
+  const findChurchMeetings = async (churchCampusId: string) => {
     setIsLoading(true);
     const churchMeetingsResponse = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/church/${meetingId}/meetings`,
+        url: `/church-meeting`,
         options: {
+          params: { churchCampusId },
           headers: { Authorization: `Bearer ${token}` },
         },
       })
@@ -167,7 +169,7 @@ const KidChurchReportModal = () => {
             }
           >
             <Form.Item
-              name="church"
+              name="churchCampus"
               label="Sede"
               rules={[
                 { required: true, message: 'Por favor seleccionar una sede' },
@@ -177,7 +179,7 @@ const KidChurchReportModal = () => {
                 options={churchOptions}
                 onChange={async (arr) => {
                   if (arr.length) {
-                    await findChurchMeetings(arr[0]);
+                    await findChurchMeetings(arr[0] as string);
                   } else {
                     setChurchMeetings([]);
                   }

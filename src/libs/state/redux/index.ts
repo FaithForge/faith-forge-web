@@ -1,6 +1,6 @@
 export * from './hooks';
 export * from './provider';
-export * from './slices/church/church.slice';
+export * from './slices/church/churchCampus.slice';
 export * from './slices/church/churchMeeting.slice';
 export * from './slices/church/churchPrinter.slice';
 export * from './slices/kid-church/kid-group-registered.slice';

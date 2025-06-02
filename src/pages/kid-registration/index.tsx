@@ -44,8 +44,8 @@ const Registration: NextPage = () => {
     totalPages,
     loading,
   } = useSelector((state: RootState) => state.kidSlice);
-  const { current: church } = useSelector(
-    (state: RootState) => state.churchSlice,
+  const { current: churchCampus } = useSelector(
+    (state: RootState) => state.churchCampusSlice,
   );
   const { current: churchMeeting } = useSelector(
     (state: RootState) => state.churchMeetingSlice,
@@ -156,7 +156,7 @@ const Registration: NextPage = () => {
       /> */}
       <Alert
         title={`Impresora: ${churchPrinterSlice.current?.name}`}
-        subtitle={`Reunión: ${churchMeeting?.name} (${church?.name})`}
+        subtitle={`Reunión: ${churchMeeting?.name} (${churchCampus?.name})`}
         type={ColorType.INFO}
       />
 

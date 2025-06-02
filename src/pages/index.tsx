@@ -9,7 +9,7 @@ import {
   RootState,
   AppDispatch,
   UserLogin,
-  GetChurches,
+  GetChurchCampuses,
 } from '@/libs/state/redux';
 import { getMainUserRole, GetUserRoles, UserRole } from '@/libs/utils/auth';
 import { SubmitHandler, useForm } from 'react-hook-form';
@@ -110,7 +110,7 @@ const Login: NextPage = () => {
       }
 
       setInitialCheckDone(false);
-      dispatch(GetChurches());
+      dispatch(GetChurchCampuses());
       redirect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

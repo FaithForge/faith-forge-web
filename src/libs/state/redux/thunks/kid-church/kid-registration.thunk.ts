@@ -9,7 +9,7 @@ export const CreateKidRegistration = createAsyncThunk(
   async (payload: ICreateKidRegistration, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
-    const churchSlice = state.churchSlice;
+    const churchCampusSlice = state.churchCampusSlice;
     const churchMeetingSlice = state.churchMeetingSlice;
     const authSlice = state.authSlice;
     const accountSlice = state.accountSlice;
@@ -23,7 +23,7 @@ export const CreateKidRegistration = createAsyncThunk(
         options: {
           data: {
             ...payload,
-            churchId: churchSlice.current?.id,
+            churchId: churchCampusSlice.current?.id,
             churchMeetingId: churchMeetingSlice.current?.id,
             churchPrinterId: churchPrinterSlice.current?.name,
             log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del ${accountSlice.churchGroup}`,

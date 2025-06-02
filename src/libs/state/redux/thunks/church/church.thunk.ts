@@ -3,8 +3,8 @@ import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 
-export const GetChurches = createAsyncThunk(
-  'church/GetChurches',
+export const GetChurchCampuses = createAsyncThunk(
+  'church/GetChurchCampuses',
   async (_, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -12,8 +12,9 @@ export const GetChurches = createAsyncThunk(
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/church`,
+        url: `/church-campus`,
         options: {
+          params: { churchId: process.env.NEXT_PUBLIC_CHURCH_ID },
           headers: { Authorization: `Bearer ${token}` },
         },
       })
@@ -24,19 +25,17 @@ export const GetChurches = createAsyncThunk(
 
 export const GetChurchMeetings = createAsyncThunk(
   'church/GetChurchMeetings',
-  async (payload: { churchId: string; state?: string }, { getState }) => {
-    const { churchId, state: stateMeeting } = payload;
+  async (payload: { churchCampusId: string; state?: string }, { getState }) => {
+    const { churchCampusId, state: stateMeeting } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/church/${churchId}/meetings`,
+        url: `/church-meeting`,
         options: {
-          params: {
-            state: stateMeeting,
-          },
+          params: { churchCampusId, state: stateMeeting },
           headers: { Authorization: `Bearer ${token}` },
         },
       })
@@ -47,15 +46,16 @@ export const GetChurchMeetings = createAsyncThunk(
 
 export const GetChurchPrinters = createAsyncThunk(
   'church/GetChurchPrinters',
-  async (churchId: string, { getState }) => {
+  async (churchCampusId: string, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/church/${churchId}/printers`,
+        url: `/church-printers`,
         options: {
+          params: { churchCampusId },
           headers: { Authorization: `Bearer ${token}` },
         },
       })

@@ -12,13 +12,15 @@ type Props = {
 
 const KidChurchLayout = ({ children }: Props) => {
   const router = useRouter();
-  const churchSlice = useSelector((state: RootState) => state.churchSlice);
+  const churchCampusSlice = useSelector(
+    (state: RootState) => state.churchCampusSlice,
+  );
   const churchMeetingSlice = useSelector(
     (state: RootState) => state.churchMeetingSlice,
   );
 
   useEffect(() => {
-    if (!churchSlice.current || !churchMeetingSlice.current) {
+    if (!churchCampusSlice.current || !churchMeetingSlice.current) {
       const dialog = document.getElementById(
         'settingsKidChurchModal',
       ) as HTMLDialogElement | null;
