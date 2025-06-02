@@ -1,9 +1,0 @@
-{
-  "name": "kid-church",
-  "$schema": "../../node_modules/nx/schemas/project-schema.json",
-  "sourceRoot": "apps/kid-church",
-  "projectType": "application",
-  "tags": [],
-  "// targets": "to see all targets run: nx show project kid-church --web",
-  "targets": {}
-}
