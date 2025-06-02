@@ -53,7 +53,7 @@ const KidRegistrationLayout = ({ children }: Props) => {
         setDisableActions(false);
       }
     }
-  }, [churchMeetingSlice.current, churchPrinterSlice.current]);
+  }, [churchMeetingSlice.current, churchPrinterSlice.current, currentRole]);
 
   return (
     <>
