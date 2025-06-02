@@ -49,7 +49,7 @@ const KidRegistrationLayout = ({ children }: Props) => {
         warning = true;
         setDisableActions(true);
       }
-      if (!warning) {
+      if (!warning || currentRole === UserRole.KID_REGISTER_ADMIN) {
         setDisableActions(false);
       }
     }
