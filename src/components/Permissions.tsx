@@ -4,7 +4,7 @@ import { UserRole } from '@/libs/utils/auth';
 import { useRouter } from 'next/router';
 import { useSelector } from 'react-redux';
 
-export function hasRequiredPermissions(
+export function useHasRequiredPermissions(
   requiredPermissions: UserRole[],
 ): boolean {
   const { user } = useSelector((state: RootState) => state.authSlice);
@@ -20,7 +20,7 @@ export function hasRequiredPermissions(
 export function withRoles(Component: any, requiredPermissions: UserRole[]) {
   return function WithRolesWrapper(props: any) {
     const router = useRouter();
-    const hasPermission = hasRequiredPermissions(requiredPermissions);
+    const hasPermission = useHasRequiredPermissions(requiredPermissions);
     if (hasPermission) {
       return <Component {...props} />;
     } else {

@@ -1,16 +1,11 @@
-import { useRouter } from 'next/router';
-import { Dispatch, SetStateAction, useState } from 'react';
-import { Dialog, Notify } from 'react-vant';
-import { PiUserSwitch } from 'react-icons/pi';
-import { useDispatch, useSelector } from 'react-redux';
+import { ColorType } from '@/libs/common-types/constants/theme';
 import {
-  AppDispatch,
   changeCurrentRole,
   GetKids,
   logout,
+  resetChurchCampusState,
   resetChurchMeetingState,
   resetChurchPrinterState,
-  resetChurchCampusState,
   RootState,
 } from '@/libs/state/redux';
 import {
@@ -20,8 +15,12 @@ import {
   UserRole,
 } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
+import { useRouter } from 'next/router';
+import { Dispatch, SetStateAction } from 'react';
+import { PiUserSwitch } from 'react-icons/pi';
+import { useDispatch, useSelector } from 'react-redux';
+import { Notify } from 'react-vant';
 import ConfirmationModal from '../modal/ConfirmationModal';
-import { ColorType } from '@/libs/common-types/constants/theme';
 
 type HomeNavBarProps = {
   findText?: string;

@@ -1,21 +1,10 @@
 import { churchGroupOptions } from '@/libs/common-types/constants';
-import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { ChurchMeetingStateEnum } from '@/libs/models';
-import { AppDispatch, RootState } from '@/libs/state/redux';
+import { RootState } from '@/libs/state/redux';
 import { FFDay } from '@/libs/utils/ffDay';
-import { microserviceApiRequest } from '@/libs/utils/http';
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { FaCopy, FaShareAlt } from 'react-icons/fa';
-import { useDispatch, useSelector } from 'react-redux';
-import {
-  Button,
-  Form,
-  hooks,
-  Input,
-  Notify,
-  Radio,
-  Selector,
-} from 'react-vant';
+import { useSelector } from 'react-redux';
+import { Button, Form, hooks, Input, Radio, Selector } from 'react-vant';
 
 const KidRegistrationReportModal = () => {
   const churchCampusSlice = useSelector(

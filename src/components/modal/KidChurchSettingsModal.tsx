@@ -3,7 +3,6 @@ import {
   ChurchMeetingStateEnum,
   IChurchCampus,
   IChurchMeeting,
-  IChurchPrinter,
 } from '@/libs/models';
 import {
   AppDispatch,
@@ -13,10 +12,9 @@ import {
   RootState,
   updateCurrentChurchCampus,
   updateCurrentChurchMeeting,
-  updateCurrentChurchPrinter,
 } from '@/libs/state/redux';
 import { DateTime } from 'luxon';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { PiPrinter } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
 

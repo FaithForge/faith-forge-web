@@ -1,10 +1,9 @@
 import { RootState } from '@/libs/state/redux';
 import { useRouter } from 'next/router';
 import React, { useEffect } from 'react';
-import { PiFileText, PiGearSix, PiQrCode, PiUserList } from 'react-icons/pi';
+import { PiFileText, PiGearSix, PiUserList } from 'react-icons/pi';
 import { useSelector } from 'react-redux';
 import KidChurchSettingsModal from '../modal/KidChurchSettingsModal';
-import KidChurchReportModal from '../modal/KidChurchReportModal';
 
 type Props = {
   children?: React.ReactNode;

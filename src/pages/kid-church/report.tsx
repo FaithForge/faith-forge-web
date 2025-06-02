@@ -1,16 +1,15 @@
-import type { NextPage } from 'next';
-import { useSelector } from 'react-redux';
-import NavBarApp from '../../components/NavBarApp';
-import { useEffect, useState } from 'react';
-import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
-import { Layout } from '../../components/Layout';
-import { MS, HttpRequestMethod } from '@/libs/common-types/global';
+import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { RootState } from '@/libs/state/redux';
 import { FFDay } from '@/libs/utils/ffDay';
 import { microserviceApiRequest } from '@/libs/utils/http';
-import { DateTime } from 'luxon';
-import React from 'react';
 import dayjs from 'dayjs';
+import { DateTime } from 'luxon';
+import type { NextPage } from 'next';
+import React, { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
+import { Layout } from '../../components/Layout';
+import NavBarApp from '../../components/NavBarApp';
 
 const ReportRegistrationGroup: NextPage = () => {
   const [form] = Form.useForm();

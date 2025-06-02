@@ -1,43 +1,42 @@
-import type { NextPage } from 'next';
-import { usePathname } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
-import { useEffect, useState } from 'react';
-import { DateTime } from 'luxon';
+import HomeNavBar from '@/components/navbar/HomeNavBar';
 import {
-  Grid,
-  NoticeBar,
-  Search,
-  Image,
-  Typography,
-  Empty,
-  Cell,
-  Skeleton,
-} from 'react-vant';
-import {
-  hasRequiredPermissions,
-  withRoles,
-} from '../../components/Permissions';
-import { Layout } from '../../components/Layout';
-import { IoIosArrowForward } from 'react-icons/io';
-import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
-import FloatingBubbleApp from '../../components/FloatingBubbleApp';
-import { TbReload } from 'react-icons/tb';
-import {
+  GENERAL_COPY_DIFFERENT_DAY_MEETING,
   GENERAL_COPY_LATER_HOURS_MEETING,
   GENERAL_COPY_LOWER_HOURS_MEETING,
-  GENERAL_COPY_DIFFERENT_DAY_MEETING,
 } from '@/libs/common-types/constants';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import {
-  RootState,
   AppDispatch,
-  GetKidGroups,
   GetKidGroupRegistered,
+  GetKidGroups,
+  RootState,
 } from '@/libs/state/redux';
 import { ChurchRoles, KidChurchSupervisorRoles } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { PRIMARY_COLOR_APP } from '@/libs/utils/theme';
-import HomeNavBar from '@/components/navbar/HomeNavBar';
+import { DateTime } from 'luxon';
+import type { NextPage } from 'next';
+import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { IoIosArrowForward } from 'react-icons/io';
+import { TbReload } from 'react-icons/tb';
+import { useDispatch, useSelector } from 'react-redux';
+import {
+  Cell,
+  Empty,
+  Grid,
+  Image,
+  NoticeBar,
+  Skeleton,
+  Typography,
+} from 'react-vant';
+import FloatingBubbleApp from '../../components/FloatingBubbleApp';
+import { Layout } from '../../components/Layout';
+import {
+  useHasRequiredPermissions,
+  withRoles,
+} from '../../components/Permissions';
+import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector(
@@ -60,7 +59,7 @@ const KidChurch: NextPage = () => {
     icon: '',
     blockRegister: false,
   });
-  const isAdmin = hasRequiredPermissions(ChurchRoles);
+  const isAdmin = useHasRequiredPermissions(ChurchRoles);
 
   useEffect(() => {
     const currentDate = DateTime.local().toJSDate();

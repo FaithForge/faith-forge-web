@@ -2,10 +2,8 @@ import Cell from '@/components/Cell';
 import ConfirmationModal from '@/components/modal/ConfirmationModal';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import { ColorType } from '@/libs/common-types/constants/theme';
-import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { AppDispatch } from '@/libs/state/redux';
 import { CleanCache } from '@/libs/state/redux/thunks/admin/admin.thunk';
-import { microserviceApiRequest } from '@/libs/utils/http';
 import type { NextPage } from 'next';
 import { FaChildReaching, FaChildren } from 'react-icons/fa6';
 import { IoIosArrowForward } from 'react-icons/io';
@@ -16,7 +14,6 @@ import {
   PiUser,
   PiUserCirclePlus,
 } from 'react-icons/pi';
-import { SiGoogleclassroom } from 'react-icons/si';
 import { useDispatch } from 'react-redux';
 
 const churchAdminOptions = [

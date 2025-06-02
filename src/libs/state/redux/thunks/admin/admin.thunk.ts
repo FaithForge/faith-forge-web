@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { KidGuardianRelationCodeEnum } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
@@ -27,4 +26,3 @@ export const CleanCache = createAsyncThunk(
     }
   },
 );
-

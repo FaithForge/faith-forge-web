@@ -15,7 +15,7 @@ import {
   updateCurrentChurchMeeting,
   updateCurrentChurchPrinter,
 } from '@/libs/state/redux';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { PiPrinter } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
 

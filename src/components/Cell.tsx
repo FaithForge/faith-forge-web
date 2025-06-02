@@ -1,4 +1,3 @@
-import { ColorType } from '@/libs/common-types/constants/theme';
 import React from 'react';
 
 type AlertProps = {

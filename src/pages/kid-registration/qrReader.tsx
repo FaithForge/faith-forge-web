@@ -1,11 +1,20 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useState } from 'react';
-import type { NextPage } from 'next';
-import NavBarApp from '../../components/NavBarApp';
-import { useDispatch, useSelector } from 'react-redux';
-import LoadingMask from '../../components/LoadingMask';
+import {
+  AppDispatch,
+  cleanScanQRSearch,
+  CreateKidRegistration,
+  RootState,
+  ScanCodeKidRegistration,
+} from '@/libs/state/redux';
+import { capitalizeWords } from '@/libs/utils/text';
 import { IDetectedBarcode, Scanner } from '@yudiel/react-qr-scanner';
+import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { AiOutlineQrcode } from 'react-icons/ai';
+import { FaArrowRight, FaRegCheckCircle } from 'react-icons/fa';
+import { HiDotsVertical } from 'react-icons/hi';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   Button,
   Cell,
@@ -18,19 +27,9 @@ import {
   Toast,
 } from 'react-vant';
 import { Layout } from '../../components/Layout';
+import LoadingMask from '../../components/LoadingMask';
+import NavBarApp from '../../components/NavBarApp';
 import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
-import { HiDotsVertical } from 'react-icons/hi';
-import { AiOutlineQrcode } from 'react-icons/ai';
-import { FaRegCheckCircle } from 'react-icons/fa';
-import { FaArrowRight } from 'react-icons/fa';
-import {
-  RootState,
-  AppDispatch,
-  cleanScanQRSearch,
-  ScanCodeKidRegistration,
-  CreateKidRegistration,
-} from '@/libs/state/redux';
-import { capitalizeWords } from '@/libs/utils/text';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();

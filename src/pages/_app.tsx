@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
-import type { AppProps } from 'next/app';
-import Head from 'next/head';
-import { PersistGate } from 'redux-persist/integration/react';
-import { persistStore } from 'redux-persist';
-import { ConfigProvider } from 'react-vant';
-import './theme.css';
-import { DM_Sans } from 'next/font/google';
-import { store, Providers } from '@/libs/state/redux';
+import { Providers, store } from '@/libs/state/redux';
 import { themeVars } from '@/libs/utils/theme';
-const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
+import type { AppProps } from 'next/app';
+import { DM_Sans } from 'next/font/google';
+import Head from 'next/head';
 import { useRouter } from 'next/router';
+import { useEffect } from 'react';
+import { ConfigProvider } from 'react-vant';
+import { persistStore } from 'redux-persist';
+import { PersistGate } from 'redux-persist/integration/react';
+import './theme.css';
+const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
 
 const BLOCKED_ROUTES = ['/', '/admin', '/kid-registration', '/kid-church'];
 

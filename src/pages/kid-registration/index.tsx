@@ -1,41 +1,34 @@
+import dayjs from 'dayjs';
+import { DateTime } from 'luxon';
 import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
-import { useDispatch, useSelector } from 'react-redux';
 import { useEffect, useState } from 'react';
-import { DateTime } from 'luxon';
-import dayjs from 'dayjs';
+import { useDispatch, useSelector } from 'react-redux';
 
-import { Empty, List, Skeleton } from 'react-vant';
+import Alert from '@/components/Alert';
+import Cell from '@/components/Cell';
+import HomeNavBar from '@/components/navbar/HomeNavBar';
 import {
-  hasRequiredPermissions,
-  withRoles,
-} from '../../components/Permissions';
-import { Layout } from '../../components/Layout';
-import { IoIosArrowForward } from 'react-icons/io';
-import {
+  REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
-  REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
 } from '@/libs/common-types/constants';
+import { ColorType } from '@/libs/common-types/constants/theme';
 import { IKid, UserGenderCode } from '@/libs/models';
 import {
-  RootState,
   AppDispatch,
   GetKids,
   GetMoreKids,
+  RootState,
   updateCurrentKid,
 } from '@/libs/state/redux';
-import {
-  ChurchRoles,
-  KidChurchRegisterRoles,
-  UserRole,
-} from '@/libs/utils/auth';
+import { KidChurchRegisterRoles, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
+import { IoIosArrowForward } from 'react-icons/io';
 import { PiCaretRight, PiWarning, PiX } from 'react-icons/pi';
-import Alert from '@/components/Alert';
-import HomeNavBar from '@/components/navbar/HomeNavBar';
-import { ColorType } from '@/libs/common-types/constants/theme';
-import Cell from '@/components/Cell';
+import { Empty, List, Skeleton } from 'react-vant';
+import { Layout } from '../../components/Layout';
+import { withRoles } from '../../components/Permissions';
 
 const Registration: NextPage = () => {
   const {
@@ -192,6 +185,7 @@ const Registration: NextPage = () => {
                     title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
                     icon={
                       <img
+                        alt={`${capitalizeWords(`${kid.firstName} ${kid.lastName}`)}`}
                         className="size-10 rounded-box"
                         src={
                           kid.photoUrl
