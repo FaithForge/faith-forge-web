@@ -67,20 +67,20 @@ const KidRegistrationLayout = ({ children }: Props) => {
           <button
             onClick={() => router.push('/kid-registration/qrReader')}
             disabled={disableActions}
-            className={`${disableActions ? 'opacity-60' : 'opacity-0'}`}
+            className={`${disableActions ? 'opacity-60' : 'opacity-100'}`}
           >
-            <PiQrCode className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-0'}`} />
-            <span className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-0'}`}>
+            <PiQrCode className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-100'}`} />
+            <span className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-100'}`}>
               Escanear QR
             </span>
           </button>
           <button
             onClick={() => router.push('/kid-registration/newKid')}
             disabled={disableActions}
-            className={`${disableActions ? 'opacity-60' : 'opacity-0'}`}
+            className={`${disableActions ? 'opacity-60' : 'opacity-100'}`}
           >
-            <PiPlusCircle className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-0'}`} />
-            <span className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-0'}`}>
+            <PiPlusCircle className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-100'}`} />
+            <span className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-100'}`}>
               Crear niño
             </span>
           </button>
