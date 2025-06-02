@@ -93,7 +93,7 @@ const QRReader: NextPage = () => {
       position: 'bottom',
       duration: 1000,
     });
-    router.back();
+    router.push('/kid-registration');
   };
 
   useEffect(() => {
