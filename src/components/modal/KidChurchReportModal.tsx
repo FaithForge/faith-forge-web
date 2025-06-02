@@ -6,12 +6,7 @@ import dayjs from 'dayjs';
 import { DateTime } from 'luxon';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import {
-  Button,
-  DatetimePicker,
-  Form,
-  Selector,
-} from 'react-vant';
+import { Button, DatetimePicker, Form, Selector } from 'react-vant';
 
 const KidChurchReportModal = () => {
   const [form] = Form.useForm();
@@ -31,7 +26,7 @@ const KidChurchReportModal = () => {
         await microserviceApiRequest({
           microservice: MS.Church,
           method: HttpRequestMethod.GET,
-          url: `/churches`,
+          url: `/church`,
           options: {
             headers: { Authorization: `Bearer ${token}` },
           },

@@ -31,7 +31,7 @@ const GenerateChurchMeetingReport: NextPage = () => {
         await microserviceApiRequest({
           microservice: MS.Church,
           method: HttpRequestMethod.GET,
-          url: `/churches`,
+          url: `/church`,
           options: {
             headers: { Authorization: `Bearer ${token}` },
           },

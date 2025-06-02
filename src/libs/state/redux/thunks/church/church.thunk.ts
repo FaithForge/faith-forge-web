@@ -5,18 +5,15 @@ import { RootState } from '../../store';
 
 export const GetChurches = createAsyncThunk(
   'church/GetChurches',
-  async (withAdditionalData: boolean, { getState }) => {
+  async (_, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/churches`,
+        url: `/church`,
         options: {
-          params: {
-            withAdditionalData,
-          },
           headers: { Authorization: `Bearer ${token}` },
         },
       })

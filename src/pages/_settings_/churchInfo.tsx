@@ -47,7 +47,7 @@ const ChurchInfo: NextPage = () => {
   };
 
   useEffect(() => {
-    dispatch(GetChurches(false));
+    dispatch(GetChurches());
   }, [dispatch]);
 
   const churchOptions = churchSlice.data

@@ -110,7 +110,7 @@ const Login: NextPage = () => {
       }
 
       setInitialCheckDone(false);
-      dispatch(GetChurches(false));
+      dispatch(GetChurches());
       redirect();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
