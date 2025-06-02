@@ -1,9 +1,5 @@
 import { SelectorOption } from '@/libs/common-types/global';
-import {
-  ChurchMeetingStateEnum,
-  IChurchCampus,
-  IChurchMeeting,
-} from '@/libs/models';
+import { ChurchMeetingStateEnum, IChurchCampus, IChurchMeeting } from '@/libs/models';
 import {
   AppDispatch,
   GetChurchMeetings,
@@ -20,12 +16,8 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const KidChurchSettingsModal = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const churchCampusSlice = useSelector(
-    (state: RootState) => state.churchCampusSlice,
-  );
-  const churchMeetingSlice = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
+  const churchCampusSlice = useSelector((state: RootState) => state.churchCampusSlice);
+  const churchMeetingSlice = useSelector((state: RootState) => state.churchMeetingSlice);
 
   useEffect(() => {
     const churchCampusId = churchCampusSlice.current?.id;

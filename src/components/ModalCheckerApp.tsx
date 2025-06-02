@@ -1,13 +1,5 @@
 import { FC, useMemo, useState } from 'react';
-import {
-  Button,
-  Cell,
-  Checkbox,
-  Popup,
-  Search,
-  Space,
-  Typography,
-} from 'react-vant';
+import { Button, Cell, Checkbox, Popup, Search, Space, Typography } from 'react-vant';
 import { CiSearch } from 'react-icons/ci';
 import { SelectorOption } from '@/libs/common-types/global';
 
@@ -33,9 +25,7 @@ export const ModalCheckerApp: FC<ModalCheckerProps> = ({
   const filteredOptions = useMemo(() => {
     if (searchOptions) {
       return options.filter((item) =>
-        item.name
-          .toLocaleLowerCase()
-          .includes(searchOptions.toLocaleLowerCase()),
+        item.name.toLocaleLowerCase().includes(searchOptions.toLocaleLowerCase()),
       );
     } else {
       return options;
@@ -98,9 +88,7 @@ export const ModalCheckerApp: FC<ModalCheckerProps> = ({
                     key={condition.id}
                     clickable
                     title={condition.name}
-                    onClick={() =>
-                      onClick(value?.id !== condition.id ? condition.id : '')
-                    }
+                    onClick={() => onClick(value?.id !== condition.id ? condition.id : '')}
                     rightIcon={<Checkbox name={condition.id} />}
                   />
                 ))
@@ -110,9 +98,7 @@ export const ModalCheckerApp: FC<ModalCheckerProps> = ({
                 key={emptyOption.id}
                 clickable
                 title={emptyOption.name}
-                onClick={() =>
-                  onClick(value?.id !== emptyOption.id ? emptyOption.id : '')
-                }
+                onClick={() => onClick(value?.id !== emptyOption.id ? emptyOption.id : '')}
                 rightIcon={<Checkbox name={emptyOption.id} />}
               />
             ) : null}

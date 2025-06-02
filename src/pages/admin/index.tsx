@@ -94,9 +94,7 @@ const systemAdminOptions = [
     bgColorClass: '',
     bgHoverColorClass: 'hover:bg-neutral-100',
     onclick: () => {
-      const dialog = document.getElementById(
-        'cleanCacheModal',
-      ) as HTMLDialogElement | null;
+      const dialog = document.getElementById('cleanCacheModal') as HTMLDialogElement | null;
       dialog?.showModal();
     },
   },
@@ -121,11 +119,7 @@ const AdminHome: NextPage = () => {
                 bgColorClass={option.bgColorClass}
                 bgHoverColorClass={option.bgHoverColorClass}
                 onClick={option.onclick}
-                iconRight={
-                  <IoIosArrowForward
-                    style={{ height: '3em', width: '1.2em' }}
-                  />
-                }
+                iconRight={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
               />
             ))}
           </ul>
@@ -144,11 +138,7 @@ const AdminHome: NextPage = () => {
                 bgColorClass={option.bgColorClass}
                 bgHoverColorClass={option.bgHoverColorClass}
                 onClick={option.onclick}
-                iconRight={
-                  <IoIosArrowForward
-                    style={{ height: '3em', width: '1.2em' }}
-                  />
-                }
+                iconRight={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
               />
             ))}
           </ul>
@@ -167,11 +157,7 @@ const AdminHome: NextPage = () => {
                 bgColorClass={option.bgColorClass}
                 bgHoverColorClass={option.bgHoverColorClass}
                 onClick={option.onclick}
-                iconRight={
-                  <IoIosArrowForward
-                    style={{ height: '3em', width: '1.2em' }}
-                  />
-                }
+                iconRight={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
               />
             ))}
           </ul>
@@ -189,11 +175,7 @@ const AdminHome: NextPage = () => {
                 bgColorClass={option.bgColorClass}
                 bgHoverColorClass={option.bgHoverColorClass}
                 onClick={option.onclick}
-                iconRight={
-                  <IoIosArrowForward
-                    style={{ height: '3em', width: '1.2em' }}
-                  />
-                }
+                iconRight={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
               />
             ))}
           </ul>

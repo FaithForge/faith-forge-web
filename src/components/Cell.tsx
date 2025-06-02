@@ -35,10 +35,7 @@ const Cell: React.FC<AlertProps> = ({
         <div>{title}</div>
         {label && <div className="text-xs opacity-60">{label}</div>}
       </div>
-      <button
-        className="btn btn-square btn-ghost"
-        onClick={disable ? undefined : onClick}
-      >
+      <button className="btn btn-square btn-ghost" onClick={disable ? undefined : onClick}>
         {iconRight}
       </button>
     </li>

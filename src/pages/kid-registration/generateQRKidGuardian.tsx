@@ -54,13 +54,9 @@ const GenerateQRKidGuardianView: NextPage = () => {
   }, [guardian]);
 
   const downloadCode = () => {
-    const canvas: any = document.getElementById(
-      'qr-code-generate-kid-guardian',
-    );
+    const canvas: any = document.getElementById('qr-code-generate-kid-guardian');
     if (canvas) {
-      const pngUrl = canvas
-        .toDataURL('image/png')
-        .replace('image/png', 'image/octet-stream');
+      const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
       const downloadLink = document.createElement('a');
       downloadLink.href = pngUrl;
       downloadLink.download = `${guardian?.id}.png`;
@@ -91,12 +87,8 @@ const GenerateQRKidGuardianView: NextPage = () => {
   // };
 
   const sharedCQRodeWhatsapp = async () => {
-    const canvas: any = document.getElementById(
-      'qr-code-generate-kid-guardian',
-    );
-    const canvasWhatsapp: any = document.getElementById(
-      'qr-code-generate-kid-guardian-whatsapp',
-    );
+    const canvas: any = document.getElementById('qr-code-generate-kid-guardian');
+    const canvasWhatsapp: any = document.getElementById('qr-code-generate-kid-guardian-whatsapp');
     if (canvas && canvasWhatsapp && guardian && guardian.id) {
       const dataUrl = canvas.toDataURL();
       const photo = await (await fetch(dataUrl)).blob();
@@ -104,15 +96,12 @@ const GenerateQRKidGuardianView: NextPage = () => {
       const formData = new FormData();
       formData.append('file', photo);
       formData.append('qrCodeValue', guardian.id);
-      const photoUrl = (await dispatch(UploadQRCodeImage({ formData })))
-        .payload as string;
+      const photoUrl = (await dispatch(UploadQRCodeImage({ formData }))).payload as string;
 
       const url = `https://api.whatsapp.com/send?phone=${guardian.dialCodePhone.slice(1)}${
         guardian.phone
       }&text=${encodeURIComponent(
-        `¡Hola *${capitalizeWords(guardian.firstName)} ${capitalizeWords(
-          guardian.lastName,
-        )}*!
+        `¡Hola *${capitalizeWords(guardian.firstName)} ${capitalizeWords(guardian.lastName)}*!
 Desde Iglekids te enviamos este enlace para descargar un código QR, el cual podrás mostrar cada vez que registres a tu(s) niño(s) para que este proceso sea más ágil:
 
 *URL de imagen:* ${photoUrl}
@@ -166,19 +155,15 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
                   marginBottom: '0px',
                 }}
               >
-                {capitalizeWords(guardian.firstName)}{' '}
-                {capitalizeWords(guardian.lastName)}
+                {capitalizeWords(guardian.firstName)} {capitalizeWords(guardian.lastName)}
               </Typography.Title>
-              <Typography.Title
-                level={4}
-                style={{ textAlign: 'center', marginTop: '5px' }}
-              >
+              <Typography.Title level={4} style={{ textAlign: 'center', marginTop: '5px' }}>
                 Teléfono: {guardian.dialCodePhone} {guardian.phone}
               </Typography.Title>
               <Typography.Text style={{ textAlign: 'center' }}>
-                Pide al acudiente que lea este código con su celular y se
-                autoenvíe el mensaje generado (Este debe tener Whatsapp
-                instalado con el número de teléfono que aparece arriba)
+                Pide al acudiente que lea este código con su celular y se autoenvíe el mensaje
+                generado (Este debe tener Whatsapp instalado con el número de teléfono que aparece
+                arriba)
               </Typography.Text>
               <QRCode
                 qrStyle="dots"
@@ -227,9 +212,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
         <Empty
           image={search ? 'error' : 'search'}
           description={`${
-            search
-              ? 'No se ha encontrado acudiente'
-              : 'Por favor buscar el acudiente a generar QR'
+            search ? 'No se ha encontrado acudiente' : 'Por favor buscar el acudiente a generar QR'
           }`}
         />
       )}

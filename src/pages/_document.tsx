@@ -6,9 +6,7 @@ const prod = process.env.PROD_MANIFEST === 'yes';
 class MyDocument extends Document {
   render() {
     const manifest = prod ? '/manifest.json' : '/manifest-dev.json';
-    const favicon = prod
-      ? '/icons/icon-192x192.png'
-      : '/icons/icondev-192x192.png';
+    const favicon = prod ? '/icons/icon-192x192.png' : '/icons/icondev-192x192.png';
 
     return (
       <Html>

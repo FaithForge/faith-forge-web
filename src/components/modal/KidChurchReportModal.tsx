@@ -171,9 +171,7 @@ const KidChurchReportModal = () => {
             <Form.Item
               name="churchCampus"
               label="Sede"
-              rules={[
-                { required: true, message: 'Por favor seleccionar una sede' },
-              ]}
+              rules={[{ required: true, message: 'Por favor seleccionar una sede' }]}
             >
               <Selector
                 options={churchOptions}
@@ -222,9 +220,7 @@ const KidChurchReportModal = () => {
                 confirmButtonText={'Confirmar'}
               >
                 {(value: Date) =>
-                  value
-                    ? `${dayjs(value).format('YYYY-MM-DD')}`
-                    : 'Seleccionar fecha'
+                  value ? `${dayjs(value).format('YYYY-MM-DD')}` : 'Seleccionar fecha'
                 }
               </DatetimePicker>
             </Form.Item>

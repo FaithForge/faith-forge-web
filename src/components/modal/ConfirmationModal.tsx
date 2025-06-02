@@ -31,9 +31,7 @@ const ConfirmationModal = ({
     <dialog id={id} className="modal modal-center">
       <div className="modal-box">
         <form method="dialog">
-          <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">
-            ✕
-          </button>
+          <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
         </form>
         <h3 className="text-lg font-bold">{title}</h3>
         <div className="py-4">

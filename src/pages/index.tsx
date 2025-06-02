@@ -1,10 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import {
-  AppDispatch,
-  GetChurchCampuses,
-  RootState,
-  UserLogin,
-} from '@/libs/state/redux';
+import { AppDispatch, GetChurchCampuses, RootState, UserLogin } from '@/libs/state/redux';
 import { getMainUserRole, GetUserRoles, UserRole } from '@/libs/utils/auth';
 import type { NextPage } from 'next';
 import { useRouter } from 'next/router';
@@ -134,9 +129,7 @@ const Login: NextPage = () => {
             {...register('username', { required: true })}
           />
           {errors.username && (
-            <p className="label text-red-700">
-              Por favor escribe tu email o usuario
-            </p>
+            <p className="label text-red-700">Por favor escribe tu email o usuario</p>
           )}
         </fieldset>
         <fieldset className="fieldset">
@@ -148,15 +141,10 @@ const Login: NextPage = () => {
             {...register('password', { min: 6, required: true })}
           />
           {errors.password && (
-            <p className="label text-red-700">
-              Por favor, escribe tu contraseña
-            </p>
+            <p className="label text-red-700">Por favor, escribe tu contraseña</p>
           )}
         </fieldset>
-        <button
-          className={'btn btn-block mt-4 btn-lg bg-blue-950'}
-          type="submit"
-        >
+        <button className={'btn btn-block mt-4 btn-lg bg-blue-950'} type="submit">
           <span className="text-white">Iniciar sesión</span>
         </button>
         <p className="text-center pt-4">V 2.2.0 Beta</p>

@@ -2,24 +2,10 @@
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Divider,
-  Form,
-  Input,
-  Popup,
-  Selector,
-  Toast,
-  Typography,
-} from 'react-vant';
+import { Button, Divider, Form, Input, Popup, Selector, Toast, Typography } from 'react-vant';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 import { IKidGuardian, kidRelationSelect } from '@/libs/models';
-import {
-  RootState,
-  AppDispatch,
-  UpdateKidGuardianPhone,
-  GetKid,
-} from '@/libs/state/redux';
+import { RootState, AppDispatch, UpdateKidGuardianPhone, GetKid } from '@/libs/state/redux';
 import { capitalizeWords } from '@/libs/utils/text';
 
 type Props = {
@@ -28,25 +14,18 @@ type Props = {
   kidGuardian: IKidGuardian;
 };
 
-const UpdateKidGuardianPhoneModal = ({
-  visible,
-  onClose,
-  kidGuardian,
-}: Props) => {
+const UpdateKidGuardianPhoneModal = ({ visible, onClose, kidGuardian }: Props) => {
   const [form] = Form.useForm();
   const { loading: guardianLoading, error } = useSelector(
     (state: RootState) => state.kidGuardianSlice,
   );
   const { current: kid } = useSelector((state: RootState) => state.kidSlice);
-  const [kidRelationSelectFilter, setKidRelationSelectFilter] =
-    useState(kidRelationSelect);
+  const [kidRelationSelectFilter, setKidRelationSelectFilter] = useState(kidRelationSelect);
 
   useEffect(() => {
     if (kidRelationSelectFilter) {
       setKidRelationSelectFilter(
-        kidRelationSelect.filter(
-          (kidRelation) => kidRelation.gender === kidGuardian.gender,
-        ),
+        kidRelationSelect.filter((kidRelation) => kidRelation.gender === kidGuardian.gender),
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -70,12 +49,7 @@ const UpdateKidGuardianPhoneModal = ({
 
   useEffect(() => {
     if (visible) {
-      form.resetFields([
-        'firstName',
-        'lastName',
-        'guardianPhone',
-        'guardianRelation',
-      ]);
+      form.resetFields(['firstName', 'lastName', 'guardianPhone', 'guardianRelation']);
     }
   }, [form, visible]);
 

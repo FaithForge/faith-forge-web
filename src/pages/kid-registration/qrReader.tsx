@@ -15,17 +15,7 @@ import { AiOutlineQrcode } from 'react-icons/ai';
 import { FaArrowRight, FaRegCheckCircle } from 'react-icons/fa';
 import { HiDotsVertical } from 'react-icons/hi';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Button,
-  Cell,
-  Checkbox,
-  Collapse,
-  Form,
-  Input,
-  Space,
-  Steps,
-  Toast,
-} from 'react-vant';
+import { Button, Cell, Checkbox, Collapse, Form, Input, Space, Steps, Toast } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
 import NavBarApp from '../../components/NavBarApp';
@@ -34,15 +24,9 @@ import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
   const [step, setStep] = useState(0);
-  const scanQRKidGuardianSlice = useSelector(
-    (state: RootState) => state.scanQRKidGuardianSlice,
-  );
-  const [relationsToRegister, setRelationsToRegister] = useState(
-    scanQRKidGuardianSlice.relations,
-  );
-  const [relationSelectToRegister, setRelationSelectToRegister] = useState<
-    string[]
-  >([]);
+  const scanQRKidGuardianSlice = useSelector((state: RootState) => state.scanQRKidGuardianSlice);
+  const [relationsToRegister, setRelationsToRegister] = useState(scanQRKidGuardianSlice.relations);
+  const [relationSelectToRegister, setRelationSelectToRegister] = useState<string[]>([]);
   const router = useRouter();
 
   const titleNavBar = 'Registro por QR';
@@ -94,9 +78,7 @@ const QRReader: NextPage = () => {
             kidId: relationToRegister.id,
             kidGroupId: relationToRegister.kidGroup?.id,
             kidGuardianId: scanQRKidGuardianSlice.kidGuardian.id,
-            observation: values
-              ? values[`observations-${relationToRegister.id}`]
-              : undefined,
+            observation: values ? values[`observations-${relationToRegister.id}`] : undefined,
           }),
         );
         Toast.info({
@@ -129,18 +111,11 @@ const QRReader: NextPage = () => {
   }, [dispatch, scanQRKidGuardianSlice.error]);
 
   useEffect(() => {
-    if (
-      scanQRKidGuardianSlice.kidGuardian &&
-      scanQRKidGuardianSlice.relations
-    ) {
+    if (scanQRKidGuardianSlice.kidGuardian && scanQRKidGuardianSlice.relations) {
       setStep(1);
       setRelationsToRegister(scanQRKidGuardianSlice.relations);
     }
-  }, [
-    dispatch,
-    scanQRKidGuardianSlice.kidGuardian,
-    scanQRKidGuardianSlice.relations,
-  ]);
+  }, [dispatch, scanQRKidGuardianSlice.kidGuardian, scanQRKidGuardianSlice.relations]);
 
   const actions: PopoverAppAction[] = [
     {
@@ -165,12 +140,7 @@ const QRReader: NextPage = () => {
       {scanQRKidGuardianSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp
         title={titleNavBar}
-        right={
-          <PopoverApp
-            actions={actions}
-            icon={<HiDotsVertical size={'1.5em'} />}
-          />
-        }
+        right={<PopoverApp actions={actions} icon={<HiDotsVertical size={'1.5em'} />} />}
       />
       <Steps active={step} activeColor="#397b9d">
         <Steps.Item>Escanear Codigo</Steps.Item>
@@ -203,9 +173,7 @@ const QRReader: NextPage = () => {
               marginBottom: 5,
             }}
           >
-            {capitalizeWords(
-              scanQRKidGuardianSlice.kidGuardian?.firstName ?? '',
-            )}
+            {capitalizeWords(scanQRKidGuardianSlice.kidGuardian?.firstName ?? '')}
           </p>
           <p
             style={{
@@ -215,26 +183,18 @@ const QRReader: NextPage = () => {
               marginBottom: 5,
             }}
           >
-            {capitalizeWords(
-              scanQRKidGuardianSlice.kidGuardian?.lastName ?? '',
-            )}
+            {capitalizeWords(scanQRKidGuardianSlice.kidGuardian?.lastName ?? '')}
           </p>
           <h3 style={{ textAlign: 'center' }}>
-            Confirme que sea el acudiente y luego seleccione los niños a
-            registrar
+            Confirme que sea el acudiente y luego seleccione los niños a registrar
           </h3>
-          <Checkbox.Group
-            value={relationSelectToRegister}
-            onChange={setRelationSelectToRegister}
-          >
+          <Checkbox.Group value={relationSelectToRegister} onChange={setRelationSelectToRegister}>
             <Cell.Group style={{ marginBottom: 10 }}>
               {relationsToRegister.map((relation: any) => (
                 <Cell
                   key={relation.id}
                   style={{
-                    backgroundColor: relation.currentKidRegistration
-                      ? '#ebebeb'
-                      : 'white',
+                    backgroundColor: relation.currentKidRegistration ? '#ebebeb' : 'white',
                   }}
                   clickable
                   title={`${capitalizeWords(relation.firstName)} 
@@ -243,25 +203,16 @@ const QRReader: NextPage = () => {
                   label={`Codigo: ${relation.faithForgeId} - Salon: ${
                     relation.kidGroup.name
                   } ${relation.staticGroup ? '(Estatico)' : ''}`}
-                  onClick={() =>
-                    relation.currentKidRegistration ? null : toggle(relation.id)
-                  }
+                  onClick={() => (relation.currentKidRegistration ? null : toggle(relation.id))}
                   rightIcon={
-                    relation.currentKidRegistration ? null : (
-                      <Checkbox name={relation.id} />
-                    )
+                    relation.currentKidRegistration ? null : <Checkbox name={relation.id} />
                   }
                   size="large"
                 />
               ))}
             </Cell.Group>
           </Checkbox.Group>
-          <Button
-            block
-            size="large"
-            type="primary"
-            onClick={confirmKidToRegister}
-          >
+          <Button block size="large" type="primary" onClick={confirmKidToRegister}>
             <Space>
               <span>Siguiente</span>
               <FaArrowRight />
@@ -291,8 +242,8 @@ const QRReader: NextPage = () => {
               marginBottom: 15,
             }}
           >
-            Si los niños tienen alguna observación colocarla. (Abrir el
-            desplegable y añadir la observación)
+            Si los niños tienen alguna observación colocarla. (Abrir el desplegable y añadir la
+            observación)
           </p>
 
           <Collapse
@@ -310,10 +261,7 @@ const QRReader: NextPage = () => {
                     relation.kidGroup.name
                   } ${relation.staticGroup ? '(Estatico)' : ''}`}
               >
-                <Form.Item
-                  name={`observations-${relation.id}`}
-                  label="Observaciones"
-                >
+                <Form.Item name={`observations-${relation.id}`} label="Observaciones">
                   <Input.TextArea
                     placeholder="Ejemplo: lleva bolso, lleva merienda, está enfermo de algo en el momento."
                     maxLength={300}

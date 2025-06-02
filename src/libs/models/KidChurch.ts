@@ -49,22 +49,16 @@ export const KID_RELATION_CODE_MAPPER = {
   [KidGuardianRelationCodeEnum.MOTHER]: KidGuardianRelationEnum.MOTHER,
   [KidGuardianRelationCodeEnum.BROTHER]: KidGuardianRelationEnum.BROTHER,
   [KidGuardianRelationCodeEnum.SISTER]: KidGuardianRelationEnum.SISTER,
-  [KidGuardianRelationCodeEnum.GRANDFATHER]:
-    KidGuardianRelationEnum.GRANDFATHER,
-  [KidGuardianRelationCodeEnum.GRANDMOTHER]:
-    KidGuardianRelationEnum.GRANDMOTHER,
+  [KidGuardianRelationCodeEnum.GRANDFATHER]: KidGuardianRelationEnum.GRANDFATHER,
+  [KidGuardianRelationCodeEnum.GRANDMOTHER]: KidGuardianRelationEnum.GRANDMOTHER,
   [KidGuardianRelationCodeEnum.UNCLE]: KidGuardianRelationEnum.UNCLE,
   [KidGuardianRelationCodeEnum.AUNT]: KidGuardianRelationEnum.AUNT,
-  [KidGuardianRelationCodeEnum.MALE_COUSIN]:
-    KidGuardianRelationEnum.MALE_COUSIN,
-  [KidGuardianRelationCodeEnum.FEMALE_COUSIN]:
-    KidGuardianRelationEnum.FEMALE_COUSIN,
+  [KidGuardianRelationCodeEnum.MALE_COUSIN]: KidGuardianRelationEnum.MALE_COUSIN,
+  [KidGuardianRelationCodeEnum.FEMALE_COUSIN]: KidGuardianRelationEnum.FEMALE_COUSIN,
   [KidGuardianRelationCodeEnum.STEPMOTHER]: KidGuardianRelationEnum.STEPMOTHER,
   [KidGuardianRelationCodeEnum.STEPFATHER]: KidGuardianRelationEnum.STEPFATHER,
-  [KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE]:
-    KidGuardianRelationEnum.MALE_ACQUAINTANCE,
-  [KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE]:
-    KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
+  [KidGuardianRelationCodeEnum.MALE_ACQUAINTANCE]: KidGuardianRelationEnum.MALE_ACQUAINTANCE,
+  [KidGuardianRelationCodeEnum.FEMALE_ACQUAINTANCE]: KidGuardianRelationEnum.FEMALE_ACQUAINTANCE,
 };
 
 // Select list of relations
@@ -277,8 +271,7 @@ export interface IUpdateKid {
 // SLIDES
 export interface IUsers extends ReduxDefaultStateWithPagination<IUser> {}
 export interface IKids extends ReduxDefaultStateWithPagination<IKid> {}
-export interface IKidMedicalConditions
-  extends ReduxDefaultState<IKidMedicalCondition> {}
+export interface IKidMedicalConditions extends ReduxDefaultState<IKidMedicalCondition> {}
 export interface IKidGroups extends ReduxDefaultState<IKidGroup> {}
 export interface IKidGroupRegistered extends ReduxDefaultState<IKid> {}
 export interface IKidGuardians extends ReduxDefaultState<IKidGuardian> {}

@@ -5,12 +5,7 @@ import {
   GENERAL_COPY_LOWER_HOURS_MEETING,
 } from '@/libs/common-types/constants';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
-import {
-  AppDispatch,
-  GetKidGroupRegistered,
-  GetKidGroups,
-  RootState,
-} from '@/libs/state/redux';
+import { AppDispatch, GetKidGroupRegistered, GetKidGroups, RootState } from '@/libs/state/redux';
 import { ChurchRoles, KidChurchSupervisorRoles } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { PRIMARY_COLOR_APP } from '@/libs/utils/theme';
@@ -21,35 +16,19 @@ import { useEffect, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { TbReload } from 'react-icons/tb';
 import { useDispatch, useSelector } from 'react-redux';
-import {
-  Cell,
-  Empty,
-  Grid,
-  Image,
-  NoticeBar,
-  Skeleton,
-  Typography,
-} from 'react-vant';
+import { Cell, Empty, Grid, Image, NoticeBar, Skeleton, Typography } from 'react-vant';
 import FloatingBubbleApp from '../../components/FloatingBubbleApp';
 import { Layout } from '../../components/Layout';
-import {
-  useHasRequiredPermissions,
-  withRoles,
-} from '../../components/Permissions';
+import { useHasRequiredPermissions, withRoles } from '../../components/Permissions';
 import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
 
 const KidChurch: NextPage = () => {
-  const { data: kids, loading } = useSelector(
-    (state: RootState) => state.kidGroupRegisteredSlice,
-  );
+  const { data: kids, loading } = useSelector((state: RootState) => state.kidGroupRegisteredSlice);
   const [kidList, setKidList] = useState<IKid[]>(kids);
-  const { current: churchMeeting } = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
+  const { current: churchMeeting } = useSelector((state: RootState) => state.churchMeetingSlice);
   const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
   const [selectedKidGroup, setSelectedKidGroup] = useState('');
-  const [openShowKidRegisteredModal, setOpenShowKidRegisteredModal] =
-    useState(false);
+  const [openShowKidRegisteredModal, setOpenShowKidRegisteredModal] = useState(false);
   const [kidToUpdate, setKidToUpdate] = useState<IKid | undefined>();
   const dispatch = useDispatch<AppDispatch>();
   const pathname = usePathname();
@@ -130,11 +109,7 @@ const KidChurch: NextPage = () => {
       <div style={{ position: 'sticky', top: '0', zIndex: 2 }}>
         <HomeNavBar findText={findText} setFindText={setFindText} />
         {loading ? (
-          <Skeleton
-            row={1}
-            rowHeight={25}
-            style={{ marginTop: 5, marginBottom: 5 }}
-          />
+          <Skeleton row={1} rowHeight={25} style={{ marginTop: 5, marginBottom: 5 }} />
         ) : (
           <NoticeBar
             style={{
@@ -146,19 +121,14 @@ const KidChurch: NextPage = () => {
         )}
       </div>
       {/* Bebes, Caminadores y Zaqueos */}
-      <Grid
-        columnNum={2}
-        gutter={8}
-        style={{ backgroundColor: 'white', paddingBottom: 10 }}
-      >
+      <Grid columnNum={2} gutter={8} style={{ backgroundColor: 'white', paddingBottom: 10 }}>
         {kidGroupSlice.data &&
           kidGroupSlice.data.slice(0, 4).map((kidGroup: IKidGroup) => {
             return (
               <Grid.Item
                 key={kidGroup.id}
                 contentStyle={{
-                  backgroundColor:
-                    selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
+                  backgroundColor: selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
                 }}
                 onClick={() => {
                   if (selectedKidGroup !== kidGroup.id) {
@@ -170,26 +140,17 @@ const KidChurch: NextPage = () => {
               >
                 <Typography.Text
                   style={{
-                    color:
-                      selectedKidGroup === kidGroup.id
-                        ? PRIMARY_COLOR_APP
-                        : '#323232',
+                    color: selectedKidGroup === kidGroup.id ? PRIMARY_COLOR_APP : '#323232',
                   }}
                 >
                   {kidGroup.name}
                 </Typography.Text>
                 {loading ? (
-                  <Skeleton
-                    row={1}
-                    rowHeight={15}
-                    style={{ backgroundColor: '#EBEBEB' }}
-                  />
+                  <Skeleton row={1} rowHeight={15} style={{ backgroundColor: '#EBEBEB' }} />
                 ) : (
                   <Typography.Text style={{ color: '#969799' }}>{`Total: ${
                     kids.length
-                      ? kids.filter(
-                          (kid: IKid) => kid.kidGroup?.id === kidGroup.id,
-                        ).length
+                      ? kids.filter((kid: IKid) => kid.kidGroup?.id === kidGroup.id).length
                       : 0
                   }`}</Typography.Text>
                 )}
@@ -198,19 +159,14 @@ const KidChurch: NextPage = () => {
           })}
       </Grid>
       {/*Jeremias, Timoteos, Titos y Yo Soy Iglekids */}
-      <Grid
-        columnNum={3}
-        gutter={8}
-        style={{ backgroundColor: 'white', paddingBottom: 10 }}
-      >
+      <Grid columnNum={3} gutter={8} style={{ backgroundColor: 'white', paddingBottom: 10 }}>
         {kidGroupSlice.data &&
           kidGroupSlice.data.slice(4).map((kidGroup: IKidGroup) => {
             return (
               <Grid.Item
                 key={kidGroup.id}
                 contentStyle={{
-                  backgroundColor:
-                    selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
+                  backgroundColor: selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
                 }}
                 onClick={() => {
                   if (selectedKidGroup !== kidGroup.id) {
@@ -222,26 +178,17 @@ const KidChurch: NextPage = () => {
               >
                 <Typography.Text
                   style={{
-                    color:
-                      selectedKidGroup === kidGroup.id
-                        ? PRIMARY_COLOR_APP
-                        : '#323232',
+                    color: selectedKidGroup === kidGroup.id ? PRIMARY_COLOR_APP : '#323232',
                   }}
                 >
                   {kidGroup.name}
                 </Typography.Text>
                 {loading ? (
-                  <Skeleton
-                    row={1}
-                    rowHeight={15}
-                    style={{ backgroundColor: '#EBEBEB' }}
-                  />
+                  <Skeleton row={1} rowHeight={15} style={{ backgroundColor: '#EBEBEB' }} />
                 ) : (
                   <Typography.Text style={{ color: '#969799' }}>{`Total: ${
                     kids.length
-                      ? kids.filter(
-                          (kid: IKid) => kid.kidGroup?.id === kidGroup.id,
-                        ).length
+                      ? kids.filter((kid: IKid) => kid.kidGroup?.id === kidGroup.id).length
                       : 0
                   }`}</Typography.Text>
                 )}
@@ -258,13 +205,7 @@ const KidChurch: NextPage = () => {
       {loading ? (
         <>
           {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton
-              key={index}
-              avatar
-              avatarSize={44}
-              row={2}
-              style={{ padding: '10px' }}
-            />
+            <Skeleton key={index} avatar avatarSize={44} row={2} style={{ padding: '10px' }} />
           ))}
         </>
       ) : (
@@ -306,11 +247,7 @@ const KidChurch: NextPage = () => {
                   } meses`}
                   isLink
                   size="large"
-                  rightIcon={
-                    <IoIosArrowForward
-                      style={{ height: '3em', width: '1.2em' }}
-                    />
-                  }
+                  rightIcon={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
                   onClick={() => {
                     setKidToUpdate(kid);
                     setOpenShowKidRegisteredModal(true);

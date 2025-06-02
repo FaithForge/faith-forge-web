@@ -8,15 +8,10 @@ export interface PopoverAppAction {
   onClick: () => void;
 }
 
-export const PopoverApp = (payload: {
-  actions: PopoverAppAction[];
-  icon: ReactNode;
-}) => {
+export const PopoverApp = (payload: { actions: PopoverAppAction[]; icon: ReactNode }) => {
   const { actions, icon } = payload;
   const select = (option: any) => {
-    const action = actions.find(
-      (action: PopoverAppAction) => action.text === option.text,
-    );
+    const action = actions.find((action: PopoverAppAction) => action.text === option.text);
 
     action?.onClick();
   };

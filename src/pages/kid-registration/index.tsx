@@ -15,13 +15,7 @@ import {
 } from '@/libs/common-types/constants';
 import { ColorType } from '@/libs/common-types/constants/theme';
 import { IKid, UserGenderCode } from '@/libs/models';
-import {
-  AppDispatch,
-  GetKids,
-  GetMoreKids,
-  RootState,
-  updateCurrentKid,
-} from '@/libs/state/redux';
+import { AppDispatch, GetKids, GetMoreKids, RootState, updateCurrentKid } from '@/libs/state/redux';
 import { KidChurchRegisterRoles, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { IoIosArrowForward } from 'react-icons/io';
@@ -37,15 +31,9 @@ const Registration: NextPage = () => {
     totalPages,
     loading,
   } = useSelector((state: RootState) => state.kidSlice);
-  const { current: churchCampus } = useSelector(
-    (state: RootState) => state.churchCampusSlice,
-  );
-  const { current: churchMeeting } = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
-  const churchPrinterSlice = useSelector(
-    (state: RootState) => state.churchPrinterSlice,
-  );
+  const { current: churchCampus } = useSelector((state: RootState) => state.churchCampusSlice);
+  const { current: churchMeeting } = useSelector((state: RootState) => state.churchMeetingSlice);
+  const churchPrinterSlice = useSelector((state: RootState) => state.churchPrinterSlice);
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const currentRole = authSlice.currentRole;
 
@@ -119,9 +107,7 @@ const Registration: NextPage = () => {
       {warningAlert.message && (
         <Alert
           title={warningAlert.message}
-          type={
-            warningAlert.blockRegister ? ColorType.ERROR : ColorType.WARNING
-          }
+          type={warningAlert.blockRegister ? ColorType.ERROR : ColorType.WARNING}
           onClick={() => {
             const dialog = document.getElementById(
               'settingsKidRegistrationModal',
@@ -129,9 +115,7 @@ const Registration: NextPage = () => {
             dialog?.showModal();
           }}
           icon={warningAlert.blockRegister ? <PiX /> : <PiWarning />}
-          iconRight={
-            warningAlert.blockRegister ? <PiCaretRight /> : <PiCaretRight />
-          }
+          iconRight={warningAlert.blockRegister ? <PiCaretRight /> : <PiCaretRight />}
         />
       )}
 
@@ -156,13 +140,7 @@ const Registration: NextPage = () => {
       {loading ? (
         <>
           {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton
-              key={index}
-              avatar
-              avatarSize={44}
-              row={2}
-              style={{ padding: '10px' }}
-            />
+            <Skeleton key={index} avatar avatarSize={44} row={2} style={{ padding: '10px' }} />
           ))}
         </>
       ) : (
@@ -178,8 +156,7 @@ const Registration: NextPage = () => {
                 kids.map((kid: IKid) => (
                   <Cell
                     disable={
-                      warningAlert.blockRegister &&
-                      currentRole !== UserRole.KID_REGISTER_ADMIN
+                      warningAlert.blockRegister && currentRole !== UserRole.KID_REGISTER_ADMIN
                     }
                     key={kid.faithForgeId}
                     title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
@@ -209,15 +186,10 @@ const Registration: NextPage = () => {
                           }`
                         : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
                     }
-                    bgColorClass={
-                      kid.currentKidRegistration && 'bg-neutral-200'
-                    }
-                    bgHoverColorClass={
-                      kid.currentKidRegistration && 'hover:bg-neutral-300'
-                    }
+                    bgColorClass={kid.currentKidRegistration && 'bg-neutral-200'}
+                    bgHoverColorClass={kid.currentKidRegistration && 'hover:bg-neutral-300'}
                     onClick={() =>
-                      kid.age < 12 ||
-                      currentRole === UserRole.KID_REGISTER_ADMIN
+                      kid.age < 12 || currentRole === UserRole.KID_REGISTER_ADMIN
                         ? registerKidViewHandler(kid)
                         : null
                     }
@@ -225,8 +197,7 @@ const Registration: NextPage = () => {
                       <IoIosArrowForward
                         style={{
                           height:
-                            kid.age < 12 ||
-                            currentRole === UserRole.KID_REGISTER_ADMIN
+                            kid.age < 12 || currentRole === UserRole.KID_REGISTER_ADMIN
                               ? '3em'
                               : '0em',
                           width: '1.2em',

@@ -1,13 +1,5 @@
 import { FC, useMemo, useState } from 'react';
-import {
-  Button,
-  Cell,
-  Popup,
-  Radio,
-  Search,
-  Space,
-  Typography,
-} from 'react-vant';
+import { Button, Cell, Popup, Radio, Search, Space, Typography } from 'react-vant';
 import { CiSearch } from 'react-icons/ci';
 import { SelectorOption } from '@/libs/common-types/global';
 
@@ -33,9 +25,7 @@ export const ModalSelectorApp: FC<ModalSelectorProps> = ({
   const filteredOptions = useMemo(() => {
     if (searchOptions) {
       return options.filter((item) =>
-        item.name
-          .toLocaleLowerCase()
-          .includes(searchOptions.toLocaleLowerCase()),
+        item.name.toLocaleLowerCase().includes(searchOptions.toLocaleLowerCase()),
       );
     } else {
       return options;
@@ -90,11 +80,7 @@ export const ModalSelectorApp: FC<ModalSelectorProps> = ({
           }}
         />
 
-        <Radio.Group
-          value={value?.id}
-          style={{ width: '100%' }}
-          onChange={(val) => onClick(val)}
-        >
+        <Radio.Group value={value?.id} style={{ width: '100%' }} onChange={(val) => onClick(val)}>
           <Cell.Group>
             {filteredOptions
               ? filteredOptions.map((condition) => (

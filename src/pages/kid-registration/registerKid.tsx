@@ -42,10 +42,7 @@ const RegisterKidView: NextPage = () => {
     <Layout>
       <NavBarApp
         right={
-          <PopoverApp
-            actions={registerKidMenu}
-            icon={<HiOutlineDotsVertical size={'1.5em'} />}
-          />
+          <PopoverApp actions={registerKidMenu} icon={<HiOutlineDotsVertical size={'1.5em'} />} />
         }
         title="Registrar niño"
       />

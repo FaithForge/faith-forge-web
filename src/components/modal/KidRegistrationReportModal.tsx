@@ -7,18 +7,11 @@ import { useSelector } from 'react-redux';
 import { Button, Form, hooks, Input, Radio, Selector } from 'react-vant';
 
 const KidRegistrationReportModal = () => {
-  const churchCampusSlice = useSelector(
-    (state: RootState) => state.churchCampusSlice,
-  );
-  const churchMeetingSlice = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
+  const churchCampusSlice = useSelector((state: RootState) => state.churchCampusSlice);
+  const churchMeetingSlice = useSelector((state: RootState) => state.churchMeetingSlice);
   const [form] = Form.useForm();
 
-  const now = FFDay.utc()
-    .tz('America/Bogota')
-    .startOf('day')
-    .format('YYYY-MM-DD');
+  const now = FFDay.utc().tz('America/Bogota').startOf('day').format('YYYY-MM-DD');
   const [isFinished, setIsFinished] = useState(false);
 
   const defaultState = {
@@ -116,13 +109,11 @@ ${state.observationGeneral}`;
         <div className="py-4">
           {isFinished ? (
             <div>
-              <h2 className="text-lg font-bold text-center py-2">
-                ¡Reporte generado!
-              </h2>
+              <h2 className="text-lg font-bold text-center py-2">¡Reporte generado!</h2>
               <p style={{ marginBottom: 20 }}>
-                Elige si deseas compartir por WhatsApp (se abrirá el grupo y
-                elige el grupo de Supervisores Regikids) o copia el texto y
-                pegado en el grupo. Una vez terminado cierra esta ventana
+                Elige si deseas compartir por WhatsApp (se abrirá el grupo y elige el grupo de
+                Supervisores Regikids) o copia el texto y pegado en el grupo. Una vez terminado
+                cierra esta ventana
               </p>
               <Button
                 type="primary"
@@ -184,18 +175,15 @@ ${state.observationGeneral}`;
               <Form.Item
                 name="churchGroup"
                 label="Grupo que sirvió"
-                rules={[
-                  { required: true, message: 'Por favor seleccione un grupo' },
-                ]}
+                rules={[{ required: true, message: 'Por favor seleccione un grupo' }]}
               >
                 <Selector
                   options={churchOptions}
                   onChange={async (arr) => {
                     if (arr.length) {
                       updateState({
-                        group: churchOptions.find(
-                          (churchOption) => churchOption.value === arr[0],
-                        )?.label,
+                        group: churchOptions.find((churchOption) => churchOption.value === arr[0])
+                          ?.label,
                       });
                     } else {
                       updateState({
@@ -206,9 +194,7 @@ ${state.observationGeneral}`;
                 />
               </Form.Item>
 
-              <h2 className="text-lg font-bold py-2">
-                Inventario (Obligatorio)
-              </h2>
+              <h2 className="text-lg font-bold py-2">Inventario (Obligatorio)</h2>
               <Form.Item name="computer" label="¿Esta el computador?">
                 <Radio.Group
                   defaultValue="Si"
@@ -219,16 +205,11 @@ ${state.observationGeneral}`;
                   <Radio name="No">No</Radio>
                 </Radio.Group>
               </Form.Item>
-              <Form.Item
-                name="computerCharger"
-                label="¿Esta el cargador del computador?"
-              >
+              <Form.Item name="computerCharger" label="¿Esta el cargador del computador?">
                 <Radio.Group
                   defaultValue="Si"
                   direction="horizontal"
-                  onChange={(computerCharger) =>
-                    updateState({ computerCharger })
-                  }
+                  onChange={(computerCharger) => updateState({ computerCharger })}
                 >
                   <Radio name="Si">Si</Radio>
                   <Radio name="No">No</Radio>
@@ -374,9 +355,7 @@ ${state.observationGeneral}`;
                 <Radio.Group
                   defaultValue="Si"
                   direction="horizontal"
-                  onChange={(welcomeStickerBoy) =>
-                    updateState({ welcomeStickerBoy })
-                  }
+                  onChange={(welcomeStickerBoy) => updateState({ welcomeStickerBoy })}
                 >
                   <Radio name="Si">Si</Radio>
                   <Radio name="No">No</Radio>
@@ -389,9 +368,7 @@ ${state.observationGeneral}`;
                 <Radio.Group
                   defaultValue="Si"
                   direction="horizontal"
-                  onChange={(welcomeStickerGirl) =>
-                    updateState({ welcomeStickerGirl })
-                  }
+                  onChange={(welcomeStickerGirl) => updateState({ welcomeStickerGirl })}
                 >
                   <Radio name="Si">Si</Radio>
                   <Radio name="No">No</Radio>
@@ -404,9 +381,7 @@ ${state.observationGeneral}`;
                 <Radio.Group
                   defaultValue="Si"
                   direction="horizontal"
-                  onChange={(birthdayStickerBoy) =>
-                    updateState({ birthdayStickerBoy })
-                  }
+                  onChange={(birthdayStickerBoy) => updateState({ birthdayStickerBoy })}
                 >
                   <Radio name="Si">Si</Radio>
                   <Radio name="No">No</Radio>
@@ -419,21 +394,17 @@ ${state.observationGeneral}`;
                 <Radio.Group
                   defaultValue="Si"
                   direction="horizontal"
-                  onChange={(birthdayStickerGirl) =>
-                    updateState({ birthdayStickerGirl })
-                  }
+                  onChange={(birthdayStickerGirl) => updateState({ birthdayStickerGirl })}
                 >
                   <Radio name="Si">Si</Radio>
                   <Radio name="No">No</Radio>
                 </Radio.Group>
               </Form.Item>
-              <h2 className="text-lg font-bold py-2">
-                Observaciones generales (Obligatorio)
-              </h2>
+              <h2 className="text-lg font-bold py-2">Observaciones generales (Obligatorio)</h2>
               <p>
-                Si tuvo algún inconveniente que desee comentar, queja o reclamo,
-                por favor manifestarlo. En caso contrario, manifestar que deja
-                el área en perfectas condiciones para el siguiente grupo.
+                Si tuvo algún inconveniente que desee comentar, queja o reclamo, por favor
+                manifestarlo. En caso contrario, manifestar que deja el área en perfectas
+                condiciones para el siguiente grupo.
               </p>
 
               <Form.Item
@@ -450,9 +421,7 @@ ${state.observationGeneral}`;
                   showWordLimit
                   rows={3}
                   value={state.observationGeneral}
-                  onChange={(observationGeneral) =>
-                    updateState({ observationGeneral })
-                  }
+                  onChange={(observationGeneral) => updateState({ observationGeneral })}
                 />
               </Form.Item>
             </Form>

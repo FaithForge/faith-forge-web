@@ -1,12 +1,6 @@
 import { useRouter } from 'next/router';
 import React, { useEffect, useState } from 'react';
-import {
-  PiFileText,
-  PiGearSix,
-  PiHouse,
-  PiPlusCircle,
-  PiQrCode,
-} from 'react-icons/pi';
+import { PiFileText, PiGearSix, PiHouse, PiPlusCircle, PiQrCode } from 'react-icons/pi';
 import KidRegistrationSettingsModal from '../modal/KidRegistrationSettingsModal';
 import { useSelector } from 'react-redux';
 import { RootState } from '@/libs/state/redux';
@@ -20,26 +14,16 @@ type Props = {
 
 const KidRegistrationLayout = ({ children }: Props) => {
   const router = useRouter();
-  const churchCampusSlice = useSelector(
-    (state: RootState) => state.churchCampusSlice,
-  );
-  const churchMeetingSlice = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
-  const churchPrinterSlice = useSelector(
-    (state: RootState) => state.churchPrinterSlice,
-  );
+  const churchCampusSlice = useSelector((state: RootState) => state.churchCampusSlice);
+  const churchMeetingSlice = useSelector((state: RootState) => state.churchMeetingSlice);
+  const churchPrinterSlice = useSelector((state: RootState) => state.churchPrinterSlice);
 
   const authSlice = useSelector((state: RootState) => state.authSlice);
   const currentRole = authSlice.currentRole;
   const [disableActions, setDisableActions] = useState<boolean>(false);
 
   useEffect(() => {
-    if (
-      !churchCampusSlice.current ||
-      !churchMeetingSlice.current ||
-      !churchPrinterSlice.current
-    ) {
+    if (!churchCampusSlice.current || !churchMeetingSlice.current || !churchPrinterSlice.current) {
       const dialog = document.getElementById(
         'settingsKidRegistrationModal',
       ) as HTMLDialogElement | null;
@@ -51,10 +35,7 @@ const KidRegistrationLayout = ({ children }: Props) => {
     const currentDay = DateTime.local().toFormat('EEEE');
     if (churchMeetingSlice.current && churchPrinterSlice.current) {
       let warning = false;
-      if (
-        currentDay.toUpperCase() ===
-        churchMeetingSlice.current.day.toUpperCase()
-      ) {
+      if (currentDay.toUpperCase() === churchMeetingSlice.current.day.toUpperCase()) {
         const currentTime = DateTime.local().toFormat('HH:mm:ss');
         if (churchMeetingSlice.current.initialRegistrationHour >= currentTime) {
           warning = true;
@@ -88,12 +69,8 @@ const KidRegistrationLayout = ({ children }: Props) => {
             disabled={disableActions}
             className={`${disableActions ? 'opacity-60' : 'opacity-0'}`}
           >
-            <PiQrCode
-              className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-0'}`}
-            />
-            <span
-              className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-0'}`}
-            >
+            <PiQrCode className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-0'}`} />
+            <span className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-0'}`}>
               Escanear QR
             </span>
           </button>
@@ -102,12 +79,8 @@ const KidRegistrationLayout = ({ children }: Props) => {
             disabled={disableActions}
             className={`${disableActions ? 'opacity-60' : 'opacity-0'}`}
           >
-            <PiPlusCircle
-              className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-0'}`}
-            />
-            <span
-              className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-0'}`}
-            >
+            <PiPlusCircle className={`h-8 w-8 ${disableActions ? 'opacity-60' : 'opacity-0'}`} />
+            <span className={`dock-label ${disableActions ? 'opacity-60' : 'opacity-0'}`}>
               Crear niño
             </span>
           </button>
@@ -123,10 +96,9 @@ const KidRegistrationLayout = ({ children }: Props) => {
             <span className="dock-label">Configurar</span>
           </button>
           {currentRole &&
-            [
-              UserRole.KID_REGISTER_ADMIN,
-              UserRole.KID_REGISTER_SUPERVISOR,
-            ]?.includes(currentRole) && (
+            [UserRole.KID_REGISTER_ADMIN, UserRole.KID_REGISTER_SUPERVISOR]?.includes(
+              currentRole,
+            ) && (
               <button
                 onClick={() => {
                   const dialog = document.getElementById(

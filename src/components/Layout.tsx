@@ -12,10 +12,7 @@ type Props = {
   children?: React.ReactNode;
 };
 
-const userRoleLayoutMap: Record<
-  UserRole,
-  React.ComponentType<{ children: React.ReactNode }>
-> = {
+const userRoleLayoutMap: Record<UserRole, React.ComponentType<{ children: React.ReactNode }>> = {
   [UserRole.KID_REGISTER_ADMIN]: KidRegistrationLayout,
   [UserRole.KID_REGISTER_SUPERVISOR]: KidRegistrationLayout,
   [UserRole.KID_REGISTER_USER]: KidRegistrationLayout,

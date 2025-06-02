@@ -101,19 +101,13 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
     <>
       <div className="navbar bg-base-100 border-b border-gray-50 sticky top-0 z-100">
         <div className="flex-none">
-          {userRoles &&
-          userRoles.filter((role) => role in userRolesNavBarConfig).length >
-            1 ? (
+          {userRoles && userRoles.filter((role) => role in userRolesNavBarConfig).length > 1 ? (
             <div className="indicator">
               <span
                 className={`indicator-item indicator-bottom indicator-center status status-warning ${currentRole && userRolesNavBarConfig[currentRole]?.color}`}
               ></span>
               <div className="dropdown">
-                <div
-                  tabIndex={0}
-                  role="button"
-                  className="btn btn-ghost btn-circle"
-                >
+                <div tabIndex={0} role="button" className="btn btn-ghost btn-circle">
                   <PiUserSwitch className="h-8 w-8" />
                 </div>
                 <ul
@@ -121,29 +115,19 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
                   className="menu dropdown-content bg-base-100 rounded-box z-1 mt-3 w-52 p-2 shadow"
                 >
                   {userRoles
-                    .filter(
-                      (userRole: UserRole) =>
-                        userRolesNavBarConfig[userRole] !== undefined,
-                    )
+                    .filter((userRole: UserRole) => userRolesNavBarConfig[userRole] !== undefined)
                     .map((userRole: UserRole) => {
                       return (
                         <li
                           key={userRole}
-                          className={
-                            currentRole === userRole ? 'menu-disabled' : ''
-                          }
+                          className={currentRole === userRole ? 'menu-disabled' : ''}
                         >
                           <a
                             onClick={async () => {
                               await dispatch(changeCurrentRole(userRole));
-                              router.push(
-                                userRolesNavBarConfig[userRole]
-                                  ?.dashboardUrl as any,
-                              );
+                              router.push(userRolesNavBarConfig[userRole]?.dashboardUrl as any);
                             }}
-                            className={
-                              currentRole === userRole ? 'menu-active' : ''
-                            }
+                            className={currentRole === userRole ? 'menu-active' : ''}
                           >
                             {userRolesNavBarConfig[userRole]?.text}
                             <span
@@ -159,8 +143,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
           ) : null}
         </div>
 
-        {(IsSupervisorRegisterOrKidChurchSupervisor(roles) ||
-          IsRegisterKidChurch(roles)) && (
+        {(IsSupervisorRegisterOrKidChurchSupervisor(roles) || IsRegisterKidChurch(roles)) && (
           <div className="flex-1 mx-2">
             <label className="input input-ghost">
               <svg

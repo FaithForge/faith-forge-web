@@ -78,10 +78,7 @@ const MobileInputApp = ({
         {(_, selectRow: PickerColumnOption, actions) => {
           return (
             <Space>
-              <Space
-                align="center"
-                onClick={() => (disabled ? null : actions.open())}
-              >
+              <Space align="center" onClick={() => (disabled ? null : actions.open())}>
                 <div>+{selectRow?.text}</div>
                 <ArrowDown style={{ display: 'block' }} />
               </Space>

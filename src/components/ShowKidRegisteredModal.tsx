@@ -27,10 +27,7 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
   };
 
   const birthday = kid.birthday
-    ? FFDay(new Date(kid.birthday))
-        .tz('UTC')
-        .locale('es')
-        .format('MMMM D, YYYY')
+    ? FFDay(new Date(kid.birthday)).tz('UTC').locale('es').format('MMMM D, YYYY')
     : '';
 
   const kidGuardianRegistration = kid.relations?.find(
@@ -54,12 +51,7 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
       onClose={closeModal}
     >
       <div style={{ paddingLeft: 15, paddingRight: 15 }}>
-        <Flex
-          justify="center"
-          align="center"
-          gutter={16}
-          style={{ paddingBottom: 10 }}
-        >
+        <Flex justify="center" align="center" gutter={16} style={{ paddingBottom: 10 }}>
           <Flex.Item span={8}>
             <Image
               alt="profileImage"
@@ -96,15 +88,11 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
               {capitalizeWords(kid.lastName ?? '')}
             </h2>
             {kid.kidGroup && (
-              <TagKidGroupApp
-                kidGroup={kid.kidGroup.name}
-                staticGroup={kid.staticGroup}
-              />
+              <TagKidGroupApp kidGroup={kid.kidGroup.name} staticGroup={kid.staticGroup} />
             )}
           </Flex.Item>
         </Flex>
-        {birthday.slice(0, -6) ===
-          dayjs(new Date()).locale('es').format('MMMM D') && (
+        {birthday.slice(0, -6) === dayjs(new Date()).locale('es').format('MMMM D') && (
           <NoticeBar
             text="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
             background="rgb(249, 249, 249)"
@@ -149,9 +137,7 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                   <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
                     Género
                   </Flex.Item>
-                  <Flex.Item span={12}>{`${
-                    USER_GENDER_CODE_MAPPER[kid.gender]
-                  }`}</Flex.Item>
+                  <Flex.Item span={12}>{`${USER_GENDER_CODE_MAPPER[kid.gender]}`}</Flex.Item>
                 </>
               )}
               {kid.healthSecurityEntity && (
@@ -222,17 +208,14 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                       </Flex.Item>
                     </>
                   )}
-                  {IsSupervisorRegisterKidChurch(roles) &&
-                    kid.currentKidRegistration?.log && (
-                      <>
-                        <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
-                          Log de registro
-                        </Flex.Item>
-                        <Flex.Item span={12}>
-                          {`${kid.currentKidRegistration?.log}`}
-                        </Flex.Item>
-                      </>
-                    )}
+                  {IsSupervisorRegisterKidChurch(roles) && kid.currentKidRegistration?.log && (
+                    <>
+                      <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
+                        Log de registro
+                      </Flex.Item>
+                      <Flex.Item span={12}>{`${kid.currentKidRegistration?.log}`}</Flex.Item>
+                    </>
+                  )}
                 </Flex>
               </Card.Body>
             </Card>

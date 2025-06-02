@@ -169,9 +169,7 @@ const ReportRegistrationGroup: NextPage = () => {
           <Form.Item
             name="churchCampus"
             label="Sede"
-            rules={[
-              { required: true, message: 'Por favor seleccionar una sede' },
-            ]}
+            rules={[{ required: true, message: 'Por favor seleccionar una sede' }]}
           >
             <Selector
               options={churchOptions}
@@ -220,9 +218,7 @@ const ReportRegistrationGroup: NextPage = () => {
               confirmButtonText={'Confirmar'}
             >
               {(value: Date) =>
-                value
-                  ? `${dayjs(value).format('YYYY-MM-DD')}`
-                  : 'Seleccionar fecha'
+                value ? `${dayjs(value).format('YYYY-MM-DD')}` : 'Seleccionar fecha'
               }
             </DatetimePicker>
           </Form.Item>
@@ -240,13 +236,9 @@ const ReportRegistrationGroup: NextPage = () => {
           <>
             <h2>Totales generales</h2>
             <Grid columnNum={2} gutter={0} border={true} center={false}>
-              <Grid.Item style={{ fontWeight: 'bold' }}>
-                Total niños registrados
-              </Grid.Item>
+              <Grid.Item style={{ fontWeight: 'bold' }}>Total niños registrados</Grid.Item>
               <Grid.Item>{report.totalKids}</Grid.Item>
-              <Grid.Item style={{ fontWeight: 'bold' }}>
-                Total niños nuevos
-              </Grid.Item>
+              <Grid.Item style={{ fontWeight: 'bold' }}>Total niños nuevos</Grid.Item>
               <Grid.Item>{report.totalNewKids}</Grid.Item>
             </Grid>
 
@@ -258,9 +250,7 @@ const ReportRegistrationGroup: NextPage = () => {
                     <Grid.Item style={{ fontWeight: 'bold', flexBasis: '50%' }}>
                       {kidGroup.name}
                     </Grid.Item>
-                    <Grid.Item style={{ flexBasis: '50%' }}>
-                      {kidGroup.count}
-                    </Grid.Item>
+                    <Grid.Item style={{ flexBasis: '50%' }}>{kidGroup.count}</Grid.Item>
                   </React.Fragment>
                 );
               })}
@@ -270,13 +260,11 @@ const ReportRegistrationGroup: NextPage = () => {
             <Grid columnNum={2} gutter={0} border={true} center={false}>
               <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
               <Grid.Item>
-                {report.statistics?.byGender?.find((d: any) => d.name === 'M')
-                  ?.count ?? 0}
+                {report.statistics?.byGender?.find((d: any) => d.name === 'M')?.count ?? 0}
               </Grid.Item>
               <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
               <Grid.Item>
-                {report.statistics?.byGender?.find((d: any) => d.name === 'F')
-                  ?.count ?? 0}
+                {report.statistics?.byGender?.find((d: any) => d.name === 'F')?.count ?? 0}
               </Grid.Item>
             </Grid>
             {/* <h2>Lista niños por salones</h2>

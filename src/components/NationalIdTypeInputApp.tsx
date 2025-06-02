@@ -1,9 +1,4 @@
-import {
-  IdType,
-  UserIdType,
-  ID_TYPE_MAPPER,
-  idGuardianTypeSelect,
-} from '@/libs/models';
+import { IdType, UserIdType, ID_TYPE_MAPPER, idGuardianTypeSelect } from '@/libs/models';
 import React from 'react';
 import { Picker, PickerColumnOption, Field } from 'react-vant';
 

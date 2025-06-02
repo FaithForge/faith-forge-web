@@ -22,11 +22,7 @@ import { Layout } from '../../components/Layout';
 import { TbCameraPlus } from 'react-icons/tb';
 import { ModalSelectorApp } from '../../components/ModalSelectorApp';
 import { ModalCheckerApp } from '../../components/ModalCheckerApp';
-import {
-  IKidGroup,
-  userGenderSelect,
-  healthSecurityEntitySelect,
-} from '@/libs/models';
+import { IKidGroup, userGenderSelect, healthSecurityEntitySelect } from '@/libs/models';
 import {
   RootState,
   AppDispatch,
@@ -64,9 +60,7 @@ const UpdateKidPage: NextPage = () => {
   });
   const [source, setSource] = useState(kidSlice.current?.photoUrl);
   const [photo, setPhoto] = useState<Blob>();
-  const [staticGroup, setStaticGroup] = useState(
-    kidSlice.current?.staticGroup as boolean,
-  );
+  const [staticGroup, setStaticGroup] = useState(kidSlice.current?.staticGroup as boolean);
 
   const handleCapture = async (target: HTMLInputElement) => {
     if (target.files) {
@@ -75,11 +69,7 @@ const UpdateKidPage: NextPage = () => {
 
         try {
           // Redimensiona la imagen
-          const resizedBlob = await resizeAndCropImageToSquare(
-            file,
-            500,
-            500 * 1024,
-          ); // 800px, 500 KB
+          const resizedBlob = await resizeAndCropImageToSquare(file, 500, 500 * 1024); // 800px, 500 KB
           const resizedUrl = URL.createObjectURL(resizedBlob);
 
           // Guarda la imagen redimensionada
@@ -129,10 +119,7 @@ const UpdateKidPage: NextPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [form, kidSlice]);
 
-  const checkHealthSecurityEntity = (
-    _: any,
-    value: { id: string; name: string },
-  ) => {
+  const checkHealthSecurityEntity = (_: any, value: { id: string; name: string }) => {
     value = value ?? {
       id: kidSlice.current?.healthSecurityEntity,
       name: kidSlice.current?.healthSecurityEntity,
@@ -152,8 +139,7 @@ const UpdateKidPage: NextPage = () => {
       const formData = new FormData();
       formData.append('file', photo);
 
-      photoUrl = (await dispatch(UploadUserImage({ formData })))
-        .payload as string;
+      photoUrl = (await dispatch(UploadUserImage({ formData }))).payload as string;
     }
 
     if (kidSlice.current?.id) {
@@ -170,10 +156,8 @@ const UpdateKidPage: NextPage = () => {
             observations: values.observations ?? undefined,
             photoUrl,
             healthSecurityEntity:
-              values.healthSecurityEntity?.name ??
-              kidSlice.current?.healthSecurityEntity,
-            medicalConditionId:
-              medicalCondition.id !== '' ? medicalCondition.id : undefined,
+              values.healthSecurityEntity?.name ?? kidSlice.current?.healthSecurityEntity,
+            medicalConditionId: medicalCondition.id !== '' ? medicalCondition.id : undefined,
           },
         }),
       );
@@ -272,9 +256,7 @@ const UpdateKidPage: NextPage = () => {
           onClick={(_, action) => {
             action?.current?.open();
           }}
-          rules={[
-            { required: true, message: 'Fecha de nacimiento es requerida' },
-          ]}
+          rules={[{ required: true, message: 'Fecha de nacimiento es requerida' }]}
         >
           <DatetimePicker
             popup
@@ -289,9 +271,7 @@ const UpdateKidPage: NextPage = () => {
               value
                 ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
                     calculateAge(value) ?? 0,
-                  )} años y ${
-                    getAgeInMonths(value) - Math.floor(calculateAge(value)) * 12
-                  } meses)`
+                  )} años y ${getAgeInMonths(value) - Math.floor(calculateAge(value)) * 12} meses)`
                 : 'Seleccionar fecha'
             }
           </DatetimePicker>
@@ -329,15 +309,10 @@ const UpdateKidPage: NextPage = () => {
           />
         </Form.Item>
         <Form.Item>
-          <Typography.Title level={4}>
-            Información Adicional (Opcional)
-          </Typography.Title>
+          <Typography.Title level={4}>Información Adicional (Opcional)</Typography.Title>
         </Form.Item>
         <Form.Item name="staticGroup" label="Asignar salón estático">
-          <Switch
-            onChange={(value) => setStaticGroup(value)}
-            defaultChecked={staticGroup}
-          />
+          <Switch onChange={(value) => setStaticGroup(value)} defaultChecked={staticGroup} />
         </Form.Item>
         {staticGroup && (
           <Form.Item

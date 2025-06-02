@@ -2,15 +2,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
-import {
-  Button,
-  Form,
-  Input,
-  Popup,
-  Selector,
-  Toast,
-  Typography,
-} from 'react-vant';
+import { Button, Form, Input, Popup, Selector, Toast, Typography } from 'react-vant';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 import NationalIdTypeInputApp from '../NationalIdTypeInputApp';
 import { MdKeyboardArrowRight } from 'react-icons/md';
@@ -46,8 +38,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
   } = useSelector((state: RootState) => state.kidGuardianSlice);
   const { current: kid } = useSelector((state: RootState) => state.kidSlice);
   const [selectedGender, setSelectedGender] = useState<UserGenderCode>();
-  const [kidRelationSelectFilter, setKidRelationSelectFilter] =
-    useState(kidRelationSelect);
+  const [kidRelationSelectFilter, setKidRelationSelectFilter] = useState(kidRelationSelect);
 
   const dispatch = useDispatch<AppDispatch>();
 
@@ -158,9 +149,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
   useEffect(() => {
     let filter;
     if (selectedGender) {
-      filter = kidRelationSelect.filter(
-        (kidRelation) => kidRelation.gender === selectedGender,
-      );
+      filter = kidRelationSelect.filter((kidRelation) => kidRelation.gender === selectedGender);
     } else {
       filter = kidRelationSelect;
     }
@@ -215,9 +204,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
             name="guardianNationalId"
             label="Numero de documento"
             disabled={!!guardian}
-            rules={[
-              { required: true, message: 'Numero de documento es requerido' },
-            ]}
+            rules={[{ required: true, message: 'Numero de documento es requerido' }]}
           >
             <Input
               placeholder="Escribir numero de documento..."

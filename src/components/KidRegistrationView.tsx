@@ -54,22 +54,15 @@ const KidRegistrationView = () => {
   const router = useRouter();
   const [action, setAction] = useState<string>();
   const roles = GetUserRoles();
-  const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] =
-    useState(false);
-  const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<
-    IKidGuardian | undefined
-  >();
+  const [openUpdateKidGuardianPhoneModal, setOpenUpdateKidGuardianPhoneModal] = useState(false);
+  const [kidGuardianToUpdate, setKidGuardianToUpdate] = useState<IKidGuardian | undefined>();
   const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
   const [isKidVolunteer, setIsKidVolunteer] = useState(false);
 
   const kidSlice = useSelector((state: RootState) => state.kidSlice);
-  const kidRegistrationSlice = useSelector(
-    (state: RootState) => state.kidRegistrationSlice,
-  );
+  const kidRegistrationSlice = useSelector((state: RootState) => state.kidRegistrationSlice);
 
-  const { current: churchMeeting } = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
+  const { current: churchMeeting } = useSelector((state: RootState) => state.churchMeetingSlice);
 
   useEffect(() => {
     if (kidSlice.current?.id) {
@@ -88,9 +81,7 @@ const KidRegistrationView = () => {
       await dispatch(
         CreateKidRegistration({
           kidId: kidSlice.current.id,
-          kidGroupId: isKidVolunteer
-            ? kidGroupSlice.data[0].id
-            : kidSlice.current.kidGroup?.id,
+          kidGroupId: isKidVolunteer ? kidGroupSlice.data[0].id : kidSlice.current.kidGroup?.id,
           kidGuardianId,
           observation,
         }),
@@ -138,16 +129,12 @@ const KidRegistrationView = () => {
   const kidGuardianRegistration = kidSlice.current?.relations?.length
     ? kidSlice.current?.relations?.find(
         (kidGuardian: IKidGuardian) =>
-          kidGuardian.id ===
-          kidSlice.current?.currentKidRegistration?.guardianId,
+          kidGuardian.id === kidSlice.current?.currentKidRegistration?.guardianId,
       )
     : null;
 
   const birthday = kidSlice.current?.birthday
-    ? FFDay(new Date(kidSlice.current.birthday))
-        .tz('UTC')
-        .locale('es')
-        .format('MMMM D, YYYY')
+    ? FFDay(new Date(kidSlice.current.birthday)).tz('UTC').locale('es').format('MMMM D, YYYY')
     : '';
 
   const imageProfile = kidSlice.current?.photoUrl
@@ -158,12 +145,7 @@ const KidRegistrationView = () => {
 
   return (
     <div style={{ paddingLeft: 15, paddingRight: 15 }}>
-      <Flex
-        justify="center"
-        align="center"
-        gutter={16}
-        style={{ paddingBottom: 10 }}
-      >
+      <Flex justify="center" align="center" gutter={16} style={{ paddingBottom: 10 }}>
         <Flex.Item span={8}>
           <Image
             alt="profileImage"
@@ -200,12 +182,7 @@ const KidRegistrationView = () => {
             {capitalizeWords(kidSlice.current?.lastName ?? '')}
           </h2>
           {!kidSlice.current?.kidGroup ? (
-            <Skeleton
-              row={1}
-              rowWidth={120}
-              rowHeight={25}
-              style={{ padding: 0 }}
-            />
+            <Skeleton row={1} rowWidth={120} rowHeight={25} style={{ padding: 0 }} />
           ) : (
             <>
               {kidSlice.current?.currentKidRegistration ? (
@@ -229,13 +206,9 @@ const KidRegistrationView = () => {
                 <>
                   <TagKidGroupApp
                     kidGroup={
-                      isKidVolunteer
-                        ? kidGroupSlice.data[0].name
-                        : kidSlice.current.kidGroup.name
+                      isKidVolunteer ? kidGroupSlice.data[0].name : kidSlice.current.kidGroup.name
                     }
-                    staticGroup={
-                      isKidVolunteer ? false : kidSlice.current.staticGroup
-                    }
+                    staticGroup={isKidVolunteer ? false : kidSlice.current.staticGroup}
                   />
                   <PiUserSwitchFill
                     size={24}
@@ -259,8 +232,7 @@ const KidRegistrationView = () => {
           )}
         </Flex.Item>
       </Flex>
-      {birthday.slice(0, -6) ===
-        dayjs(new Date()).locale('es').format('MMMM D') && (
+      {birthday.slice(0, -6) === dayjs(new Date()).locale('es').format('MMMM D') && (
         <NoticeBar
           text="¡¡¡HOY ES SU CUMPLEAÑOS!!!"
           background="rgb(249, 249, 249)"
@@ -277,9 +249,7 @@ const KidRegistrationView = () => {
                 <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
                   Código de aplicación
                 </Flex.Item>
-                <Flex.Item span={12}>
-                  {kidSlice.current?.faithForgeId}
-                </Flex.Item>
+                <Flex.Item span={12}>{kidSlice.current?.faithForgeId}</Flex.Item>
               </>
             )}
             {(kidSlice.current?.age || kidSlice.current?.age === 0) &&
@@ -290,8 +260,7 @@ const KidRegistrationView = () => {
                   </Flex.Item>
                   <Flex.Item span={12}>
                     {`${Math.floor(kidSlice.current?.age ?? 0)} años y ${
-                      kidSlice.current.ageInMonths -
-                      Math.floor(kidSlice.current.age) * 12
+                      kidSlice.current.ageInMonths - Math.floor(kidSlice.current.age) * 12
                     } meses`}
                   </Flex.Item>
                 </>
@@ -310,9 +279,7 @@ const KidRegistrationView = () => {
                   Género
                 </Flex.Item>
                 <Flex.Item span={12}>{`${
-                  USER_GENDER_CODE_MAPPER[
-                    kidSlice.current.gender as any as UserGenderCode
-                  ]
+                  USER_GENDER_CODE_MAPPER[kidSlice.current.gender as any as UserGenderCode]
                 }`}</Flex.Item>
               </>
             )}
@@ -328,9 +295,7 @@ const KidRegistrationView = () => {
                   <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
                     EPS
                   </Flex.Item>
-                  <Flex.Item span={12}>
-                    {kidSlice.current.healthSecurityEntity}
-                  </Flex.Item>
+                  <Flex.Item span={12}>{kidSlice.current.healthSecurityEntity}</Flex.Item>
                 </>
               )
             )}
@@ -364,9 +329,7 @@ const KidRegistrationView = () => {
                   <Flex.Item span={12} style={{ fontWeight: 'bold' }}>
                     Observaciones generales
                   </Flex.Item>
-                  <Flex.Item span={12}>
-                    {kidSlice.current.observations}
-                  </Flex.Item>
+                  <Flex.Item span={12}>{kidSlice.current.observations}</Flex.Item>
                 </>
               )
             )}
@@ -415,51 +378,43 @@ const KidRegistrationView = () => {
             {!kidSlice.current?.relations ? (
               <Skeleton row={3} style={{ width: '100%' }} />
             ) : (
-              <Radio.Group
-                value={form.getFieldValue('guardian')}
-                style={{ width: '100%' }}
-              >
+              <Radio.Group value={form.getFieldValue('guardian')} style={{ width: '100%' }}>
                 <Cell.Group border={false}>
-                  {kidSlice.current.relations.map(
-                    (kidGuardian: IKidGuardian) => {
-                      return (
-                        <Cell
-                          key={kidGuardian.id}
-                          clickable
-                          title={`${capitalizeWords(kidGuardian.firstName)} ${capitalizeWords(
-                            kidGuardian.lastName as '',
-                          )} (${KID_RELATION_CODE_MAPPER[kidGuardian.relation]})`}
-                          label={`Teléfono: ${kidGuardian.dialCodePhone} ${kidGuardian.phone}`}
-                          onClick={() =>
-                            form.setFieldValue('guardian', kidGuardian.id)
-                          }
-                          icon={<Radio name={kidGuardian.id} />}
-                          rightIcon={
-                            <AiFillEdit
-                              style={{ width: 24, height: 24 }}
-                              onClick={() => {
-                                const kidGuardianSearch =
-                                  kidSlice.current?.relations?.find(
-                                    (item) => item.id === kidGuardian.id,
-                                  );
-                                if (kidGuardianSearch) {
-                                  setKidGuardianToUpdate(kidGuardianSearch);
-                                  setOpenUpdateKidGuardianPhoneModal(true);
-                                }
-                              }}
-                            />
-                          }
-                          style={{
-                            paddingLeft: 0,
-                            paddingRight: 0,
-                            paddingTop: 5,
-                            paddingBottom: 5,
-                            alignItems: 'center',
-                          }}
-                        />
-                      );
-                    },
-                  )}
+                  {kidSlice.current.relations.map((kidGuardian: IKidGuardian) => {
+                    return (
+                      <Cell
+                        key={kidGuardian.id}
+                        clickable
+                        title={`${capitalizeWords(kidGuardian.firstName)} ${capitalizeWords(
+                          kidGuardian.lastName as '',
+                        )} (${KID_RELATION_CODE_MAPPER[kidGuardian.relation]})`}
+                        label={`Teléfono: ${kidGuardian.dialCodePhone} ${kidGuardian.phone}`}
+                        onClick={() => form.setFieldValue('guardian', kidGuardian.id)}
+                        icon={<Radio name={kidGuardian.id} />}
+                        rightIcon={
+                          <AiFillEdit
+                            style={{ width: 24, height: 24 }}
+                            onClick={() => {
+                              const kidGuardianSearch = kidSlice.current?.relations?.find(
+                                (item) => item.id === kidGuardian.id,
+                              );
+                              if (kidGuardianSearch) {
+                                setKidGuardianToUpdate(kidGuardianSearch);
+                                setOpenUpdateKidGuardianPhoneModal(true);
+                              }
+                            }}
+                          />
+                        }
+                        style={{
+                          paddingLeft: 0,
+                          paddingRight: 0,
+                          paddingTop: 5,
+                          paddingBottom: 5,
+                          alignItems: 'center',
+                        }}
+                      />
+                    );
+                  })}
                 </Cell.Group>
               </Radio.Group>
             )}
@@ -484,9 +439,7 @@ const KidRegistrationView = () => {
                   Fecha de registro
                 </Flex.Item>
                 <Flex.Item span={12}>
-                  {`${dayjs(
-                    kidSlice.current?.currentKidRegistration?.date.toString(),
-                  )
+                  {`${dayjs(kidSlice.current?.currentKidRegistration?.date.toString())
                     .locale('es')
                     .format('MMMM D, YYYY h:mm A')}`}
                 </Flex.Item>
@@ -532,49 +485,35 @@ const KidRegistrationView = () => {
             <Card.Header border>Acudientes</Card.Header>
             <Card.Body>
               <Flex gutter={8} wrap="wrap">
-                <Flex.Item
-                  span={10}
-                  style={{ fontWeight: 'bold' }}
-                  key={'Nombre'}
-                >
+                <Flex.Item span={10} style={{ fontWeight: 'bold' }} key={'Nombre'}>
                   Nombre
                 </Flex.Item>
-                <Flex.Item
-                  span={5}
-                  style={{ fontWeight: 'bold' }}
-                  key={'Relación'}
-                >
+                <Flex.Item span={5} style={{ fontWeight: 'bold' }} key={'Relación'}>
                   Relación
                 </Flex.Item>
-                <Flex.Item
-                  span={9}
-                  style={{ fontWeight: 'bold' }}
-                  key={'Teléfono'}
-                >
+                <Flex.Item span={9} style={{ fontWeight: 'bold' }} key={'Teléfono'}>
                   Teléfono
                 </Flex.Item>
-                {kidSlice.current.relations?.map(
-                  (kidGuardian: IKidGuardian) => {
-                    return (
-                      <>
-                        <Flex.Item span={10}>
-                          {capitalizeWords(kidGuardian.firstName)}{' '}
-                          {capitalizeWords(kidGuardian.lastName as '')}
-                        </Flex.Item>
-                        <Flex.Item span={5}>
-                          {
-                            KID_RELATION_CODE_MAPPER[
-                              kidGuardian.relation as KidGuardianRelationCodeEnum
-                            ]
-                          }
-                        </Flex.Item>
-                        <Flex.Item span={9}>
-                          {kidGuardian.dialCodePhone} {kidGuardian.phone}
-                        </Flex.Item>
-                      </>
-                    );
-                  },
-                )}
+                {kidSlice.current.relations?.map((kidGuardian: IKidGuardian) => {
+                  return (
+                    <>
+                      <Flex.Item span={10}>
+                        {capitalizeWords(kidGuardian.firstName)}{' '}
+                        {capitalizeWords(kidGuardian.lastName as '')}
+                      </Flex.Item>
+                      <Flex.Item span={5}>
+                        {
+                          KID_RELATION_CODE_MAPPER[
+                            kidGuardian.relation as KidGuardianRelationCodeEnum
+                          ]
+                        }
+                      </Flex.Item>
+                      <Flex.Item span={9}>
+                        {kidGuardian.dialCodePhone} {kidGuardian.phone}
+                      </Flex.Item>
+                    </>
+                  );
+                })}
               </Flex>
             </Card.Body>
           </Card>
@@ -611,9 +550,7 @@ const KidRegistrationView = () => {
       {kidGuardianToUpdate && (
         <UpdateKidGuardianPhoneModal
           visible={openUpdateKidGuardianPhoneModal}
-          onClose={(status: boolean) =>
-            setOpenUpdateKidGuardianPhoneModal(status)
-          }
+          onClose={(status: boolean) => setOpenUpdateKidGuardianPhoneModal(status)}
           kidGuardian={kidGuardianToUpdate}
         />
       )}

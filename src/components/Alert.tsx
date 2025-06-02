@@ -10,14 +10,7 @@ type AlertProps = {
   onClick?: () => void;
 };
 
-const Alert: React.FC<AlertProps> = ({
-  type,
-  title,
-  subtitle,
-  icon,
-  iconRight,
-  onClick,
-}) => {
+const Alert: React.FC<AlertProps> = ({ type, title, subtitle, icon, iconRight, onClick }) => {
   const alertThemes: Record<ColorType, string> = {
     success: 'alert-success',
     error: 'alert-error',
@@ -28,11 +21,7 @@ const Alert: React.FC<AlertProps> = ({
   const confirmAlertTheme = alertThemes[type];
 
   return (
-    <div
-      onClick={onClick}
-      role="alert"
-      className={`alert ${confirmAlertTheme} m-2`}
-    >
+    <div onClick={onClick} role="alert" className={`alert ${confirmAlertTheme} m-2`}>
       {icon}
       {subtitle ? (
         <div>

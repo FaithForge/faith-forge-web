@@ -21,15 +21,9 @@ import { useDispatch, useSelector } from 'react-redux';
 
 const KidRegistrationSettingsModal = () => {
   const dispatch = useDispatch<AppDispatch>();
-  const churchCampusSlice = useSelector(
-    (state: RootState) => state.churchCampusSlice,
-  );
-  const churchMeetingSlice = useSelector(
-    (state: RootState) => state.churchMeetingSlice,
-  );
-  const churchPrinterSlice = useSelector(
-    (state: RootState) => state.churchPrinterSlice,
-  );
+  const churchCampusSlice = useSelector((state: RootState) => state.churchCampusSlice);
+  const churchMeetingSlice = useSelector((state: RootState) => state.churchMeetingSlice);
+  const churchPrinterSlice = useSelector((state: RootState) => state.churchPrinterSlice);
 
   useEffect(() => {
     const churchCampusId = churchCampusSlice.current?.id;
@@ -42,8 +36,7 @@ const KidRegistrationSettingsModal = () => {
             state: ChurchMeetingStateEnum.ACTIVE,
           }),
         );
-      if (!churchPrinterSlice.current)
-        dispatch(GetChurchPrinters(churchCampusId));
+      if (!churchPrinterSlice.current) dispatch(GetChurchPrinters(churchCampusId));
     }
   }, []);
 
@@ -163,9 +156,7 @@ const KidRegistrationSettingsModal = () => {
             </legend>
             <select
               className="select"
-              disabled={
-                churchMeetingSlice.loading || churchPrinterSlice.loading
-              }
+              disabled={churchMeetingSlice.loading || churchPrinterSlice.loading}
               onChange={async (event) => {
                 const churchPrinterId = event.target.value;
                 await dispatch(updateCurrentChurchPrinter(churchPrinterId));

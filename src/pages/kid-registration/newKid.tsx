@@ -19,9 +19,7 @@ import {
 import KidRegistrationView from '../../components/KidRegistrationView';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
-import MobileInputApp, {
-  checkPhoneField,
-} from '../../components/MobileInputApp';
+import MobileInputApp, { checkPhoneField } from '../../components/MobileInputApp';
 import { ModalSelectorApp } from '../../components/ModalSelectorApp';
 import NavBarApp from '../../components/NavBarApp';
 import { ModalCheckerApp } from '../../components/ModalCheckerApp';
@@ -63,9 +61,7 @@ const NewKid: NextPage = () => {
   const router = useRouter();
   const kidSlice = useSelector((state: RootState) => state.kidSlice);
   const kidGroupSlice = useSelector((state: RootState) => state.kidGroupSlice);
-  const kidGuardianSlice = useSelector(
-    (state: RootState) => state.kidGuardianSlice,
-  );
+  const kidGuardianSlice = useSelector((state: RootState) => state.kidGuardianSlice);
   const kidMedicalConditionSlice = useSelector(
     (state: RootState) => state.kidMedicalConditionSlice,
   );
@@ -75,8 +71,7 @@ const NewKid: NextPage = () => {
   const [staticGroup, setStaticGroup] = useState(false);
   const [step, setStep] = useState(0);
   const [selectedGender, setSelectedGender] = useState<UserGenderCode>();
-  const [kidRelationSelectFilter, setKidRelationSelectFilter] =
-    useState(kidRelationSelect);
+  const [kidRelationSelectFilter, setKidRelationSelectFilter] = useState(kidRelationSelect);
   const dispatch = useDispatch<AppDispatch>();
   const now = DateTime.local().endOf('year').toJSDate();
 
@@ -87,11 +82,7 @@ const NewKid: NextPage = () => {
 
         try {
           // Redimensiona la imagen
-          const resizedBlob = await resizeAndCropImageToSquare(
-            file,
-            500,
-            500 * 1024,
-          ); // 800px, 500 KB
+          const resizedBlob = await resizeAndCropImageToSquare(file, 500, 500 * 1024); // 800px, 500 KB
           const resizedUrl = URL.createObjectURL(resizedBlob);
 
           // Guarda la imagen redimensionada
@@ -170,8 +161,7 @@ const NewKid: NextPage = () => {
   }, [router, step]);
 
   const findGuardian = async () => {
-    const guardianNationalId =
-      formKidGuardian.getFieldsValue().guardianNationalId;
+    const guardianNationalId = formKidGuardian.getFieldsValue().guardianNationalId;
     if (guardianNationalId) dispatch(GetKidGuardian(guardianNationalId));
   };
 
@@ -197,10 +187,7 @@ const NewKid: NextPage = () => {
     id: '',
     name: '',
   });
-  const checkHealthSecurityEntity = (
-    _: any,
-    value: { id: string; name: string },
-  ) => {
+  const checkHealthSecurityEntity = (_: any, value: { id: string; name: string }) => {
     if (value.id) {
       setHealthSecurityEntity(value);
       return Promise.resolve();
@@ -216,8 +203,7 @@ const NewKid: NextPage = () => {
       const formData = new FormData();
       formData.append('file', photo);
 
-      photoUrl = (await dispatch(UploadUserImage({ formData })))
-        .payload as string;
+      photoUrl = (await dispatch(UploadUserImage({ formData }))).payload as string;
     }
 
     try {
@@ -232,8 +218,7 @@ const NewKid: NextPage = () => {
           observations: values.observations ?? undefined,
           photoUrl,
           healthSecurityEntity: values.healthSecurityEntity.name,
-          medicalConditionId:
-            medicalCondition.id !== '' ? medicalCondition.id : undefined,
+          medicalConditionId: medicalCondition.id !== '' ? medicalCondition.id : undefined,
         }),
       );
 
@@ -277,8 +262,7 @@ const NewKid: NextPage = () => {
 
       if (!response.payload.error) {
         Toast.info({
-          message:
-            'Se ha creado al niño y acudiente con éxito. Proceda a registrarlo',
+          message: 'Se ha creado al niño y acudiente con éxito. Proceda a registrarlo',
           position: 'bottom',
           duration: 3000,
         });
@@ -300,9 +284,7 @@ const NewKid: NextPage = () => {
   useEffect(() => {
     let filter;
     if (selectedGender) {
-      filter = kidRelationSelect.filter(
-        (kidRelation) => kidRelation.gender === selectedGender,
-      );
+      filter = kidRelationSelect.filter((kidRelation) => kidRelation.gender === selectedGender);
     } else {
       filter = kidRelationSelect;
     }
@@ -411,9 +393,7 @@ const NewKid: NextPage = () => {
               onClick={(_, action) => {
                 action?.current?.open();
               }}
-              rules={[
-                { required: true, message: 'Fecha de nacimiento es requerida' },
-              ]}
+              rules={[{ required: true, message: 'Fecha de nacimiento es requerida' }]}
             >
               <DatetimePicker
                 popup
@@ -429,8 +409,7 @@ const NewKid: NextPage = () => {
                     ? `${dayjs(value).format('YYYY-MM-DD')} (Tiene: ${Math.floor(
                         calculateAge(value) ?? 0,
                       )} años y ${
-                        getAgeInMonths(value) -
-                        Math.floor(calculateAge(value)) * 12
+                        getAgeInMonths(value) - Math.floor(calculateAge(value)) * 12
                       } meses)`
                     : 'Seleccionar fecha'
                 }
@@ -470,15 +449,10 @@ const NewKid: NextPage = () => {
             </Form.Item>
 
             <Form.Item>
-              <Typography.Title level={4}>
-                Información Adicional (Opcional)
-              </Typography.Title>
+              <Typography.Title level={4}>Información Adicional (Opcional)</Typography.Title>
             </Form.Item>
             <Form.Item name="staticGroup" label="Asignar salón estático">
-              <Switch
-                onChange={(value) => setStaticGroup(value)}
-                defaultChecked={staticGroup}
-              />
+              <Switch onChange={(value) => setStaticGroup(value)} defaultChecked={staticGroup} />
             </Form.Item>
             {staticGroup && (
               <Form.Item
@@ -536,9 +510,7 @@ const NewKid: NextPage = () => {
             }
           >
             <Form.Item>
-              <Typography.Title level={4}>
-                Información del Acudiente
-              </Typography.Title>
+              <Typography.Title level={4}>Información del Acudiente</Typography.Title>
             </Form.Item>
             <Form.Item
               initialValue={{ label: IdType.CC, value: UserIdType.CC }}
@@ -559,9 +531,7 @@ const NewKid: NextPage = () => {
               name="guardianNationalId"
               label="Número de documento"
               disabled={!!kidGuardianSlice.current}
-              rules={[
-                { required: true, message: 'Número de documento es requerido' },
-              ]}
+              rules={[{ required: true, message: 'Número de documento es requerido' }]}
             >
               <Input
                 placeholder="Escribir número de documento..."
@@ -643,12 +613,7 @@ const NewKid: NextPage = () => {
 
             {kidGuardianSlice.current ? (
               <Form.Item>
-                <Button
-                  block
-                  type="default"
-                  onClick={cleanGuardian}
-                  size="large"
-                >
+                <Button block type="default" onClick={cleanGuardian} size="large">
                   Limpiar formulario acudiente
                 </Button>
               </Form.Item>
