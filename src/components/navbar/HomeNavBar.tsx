@@ -125,7 +125,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
                           <a
                             onClick={async () => {
                               await dispatch(changeCurrentRole(userRole));
-                              router.push(userRolesNavBarConfig[userRole]?.dashboardUrl as any);
+                              router.push(userRolesNavBarConfig[userRole]?.dashboardUrl as string);
                             }}
                             className={currentRole === userRole ? 'menu-active' : ''}
                           >
@@ -169,6 +169,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
                 onChange={(e) => setFindText && setFindText(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
+                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
                     dispatch(findText && (GetKids({ findText }) as any));
                   }
                 }}
