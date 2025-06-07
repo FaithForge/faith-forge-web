@@ -26,28 +26,18 @@ export enum UserRole {
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
 
-
-export const KidChurchAdminRoles = [
-  UserRole.KID_CHURCH_ADMIN,
-  UserRole.KID_REGISTER_ADMIN,
-];
+export const KidChurchAdminRoles = [UserRole.KID_CHURCH_ADMIN];
 
 export const KidGroupAdminRoles = [UserRole.KID_GROUP_ADMIN];
 
 export const KidChurchSupervisorRoles = [
   ...KidChurchAdminRoles,
+  ...KidGroupAdminRoles,
   UserRole.KID_GROUP_SUPERVISOR,
-];
-
-export const KidChurchAndRegisterSupervisorRoles = [
-  UserRole.KID_GROUP_SUPERVISOR,
-  UserRole.KID_REGISTER_SUPERVISOR,
 ];
 
 // Kid Registration
-export const KidChurchRegisterSupervisorRoles = [
-  UserRole.KID_REGISTER_SUPERVISOR,
-];
+export const KidChurchRegisterSupervisorRoles = [UserRole.KID_REGISTER_SUPERVISOR];
 export const KidChurchRegisterRoles = [
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
@@ -80,15 +70,6 @@ export const IsSupervisorRegisterKidChurch = (roles: UserRole[]) => {
   return roles.some((role) => KidChurchRegisterSupervisorRoles.includes(role));
 };
 
-export const IsSupervisorRegisterOrKidChurchSupervisor = (
-  roles: UserRole[],
-) => {
-  if (!roles?.length) return false;
-  return roles.some((role) =>
-    KidChurchAndRegisterSupervisorRoles.includes(role),
-  );
-};
-
 export const IsSupervisorKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchSupervisorRoles.includes(role));
@@ -119,16 +100,9 @@ const userRolePriority: Record<UserRole, number> = {
 };
 
 export const sortUserRolesByPriority = (roles: UserRole[]): UserRole[] => {
-  return _.orderBy(
-    roles,
-    (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER,
-    'asc',
-  );
+  return _.orderBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER, 'asc');
 };
 
 export const getMainUserRole = (roles: UserRole[]): UserRole | undefined => {
-  return _.minBy(
-    roles,
-    (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER,
-  );
+  return _.minBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER);
 };

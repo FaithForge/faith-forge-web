@@ -38,7 +38,7 @@ const KidRegistrationSettingsModal = () => {
         );
       if (!churchPrinterSlice.current) dispatch(GetChurchPrinters(churchCampusId));
     }
-  }, []);
+  }, [churchCampusSlice.current]);
 
   const churchOptions: SelectorOption[] = churchCampusSlice.data
     ? churchCampusSlice.data.map((church: IChurchCampus) => {

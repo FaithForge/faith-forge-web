@@ -31,7 +31,7 @@ const KidChurchSettingsModal = () => {
           }),
         );
     }
-  }, []);
+  }, [churchCampusSlice.current]);
 
   const churchOptions: SelectorOption[] = churchCampusSlice.data
     ? churchCampusSlice.data.map((church: IChurchCampus) => {

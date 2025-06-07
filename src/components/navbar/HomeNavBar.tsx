@@ -11,7 +11,7 @@ import {
 import {
   GetUserRoles,
   IsRegisterKidChurch,
-  IsSupervisorRegisterOrKidChurchSupervisor,
+  IsSupervisorKidChurch,
   UserRole,
 } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -143,7 +143,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
           ) : null}
         </div>
 
-        {(IsSupervisorRegisterOrKidChurchSupervisor(roles) || IsRegisterKidChurch(roles)) && (
+        {(IsSupervisorKidChurch(roles) || IsRegisterKidChurch(roles)) && (
           <div className="flex-1 mx-2">
             <label className="input input-ghost">
               <svg
