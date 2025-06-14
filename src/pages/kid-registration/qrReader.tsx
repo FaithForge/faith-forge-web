@@ -15,11 +15,12 @@ import { AiOutlineQrcode } from 'react-icons/ai';
 import { FaArrowRight, FaRegCheckCircle } from 'react-icons/fa';
 import { HiDotsVertical } from 'react-icons/hi';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Cell, Checkbox, Collapse, Form, Input, Space, Steps, Toast } from 'react-vant';
+import { Button, Cell, Checkbox, Collapse, Form, Input, Space, Steps } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
 import NavBarApp from '../../components/NavBarApp';
 import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
+import { toast } from 'sonner';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
@@ -43,10 +44,9 @@ const QRReader: NextPage = () => {
     const code = targets[0].rawValue;
 
     if (!code) {
-      Toast.fail({
-        message: 'Código Invalido',
-        position: 'bottom',
+      toast.error(`Código Invalido`, {
         duration: 3000,
+        style: { color: 'white' },
       });
     } else {
       dispatch(ScanCodeKidRegistration(code));
@@ -55,10 +55,9 @@ const QRReader: NextPage = () => {
 
   const confirmKidToRegister = () => {
     if (!relationSelectToRegister.length) {
-      Toast.fail({
-        message: `Seleccione al menos un niño`,
-        position: 'middle',
+      toast.error(`Seleccione al menos un niño`, {
         duration: 3000,
+        style: { color: 'white' },
       });
       return;
     }
@@ -81,17 +80,15 @@ const QRReader: NextPage = () => {
             observation: values ? values[`observations-${relationToRegister.id}`] : undefined,
           }),
         );
-        Toast.info({
-          message: 'Se ha registrado al niño con exito',
-          position: 'bottom',
+        toast.success(`Se ha registrado al niño con exito`, {
           duration: 1000,
+          style: { color: 'white' },
         });
       }
     }
-    Toast.info({
-      message: 'Se ha registrado con exito a todos los niños',
-      position: 'bottom',
+    toast.success(`Se ha registrado con exito a todos los niños`, {
       duration: 1000,
+      style: { color: 'white' },
     });
     router.push('/kid-registration');
   };
@@ -102,10 +99,9 @@ const QRReader: NextPage = () => {
 
   useEffect(() => {
     if (scanQRKidGuardianSlice.error) {
-      Toast.fail({
-        message: scanQRKidGuardianSlice.error,
-        position: 'bottom',
+      toast.error(scanQRKidGuardianSlice.error, {
         duration: 3000,
+        style: { color: 'white' },
       });
     }
   }, [dispatch, scanQRKidGuardianSlice.error]);

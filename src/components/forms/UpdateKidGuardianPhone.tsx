@@ -2,11 +2,12 @@
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
-import { Button, Divider, Form, Input, Popup, Selector, Toast, Typography } from 'react-vant';
+import { Button, Divider, Form, Input, Popup, Selector, Typography } from 'react-vant';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 import { IKidGuardian, kidRelationSelect } from '@/libs/models';
 import { RootState, AppDispatch, UpdateKidGuardianPhone, GetKid } from '@/libs/state/redux';
 import { capitalizeWords } from '@/libs/utils/text';
+import { toast } from 'sonner';
 
 type Props = {
   visible: boolean;
@@ -35,10 +36,9 @@ const UpdateKidGuardianPhoneModal = ({ visible, onClose, kidGuardian }: Props) =
 
   useEffect(() => {
     if (error) {
-      Toast.fail({
-        message: `Ha ocurrido un error al actualizar el teléfono del acudiente: ${error}`,
-        position: 'bottom',
+      toast.error(`Ha ocurrido un error al actualizar el teléfono del acudiente: ${error}`, {
         duration: 5000,
+        style: { color: 'white' },
       });
     }
   }, [error]);
@@ -75,10 +75,9 @@ const UpdateKidGuardianPhoneModal = ({ visible, onClose, kidGuardian }: Props) =
           await dispatch(GetKid({ id: kidId }));
           await onClose(false);
         } else {
-          Toast.fail({
-            message: `El teléfono que intenta ingresar ya existe en la base de datos`,
-            position: 'bottom',
+          toast.error(`El teléfono que intenta ingresar ya existe en la base de datos`, {
             duration: 5000,
+            style: { color: 'white' },
           });
         }
       }

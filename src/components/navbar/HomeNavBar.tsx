@@ -21,6 +21,7 @@ import { PiUserSwitch } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
 import { Notify } from 'react-vant';
 import ConfirmationModal from '../modal/ConfirmationModal';
+import { toast } from 'sonner';
 
 type HomeNavBarProps = {
   findText?: string;
@@ -235,10 +236,9 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
         onConfirm={async () => {
           dispatch(logout());
           router.push('/');
-          Notify.show({
-            message: 'Se ha cerrado la sesión',
+          toast.success('Se ha cerrado su sesión', {
             duration: 5000,
-            type: 'success',
+            style: { color: 'white' },
           });
 
           dispatch(resetChurchCampusState());

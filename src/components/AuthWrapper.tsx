@@ -8,17 +8,18 @@ import {
 import { parseJwt } from '@/libs/utils/jwt';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Notify } from 'react-vant';
+import { toast } from 'sonner';
 
 type Props = {
   children?: React.ReactNode;
 };
 
 const toastLogout = () => {
-  Notify.show({
-    type: 'success',
-    message: 'Se ha cerrado su sesión',
+  toast.success('Se ha cerrado su sesión', {
     duration: 5000,
+    style: {
+      color: 'white',
+    },
   });
 };
 

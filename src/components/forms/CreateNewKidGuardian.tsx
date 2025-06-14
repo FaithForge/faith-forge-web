@@ -2,7 +2,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, Popup, Selector, Toast, Typography } from 'react-vant';
+import { Button, Form, Input, Popup, Selector, Typography } from 'react-vant';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 import NationalIdTypeInputApp from '../NationalIdTypeInputApp';
 import { MdKeyboardArrowRight } from 'react-icons/md';
@@ -23,6 +23,7 @@ import {
   userGenderSelect,
   UserIdType,
 } from '@/libs/models';
+import { toast } from 'sonner';
 
 type Props = {
   visible: boolean;
@@ -44,10 +45,11 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
 
   useEffect(() => {
     if (error) {
-      Toast.fail({
-        message: `Ha ocurrido un error al crear el acudiente: ${error}`,
-        position: 'bottom',
+      toast.error(`Ha ocurrido un error al crear el acudiente: ${error}`, {
         duration: 5000,
+        style: {
+          color: 'white',
+        },
       });
     }
   }, [error]);

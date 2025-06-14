@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Form,
-  Toast,
   Steps,
   Button,
   Input,
@@ -53,6 +52,7 @@ import { calculateAge, getAgeInMonths } from '@/libs/utils/date';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { capitalizeWords } from '@/libs/utils/text';
 import { checkLastNameField } from '@/libs/utils/validator';
+import { toast } from 'sonner';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -136,20 +136,18 @@ const NewKid: NextPage = () => {
 
   useEffect(() => {
     if (kidSlice.error) {
-      Toast.fail({
-        message: `Ha ocurrido un error al crear al niño: ${kidSlice.error}`,
-        position: 'bottom',
+      toast.error(`Ha ocurrido un error al crear al niño: ${kidSlice.error}`, {
         duration: 5000,
+        style: { color: 'white' },
       });
     }
   }, [kidSlice]);
 
   useEffect(() => {
     if (kidGuardianSlice.error) {
-      Toast.fail({
-        message: `Ha ocurrido un error al crear el acudiente: ${kidGuardianSlice.error}`,
-        position: 'bottom',
+      toast.error(`Ha ocurrido un error al crear el acudiente: ${kidGuardianSlice.error}`, {
         duration: 5000,
+        style: { color: 'white' },
       });
     }
   }, [kidGuardianSlice]);
@@ -227,10 +225,9 @@ const NewKid: NextPage = () => {
         setStep(1);
       }
     } catch {
-      Toast.fail({
-        message: 'Ha ocurrido un error al crear el niño.',
-        position: 'bottom',
+      toast.error(`Ha ocurrido un error al crear el niño.`, {
         duration: 5000,
+        style: { color: 'white' },
       });
     }
   };
@@ -261,10 +258,9 @@ const NewKid: NextPage = () => {
       );
 
       if (!response.payload.error) {
-        Toast.info({
-          message: 'Se ha creado al niño y acudiente con éxito. Proceda a registrarlo',
-          position: 'bottom',
+        toast.info(`Se ha creado al niño y acudiente con éxito. Proceda a registrarlo`, {
           duration: 3000,
+          style: { color: 'white' },
         });
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
         setStep(2);

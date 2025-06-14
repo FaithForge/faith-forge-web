@@ -9,6 +9,7 @@ import { ConfigProvider } from 'react-vant';
 import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 import './theme.css';
+import { Toaster } from 'sonner';
 const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
 
 const BLOCKED_ROUTES = ['/', '/admin', '/kid-registration', '/kid-church'];
@@ -39,6 +40,16 @@ function MyApp({ Component, pageProps }: AppProps) {
           </Head>
           {/* <SafeArea position="top" /> */}
           <Component {...pageProps} />
+          <Toaster
+            position="bottom-center"
+            toastOptions={{
+              classNames: {
+                info: '!bg-blue-700',
+                success: '!bg-green-700',
+                error: '!bg-red-700',
+              },
+            }}
+          />
           {/* <SafeArea position="bottom" /> */}
         </PersistGate>
       </ConfigProvider>
