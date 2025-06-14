@@ -17,7 +17,7 @@ import {
   UploadQRCodeImage,
 } from '@/libs/state/redux';
 import { capitalizeWords } from '@/libs/utils/text';
-import BackNavBar from '@/components/BackNavBar';
+import BackNavBar from '@/components/navbar/BackNavBar';
 
 const GenerateQRKidGuardianView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();

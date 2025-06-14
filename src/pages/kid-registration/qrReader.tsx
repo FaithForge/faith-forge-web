@@ -18,11 +18,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button, Cell, Checkbox, Collapse, Form, Input, Space } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
-import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
 import { toast } from 'sonner';
 import { ColorType } from '@/libs/common-types/constants/theme';
-import Steps from '@/components/Steps';
-import BackNavBar from '@/components/BackNavBar';
+import Steps from '@/components/ui/Steps';
+import BackNavBar, { PopoverAppAction } from '@/components/navbar/BackNavBar';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();

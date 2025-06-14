@@ -35,7 +35,7 @@ import { calculateAge, getAgeInMonths } from '@/libs/utils/date';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { capitalizeWords } from '@/libs/utils/text';
 import { checkLastNameField } from '@/libs/utils/validator';
-import BackNavBar from '@/components/BackNavBar';
+import BackNavBar from '@/components/navbar/BackNavBar';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();

@@ -4,9 +4,8 @@ import type { NextPage } from 'next';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-
-import Alert from '@/components/Alert';
-import Cell from '@/components/Cell';
+import Alert from '@/components/ui/Alert';
+import Cell from '@/components/ui/Cell';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,

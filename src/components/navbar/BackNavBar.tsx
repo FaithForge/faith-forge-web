@@ -1,11 +1,18 @@
 import { useRouter } from 'next/router';
 import { PiArrowLeft, PiDotsThreeVerticalBold } from 'react-icons/pi';
-import { PopoverAppAction } from './PopoverApp';
+import { ReactNode } from 'react';
 
 type Props = {
   title: string;
   rightActions?: PopoverAppAction[];
 };
+
+export interface PopoverAppAction {
+  key: string;
+  icon?: ReactNode;
+  text: string;
+  onClick: () => void;
+}
 
 const BackNavBar = ({ title, rightActions }: Props) => {
   const router = useRouter();

@@ -52,8 +52,8 @@ import { capitalizeWords } from '@/libs/utils/text';
 import { checkLastNameField } from '@/libs/utils/validator';
 import { toast } from 'sonner';
 import { ColorType } from '@/libs/common-types/constants/theme';
-import Steps from '@/components/Steps';
-import BackNavBar from '@/components/BackNavBar';
+import Steps from '@/components/ui/Steps';
+import BackNavBar from '@/components/navbar/BackNavBar';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();

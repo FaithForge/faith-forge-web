@@ -1,4 +1,4 @@
-import Cell from '@/components/Cell';
+import Cell from '@/components/ui/Cell';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import { RootState } from '@/libs/state/redux';
 import { capitalizeWords } from '@/libs/utils/text';

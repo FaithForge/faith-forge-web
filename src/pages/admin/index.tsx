@@ -1,4 +1,4 @@
-import Cell from '@/components/Cell';
+import Cell from '@/components/ui/Cell';
 import ConfirmationModal from '@/components/modal/ConfirmationModal';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import { ColorType } from '@/libs/common-types/constants/theme';

@@ -9,7 +9,7 @@ import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
 import { Layout } from '../../components/Layout';
-import BackNavBar from '@/components/BackNavBar';
+import BackNavBar from '@/components/navbar/BackNavBar';
 
 const ReportRegistrationGroup: NextPage = () => {
   const [form] = Form.useForm();
