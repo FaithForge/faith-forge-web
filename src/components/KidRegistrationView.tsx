@@ -7,17 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { PiUserSwitchFill } from 'react-icons/pi';
 
-import {
-  Button,
-  Form,
-  Input,
-  NoticeBar,
-  Radio,
-  Card,
-  Cell,
-  Typography,
-  Skeleton,
-} from 'react-vant';
+import { Button, Form, Input, NoticeBar, Radio, Cell, Typography, Skeleton } from 'react-vant';
 import UpdateKidGuardianPhoneModal from './forms/UpdateKidGuardianPhone';
 import { AiFillEdit } from 'react-icons/ai';
 import { LiaBirthdayCakeSolid } from 'react-icons/lia';
@@ -206,9 +196,9 @@ const KidRegistrationView = () => {
           style={{ marginBottom: '10px', textAlign: 'center' }}
         />
       )}
-      <Card round style={{ backgroundColor: '#f9f9f9', marginBottom: 10 }}>
-        <Card.Header border>Datos del niño</Card.Header>
-        <Card.Body>
+      <div className="card card-dash bg-gray-50 w-full mb-4">
+        <div className="card-body">
+          <h2 className="card-title">Datos del niño</h2>
           <div className="flex flex-col gap-y-4">
             {kidSlice.current?.faithForgeId && (
               <div className="flex gap-x-4">
@@ -286,8 +276,8 @@ const KidRegistrationView = () => {
               )
             )}
           </div>
-        </Card.Body>
-      </Card>
+        </div>
+      </div>
 
       {!kidSlice.current?.currentKidRegistration ? (
         <Form
@@ -383,9 +373,9 @@ const KidRegistrationView = () => {
         </Form>
       ) : (
         <>
-          <Card round style={{ backgroundColor: '#f9f9f9' }}>
-            <Card.Header border>Información del registro</Card.Header>
-            <Card.Body>
+          <div className="card card-dash bg-gray-50 w-full mb-4">
+            <div className="card-body">
+              <h2 className="card-title">Información del registro</h2>
               <div className="flex flex-col gap-y-4">
                 <div className="flex gap-x-4">
                   <div className="w-1/2 font-bold">Fecha de registro</div>
@@ -426,11 +416,11 @@ const KidRegistrationView = () => {
                     </div>
                   )}
               </div>
-            </Card.Body>
-          </Card>
-          <Card round style={{ backgroundColor: '#f9f9f9', marginTop: 10 }}>
-            <Card.Header border>Acudientes</Card.Header>
-            <Card.Body>
+            </div>
+          </div>
+          <div className="card card-dash bg-gray-50 w-full mb-4">
+            <div className="card-body">
+              <h2 className="card-title">Acudientes</h2>
               <div className="grid grid-cols-24 gap-2">
                 {/* Encabezados */}
                 <div className="col-span-10 font-bold">Nombre</div>
@@ -457,8 +447,8 @@ const KidRegistrationView = () => {
                   </React.Fragment>
                 ))}
               </div>
-            </Card.Body>
-          </Card>
+            </div>
+          </div>
           <div style={{ paddingTop: 10 }}>
             <Button
               loading={kidRegistrationSlice.loading && action === 'reprint'}

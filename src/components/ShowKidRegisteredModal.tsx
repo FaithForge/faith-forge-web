@@ -1,5 +1,5 @@
 import dayjs from 'dayjs';
-import { Card, NoticeBar, Popup } from 'react-vant';
+import { NoticeBar, Popup } from 'react-vant';
 import { LiaBirthdayCakeSolid } from 'react-icons/lia';
 import TagKidGroupApp from './TagKidGroupApp';
 import {
@@ -85,9 +85,9 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
             style={{ marginBottom: '10px', textAlign: 'center' }}
           />
         )}
-        <Card round style={{ backgroundColor: '#f9f9f9', marginBottom: 10 }}>
-          <Card.Header border>Datos del niño</Card.Header>
-          <Card.Body>
+        <div className="card card-dash bg-gray-50 w-full mb-4">
+          <div className="card-body">
+            <h2 className="card-title">Datos del niño</h2>
             <div className="flex flex-col gap-y-4">
               {kid.faithForgeId && (
                 <div className="flex gap-x-4">
@@ -144,14 +144,14 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                 </div>
               )}
             </div>
-          </Card.Body>
-        </Card>
+          </div>
+        </div>
 
         {kid.currentKidRegistration && (
           <>
-            <Card round style={{ backgroundColor: '#f9f9f9' }}>
-              <Card.Header border>Información del registro</Card.Header>
-              <Card.Body>
+            <div className="card card-dash bg-gray-50 w-full mb-4">
+              <div className="card-body">
+                <h2 className="card-title">Información del registro</h2>
                 <div className="flex flex-col gap-y-4">
                   <div className="flex gap-x-4">
                     <div className="w-1/2 font-bold">Fecha de registro</div>
@@ -189,18 +189,11 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                     </div>
                   )}
                 </div>
-              </Card.Body>
-            </Card>
-            <Card
-              round
-              style={{
-                backgroundColor: '#f9f9f9',
-                marginTop: 10,
-                marginBottom: 10,
-              }}
-            >
-              <Card.Header border>Acudientes</Card.Header>
-              <Card.Body>
+              </div>
+            </div>
+            <div className="card card-dash bg-gray-50 w-full mb-4">
+              <div className="card-body">
+                <h2 className="card-title">Acudientes</h2>
                 <div className="flex flex-col gap-y-4">
                   {/* Encabezados */}
                   <div className="flex flex-wrap gap-x-2">
@@ -229,8 +222,8 @@ const ShowKidRegisteredModal = ({ visible, onClose, kid }: Props) => {
                     </div>
                   ))}
                 </div>
-              </Card.Body>
-            </Card>
+              </div>
+            </div>
           </>
         )}
       </div>
