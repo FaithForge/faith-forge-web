@@ -2,7 +2,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
-import { Button, Divider, Form, Input, Popup, Selector, Typography } from 'react-vant';
+import { Button, Divider, Form, Input, Popup, Selector } from 'react-vant';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 import { IKidGuardian, kidRelationSelect } from '@/libs/models';
 import { RootState, AppDispatch, UpdateKidGuardianPhone, GetKid } from '@/libs/state/redux';
@@ -97,9 +97,9 @@ const UpdateKidGuardianPhoneModal = ({ visible, onClose, kidGuardian }: Props) =
       {guardianLoading ? <LoadingMask /> : ''}
 
       <div style={{ padding: 5 }}>
-        <Typography.Title level={2} center>
+        <h2 className="text-2xl font-bold text-center py-2">
           Actualizar Numero De teléfono y Relación con Niño
-        </Typography.Title>
+        </h2>
         <Form
           form={form}
           onFinish={onFinish}

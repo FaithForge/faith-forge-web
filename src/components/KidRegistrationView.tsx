@@ -7,7 +7,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/router';
 import { PiUserSwitchFill } from 'react-icons/pi';
 
-import { Button, Form, Input, NoticeBar, Radio, Cell, Typography, Skeleton } from 'react-vant';
+import { Button, Form, Input, NoticeBar, Radio, Cell } from 'react-vant';
 import UpdateKidGuardianPhoneModal from './forms/UpdateKidGuardianPhone';
 import { AiFillEdit } from 'react-icons/ai';
 import { LiaBirthdayCakeSolid } from 'react-icons/lia';
@@ -35,6 +35,7 @@ import { capitalizeWords } from '@/libs/utils/text';
 import { toast } from 'sonner';
 import ConfirmationModal, { showConfirmationModal } from './modal/ConfirmationModal';
 import { ColorType } from '@/libs/common-types/constants/theme';
+import Skeleton, { SkeletonType } from './ui/Skeleton';
 
 const KidRegistrationView = () => {
   const [form] = Form.useForm();
@@ -157,7 +158,7 @@ const KidRegistrationView = () => {
           </h2>
 
           {!kidSlice.current?.kidGroup ? (
-            <Skeleton row={1} rowWidth={120} rowHeight={25} style={{ padding: 0 }} />
+            <Skeleton type={SkeletonType.TAG} />
           ) : kidSlice.current?.currentKidRegistration ? (
             <TagKidGroupApp
               kidGroup={
@@ -237,7 +238,7 @@ const KidRegistrationView = () => {
 
             {kidSlice.loading && !kidSlice.current?.healthSecurityEntity ? (
               <div className="w-full pl-0 pb-2.5">
-                <Skeleton row={1} rowHeight={25} style={{ width: '100%' }} />
+                <Skeleton type={SkeletonType.TEXT} width="w-full" height="h-4" rows={1} />
               </div>
             ) : (
               kidSlice.current?.healthSecurityEntity && (
@@ -250,7 +251,7 @@ const KidRegistrationView = () => {
 
             {kidSlice.loading && !kidSlice.current?.medicalCondition ? (
               <div className="w-full pl-0 pb-2.5">
-                <Skeleton row={1} rowHeight={25} style={{ width: '100%' }} />
+                <Skeleton type={SkeletonType.TEXT} width="w-full" height="h-4" rows={1} />
               </div>
             ) : (
               kidSlice.current?.medicalCondition && (
@@ -265,7 +266,7 @@ const KidRegistrationView = () => {
 
             {kidSlice.loading && !kidSlice.current?.observations ? (
               <div className="w-full pl-0 pb-2.5">
-                <Skeleton row={1} rowHeight={25} style={{ width: '100%' }} />
+                <Skeleton type={SkeletonType.TEXT} width="w-full" height="h-4" rows={1} />
               </div>
             ) : (
               kidSlice.current?.observations && (
@@ -286,12 +287,7 @@ const KidRegistrationView = () => {
           onFinish={registerKid}
           footer={
             <>
-              <Typography.Text
-                center={true}
-                style={{ width: '100%', paddingTop: 5, paddingBottom: 5 }}
-              >
-                El registro sera para: {churchMeeting?.name}
-              </Typography.Text>
+              <p className="text-center py-2">El registro sera para: {churchMeeting?.name}</p>
               <Button
                 loading={kidRegistrationSlice.loading && action === 'reprint'}
                 loadingText="Registrando..."
@@ -318,7 +314,7 @@ const KidRegistrationView = () => {
             ]}
           >
             {!kidSlice.current?.relations ? (
-              <Skeleton row={3} style={{ width: '100%' }} />
+              <Skeleton type={SkeletonType.TEXT} width="w-64" height="h-4" />
             ) : (
               <Radio.Group value={form.getFieldValue('guardian')} style={{ width: '100%' }}>
                 <Cell.Group border={false}>

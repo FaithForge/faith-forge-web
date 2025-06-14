@@ -1,5 +1,5 @@
 import { FC, useMemo, useState } from 'react';
-import { Button, Cell, Popup, Radio, Search, Space, Typography } from 'react-vant';
+import { Button, Cell, Popup, Radio, Search, Space } from 'react-vant';
 import { CiSearch } from 'react-icons/ci';
 import { SelectorOption } from '@/libs/common-types/global';
 
@@ -61,7 +61,7 @@ export const ModalSelectorApp: FC<ModalSelectorProps> = ({
         >
           {searchButtonText}
         </Button>
-        <Typography.Text>{value?.name}</Typography.Text>
+        <span>{value?.name}</span>
       </Space>
       <Popup
         visible={visible}

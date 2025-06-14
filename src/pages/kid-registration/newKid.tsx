@@ -4,15 +4,7 @@ import { NextPage } from 'next';
 import { useRouter } from 'next/router';
 import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import {
-  Form,
-  Button,
-  Input,
-  Selector,
-  Switch,
-  Typography,
-  DatetimePicker,
-} from 'react-vant';
+import { Form, Button, Input, Selector, Switch, DatetimePicker } from 'react-vant';
 import KidRegistrationView from '../../components/KidRegistrationView';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
@@ -358,7 +350,7 @@ const NewKid: NextPage = () => {
             }
           >
             <Form.Item>
-              <Typography.Title level={4}>Información Básica</Typography.Title>
+              <h2 className="text-xl font-semibold">Información Básica</h2>
             </Form.Item>
             <Form.Item
               name="firstName"
@@ -448,7 +440,7 @@ const NewKid: NextPage = () => {
             </Form.Item>
 
             <Form.Item>
-              <Typography.Title level={4}>Información Adicional (Opcional)</Typography.Title>
+              <h2 className="text-xl font-semibold">Información Adicional (Opcional)</h2>
             </Form.Item>
             <Form.Item name="staticGroup" label="Asignar salón estático">
               <Switch onChange={(value) => setStaticGroup(value)} defaultChecked={staticGroup} />
@@ -509,7 +501,7 @@ const NewKid: NextPage = () => {
             }
           >
             <Form.Item>
-              <Typography.Title level={4}>Información del Acudiente</Typography.Title>
+              <h2 className="text-xl font-semibold">Información del Acudiente</h2>
             </Form.Item>
             <Form.Item
               initialValue={{ label: IdType.CC, value: UserIdType.CC }}

@@ -7,7 +7,7 @@ import { DateTime } from 'luxon';
 import type { NextPage } from 'next';
 import React, { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, DatetimePicker, Form, Grid, Selector } from 'react-vant';
+import { Button, DatetimePicker, Form, Selector } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import BackNavBar from '@/components/navbar/BackNavBar';
 
@@ -234,39 +234,36 @@ const ReportRegistrationGroup: NextPage = () => {
       >
         {report && (
           <>
-            <h2>Totales generales</h2>
-            <Grid columnNum={2} gutter={0} border={true} center={false}>
-              <Grid.Item style={{ fontWeight: 'bold' }}>Total niños registrados</Grid.Item>
-              <Grid.Item>{report.totalKids}</Grid.Item>
-              <Grid.Item style={{ fontWeight: 'bold' }}>Total niños nuevos</Grid.Item>
-              <Grid.Item>{report.totalNewKids}</Grid.Item>
-            </Grid>
+            <h2 className="mt-4 mb-2 font-semibold text-lg">Totales generales</h2>
+            <div className="grid grid-cols-2 border border-gray-300 divide-x divide-y divide-gray-300 text-left">
+              <div className="font-bold px-4 py-2">Total niños registrados</div>
+              <div className="px-4 py-2">{report.totalKids}</div>
+              <div className="font-bold px-4 py-2">Total niños nuevos</div>
+              <div className="px-4 py-2">{report.totalNewKids}</div>
+            </div>
 
-            <h2>Totales por salones</h2>
-            <Grid columnNum={2} gutter={0} border={true} center={false}>
-              {report.statistics.byKidGroup.map((kidGroup: any) => {
-                return (
-                  <React.Fragment key={kidGroup.name}>
-                    <Grid.Item style={{ fontWeight: 'bold', flexBasis: '50%' }}>
-                      {kidGroup.name}
-                    </Grid.Item>
-                    <Grid.Item style={{ flexBasis: '50%' }}>{kidGroup.count}</Grid.Item>
-                  </React.Fragment>
-                );
-              })}
-            </Grid>
+            <h2 className="mt-4 mb-2 font-semibold text-lg">Totales por salones</h2>
+            <div className="grid grid-cols-2 border border-gray-300 divide-x divide-y divide-gray-300 text-left">
+              {report.statistics.byKidGroup.map((kidGroup: any) => (
+                <React.Fragment key={kidGroup.name}>
+                  <div className="font-bold px-4 py-2">{kidGroup.name}</div>
+                  <div className="px-4 py-2">{kidGroup.count}</div>
+                </React.Fragment>
+              ))}
+            </div>
 
-            <h2>Totales por genero</h2>
-            <Grid columnNum={2} gutter={0} border={true} center={false}>
-              <Grid.Item style={{ fontWeight: 'bold' }}>Masculino</Grid.Item>
-              <Grid.Item>
+            <h2 className="mt-4 mb-2 font-semibold text-lg">Totales por género</h2>
+            <div className="grid grid-cols-2 border border-gray-300 divide-x divide-y divide-gray-300 text-left mb-4">
+              <div className="font-bold px-4 py-2">Masculino</div>
+              <div className="px-4 py-2">
                 {report.statistics?.byGender?.find((d: any) => d.name === 'M')?.count ?? 0}
-              </Grid.Item>
-              <Grid.Item style={{ fontWeight: 'bold' }}>Femenino</Grid.Item>
-              <Grid.Item>
+              </div>
+              <div className="font-bold px-4 py-2">Femenino</div>
+              <div className="px-4 py-2">
                 {report.statistics?.byGender?.find((d: any) => d.name === 'F')?.count ?? 0}
-              </Grid.Item>
-            </Grid>
+              </div>
+            </div>
+
             <Button
               loading={isLoading}
               loadingText="Descargando reporte..."

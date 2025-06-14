@@ -6,7 +6,7 @@ import 'dayjs/locale/es';
 import { QRCode } from 'react-qrcode-logo';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { Button, Empty, Grid, Search, Space, Typography } from 'react-vant';
+import { Button, Empty, Search, Space } from 'react-vant';
 import LoadingMask from '../../components/LoadingMask';
 import { Layout } from '../../components/Layout';
 import {
@@ -145,67 +145,56 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
       />
       {guardian && (
         <>
-          <Grid columnNum={1} border={false}>
-            <Grid.Item>
-              <Typography.Title
-                level={3}
-                style={{
-                  textAlign: 'center',
-                  marginTop: '0px',
-                  marginBottom: '0px',
-                }}
-              >
+          <div className="flex flex-col items-center gap-4">
+            <div className="text-center">
+              <h3 className="text-xl font-semibold m-0">
                 {capitalizeWords(guardian.firstName)} {capitalizeWords(guardian.lastName)}
-              </Typography.Title>
-              <Typography.Title level={4} style={{ textAlign: 'center', marginTop: '5px' }}>
+              </h3>
+              <h4 className="text-lg font-medium mt-1">
                 Teléfono: {guardian.dialCodePhone} {guardian.phone}
-              </Typography.Title>
-              <Typography.Text style={{ textAlign: 'center' }}>
+              </h4>
+              <p className="text-gray-600 text-sm mt-2">
                 Pide al acudiente que lea este código con su celular y se autoenvíe el mensaje
                 generado (Este debe tener Whatsapp instalado con el número de teléfono que aparece
                 arriba)
-              </Typography.Text>
-              <QRCode
-                qrStyle="dots"
-                value={urlCode}
-                size={windowSize.width}
-                id="qr-code-generate-kid-guardian-whatsapp"
-              />
-            </Grid.Item>
-            {/* <Grid.Item>
-              <Button onClick={() => sharedCode()} block color="primary">
-                <Space>
-                  <ShareAltOutlined />
-                  <span>Compartir Imagen</span>
-                </Space>
-              </Button>
-            </Grid.Item> */}
-            <Grid.Item>
+              </p>
+              <div className="mt-4 flex justify-center">
+                <QRCode
+                  qrStyle="dots"
+                  value={urlCode}
+                  size={windowSize.width}
+                  id="qr-code-generate-kid-guardian-whatsapp"
+                />
+              </div>
+            </div>
+
+            {/* Botones */}
+            <div className="w-full flex flex-col gap-2 px-4">
               <Button onClick={() => downloadCode()} block type="primary">
                 <Space>
-                  {/* <CloudDownloadOutlined /> */}
                   <span>Descargar</span>
                 </Space>
               </Button>
               <Button block disabled type="primary">
                 <Space>
-                  {/* <PrinterOutlined /> */}
-                  <span>Imprimir (Proximanente)</span>
+                  <span>Imprimir (Próximamente)</span>
                 </Space>
               </Button>
-            </Grid.Item>
-          </Grid>
-          <QRCode
-            style={{ display: 'contents' }}
-            qrStyle="dots"
-            value={guardian.id}
-            logoImage={'/logo-iglekids.png'}
-            logoHeight={141}
-            logoWidth={217}
-            logoOpacity={0.4}
-            size={365}
-            id="qr-code-generate-kid-guardian"
-          />
+            </div>
+          </div>
+          <div className="absolute -left-[9999px] -top-[9999px]">
+            <QRCode
+              style={{ display: 'block' }}
+              qrStyle="dots"
+              value={guardian.id}
+              logoImage={'/logo-iglekids.png'}
+              logoHeight={141}
+              logoWidth={217}
+              logoOpacity={0.4}
+              size={365}
+              id="qr-code-generate-kid-guardian"
+            />
+          </div>
         </>
       )}
       {!guardian && (

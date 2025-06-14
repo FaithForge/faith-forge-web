@@ -19,10 +19,12 @@ import { KidChurchRegisterRoles, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { IoIosArrowForward } from 'react-icons/io';
 import { PiCaretRight, PiWarning, PiX } from 'react-icons/pi';
-import { Empty, List, Skeleton } from 'react-vant';
+import { Empty, List } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import { withRoles } from '../../components/Permissions';
 import { showConfirmationModal } from '@/components/modal/ConfirmationModal';
+import Skeleton, { SkeletonType } from '@/components/ui/Skeleton';
+import _ from 'lodash';
 
 const Registration: NextPage = () => {
   const {
@@ -134,8 +136,8 @@ const Registration: NextPage = () => {
 
       {loading ? (
         <>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} avatar avatarSize={44} row={2} style={{ padding: '10px' }} />
+          {_.times(10, (index) => (
+            <Skeleton key={index} type={SkeletonType.CELL} width="full" height="8" />
           ))}
         </>
       ) : (

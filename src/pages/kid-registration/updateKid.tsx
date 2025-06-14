@@ -6,7 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../../components/LoadingMask';
 import { useRouter } from 'next/router';
 import { DateTime } from 'luxon';
-import { Button, DatetimePicker, Form, Input, Selector, Switch, Typography } from 'react-vant';
+import { Button, DatetimePicker, Form, Input, Selector, Switch } from 'react-vant';
 import { Layout } from '../../components/Layout';
 
 import { TbCameraPlus } from 'react-icons/tb';
@@ -212,7 +212,7 @@ const UpdateKidPage: NextPage = () => {
         }
       >
         <Form.Item>
-          <Typography.Title level={4}>Información Básica</Typography.Title>
+          <h2 className="text-xl font-semibold">Información Básica</h2>
         </Form.Item>
         <Form.Item
           name="firstName"
@@ -299,7 +299,7 @@ const UpdateKidPage: NextPage = () => {
           />
         </Form.Item>
         <Form.Item>
-          <Typography.Title level={4}>Información Adicional (Opcional)</Typography.Title>
+          <h2 className="text-xl font-semibold">Información Adicional (Opcional)</h2>
         </Form.Item>
         <Form.Item name="staticGroup" label="Asignar salón estático">
           <Switch onChange={(value) => setStaticGroup(value)} defaultChecked={staticGroup} />

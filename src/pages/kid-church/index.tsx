@@ -16,12 +16,14 @@ import { useEffect, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { TbReload } from 'react-icons/tb';
 import { useDispatch, useSelector } from 'react-redux';
-import { Empty, Grid, NoticeBar, Skeleton, Typography } from 'react-vant';
+import { Empty, NoticeBar } from 'react-vant';
 import FloatingBubbleApp from '../../components/FloatingBubbleApp';
 import { Layout } from '../../components/Layout';
 import { useHasRequiredPermissions, withRoles } from '../../components/Permissions';
 import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
 import Cell from '@/components/ui/Cell';
+import _ from 'lodash';
+import Skeleton, { SkeletonType } from '@/components/ui/Skeleton';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector((state: RootState) => state.kidGroupRegisteredSlice);
@@ -110,7 +112,7 @@ const KidChurch: NextPage = () => {
       <div style={{ position: 'sticky', top: '0', zIndex: 2 }}>
         <HomeNavBar findText={findText} setFindText={setFindText} />
         {loading ? (
-          <Skeleton row={1} rowHeight={25} style={{ marginTop: 5, marginBottom: 5 }} />
+          <Skeleton type={SkeletonType.TEXT} width="w-64" height="h-4" rows={1} />
         ) : (
           <NoticeBar
             style={{
@@ -122,81 +124,69 @@ const KidChurch: NextPage = () => {
         )}
       </div>
       {/* Bebes, Caminadores y Zaqueos */}
-      <Grid columnNum={2} gutter={8} style={{ backgroundColor: 'white', paddingBottom: 10 }}>
+      <div className="grid grid-cols-2 gap-2 bg-white px-2">
         {kidGroupSlice.data &&
           kidGroupSlice.data.slice(0, 4).map((kidGroup: IKidGroup) => {
+            const isSelected = selectedKidGroup === kidGroup.id;
             return (
-              <Grid.Item
+              <div
                 key={kidGroup.id}
-                contentStyle={{
-                  backgroundColor: selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
-                }}
-                onClick={() => {
-                  if (selectedKidGroup !== kidGroup.id) {
-                    setSelectedKidGroup(kidGroup.id);
-                  } else {
-                    setSelectedKidGroup('');
-                  }
-                }}
+                className={`flex flex-col items-center justify-center p-2 rounded-md cursor-pointer text-center ${
+                  isSelected ? 'bg-indigo-100' : 'bg-gray-100'
+                }`}
+                onClick={() => setSelectedKidGroup(isSelected ? '' : kidGroup.id)}
               >
-                <Typography.Text
-                  style={{
-                    color: selectedKidGroup === kidGroup.id ? PRIMARY_COLOR_APP : '#323232',
-                  }}
-                >
+                <p className={`font-medium ${isSelected ? 'text-indigo-600' : 'text-gray-800'}`}>
                   {kidGroup.name}
-                </Typography.Text>
+                </p>
                 {loading ? (
-                  <Skeleton row={1} rowHeight={15} style={{ backgroundColor: '#EBEBEB' }} />
+                  <div className="w-32 h-4 bg-gray-300 rounded animate-pulse mt-1" />
                 ) : (
-                  <Typography.Text style={{ color: '#969799' }}>{`Total: ${
-                    kids.length
-                      ? kids.filter((kid: IKid) => kid.kidGroup?.id === kidGroup.id).length
-                      : 0
-                  }`}</Typography.Text>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {`Total: ${
+                      kids.length
+                        ? kids.filter((kid: IKid) => kid.kidGroup?.id === kidGroup.id).length
+                        : 0
+                    }`}
+                  </p>
                 )}
-              </Grid.Item>
+              </div>
             );
           })}
-      </Grid>
-      {/*Jeremias, Timoteos, Titos y Yo Soy Iglekids */}
-      <Grid columnNum={3} gutter={8} style={{ backgroundColor: 'white', paddingBottom: 10 }}>
+      </div>
+
+      {/* Jeremias, Timoteos, Titos y Yo Soy Iglekids */}
+      <div className="grid grid-cols-3 gap-2 bg-white px-2 pb-2 mt-2">
         {kidGroupSlice.data &&
           kidGroupSlice.data.slice(4).map((kidGroup: IKidGroup) => {
+            const isSelected = selectedKidGroup === kidGroup.id;
             return (
-              <Grid.Item
+              <div
                 key={kidGroup.id}
-                contentStyle={{
-                  backgroundColor: selectedKidGroup === kidGroup.id ? '#efefff' : '#f2f3f5',
-                }}
-                onClick={() => {
-                  if (selectedKidGroup !== kidGroup.id) {
-                    setSelectedKidGroup(kidGroup.id);
-                  } else {
-                    setSelectedKidGroup('');
-                  }
-                }}
+                className={`flex flex-col items-center justify-center p-2 rounded-md cursor-pointer text-center ${
+                  isSelected ? 'bg-indigo-100' : 'bg-gray-100'
+                }`}
+                onClick={() => setSelectedKidGroup(isSelected ? '' : kidGroup.id)}
               >
-                <Typography.Text
-                  style={{
-                    color: selectedKidGroup === kidGroup.id ? PRIMARY_COLOR_APP : '#323232',
-                  }}
-                >
+                <p className={`font-medium ${isSelected ? 'text-indigo-600' : 'text-gray-800'}`}>
                   {kidGroup.name}
-                </Typography.Text>
+                </p>
                 {loading ? (
-                  <Skeleton row={1} rowHeight={15} style={{ backgroundColor: '#EBEBEB' }} />
+                  <div className="w-16 h-4 bg-gray-300 rounded animate-pulse mt-1" />
                 ) : (
-                  <Typography.Text style={{ color: '#969799' }}>{`Total: ${
-                    kids.length
-                      ? kids.filter((kid: IKid) => kid.kidGroup?.id === kidGroup.id).length
-                      : 0
-                  }`}</Typography.Text>
+                  <p className="text-sm text-gray-500 mt-1">
+                    {`Total: ${
+                      kids.length
+                        ? kids.filter((kid: IKid) => kid.kidGroup?.id === kidGroup.id).length
+                        : 0
+                    }`}
+                  </p>
                 )}
-              </Grid.Item>
+              </div>
             );
           })}
-      </Grid>
+      </div>
+
       {warningAlert.message && (
         <NoticeBar
           text={warningAlert.message}
@@ -205,8 +195,8 @@ const KidChurch: NextPage = () => {
       )}
       {loading ? (
         <>
-          {Array.from({ length: 6 }).map((_, index) => (
-            <Skeleton key={index} avatar avatarSize={44} row={2} style={{ padding: '10px' }} />
+          {_.times(10, (index) => (
+            <Skeleton key={index} type={SkeletonType.CELL} width="full" height="8" />
           ))}
         </>
       ) : (

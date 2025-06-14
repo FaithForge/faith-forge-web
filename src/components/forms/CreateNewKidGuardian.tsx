@@ -2,7 +2,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../LoadingMask';
 import { useEffect, useState } from 'react';
-import { Button, Form, Input, Popup, Selector, Typography } from 'react-vant';
+import { Button, Form, Input, Popup, Selector } from 'react-vant';
 import MobileInputApp, { checkPhoneField } from '../MobileInputApp';
 import NationalIdTypeInputApp from '../NationalIdTypeInputApp';
 import { MdKeyboardArrowRight } from 'react-icons/md';
@@ -174,9 +174,7 @@ const CreateNewKidGuardian = ({ visible, onClose }: Props) => {
           padding: 5,
         }}
       >
-        <Typography.Title level={2} center>
-          Asignar acudiente
-        </Typography.Title>
+        <h2 className="text-2xl font-bold text-center py-2">Asignar acudiente</h2>
         <Form
           form={form}
           onFinish={onFinish}
