@@ -19,7 +19,6 @@ import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
 import MobileInputApp, { checkPhoneField } from '../../components/MobileInputApp';
 import { ModalSelectorApp } from '../../components/ModalSelectorApp';
-import NavBarApp from '../../components/NavBarApp';
 import { ModalCheckerApp } from '../../components/ModalCheckerApp';
 import { TbCameraPlus } from 'react-icons/tb';
 import dayjs from 'dayjs';
@@ -54,6 +53,7 @@ import { checkLastNameField } from '@/libs/utils/validator';
 import { toast } from 'sonner';
 import { ColorType } from '@/libs/common-types/constants/theme';
 import Steps from '@/components/Steps';
+import BackNavBar from '@/components/BackNavBar';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -304,7 +304,7 @@ const NewKid: NextPage = () => {
   return (
     <Layout>
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
-      <NavBarApp title={titleNavBar} />
+      <BackNavBar title={titleNavBar} />
       <Steps
         colorType={ColorType.INFO}
         currentStep={step}

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
-import NavBarApp from '../../components/NavBarApp';
 import 'dayjs/locale/es';
 
 import { QRCode } from 'react-qrcode-logo';
@@ -18,6 +17,7 @@ import {
   UploadQRCodeImage,
 } from '@/libs/state/redux';
 import { capitalizeWords } from '@/libs/utils/text';
+import BackNavBar from '@/components/BackNavBar';
 
 const GenerateQRKidGuardianView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -137,7 +137,7 @@ Este código es personal, solo lo puede presentar el acudiente que esté relacio
     <Layout>
       {guardianLoading || loading ? <LoadingMask /> : ''}
 
-      <NavBarApp title="Generar Código QR" />
+      <BackNavBar title="Generar Código QR" />
       <Search
         placeholder="Colocar Numero de Cedula del Acudiente"
         onSearch={(value) => findGuardian(value)}

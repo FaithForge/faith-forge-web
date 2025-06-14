@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from 'react';
 import type { NextPage } from 'next';
-import NavBarApp from '../../components/NavBarApp';
 import dayjs from 'dayjs';
 import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../../components/LoadingMask';
@@ -36,6 +35,7 @@ import { calculateAge, getAgeInMonths } from '@/libs/utils/date';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { capitalizeWords } from '@/libs/utils/text';
 import { checkLastNameField } from '@/libs/utils/validator';
+import BackNavBar from '@/components/BackNavBar';
 
 const UpdateKidPage: NextPage = () => {
   const [form] = Form.useForm();
@@ -177,7 +177,7 @@ const UpdateKidPage: NextPage = () => {
   return (
     <Layout>
       {kidSlice.loading ? <LoadingMask /> : ''}
-      <NavBarApp title="Actualizar Niño" />
+      <BackNavBar title="Actualizar Niño" />
       <div
         style={{
           display: 'flex',

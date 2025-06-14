@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import type { NextPage } from 'next';
-import NavBarApp from '../../components/NavBarApp';
 import 'dayjs/locale/es';
 import { useDispatch } from 'react-redux';
 import { useRouter } from 'next/router';
@@ -12,13 +11,14 @@ import { MdEdit } from 'react-icons/md';
 import { AiOutlineUsergroupAdd } from 'react-icons/ai';
 import { HiOutlineDotsVertical } from 'react-icons/hi';
 import { AppDispatch, cleanCurrentKidGuardian } from '@/libs/state/redux';
+import BackNavBar from '@/components/BackNavBar';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
   const router = useRouter();
   const [openKidGuardianModal, setOpenKidGuardianModal] = useState(false);
 
-  const registerKidMenu: PopoverAppAction[] = [
+  const actions: PopoverAppAction[] = [
     {
       key: 'updateKid',
       icon: <MdEdit />,
@@ -40,12 +40,7 @@ const RegisterKidView: NextPage = () => {
 
   return (
     <Layout>
-      <NavBarApp
-        right={
-          <PopoverApp actions={registerKidMenu} icon={<HiOutlineDotsVertical size={'1.5em'} />} />
-        }
-        title="Registrar niño"
-      />
+      <BackNavBar rightActions={actions} title="Registrar niño" />
       <KidRegistrationView />
       <CreateNewKidGuardian
         visible={openKidGuardianModal}
