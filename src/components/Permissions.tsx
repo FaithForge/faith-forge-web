@@ -4,7 +4,6 @@ import { UserRole } from '@/libs/utils/auth';
 import _ from 'lodash';
 import { useRouter } from 'next/router';
 import { useDispatch, useSelector } from 'react-redux';
-import { Notify } from 'react-vant';
 
 export function useHasRequiredPermissions(requiredPermissions: UserRole[]): boolean {
   const { user } = useSelector((state: RootState) => state.authSlice);

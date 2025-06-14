@@ -18,7 +18,6 @@ import {
   Card,
   Cell,
   Typography,
-  Notify,
   Skeleton,
   ImagePreview,
   Dialog,
@@ -47,6 +46,7 @@ import {
 import { GetUserRoles, IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
 import { FFDay } from '@/libs/utils/ffDay';
 import { capitalizeWords } from '@/libs/utils/text';
+import { toast } from 'sonner';
 
 const KidRegistrationView = () => {
   const [form] = Form.useForm();
@@ -86,10 +86,9 @@ const KidRegistrationView = () => {
           observation,
         }),
       );
-      Notify.show({
-        message: 'Se ha registrado al niño con exito',
-        type: 'success',
+      toast.success('Se ha registrado al niño con exito', {
         duration: 1000,
+        style: { color: 'white' },
       });
       router.back();
     }
@@ -103,11 +102,9 @@ const KidRegistrationView = () => {
           id: kidSlice.current.currentKidRegistration.id,
         }),
       );
-
-      Notify.show({
-        type: 'success',
-        message: 'Se ha eliminado el registro del niño con exito',
+      toast.success('Se ha eliminado el registro del niño con exito', {
         duration: 1000,
+        style: { color: 'white' },
       });
       router.back();
     }

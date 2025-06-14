@@ -267,10 +267,6 @@ const ReportRegistrationGroup: NextPage = () => {
                 {report.statistics?.byGender?.find((d: any) => d.name === 'F')?.count ?? 0}
               </Grid.Item>
             </Grid>
-            {/* <h2>Lista niños por salones</h2>
-            {report.list.byKidGroup.map((kidGroup: any, index: any) => {
-              return <ModalFaithForge key={index} kidGroup={kidGroup} />;
-            })} */}
             <Button
               loading={isLoading}
               loadingText="Descargando reporte..."
