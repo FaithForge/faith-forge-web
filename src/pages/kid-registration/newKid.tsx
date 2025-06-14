@@ -6,7 +6,6 @@ import { useState, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import {
   Form,
-  Steps,
   Button,
   Input,
   Selector,
@@ -53,6 +52,8 @@ import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { capitalizeWords } from '@/libs/utils/text';
 import { checkLastNameField } from '@/libs/utils/validator';
 import { toast } from 'sonner';
+import { ColorType } from '@/libs/common-types/constants/theme';
+import Steps from '@/components/Steps';
 
 const NewKid: NextPage = () => {
   const [form] = Form.useForm();
@@ -69,7 +70,7 @@ const NewKid: NextPage = () => {
   const [source, setSource] = useState('');
   const [photo, setPhoto] = useState<any>(null);
   const [staticGroup, setStaticGroup] = useState(false);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const [selectedGender, setSelectedGender] = useState<UserGenderCode>();
   const [kidRelationSelectFilter, setKidRelationSelectFilter] = useState(kidRelationSelect);
   const dispatch = useDispatch<AppDispatch>();
@@ -222,7 +223,7 @@ const NewKid: NextPage = () => {
 
       if (!response.payload.error) {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        setStep(1);
+        setStep(2);
       }
     } catch {
       toast.error(`Ha ocurrido un error al crear el niño.`, {
@@ -263,7 +264,7 @@ const NewKid: NextPage = () => {
           style: { color: 'white' },
         });
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-        setStep(2);
+        setStep(3);
       }
     }
   };
@@ -304,12 +305,16 @@ const NewKid: NextPage = () => {
     <Layout>
       {kidGuardianSlice.loading || kidSlice.loading ? <LoadingMask /> : ''}
       <NavBarApp title={titleNavBar} />
-      <Steps active={step} activeColor="#397b9d">
-        <Steps.Item>Crear niño </Steps.Item>
-        <Steps.Item>Crear Acudiente</Steps.Item>
-        <Steps.Item>Registrar Niño</Steps.Item>
-      </Steps>
-      {step === 0 && (
+      <Steps
+        colorType={ColorType.INFO}
+        currentStep={step}
+        steps={[
+          { value: 1, label: 'Crear niño' },
+          { value: 2, label: 'Crear Acudiente' },
+          { value: 3, label: 'Registrar Niño' },
+        ]}
+      />
+      {step === 1 && (
         <>
           <div
             style={{
@@ -491,7 +496,7 @@ const NewKid: NextPage = () => {
         </>
       )}
 
-      {step === 1 && (
+      {step === 2 && (
         <>
           <Form
             form={formKidGuardian}
@@ -618,7 +623,7 @@ const NewKid: NextPage = () => {
         </>
       )}
 
-      {step === 2 && <KidRegistrationView />}
+      {step === 3 && <KidRegistrationView />}
     </Layout>
   );
 };

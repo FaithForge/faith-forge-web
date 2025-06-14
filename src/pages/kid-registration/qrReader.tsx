@@ -15,16 +15,18 @@ import { AiOutlineQrcode } from 'react-icons/ai';
 import { FaArrowRight, FaRegCheckCircle } from 'react-icons/fa';
 import { HiDotsVertical } from 'react-icons/hi';
 import { useDispatch, useSelector } from 'react-redux';
-import { Button, Cell, Checkbox, Collapse, Form, Input, Space, Steps } from 'react-vant';
+import { Button, Cell, Checkbox, Collapse, Form, Input, Space } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import LoadingMask from '../../components/LoadingMask';
 import NavBarApp from '../../components/NavBarApp';
 import { PopoverApp, PopoverAppAction } from '../../components/PopoverApp';
 import { toast } from 'sonner';
+import { ColorType } from '@/libs/common-types/constants/theme';
+import Steps from '@/components/Steps';
 
 const QRReader: NextPage = () => {
   const [form] = Form.useForm();
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(1);
   const scanQRKidGuardianSlice = useSelector((state: RootState) => state.scanQRKidGuardianSlice);
   const [relationsToRegister, setRelationsToRegister] = useState(scanQRKidGuardianSlice.relations);
   const [relationSelectToRegister, setRelationSelectToRegister] = useState<string[]>([]);
@@ -66,7 +68,7 @@ const QRReader: NextPage = () => {
         relationSelectToRegister.includes(relationToRegister.id),
       ),
     );
-    setStep(2);
+    setStep(3);
   };
 
   const onRegisterKids = async (values: any) => {
@@ -108,7 +110,7 @@ const QRReader: NextPage = () => {
 
   useEffect(() => {
     if (scanQRKidGuardianSlice.kidGuardian && scanQRKidGuardianSlice.relations) {
-      setStep(1);
+      setStep(2);
       setRelationsToRegister(scanQRKidGuardianSlice.relations);
     }
   }, [dispatch, scanQRKidGuardianSlice.kidGuardian, scanQRKidGuardianSlice.relations]);
@@ -138,18 +140,22 @@ const QRReader: NextPage = () => {
         title={titleNavBar}
         right={<PopoverApp actions={actions} icon={<HiDotsVertical size={'1.5em'} />} />}
       />
-      <Steps active={step} activeColor="#397b9d">
-        <Steps.Item>Escanear Codigo</Steps.Item>
-        <Steps.Item>Niños a Registrar</Steps.Item>
-        <Steps.Item>Observaciones</Steps.Item>
-      </Steps>
-      {step === 0 && (
+      <Steps
+        colorType={ColorType.INFO}
+        currentStep={step}
+        steps={[
+          { value: 1, label: 'Escanear Codigo' },
+          { value: 2, label: 'Niños a Registrar' },
+          { value: 3, label: 'Observaciones' },
+        ]}
+      />
+      {step === 1 && (
         <Scanner
           onScan={(result) => handleReadCode(result)}
           paused={scanQRKidGuardianSlice.loading}
         />
       )}
-      {step === 1 && (
+      {step === 2 && (
         <>
           <h1
             style={{
@@ -216,7 +222,7 @@ const QRReader: NextPage = () => {
           </Button>
         </>
       )}
-      {step === 2 && (
+      {step === 3 && (
         <Form
           form={form}
           layout="vertical"
