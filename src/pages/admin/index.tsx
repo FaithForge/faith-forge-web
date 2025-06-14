@@ -1,5 +1,5 @@
 import Cell from '@/components/ui/Cell';
-import ConfirmationModal from '@/components/modal/ConfirmationModal';
+import ConfirmationModal, { showConfirmationModal } from '@/components/modal/ConfirmationModal';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import { ColorType } from '@/libs/common-types/constants/theme';
 import { AppDispatch } from '@/libs/state/redux';
@@ -93,10 +93,7 @@ const systemAdminOptions = [
     label: 'Función para borrar cache del servidor',
     bgColorClass: '',
     bgHoverColorClass: 'hover:bg-neutral-100',
-    onclick: () => {
-      const dialog = document.getElementById('cleanCacheModal') as HTMLDialogElement | null;
-      dialog?.showModal();
-    },
+    onclick: () => showConfirmationModal('cleanCacheModal'),
   },
 ];
 const AdminHome: NextPage = () => {

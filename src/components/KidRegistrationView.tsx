@@ -20,7 +20,6 @@ import {
   Typography,
   Skeleton,
   ImagePreview,
-  Dialog,
 } from 'react-vant';
 import UpdateKidGuardianPhoneModal from './forms/UpdateKidGuardianPhone';
 import { AiFillEdit } from 'react-icons/ai';
@@ -47,6 +46,8 @@ import { GetUserRoles, IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
 import { FFDay } from '@/libs/utils/ffDay';
 import { capitalizeWords } from '@/libs/utils/text';
 import { toast } from 'sonner';
+import ConfirmationModal, { showConfirmationModal } from './modal/ConfirmationModal';
+import { ColorType } from '@/libs/common-types/constants/theme';
 
 const KidRegistrationView = () => {
   const [form] = Form.useForm();
@@ -209,19 +210,8 @@ const KidRegistrationView = () => {
                   />
                   <PiUserSwitchFill
                     size={24}
-                    style={{
-                      paddingLeft: 10,
-                      verticalAlign: 'bottom',
-                    }}
-                    onClick={() =>
-                      Dialog.confirm({
-                        confirmButtonText: 'Confirmar',
-                        cancelButtonText: 'Cancelar',
-                        title: `Cambiar niño a ${isKidVolunteer ? 'recibir en Iglekids' : 'Yo Soy Iglekids'}`,
-                        message: `El niño sera cambiado ${isKidVolunteer ? 'para recibir en Iglekids' : 'al area de Yo Soy Iglekids'}. Por favor confirmar si desea realizar esta acción`,
-                        onConfirm: () => setIsKidVolunteer(!isKidVolunteer),
-                      })
-                    }
+                    style={{ paddingLeft: 10, verticalAlign: 'bottom' }}
+                    onClick={() => showConfirmationModal('changeKidVolunteerModal')}
                   />
                 </>
               )}
@@ -551,6 +541,16 @@ const KidRegistrationView = () => {
           kidGuardian={kidGuardianToUpdate}
         />
       )}
+      <ConfirmationModal
+        id={'changeKidVolunteerModal'}
+        title={`Cambiar niño a ${isKidVolunteer ? 'recibir en Iglekids' : 'Yo Soy Iglekids'}`}
+        content={`El niño sera cambiado ${isKidVolunteer ? 'para recibir en Iglekids' : 'al area de Yo Soy Iglekids'}. Por favor confirmar si desea realizar esta acción`}
+        confirmButtonText="Confirmar"
+        confirmButtonType={ColorType.SUCCESS}
+        onConfirm={() => setIsKidVolunteer(!isKidVolunteer)}
+        cancelButtonText="Cancelar"
+        cancelButtonType={ColorType.INFO}
+      />
     </div>
   );
 };

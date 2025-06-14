@@ -19,7 +19,7 @@ import { useRouter } from 'next/router';
 import { Dispatch, SetStateAction } from 'react';
 import { PiUserSwitch } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
-import ConfirmationModal from '../modal/ConfirmationModal';
+import ConfirmationModal, { showConfirmationModal } from '../modal/ConfirmationModal';
 import { toast } from 'sonner';
 
 type HomeNavBarProps = {
@@ -210,16 +210,7 @@ const HomeNavBar = ({ findText, setFindText }: HomeNavBarProps) => {
               <a>Settings</a>
             </li> */}
               <li>
-                <a
-                  onClick={() => {
-                    const dialog = document.getElementById(
-                      'logoutModal',
-                    ) as HTMLDialogElement | null;
-                    dialog?.showModal();
-                  }}
-                >
-                  Cerrar Sesión
-                </a>
+                <a onClick={() => showConfirmationModal('logoutModal')}>Cerrar Sesión</a>
               </li>
             </ul>
           </div>

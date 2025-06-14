@@ -115,16 +115,7 @@ const UpdateKidGuardianPhoneModal = ({ visible, onClose, kidGuardian }: Props) =
                       block
                       type="danger"
                       size="large"
-                      onClick={() =>
-                        Dialog.confirm({
-                          title: 'Eliminar la relación con el niño',
-                          message: 'Desvincularas al niño de este acudiente',
-                          confirmButtonText: 'Eliminar',
-                          cancelButtonText: 'Cancelar',
-                          onCancel: () => console.log('cancel'),
-                          onConfirm: () => console.log('confirm'),
-                        })
-                      }
+                      onClick={() => showConfirmationModal('changeKidVolunteerModal')}
                     >
                       Eliminar Relación
                     </Button>

@@ -7,6 +7,7 @@ import { RootState } from '@/libs/state/redux';
 import KidRegistrationReportModal from '../modal/KidRegistrationReportModal';
 import { UserRole } from '@/libs/utils/auth';
 import { DateTime } from 'luxon';
+import { showConfirmationModal } from '../modal/ConfirmationModal';
 
 type Props = {
   children?: React.ReactNode;
@@ -23,12 +24,8 @@ const KidRegistrationLayout = ({ children }: Props) => {
   const [disableActions, setDisableActions] = useState<boolean>(false);
 
   useEffect(() => {
-    if (!churchCampusSlice.current || !churchMeetingSlice.current || !churchPrinterSlice.current) {
-      const dialog = document.getElementById(
-        'settingsKidRegistrationModal',
-      ) as HTMLDialogElement | null;
-      dialog?.showModal();
-    }
+    if (!churchCampusSlice.current || !churchMeetingSlice.current || !churchPrinterSlice.current)
+      showConfirmationModal('settingsKidRegistrationModal');
   }, []);
 
   useEffect(() => {
@@ -84,14 +81,7 @@ const KidRegistrationLayout = ({ children }: Props) => {
               Crear niño
             </span>
           </button>
-          <button
-            onClick={() => {
-              const dialog = document.getElementById(
-                'settingsKidRegistrationModal',
-              ) as HTMLDialogElement | null;
-              dialog?.showModal();
-            }}
-          >
+          <button onClick={() => showConfirmationModal('settingsKidRegistrationModal')}>
             <PiGearSix className="h-8 w-8" />
             <span className="dock-label">Configurar</span>
           </button>
@@ -99,14 +89,7 @@ const KidRegistrationLayout = ({ children }: Props) => {
             [UserRole.KID_REGISTER_ADMIN, UserRole.KID_REGISTER_SUPERVISOR]?.includes(
               currentRole,
             ) && (
-              <button
-                onClick={() => {
-                  const dialog = document.getElementById(
-                    'reportKidRegistrationModal',
-                  ) as HTMLDialogElement | null;
-                  dialog?.showModal();
-                }}
-              >
+              <button onClick={() => showConfirmationModal('reportKidRegistrationModal')}>
                 <PiFileText className="h-8 w-8" />
                 <span className="dock-label">Reporte</span>
               </button>

@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import { PiFileText, PiGearSix, PiUserList } from 'react-icons/pi';
 import { useSelector } from 'react-redux';
 import KidChurchSettingsModal from '../modal/KidChurchSettingsModal';
+import { showConfirmationModal } from '../modal/ConfirmationModal';
 
 type Props = {
   children?: React.ReactNode;
@@ -15,10 +16,8 @@ const KidChurchLayout = ({ children }: Props) => {
   const churchMeetingSlice = useSelector((state: RootState) => state.churchMeetingSlice);
 
   useEffect(() => {
-    if (!churchCampusSlice.current || !churchMeetingSlice.current) {
-      const dialog = document.getElementById('settingsKidChurchModal') as HTMLDialogElement | null;
-      dialog?.showModal();
-    }
+    if (!churchCampusSlice.current || !churchMeetingSlice.current)
+      showConfirmationModal('settingsKidChurchModal');
   }, []);
 
   return (
@@ -30,14 +29,7 @@ const KidChurchLayout = ({ children }: Props) => {
             <PiUserList className="h-8 w-8" />
             <span className="dock-label">Niños Registrados</span>
           </button>
-          <button
-            onClick={() => {
-              const dialog = document.getElementById(
-                'settingsKidChurchModal',
-              ) as HTMLDialogElement | null;
-              dialog?.showModal();
-            }}
-          >
+          <button onClick={() => showConfirmationModal('settingsKidChurchModal')}>
             <PiGearSix className="h-8 w-8" />
             <span className="dock-label">Configurar</span>
           </button>

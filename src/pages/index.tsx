@@ -6,8 +6,10 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import { Dialog, Image } from 'react-vant';
+import { Image } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
+import ConfirmationModal, { showConfirmationModal } from '@/components/modal/ConfirmationModal';
+import { ColorType } from '@/libs/common-types/constants/theme';
 
 interface IFormLoginInput {
   username: string;
@@ -95,11 +97,7 @@ const Login: NextPage = () => {
   useEffect(() => {
     if (initialCheckDone) {
       if (authSlice.error || authSlice.token === '') {
-        Dialog.alert({
-          title: 'Contraseña o usuario Incorrecto',
-          message: 'Por favor digita su usuario y contraseña correctamente',
-          confirmButtonText: 'Cerrar',
-        });
+        showConfirmationModal('errorTryLoginModal');
         setInitialCheckDone(false);
         return;
       }
@@ -149,6 +147,13 @@ const Login: NextPage = () => {
         </button>
         <p className="text-center pt-4">V 2.2.0 Beta</p>
       </form>
+      <ConfirmationModal
+        id={'errorTryLoginModal'}
+        title={`Contraseña o usuario Incorrecto`}
+        content={`Por favor digita su usuario y contraseña correctamente`}
+        confirmButtonText="Cerrar"
+        confirmButtonType={ColorType.ERROR}
+      />
     </div>
   );
 };

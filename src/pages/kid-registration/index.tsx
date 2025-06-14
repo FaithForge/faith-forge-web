@@ -22,6 +22,7 @@ import { PiCaretRight, PiWarning, PiX } from 'react-icons/pi';
 import { Empty, List, Skeleton } from 'react-vant';
 import { Layout } from '../../components/Layout';
 import { withRoles } from '../../components/Permissions';
+import { showConfirmationModal } from '@/components/modal/ConfirmationModal';
 
 const Registration: NextPage = () => {
   const {
@@ -107,12 +108,7 @@ const Registration: NextPage = () => {
         <Alert
           title={warningAlert.message}
           type={warningAlert.blockRegister ? ColorType.ERROR : ColorType.WARNING}
-          onClick={() => {
-            const dialog = document.getElementById(
-              'settingsKidRegistrationModal',
-            ) as HTMLDialogElement | null;
-            dialog?.showModal();
-          }}
+          onClick={() => showConfirmationModal('settingsKidRegistrationModal')}
           icon={warningAlert.blockRegister ? <PiX /> : <PiWarning />}
           iconRight={warningAlert.blockRegister ? <PiCaretRight /> : <PiCaretRight />}
         />

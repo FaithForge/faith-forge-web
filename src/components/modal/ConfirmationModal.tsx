@@ -1,13 +1,18 @@
 import { ColorType } from '@/libs/common-types/constants/theme';
 import React from 'react';
 
+export const showConfirmationModal = (id: string) => {
+  const dialog = document.getElementById(id) as HTMLDialogElement | null;
+  dialog?.showModal();
+};
+
 type ConfirmationModalProps = {
   id: string;
   title: string;
   content: string;
   confirmButtonText: string;
   confirmButtonType: ColorType;
-  onConfirm: () => void;
+  onConfirm?: () => void;
   cancelButtonText?: string;
   cancelButtonType?: ColorType;
   onCancel?: () => void;
