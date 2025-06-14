@@ -22,7 +22,10 @@ const Steps: React.FC<StepsProps> = ({ colorType, steps, currentStep }) => {
       <ul className="steps w-full">
         {steps
           ? steps.map((step) => (
-              <li className={`step ${currentStep >= step.value && confirmStepsTheme}`}>
+              <li
+                className={`step ${currentStep >= step.value && confirmStepsTheme}`}
+                key={step.value}
+              >
                 {step.label}
               </li>
             ))
