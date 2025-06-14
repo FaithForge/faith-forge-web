@@ -10,7 +10,6 @@ import {
   Input,
   Selector,
   Switch,
-  Image,
   Typography,
   DatetimePicker,
 } from 'react-vant';
@@ -325,13 +324,12 @@ const NewKid: NextPage = () => {
           >
             <label htmlFor="profileImage" style={{ alignItems: 'center' }}>
               {source ? (
-                <Image
+                <img
                   alt="profileImage"
                   src={source}
                   width={160}
                   height={160}
-                  fit="cover"
-                  radius={100}
+                  className="rounded-full my-2"
                 />
               ) : (
                 <TbCameraPlus fontSize={160} />

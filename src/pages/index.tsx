@@ -6,7 +6,6 @@ import { useRouter } from 'next/router';
 import { useEffect, useState } from 'react';
 import { SubmitHandler, useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
-import { Image } from 'react-vant';
 import LoadingMask from '../components/LoadingMask';
 import ConfirmationModal, { showConfirmationModal } from '@/components/modal/ConfirmationModal';
 import { ColorType } from '@/libs/common-types/constants/theme';
@@ -115,7 +114,7 @@ const Login: NextPage = () => {
     <div className="flex flex-col items-center justify-center h-screen bg-gray-50">
       {isLoading ? <LoadingMask /> : ''}
       <div style={{ paddingBottom: 20 }}>
-        <Image alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
+        <img alt="Logo Iglekdis" src={'/logo-iglekids.png'} width={350} />
       </div>
       <form onSubmit={handleSubmit(onSubmit)} className="w-4/5 md:w-1/3 px-4">
         <fieldset className="fieldset">

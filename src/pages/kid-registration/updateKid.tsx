@@ -6,16 +6,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import LoadingMask from '../../components/LoadingMask';
 import { useRouter } from 'next/router';
 import { DateTime } from 'luxon';
-import {
-  Button,
-  DatetimePicker,
-  Form,
-  Image,
-  Input,
-  Selector,
-  Switch,
-  Typography,
-} from 'react-vant';
+import { Button, DatetimePicker, Form, Input, Selector, Switch, Typography } from 'react-vant';
 import { Layout } from '../../components/Layout';
 
 import { TbCameraPlus } from 'react-icons/tb';
@@ -187,13 +178,12 @@ const UpdateKidPage: NextPage = () => {
       >
         <label htmlFor="profileImage" style={{ alignItems: 'center' }}>
           {source ? (
-            <Image
+            <img
               alt="profileImage"
               src={source}
               width={160}
               height={160}
-              fit="cover"
-              radius={100}
+              className="rounded-full my-2"
             />
           ) : (
             <TbCameraPlus fontSize={160} />

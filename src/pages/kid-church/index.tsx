@@ -16,11 +16,12 @@ import { useEffect, useState } from 'react';
 import { IoIosArrowForward } from 'react-icons/io';
 import { TbReload } from 'react-icons/tb';
 import { useDispatch, useSelector } from 'react-redux';
-import { Cell, Empty, Grid, Image, NoticeBar, Skeleton, Typography } from 'react-vant';
+import { Empty, Grid, NoticeBar, Skeleton, Typography } from 'react-vant';
 import FloatingBubbleApp from '../../components/FloatingBubbleApp';
 import { Layout } from '../../components/Layout';
 import { useHasRequiredPermissions, withRoles } from '../../components/Permissions';
 import ShowKidRegisteredModal from '../../components/ShowKidRegisteredModal';
+import Cell from '@/components/ui/Cell';
 
 const KidChurch: NextPage = () => {
   const { data: kids, loading } = useSelector((state: RootState) => state.kidGroupRegisteredSlice);
@@ -209,23 +210,18 @@ const KidChurch: NextPage = () => {
           ))}
         </>
       ) : (
-        <>
+        <ul className="list bg-base-100 rounded-box">
           {kidList.length ? (
             kidList.map((kid) => (
               <>
                 <Cell
-                  clickable={warningAlert.blockRegister && !isAdmin}
+                  disable={warningAlert.blockRegister && !isAdmin}
                   key={kid.faithForgeId}
-                  style={{
-                    backgroundColor: kid.currentKidRegistration
-                      ? '#ebebeb'
-                      : kid.age >= 12
-                        ? '#FBDAD7'
-                        : 'white',
-                  }}
+                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
                   icon={
-                    <Image
+                    <img
                       alt={`${kid.firstName} ${kid.lastName}`}
+                      className="size-10 rounded-box"
                       src={
                         kid.photoUrl
                           ? kid.photoUrl
@@ -233,32 +229,27 @@ const KidChurch: NextPage = () => {
                             ? '/icons/boy-v2.png'
                             : '/icons/girl-v2.png'
                       }
-                      style={{ borderRadius: 20 }}
-                      fit="cover"
-                      width={44}
-                      height={44}
                     />
                   }
-                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
                   label={`Salon: ${
                     kid.kidGroup ? `${kid.kidGroup?.name}` : ''
                   } | Edad: ${Math.floor(kid.age ?? 0)} años y ${
                     kid.ageInMonths - Math.floor(kid.age) * 12
                   } meses`}
-                  isLink
-                  size="large"
-                  rightIcon={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
+                  bgColorClass={kid.currentKidRegistration && 'bg-neutral-200'}
+                  bgHoverColorClass={kid.currentKidRegistration && 'hover:bg-neutral-300'}
                   onClick={() => {
                     setKidToUpdate(kid);
                     setOpenShowKidRegisteredModal(true);
                   }}
+                  iconRight={<IoIosArrowForward style={{ height: '3em', width: '1.2em' }} />}
                 />
               </>
             ))
           ) : (
             <Empty description="No se encontraron registros" />
           )}
-        </>
+        </ul>
       )}
       {kidToUpdate && (
         <ShowKidRegisteredModal

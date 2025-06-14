@@ -13,13 +13,11 @@ import {
   Input,
   NoticeBar,
   Radio,
-  Image,
   Flex,
   Card,
   Cell,
   Typography,
   Skeleton,
-  ImagePreview,
 } from 'react-vant';
 import UpdateKidGuardianPhoneModal from './forms/UpdateKidGuardianPhone';
 import { AiFillEdit } from 'react-icons/ai';
@@ -145,19 +143,18 @@ const KidRegistrationView = () => {
     <div style={{ paddingLeft: 15, paddingRight: 15 }}>
       <Flex justify="center" align="center" gutter={16} style={{ paddingBottom: 10 }}>
         <Flex.Item span={8}>
-          <Image
+          <img
             alt="profileImage"
             src={imageProfile}
-            fit="cover"
-            radius={100}
-            style={{ marginTop: 10, marginBottom: 10, borderRadius: '50%' }}
-            onClick={() =>
-              ImagePreview.open({
-                closeable: true,
-                showIndex: false,
-                images: [imageProfile],
-              })
-            }
+            className="object-cover rounded-full mt-2.5 mb-2.5"
+            // TODO: Create modal with preview
+            // onClick={() =>
+            //   ImagePreview.open({
+            //     closeable: true,
+            //     showIndex: false,
+            //     images: [imageProfile],
+            //   })
+            // }
           />
         </Flex.Item>
         <Flex.Item span={16}>
