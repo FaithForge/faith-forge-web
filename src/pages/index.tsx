@@ -10,6 +10,7 @@ import LoadingMask from '../components/LoadingMask';
 import ConfirmationModal, { showConfirmationModal } from '@/components/modal/ConfirmationModal';
 import { ColorType } from '@/libs/common-types/constants/theme';
 import Form from '@/components/ui/Form';
+import Input from '@/components/ui/Input';
 
 interface IFormLoginInput {
   username: string;
@@ -102,7 +103,7 @@ const Login: NextPage = () => {
           label="Usuario/Email"
           rules={{ required: 'Este campo es obligatorio' }}
         >
-          <input type="text" className="input w-full" placeholder="Ingresa tu usuario/email" />
+          <Input type="text" className="input w-full" placeholder="Ingresa tu usuario/email" />
         </Form.Item>
 
         <Form.Item
@@ -113,7 +114,7 @@ const Login: NextPage = () => {
             minLength: { value: 6, message: 'Mínimo 6 caracteres' },
           }}
         >
-          <input type="password" className="input w-full" placeholder="Ingresa tu contraseña" />
+          <Input type="password" className="input w-full" placeholder="Ingresa tu contraseña" />
         </Form.Item>
 
         <button className="btn btn-block mt-4 btn-lg bg-blue-950" type="submit">

@@ -15,7 +15,7 @@ const FormItem: React.FC<FormItemProps> = ({ name, label, rules, children }) => 
   const error = errors[name];
 
   return (
-    <fieldset className="fieldset mb-4">
+    <fieldset className="fieldset">
       {label && <legend className="fieldset-legend">{label}</legend>}
 
       <Controller
