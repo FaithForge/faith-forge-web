@@ -186,14 +186,14 @@ const Registration: NextPage = () => {
                     bgColorClass={
                       kid.currentKidRegistration
                         ? 'bg-neutral-200'
-                        : kid.age < 12
+                        : kid.age >= 12
                           ? 'bg-red-200'
                           : null
                     }
                     bgHoverColorClass={
                       kid.currentKidRegistration
                         ? 'hover:bg-neutral-300'
-                        : kid.age < 12
+                        : kid.age >= 12
                           ? 'hover:bg-red-300'
                           : null
                     }
