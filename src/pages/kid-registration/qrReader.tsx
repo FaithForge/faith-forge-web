@@ -44,14 +44,12 @@ const QRReader: NextPage = () => {
   const handleReadCode = (targets: IDetectedBarcode[]) => {
     const code = targets[0].rawValue;
 
-    if (!code) {
+    if (!code)
       toast.error(`Código Invalido`, {
         duration: 3000,
         style: { color: 'white' },
       });
-    } else {
-      dispatch(ScanCodeKidRegistration(code));
-    }
+    else dispatch(ScanCodeKidRegistration(code));
   };
 
   const confirmKidToRegister = () => {

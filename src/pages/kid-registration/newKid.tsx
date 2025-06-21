@@ -145,9 +145,7 @@ const NewKid: NextPage = () => {
   }, [kidGuardianSlice]);
 
   useEffect(() => {
-    if (step === 3) {
-      router.back();
-    }
+    if (step === 4) router.push('/kid-registration');
   }, [router, step]);
 
   const findGuardian = async () => {
@@ -281,13 +279,13 @@ const NewKid: NextPage = () => {
 
   let titleNavBar = '';
   switch (step) {
-    case 0:
+    case 1:
       titleNavBar = 'Crear Niño';
       break;
-    case 1:
+    case 2:
       titleNavBar = 'Crear Acudiente';
       break;
-    case 2:
+    case 3:
       titleNavBar = 'Registrar niño';
       break;
   }

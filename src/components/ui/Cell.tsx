@@ -3,8 +3,8 @@ import React from 'react';
 type AlertProps = {
   title: string;
   disable?: boolean;
-  bgColorClass?: string;
-  bgHoverColorClass?: string;
+  bgColorClass?: string | null;
+  bgHoverColorClass?: string | null;
   label?: string;
   icon?: React.ReactNode;
   iconRight?: React.ReactNode;

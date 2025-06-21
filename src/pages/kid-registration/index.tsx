@@ -183,8 +183,20 @@ const Registration: NextPage = () => {
                           }`
                         : 'El niño ya cumplió la edad máxima, no puede ser registrado.'
                     }
-                    bgColorClass={kid.currentKidRegistration && 'bg-neutral-200'}
-                    bgHoverColorClass={kid.currentKidRegistration && 'hover:bg-neutral-300'}
+                    bgColorClass={
+                      kid.currentKidRegistration
+                        ? 'bg-neutral-200'
+                        : kid.age < 12
+                          ? 'bg-red-200'
+                          : null
+                    }
+                    bgHoverColorClass={
+                      kid.currentKidRegistration
+                        ? 'hover:bg-neutral-300'
+                        : kid.age < 12
+                          ? 'hover:bg-red-300'
+                          : null
+                    }
                     onClick={() =>
                       kid.age < 12 || currentRole === UserRole.KID_REGISTER_ADMIN
                         ? registerKidViewHandler(kid)
