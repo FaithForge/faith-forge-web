@@ -69,7 +69,7 @@ const RegisterKidView: NextPage = () => {
         content={`¿Está seguro que desea eliminar al niño? Esta acción no se puede deshacer.`}
         confirmButtonText="Confirmar"
         confirmButtonType={ColorType.SUCCESS}
-        onConfirm={async () => {kidSlice.current?.id && dispatch(DeleteKid({id: kidSlice.current.id})), router.push('/kid-registration'); }}
+        onConfirm={async () => {kidSlice.current?.id && dispatch(DeleteKid({id: kidSlice.current.id})), router.push('/kid-registration') }}
         cancelButtonText="Cancelar"
         cancelButtonType={ColorType.INFO}
       />
