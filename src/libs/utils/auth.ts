@@ -37,7 +37,7 @@ export const KidChurchSupervisorRoles = [
 ];
 
 // Kid Registration
-export const KidChurchRegisterSupervisorRoles = [UserRole.KID_REGISTER_SUPERVISOR];
+export const KidChurchRegisterSupervisorRoles = [UserRole.KID_REGISTER_ADMIN, UserRole.KID_REGISTER_SUPERVISOR];
 export const KidChurchRegisterRoles = [
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
