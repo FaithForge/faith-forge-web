@@ -37,8 +37,7 @@ export const GetKids = createAsyncThunk(
     const churchMeeting = state.churchMeetingSlice;
     const { token } = state.authSlice;
     const isNumber =
-      typeof Number(payload.findText) === 'number' &&
-      !Number.isNaN(Number(payload.findText));
+      typeof Number(payload.findText) === 'number' && !Number.isNaN(Number(payload.findText));
     let filterByFaithForge;
     let filterByFirstName;
     let filterByLastName;
@@ -165,5 +164,25 @@ export const UpdateKid = createAsyncThunk(
     });
 
     return updateKid;
+  },
+);
+
+export const DeleteKid = createAsyncThunk(
+  'kid-church/DeleteKid',
+  async (payload: { id: string }, { getState }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+    const response = (
+      await microserviceApiRequest({
+        microservice: MS.KidChurch,
+        method: HttpRequestMethod.DELETE,
+        url: `/kid/${payload.id}`,
+        options: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      })
+    ).data;
+
+    return response;
   },
 );

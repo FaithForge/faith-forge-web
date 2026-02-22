@@ -2,6 +2,7 @@ import { IApiErrorResponse, IKid, IKids, IUpdateKid } from '@/libs/models';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import {
   CreateKid,
+  DeleteKid,
   GetKid,
   GetKids,
   GetMoreKids,
@@ -98,24 +99,31 @@ const kidSlice = createSlice({
     builder.addCase(UpdateKid.pending, (state) => {
       state.loading = true;
     });
-    builder.addCase(
-      UpdateKid.fulfilled,
-      (state, action: PayloadAction<IUpdateKid>) => {
-        state.current = {
-          ...state.current,
-          ...action.payload,
-        };
-        state.error = undefined;
-        state.loading = false;
-      },
-    );
+    builder.addCase(UpdateKid.fulfilled, (state, action: PayloadAction<IUpdateKid>) => {
+      state.current = {
+        ...state.current,
+        ...action.payload,
+      };
+      state.error = undefined;
+      state.loading = false;
+    });
     builder.addCase(UpdateKid.rejected, (state, action) => {
+      state.error = action.error.message;
+      state.loading = false;
+    });
+    builder.addCase(DeleteKid.pending, (state) => {
+      state.loading = true;
+    });
+    builder.addCase(DeleteKid.fulfilled, (state) => {
+      state.error = undefined;
+      state.loading = false;
+    });
+    builder.addCase(DeleteKid.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });
   },
 });
 
-export const { loadingKidEnable, loadingKidDisable, updateCurrentKid } =
-  kidSlice.actions;
+export const { loadingKidEnable, loadingKidDisable, updateCurrentKid } = kidSlice.actions;
 export default kidSlice.reducer;
