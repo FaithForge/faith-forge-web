@@ -26,6 +26,7 @@ export enum UserRole {
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
 
+export const KidChurchRegisterAdminRoles = [UserRole.KID_REGISTER_ADMIN];
 export const KidChurchAdminRoles = [UserRole.KID_CHURCH_ADMIN];
 
 export const KidGroupAdminRoles = [UserRole.KID_GROUP_ADMIN];
@@ -60,10 +61,15 @@ export const IsAdmin = (roles: UserRole[]) => {
   return roles.some((role) => AdminRoles.includes(role));
 };
 
-export const IsAdminRegisterKidChurch = (roles: UserRole[]) => {
+export const IsAdminKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchAdminRoles.includes(role));
 };
+
+export const IsAdminKidRegisterChurch = (roles: UserRole[]) => {
+  if (!roles?.length) return false;
+  return roles.some((role) => KidChurchRegisterAdminRoles.includes(role));
+}
 
 export const IsSupervisorRegisterKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;

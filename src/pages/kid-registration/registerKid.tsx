@@ -12,7 +12,7 @@ import { AppDispatch, cleanCurrentKidGuardian, DeleteKid, RootState } from '@/li
 import BackNavBar, { PopoverAppAction } from '@/components/navbar/BackNavBar';
 import ConfirmationModal, { showConfirmationModal } from '../../components/modal/ConfirmationModal';
 import { ColorType } from '../../libs/common-types/constants/theme';
-import { GetUserRoles, IsAdminRegisterKidChurch } from '../../libs/utils/auth';
+import { GetUserRoles, IsAdminKidRegisterChurch } from '../../libs/utils/auth';
 
 const RegisterKidView: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -21,7 +21,7 @@ const RegisterKidView: NextPage = () => {
   const kidSlice = useSelector((state: RootState) => state.kidSlice);
     const roles = GetUserRoles();
   
- const adminActions: PopoverAppAction[] = IsAdminRegisterKidChurch(roles)
+ const adminActions: PopoverAppAction[] = IsAdminKidRegisterChurch(roles)
   ? [
       {
         key: 'deleteKid',
