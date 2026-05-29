@@ -14,12 +14,7 @@ class MyDocument extends Document {
           <title>Iglekids</title>
           <link rel="manifest" href={manifest} />
           <link rel="shortcut icon" href={favicon} />
-          <link rel="icon" href="/icons/icon-monochrome.svg" type="image/svg+xml" />
-          <link rel="mask-icon" href="/icons/icon-monochrome.svg" color="#004863" />
-          <link rel="apple-touch-icon" href="/icons/icon-512x512.png" />
-          <link rel="icon" sizes="512x512" href="/icons/icon-512x512.png" />
-          <meta name="theme-color" content="#004863" media="(prefers-color-scheme: light)" />
-          <meta name="theme-color" content="#003642" media="(prefers-color-scheme: dark)" />
+          <meta name="theme-color" content="#fff" />
         </Head>
         <body>
           <Main />
