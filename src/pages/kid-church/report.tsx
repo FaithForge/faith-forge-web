@@ -1,6 +1,8 @@
 import BackNavBar from '@/components/navbar/BackNavBar';
+import Alert from '@/components/ui/Alert';
 import { Layout } from '@/components/Layout';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
+import { ColorType } from '@/libs/common-types/constants/theme';
 import { RootState } from '@/libs/state/redux';
 import { FFDay } from '@/libs/utils/ffDay';
 import { microserviceApiRequest } from '@/libs/utils/http';
@@ -10,6 +12,7 @@ import type { NextPage } from 'next';
 import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import Button from '@/components/ui/Button';
+import DateCalendarPicker from '@/components/ui/DateCalendarPicker';
 
 type ChurchCampus = {
   id: string;
@@ -32,23 +35,52 @@ type ReportData = {
   statistics: ReportStatistics;
 };
 
+type ReportNotice = {
+  type: ColorType;
+  title: string;
+  subtitle?: string;
+};
+
 const ReportRegistrationGroup: NextPage = () => {
   const [churches, setChurches] = useState<ChurchCampus[]>([]);
   const [churchMeetings, setChurchMeetings] = useState<ChurchMeeting[]>([]);
   const [report, setReport] = useState<ReportData | null>(null);
+  const [reportNotice, setReportNotice] = useState<ReportNotice | null>(null);
   const { token } = useSelector((state: RootState) => state.authSlice);
 
   const now = useMemo(
     () => FFDay.utc().tz('America/Bogota').startOf('day').format('YYYY-MM-DD'),
     [],
   );
+  const todayLabel = useMemo(() => FFDay.utc().tz('America/Bogota').format('YYYY-MM-DD'), []);
   const minDate = useMemo(() => dayjs().subtract(12, 'year').format('YYYY-MM-DD'), []);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedChurchCampusId, setSelectedChurchCampusId] = useState('');
   const [selectedChurchMeetingId, setSelectedChurchMeetingId] = useState('');
-  const [selectedDate, setSelectedDate] = useState('');
-  const [dateCache, setDateCache] = useState('');
+  const [selectedDate, setSelectedDate] = useState(todayLabel);
+  const [dateCache, setDateCache] = useState(todayLabel);
   const [churchMeetingCache, setChurchMeetingCache] = useState('');
+
+  const resetReportState = () => {
+    setReport(null);
+    setReportNotice(null);
+  };
+
+  const isEmptyReportPayload = (payload: unknown) => {
+    if (!payload) {
+      return true;
+    }
+
+    if (Array.isArray(payload)) {
+      return payload.length === 0;
+    }
+
+    if (typeof payload !== 'object') {
+      return true;
+    }
+
+    return Object.keys(payload).length === 0;
+  };
 
   useEffect(() => {
     if (!token) {
@@ -103,11 +135,10 @@ const ReportRegistrationGroup: NextPage = () => {
     }
 
     setIsLoading(true);
+    setReport(null);
+    setReportNotice(null);
 
     try {
-      setChurchMeetingCache(selectedChurchMeetingId);
-      setDateCache(selectedDate);
-
       const reportResponse = (
         await microserviceApiRequest({
           microservice: MS.KidChurch,
@@ -119,13 +150,41 @@ const ReportRegistrationGroup: NextPage = () => {
           },
         })
       ).data;
+
+      if (isEmptyReportPayload(reportResponse)) {
+        setReportNotice({
+          type: ColorType.WARNING,
+          title: 'No se encontró reporte',
+          subtitle: 'El servicio no devolvió información para la fecha y el servicio seleccionados.',
+        });
+        setChurchMeetingCache('');
+        setDateCache(selectedDate);
+        return;
+      }
+
       setReport(reportResponse as ReportData);
+      setChurchMeetingCache(selectedChurchMeetingId);
+      setDateCache(selectedDate);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Inténtalo nuevamente.';
+
+      setReport(null);
+      setChurchMeetingCache('');
+      setDateCache(selectedDate);
+      setReportNotice({
+        type: ColorType.ERROR,
+        title: 'No se pudo generar el reporte',
+        subtitle: errorMessage,
+      });
+      return;
     } finally {
       setIsLoading(false);
     }
 
-    const reportHTML = document.getElementById('report');
-    reportHTML?.scrollIntoView({ behavior: 'smooth' });
+    requestAnimationFrame(() => {
+      const reportHTML = document.getElementById('report');
+      reportHTML?.scrollIntoView({ behavior: 'smooth' });
+    });
   };
 
   const churchMeetingInfo = useMemo(
@@ -192,9 +251,9 @@ const ReportRegistrationGroup: NextPage = () => {
                 setSelectedChurchCampusId(churchCampusId);
                 setSelectedChurchMeetingId('');
                 setChurchMeetingCache('');
-                setDateCache('');
-                setSelectedDate('');
-                setReport(null);
+                setDateCache(todayLabel);
+                setSelectedDate(todayLabel);
+                resetReportState();
 
                 if (churchCampusId) {
                   await findChurchMeetings(churchCampusId);
@@ -222,7 +281,10 @@ const ReportRegistrationGroup: NextPage = () => {
               name="churchMeeting"
               required
               value={selectedChurchMeetingId}
-              onChange={(event) => setSelectedChurchMeetingId(event.target.value)}
+              onChange={(event) => {
+                setSelectedChurchMeetingId(event.target.value);
+                resetReportState();
+              }}
               disabled={!churchMeetings.length}
               className="select select-bordered w-full disabled:cursor-not-allowed disabled:bg-gray-100"
             >
@@ -236,21 +298,17 @@ const ReportRegistrationGroup: NextPage = () => {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="date" className="text-sm font-medium text-gray-700">
-              Fecha de reporte
-            </label>
-            <input
-              id="date"
-              name="date"
-              type="date"
-              required
-              min={minDate}
-              max={now}
+            <DateCalendarPicker
+              label="Fecha de reporte"
               value={selectedDate}
-              onChange={(event) => setSelectedDate(event.target.value)}
-              className="input input-bordered w-full"
+              minDate={minDate}
+              maxDate={now}
+              helpText={`Por defecto queda en hoy. Selecciona una fecha entre ${minDate} y ${now}.`}
+                onChange={(date) => {
+                  setSelectedDate(date);
+                  resetReportState();
+                }}
             />
-            <p className="text-xs text-gray-500">Selecciona una fecha entre {minDate} y {now}.</p>
           </div>
 
           <Button
@@ -265,6 +323,12 @@ const ReportRegistrationGroup: NextPage = () => {
             Generar reporte
           </Button>
         </form>
+
+        {reportNotice ? (
+          <div className="mt-4">
+            <Alert title={reportNotice.title} subtitle={reportNotice.subtitle} type={reportNotice.type} />
+          </div>
+        ) : null}
 
         {report && (
           <section
