@@ -7,6 +7,44 @@ export const ANOTHER_BLACK_COLOR = '#004863';
 export const ANOTHER_ACTIVE_COLOR = '#9cc0da';
 export const TEXT_PRIMARY_COLOR = '#334551';
 
+export const buttonThemeVars = {
+  primary: {
+    backgroundColor: PRIMARY_COLOR_APP,
+    borderColor: PRIMARY_COLOR_APP,
+    textColor: WHITE_COLOR_APP,
+    hoverBackgroundColor: '#00384d',
+    hoverBorderColor: '#00384d',
+  },
+  secondary: {
+    backgroundColor: ANOTHER_COLOR,
+    borderColor: ANOTHER_COLOR,
+    textColor: TEXT_PRIMARY_COLOR,
+    hoverBackgroundColor: '#d8e3f3',
+    hoverBorderColor: '#d8e3f3',
+  },
+  success: {
+    backgroundColor: '#397b9d',
+    borderColor: '#397b9d',
+    textColor: WHITE_COLOR_APP,
+    hoverBackgroundColor: '#326f8d',
+    hoverBorderColor: '#326f8d',
+  },
+  ghost: {
+    backgroundColor: 'transparent',
+    borderColor: 'transparent',
+    textColor: TEXT_PRIMARY_COLOR,
+    hoverBackgroundColor: '#eff4f8',
+    hoverBorderColor: '#eff4f8',
+  },
+  default: {
+    backgroundColor: WHITE_COLOR_APP,
+    borderColor: '#d1d5db',
+    textColor: TEXT_PRIMARY_COLOR,
+    hoverBackgroundColor: '#f3f4f6',
+    hoverBorderColor: '#d1d5db',
+  },
+} as const;
+
 export const themeVars = {
   textColor: '#334551',
   primaryColor: PRIMARY_COLOR_APP,

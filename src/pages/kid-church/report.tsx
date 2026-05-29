@@ -1,3 +1,5 @@
+import BackNavBar from '@/components/navbar/BackNavBar';
+import { Layout } from '@/components/Layout';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { RootState } from '@/libs/state/redux';
 import { FFDay } from '@/libs/utils/ffDay';
@@ -5,25 +7,54 @@ import { microserviceApiRequest } from '@/libs/utils/http';
 import dayjs from 'dayjs';
 import { DateTime } from 'luxon';
 import type { NextPage } from 'next';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Button, DatetimePicker, Form, Selector } from 'react-vant';
-import { Layout } from '../../components/Layout';
-import BackNavBar from '@/components/navbar/BackNavBar';
+import Button from '@/components/ui/Button';
+
+type ChurchCampus = {
+  id: string;
+  name: string;
+};
+
+type ChurchMeeting = {
+  id: string;
+  name: string;
+};
+
+type ReportStatistics = {
+  byKidGroup: Array<{ name: string; count: number }>;
+  byGender?: Array<{ name: string; count: number }>;
+};
+
+type ReportData = {
+  totalKids: number;
+  totalNewKids: number;
+  statistics: ReportStatistics;
+};
 
 const ReportRegistrationGroup: NextPage = () => {
-  const [form] = Form.useForm();
-  const [churches, setChurches] = useState([]);
-  const [churchMeetings, setChurchMeetings] = useState([]);
-  const [report, setReport] = useState<any>(null);
+  const [churches, setChurches] = useState<ChurchCampus[]>([]);
+  const [churchMeetings, setChurchMeetings] = useState<ChurchMeeting[]>([]);
+  const [report, setReport] = useState<ReportData | null>(null);
   const { token } = useSelector((state: RootState) => state.authSlice);
 
-  const now = FFDay.utc().tz('America/Bogota').startOf('day').toDate();
+  const now = useMemo(
+    () => FFDay.utc().tz('America/Bogota').startOf('day').format('YYYY-MM-DD'),
+    [],
+  );
+  const minDate = useMemo(() => dayjs().subtract(12, 'year').format('YYYY-MM-DD'), []);
   const [isLoading, setIsLoading] = useState(false);
-  const [dateCache, setDateCache] = useState(null);
-  const [churchMeetingCache, setChurchMeetingCache] = useState(null);
+  const [selectedChurchCampusId, setSelectedChurchCampusId] = useState('');
+  const [selectedChurchMeetingId, setSelectedChurchMeetingId] = useState('');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [dateCache, setDateCache] = useState('');
+  const [churchMeetingCache, setChurchMeetingCache] = useState('');
 
   useEffect(() => {
+    if (!token) {
+      return;
+    }
+
     (async () => {
       const churchesResponse = (
         await microserviceApiRequest({
@@ -38,246 +69,257 @@ const ReportRegistrationGroup: NextPage = () => {
           },
         })
       ).data;
-      setChurches(churchesResponse);
+      setChurches(churchesResponse as ChurchCampus[]);
     })();
-  }, []);
+  }, [token]);
 
   const findChurchMeetings = async (churchCampusId: string) => {
     setIsLoading(true);
-    const churchMeetingsResponse = (
-      await microserviceApiRequest({
-        microservice: MS.Church,
-        method: HttpRequestMethod.GET,
-        url: `/church-meeting`,
-        options: {
-          params: {
-            churchCampusId,
+    try {
+      const churchMeetingsResponse = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: `/church-meeting`,
+          options: {
+            params: {
+              churchCampusId,
+            },
+            headers: { Authorization: `Bearer ${token}` },
           },
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      })
-    ).data;
-    setChurchMeetings(churchMeetingsResponse);
-    setIsLoading(false);
+        })
+      ).data;
+      setChurchMeetings(churchMeetingsResponse as ChurchMeeting[]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const onFinish = async (values: any) => {
+  const onFinish = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    if (!selectedChurchCampusId || !selectedChurchMeetingId || !selectedDate) {
+      return;
+    }
+
     setIsLoading(true);
-    const churchMeetingId = values.churchMeeting[0];
-    const date = values.date;
 
-    setChurchMeetingCache(churchMeetingId);
-    setDateCache(date);
+    try {
+      setChurchMeetingCache(selectedChurchMeetingId);
+      setDateCache(selectedDate);
 
-    const reportResponse = (
-      await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.GET,
-        url: `/report/kid-church-meeting`,
-        options: {
-          params: { churchMeetingId, date },
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      })
-    ).data;
-    await setReport(reportResponse);
-    setIsLoading(false);
+      const reportResponse = (
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.GET,
+          url: `/report/kid-church-meeting`,
+          options: {
+            params: { churchMeetingId: selectedChurchMeetingId, date: selectedDate },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+      setReport(reportResponse as ReportData);
+    } finally {
+      setIsLoading(false);
+    }
+
     const reportHTML = document.getElementById('report');
     reportHTML?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const churchOptions = churches
-    ? churches.map((church: any) => {
-        return {
-          label: church.name,
-          value: church.id,
-        };
-      })
-    : [];
-
-  const churchMeetingOptions = churchMeetings
-    ? churchMeetings.map((churchMeeting: any) => {
-        return {
-          label: churchMeeting.name,
-          value: churchMeeting.id,
-        };
-      })
-    : [];
+  const churchMeetingInfo = useMemo(
+    () => churchMeetings.find((churchMeeting) => churchMeeting.id === churchMeetingCache),
+    [churchMeetingCache, churchMeetings],
+  );
 
   const downloadFile = async () => {
     setIsLoading(true);
-    const churchMeetingId = churchMeetingCache;
-    const date = dateCache;
 
-    const reportResponse = (
-      await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.GET,
-        url: `/report/kid-church-meeting/download`,
-        options: {
-          params: { churchMeetingId, date },
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      })
-    ).data;
+    try {
+      const reportResponse = (
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.GET,
+          url: `/report/kid-church-meeting/download`,
+          options: {
+            params: { churchMeetingId: churchMeetingCache, date: dateCache },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
 
-    const bufferData = Buffer.from(reportResponse['data']);
-    const blob = new Blob([bufferData], {
-      type: 'application/pdf',
-    });
-    const url = window.URL.createObjectURL(blob);
+      const bufferData = Buffer.from(reportResponse['data']);
+      const blob = new Blob([bufferData], {
+        type: 'application/pdf',
+      });
+      const url = window.URL.createObjectURL(blob);
 
-    const churchMeetingInfo = churchMeetingOptions.find(
-      (churchMeeting) => churchMeeting.value === churchMeetingId,
-    );
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${DateTime.local().toISODate()}-${churchMeetingInfo?.label.replace(
-      ' ',
-      '-',
-    )}.pdf`;
-    a.click();
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${DateTime.local().toISODate()}-${churchMeetingInfo?.name.replace(
+        /\s+/g,
+        '-',
+      )}.pdf`;
+      a.click();
 
-    window.URL.revokeObjectURL(url);
-    setIsLoading(false);
+      window.URL.revokeObjectURL(url);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <Layout>
-      <>
+      <div className="px-4 pb-36 pt-4">
         <BackNavBar title="Generar reporte servicio" />
-        <Form
-          layout="vertical"
-          onFinish={onFinish}
-          form={form}
-          style={{ paddingLeft: 15, paddingRight: 15 }}
-          footer={
-            <Button
-              loading={isLoading}
-              loadingText="Generando reporte..."
-              disabled={isLoading}
-              block
-              type="primary"
-              size="large"
-              nativeType="submit"
-              style={{ paddingLeft: 15, paddingRight: 15 }}
-            >
-              Generar reporte
-            </Button>
-          }
+
+        <form
+          onSubmit={onFinish}
+          className="mt-4 space-y-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
         >
-          <Form.Item
-            name="churchCampus"
-            label="Sede"
-            rules={[{ required: true, message: 'Por favor seleccionar una sede' }]}
-          >
-            <Selector
-              options={churchOptions}
-              onChange={async (arr) => {
-                if (arr.length) {
-                  await findChurchMeetings(arr[0] as string);
+          <div className="space-y-2">
+            <label htmlFor="churchCampus" className="text-sm font-medium text-gray-700">
+              Sede
+            </label>
+            <select
+              id="churchCampus"
+              name="churchCampus"
+              required
+              value={selectedChurchCampusId}
+              onChange={async (event) => {
+                const churchCampusId = event.target.value;
+                setSelectedChurchCampusId(churchCampusId);
+                setSelectedChurchMeetingId('');
+                setChurchMeetingCache('');
+                setDateCache('');
+                setSelectedDate('');
+                setReport(null);
+
+                if (churchCampusId) {
+                  await findChurchMeetings(churchCampusId);
                 } else {
                   setChurchMeetings([]);
                 }
               }}
-            />
-          </Form.Item>
-          <Form.Item
-            name="churchMeeting"
-            label="Servicio"
-            rules={[
-              {
-                required: true,
-                message: 'Por favor seleccionar una reunión',
-              },
-            ]}
-          >
-            <Selector options={churchMeetingOptions} />
-          </Form.Item>
-          <Form.Item
-            name="date"
-            label="Fecha de reporte"
-            trigger="onConfirm"
-            onClick={(_, action) => {
-              action?.current?.open();
-            }}
-            rules={[
-              {
-                required: true,
-                message: 'Por favor seleccionar fecha de reporte',
-              },
-            ]}
-          >
-            <DatetimePicker
-              popup
-              type="date"
-              minDate={dayjs().subtract(12, 'year').toDate()}
-              maxDate={now}
-              title={'Fecha de nacimiento'}
-              cancelButtonText={'Cancelar'}
-              confirmButtonText={'Confirmar'}
+              className="select select-bordered w-full"
             >
-              {(value: Date) =>
-                value ? `${dayjs(value).format('YYYY-MM-DD')}` : 'Seleccionar fecha'
-              }
-            </DatetimePicker>
-          </Form.Item>
-        </Form>
-      </>
-      <div
-        style={{
-          fontSize: 16,
-          paddingLeft: 15,
-          paddingRight: 15,
-          paddingBottom: 140,
-        }}
-      >
-        {report && (
-          <>
-            <h2 className="mt-4 mb-2 font-semibold text-lg">Totales generales</h2>
-            <div className="grid grid-cols-2 border border-gray-300 divide-x divide-y divide-gray-300 text-left">
-              <div className="font-bold px-4 py-2">Total niños registrados</div>
-              <div className="px-4 py-2">{report.totalKids}</div>
-              <div className="font-bold px-4 py-2">Total niños nuevos</div>
-              <div className="px-4 py-2">{report.totalNewKids}</div>
-            </div>
-
-            <h2 className="mt-4 mb-2 font-semibold text-lg">Totales por salones</h2>
-            <div className="grid grid-cols-2 border border-gray-300 divide-x divide-y divide-gray-300 text-left">
-              {report.statistics.byKidGroup.map((kidGroup: any) => (
-                <React.Fragment key={kidGroup.name}>
-                  <div className="font-bold px-4 py-2">{kidGroup.name}</div>
-                  <div className="px-4 py-2">{kidGroup.count}</div>
-                </React.Fragment>
+              <option value="">Seleccionar sede</option>
+              {churches.map((church) => (
+                <option key={church.id} value={church.id}>
+                  {church.name}
+                </option>
               ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="churchMeeting" className="text-sm font-medium text-gray-700">
+              Servicio
+            </label>
+            <select
+              id="churchMeeting"
+              name="churchMeeting"
+              required
+              value={selectedChurchMeetingId}
+              onChange={(event) => setSelectedChurchMeetingId(event.target.value)}
+              disabled={!churchMeetings.length}
+              className="select select-bordered w-full disabled:cursor-not-allowed disabled:bg-gray-100"
+            >
+              <option value="">Seleccionar servicio</option>
+              {churchMeetings.map((churchMeeting) => (
+                <option key={churchMeeting.id} value={churchMeeting.id}>
+                  {churchMeeting.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <label htmlFor="date" className="text-sm font-medium text-gray-700">
+              Fecha de reporte
+            </label>
+            <input
+              id="date"
+              name="date"
+              type="date"
+              required
+              min={minDate}
+              max={now}
+              value={selectedDate}
+              onChange={(event) => setSelectedDate(event.target.value)}
+              className="input input-bordered w-full"
+            />
+            <p className="text-xs text-gray-500">Selecciona una fecha entre {minDate} y {now}.</p>
+          </div>
+
+          <Button
+            type="submit"
+            variant="primary"
+            loading={isLoading}
+            loadingText="Generando reporte..."
+            block
+            size="lg"
+            className="disabled:cursor-not-allowed"
+          >
+            Generar reporte
+          </Button>
+        </form>
+
+        {report && (
+          <section
+            id="report"
+            className="mt-4 space-y-4 rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+          >
+            <div>
+              <h2 className="mb-2 text-lg font-semibold text-gray-900">Totales generales</h2>
+              <div className="grid grid-cols-2 divide-x divide-y divide-gray-200 overflow-hidden rounded-xl border border-gray-200 text-left">
+                <div className="px-4 py-3 font-medium text-gray-700">Total niños registrados</div>
+                <div className="px-4 py-3 text-gray-900">{report.totalKids}</div>
+                <div className="px-4 py-3 font-medium text-gray-700">Total niños nuevos</div>
+                <div className="px-4 py-3 text-gray-900">{report.totalNewKids}</div>
+              </div>
             </div>
 
-            <h2 className="mt-4 mb-2 font-semibold text-lg">Totales por género</h2>
-            <div className="grid grid-cols-2 border border-gray-300 divide-x divide-y divide-gray-300 text-left mb-4">
-              <div className="font-bold px-4 py-2">Masculino</div>
-              <div className="px-4 py-2">
-                {report.statistics?.byGender?.find((d: any) => d.name === 'M')?.count ?? 0}
+            <div>
+              <h2 className="mb-2 text-lg font-semibold text-gray-900">Totales por salones</h2>
+              <div className="grid grid-cols-2 divide-x divide-y divide-gray-200 overflow-hidden rounded-xl border border-gray-200 text-left">
+                {report.statistics.byKidGroup.map((kidGroup) => (
+                  <React.Fragment key={kidGroup.name}>
+                    <div className="px-4 py-3 font-medium text-gray-700">{kidGroup.name}</div>
+                    <div className="px-4 py-3 text-gray-900">{kidGroup.count}</div>
+                  </React.Fragment>
+                ))}
               </div>
-              <div className="font-bold px-4 py-2">Femenino</div>
-              <div className="px-4 py-2">
-                {report.statistics?.byGender?.find((d: any) => d.name === 'F')?.count ?? 0}
+            </div>
+
+            <div>
+              <h2 className="mb-2 text-lg font-semibold text-gray-900">Totales por género</h2>
+              <div className="grid grid-cols-2 divide-x divide-y divide-gray-200 overflow-hidden rounded-xl border border-gray-200 text-left">
+                <div className="px-4 py-3 font-medium text-gray-700">Masculino</div>
+                <div className="px-4 py-3 text-gray-900">
+                  {report.statistics?.byGender?.find((gender) => gender.name === 'M')?.count ?? 0}
+                </div>
+                <div className="px-4 py-3 font-medium text-gray-700">Femenino</div>
+                <div className="px-4 py-3 text-gray-900">
+                  {report.statistics?.byGender?.find((gender) => gender.name === 'F')?.count ?? 0}
+                </div>
               </div>
             </div>
 
             <Button
+              type="button"
+              variant="primary"
               loading={isLoading}
               loadingText="Descargando reporte..."
-              disabled={isLoading}
               block
-              type="primary"
-              style={{ marginTop: 5 }}
-              size="large"
+              size="lg"
               onClick={downloadFile}
-              id="report"
+              className="disabled:cursor-not-allowed"
             >
               Descargar reporte
             </Button>
-          </>
+          </section>
         )}
       </div>
     </Layout>
