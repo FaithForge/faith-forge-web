@@ -38,7 +38,10 @@ export const KidChurchSupervisorRoles = [
 ];
 
 // Kid Registration
-export const KidChurchRegisterSupervisorRoles = [UserRole.KID_REGISTER_ADMIN, UserRole.KID_REGISTER_SUPERVISOR];
+export const KidChurchRegisterSupervisorRoles = [
+  UserRole.KID_REGISTER_ADMIN,
+  UserRole.KID_REGISTER_SUPERVISOR,
+];
 export const KidChurchRegisterRoles = [
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
@@ -51,41 +54,93 @@ export const KidChurchGroupRoles = [
   UserRole.KID_GROUP_USER,
 ];
 
+/**
+ * Returns the roles for the current authenticated user.
+ *
+ * @returns {UserRole[]} The current user's roles.
+ */
 export const GetUserRoles = () => {
   const { user } = useSelector((state: RootState) => state.authSlice);
   return user?.roles as UserRole[];
 };
 
+/**
+ * Returns the roles for the current authenticated user.
+ *
+ * @returns {UserRole[]} The current user's roles.
+ */
+
+/**
+ * Checks whether the provided roles include an admin role.
+ *
+ * @param {UserRole[]} roles - Array of user roles to check.
+ * @returns {boolean} True if any admin role is present.
+ */
 export const IsAdmin = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => AdminRoles.includes(role));
 };
 
+/**
+ * Checks whether the provided roles include a Kid Church admin role.
+ *
+ * @param {UserRole[]} roles - Array of user roles to check.
+ * @returns {boolean} True if any Kid Church admin role is present.
+ */
 export const IsAdminKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchAdminRoles.includes(role));
 };
 
+/**
+ * Checks whether the provided roles include a Kid Register admin role.
+ *
+ * @param {UserRole[]} roles - Array of user roles to check.
+ * @returns {boolean} True if any Kid Register admin role is present.
+ */
 export const IsAdminKidRegisterChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterAdminRoles.includes(role));
-}
+};
 
+/**
+ * Checks whether the provided roles include a Kid Register supervisor role.
+ *
+ * @param {UserRole[]} roles - Array of user roles to check.
+ * @returns {boolean} True if any Kid Register supervisor role is present.
+ */
 export const IsSupervisorRegisterKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterSupervisorRoles.includes(role));
 };
 
+/**
+ * Checks whether the provided roles include a Kid Church supervisor role.
+ *
+ * @param {UserRole[]} roles - Array of user roles to check.
+ * @returns {boolean} True if any Kid Church supervisor role is present.
+ */
 export const IsSupervisorKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchSupervisorRoles.includes(role));
 };
 
+/**
+ * Checks whether the provided roles include a Kid Register role.
+ *
+ * @param {UserRole[]} roles - Array of user roles to check.
+ * @returns {boolean} True if any Kid Register role is present.
+ */
 export const IsRegisterKidChurch = (roles: UserRole[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterRoles.includes(role));
 };
 
+/**
+ * Placeholder that always returns true for role checks where any role is acceptable.
+ *
+ * @returns {boolean} Always true.
+ */
 export const IsAllRole = () => {
   return true;
 };
@@ -105,10 +160,22 @@ const userRolePriority: Record<UserRole, number> = {
   KID: 9,
 };
 
+/**
+ * Sorts user roles by a configured priority map.
+ *
+ * @param {UserRole[]} roles - Array of user roles to sort.
+ * @returns {UserRole[]} Roles ordered by priority (ascending).
+ */
 export const sortUserRolesByPriority = (roles: UserRole[]): UserRole[] => {
   return _.orderBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER, 'asc');
 };
 
+/**
+ * Returns the main (highest priority) user role from a list.
+ *
+ * @param {UserRole[]} roles - Array of user roles to evaluate.
+ * @returns {UserRole|undefined} The role with highest priority or `undefined` if none.
+ */
 export const getMainUserRole = (roles: UserRole[]): UserRole | undefined => {
   return _.minBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER);
 };

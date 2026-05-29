@@ -24,6 +24,8 @@ const Login: NextPage = () => {
   const router = useRouter();
 
   const authSlice = useSelector((state: RootState) => state.authSlice);
+  const currentRole = authSlice.currentRole;
+  const resolvedRole = currentRole ?? mainRole;
   const [initialCheckDone, setInitialCheckDone] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -38,7 +40,7 @@ const Login: NextPage = () => {
   };
 
   const redirect = () => {
-    switch (mainRole) {
+    switch (resolvedRole) {
       case UserRole.SUPER_ADMIN:
       case UserRole.ADMIN:
         router.push('/admin');
@@ -66,8 +68,8 @@ const Login: NextPage = () => {
   };
 
   useEffect(() => {
-    if (mainRole) redirect();
-  }, []);
+    if (resolvedRole) redirect();
+  }, [resolvedRole]);
 
   useEffect(() => {
     if (initialCheckDone) {
@@ -83,7 +85,7 @@ const Login: NextPage = () => {
     }
   }, [authSlice.token, authSlice.error, initialCheckDone]);
 
-  if (mainRole) return null;
+  if (resolvedRole) return null;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-50">

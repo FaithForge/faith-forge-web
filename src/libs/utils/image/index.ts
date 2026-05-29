@@ -1,5 +1,11 @@
 const pica = require('pica')();
 
+/**
+ * Resize an image file to a maximum width and return a Blob.
+ *
+ * @param {File} file - The image file to resize.
+ * @returns {Promise<Blob>} A promise that resolves with the resized image blob.
+ */
 export const resizeImage = async (file: File): Promise<Blob> => {
   const img = document.createElement('img');
   const canvas = document.createElement('canvas');
@@ -34,6 +40,14 @@ export const resizeImage = async (file: File): Promise<Blob> => {
   });
 };
 
+/**
+ * Crop an image to a centered square, resize to the target size and compress to fit max size.
+ *
+ * @param {File} file - The input image file.
+ * @param {number} [targetSizeInPixels=800] - Final width/height in pixels.
+ * @param {number} [maxSizeInBytes=500*1024] - Maximum allowed blob size in bytes.
+ * @returns {Promise<Blob>} A promise that resolves with the resulting image blob.
+ */
 export const resizeAndCropImageToSquare = async (
   file: File,
   targetSizeInPixels = 800, // Tamaño final (ancho y alto)
@@ -83,11 +97,7 @@ export const resizeAndCropImageToSquare = async (
           do {
             const resizedCanvas = await pica.resize(tempCanvas, canvas);
             const blob = await new Promise<Blob | null>((resolveBlob) =>
-              resizedCanvas.toBlob(
-                resolveBlob,
-                file.type || 'image/jpeg',
-                quality,
-              ),
+              resizedCanvas.toBlob(resolveBlob, file.type || 'image/jpeg', quality),
             );
 
             if (!blob) {

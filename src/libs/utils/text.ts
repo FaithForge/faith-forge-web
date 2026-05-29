@@ -1,3 +1,9 @@
+/**
+ * Capitalizes the first letter of every word in the given string.
+ *
+ * @param {string} [input] - The input string to capitalize.
+ * @returns {string} The capitalized string, or an empty string if input is falsy.
+ */
 export const capitalizeWords = (input?: string): string => {
   if (!input) {
     return '';

@@ -39,6 +39,13 @@ export const getAgeInMonths = (birthday: Date): number => {
   return ageInMonths;
 };
 
+/**
+ * Renders a calendar label based on type and numeric data.
+ *
+ * @param {string} type - The label type (e.g., 'month').
+ * @param {number} data - Numeric data used to render the label (e.g., month number).
+ * @returns {string} The rendered label.
+ */
 export const labelRendererCalendar = (type: string, data: number): string => {
   switch (type) {
     case 'month':

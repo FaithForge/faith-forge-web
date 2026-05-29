@@ -25,6 +25,7 @@ const AuthSlice = createSlice({
     logout: (state) => {
       state.user = undefined;
       state.token = '';
+      state.currentRole = undefined;
       state.error = undefined;
       state.loading = false;
     },
