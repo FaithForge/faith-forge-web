@@ -3,14 +3,80 @@
   themes: winter --default;
  };
 
-:root:root {
-  --rv-primary-color: #004863;
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-regular.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
 }
 
-body {
-  user-select: none;
-  margin: 4px;
-  color: #334551;
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-medium.woff2') format('woff2');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-bold.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-black-italic.woff2') format('woff2');
+  font-weight: 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-heavy-italic.woff2') format('woff2');
+  font-weight: 800;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-semibold-italic.woff2') format('woff2');
+  font-weight: 600;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-light-italic.woff2') format('woff2');
+  font-weight: 300;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-thin-italic.woff2') format('woff2');
+  font-weight: 100;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'SF Pro Display';
+  src: url('/fonts/sf-pro-display-ultralight-italic.woff2') format('woff2');
+  font-weight: 200;
+  font-style: italic;
+  font-display: swap;
+}
+
+:root:root {
+  --rv-primary-color: #004863;
 }
 
 .ff-btn {
@@ -25,6 +91,7 @@ body {
   background-color: var(--ff-btn-bg);
   color: var(--ff-btn-text);
   font-size: var(--ff-btn-font-size, 16px);
+  font-weight: 600;
   line-height: var(--ff-btn-line-height, 1.2);
   text-align: center;
   cursor: pointer;
@@ -57,11 +124,6 @@ body {
 .ff-btn--block {
   display: block;
   width: 100%;
-}
-
-.ff-btn--size-sm {
-  height: 32px;
-  font-size: 14px;
 }
 
 .ff-btn--size-md {

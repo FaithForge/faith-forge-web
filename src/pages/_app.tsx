@@ -1,7 +1,6 @@
 import { Providers, store } from '@/libs/state/redux';
 import { themeVars } from '@/libs/utils/theme';
 import type { AppProps } from 'next/app';
-import { DM_Sans } from 'next/font/google';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
@@ -10,7 +9,6 @@ import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 import './theme.css';
 import { Toaster } from 'sonner';
-const dmSans = DM_Sans({ weight: ['300', '400', '700'], subsets: ['latin'] });
 
 const BLOCKED_ROUTES = ['/', '/admin', '/kid-registration', '/kid-church'];
 
@@ -25,11 +23,11 @@ function MyApp({ Component, pageProps }: AppProps) {
       }
       return true;
     });
-  }, [router.pathname]);
+  }, [router]);
 
   return (
     <Providers>
-      <ConfigProvider themeVars={themeVars} className={dmSans.className}>
+      <ConfigProvider themeVars={themeVars}>
         <PersistGate loading={null} persistor={persistor}>
           <Head>
             <meta
