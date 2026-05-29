@@ -1,22 +1,18 @@
-import { Loading, Overlay } from 'react-vant';
-
+/**
+ * Renders a full-screen loading overlay with a daisyUI spinner.
+ *
+ * @returns {JSX.Element} The loading overlay element.
+ */
 const LoadingMask = () => {
   return (
-    <>
-      <Overlay visible={true} zIndex={10000}>
-        <Loading
-          size={64}
-          style={{
-            position: 'absolute',
-            top: '50%',
-            left: '50%',
-            transform: 'translate(-50%, -50%)',
-          }}
-          type="spinner"
-          color="white"
-        />
-      </Overlay>
-    </>
+    <div
+      aria-busy="true"
+      aria-live="polite"
+      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 backdrop-blur-[1px]"
+      role="status"
+    >
+      <span className="loading loading-spinner loading-lg text-base-100" />
+    </div>
   );
 };
 
