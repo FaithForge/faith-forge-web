@@ -1,5 +1,6 @@
 import dayjs from 'dayjs';
 import React, { useEffect, useMemo, useState } from 'react';
+import ModalOverlay from '@/components/ui/ModalOverlay';
 
 type DateCalendarPickerProps = {
   value: string;
@@ -123,128 +124,124 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
 
       {helpText ? <p className="text-xs text-gray-500">{helpText}</p> : null}
 
-      {isOpen ? (
-        <div
-          className="fixed inset-0 z-[110] flex items-end justify-center bg-black/45 p-3 backdrop-blur-[2px] sm:items-center"
-          onClick={closePicker}
-        >
-          <div
-            className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-black/5"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="bg-gradient-to-r from-[#004863] to-[#005a7d] px-4 py-4 text-white">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-base font-medium text-white/95">{label}</h3>
-                  <p className="mt-0.5 text-xs text-white/70">Selecciona una fecha y confirma.</p>
+      <ModalOverlay
+        open={isOpen}
+        onClose={closePicker}
+        panelClassName="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-xl ring-1 ring-black/5"
+      >
+        <div onClick={(event) => event.stopPropagation()}>
+          <div className="bg-gradient-to-r from-[#004863] to-[#005a7d] px-4 py-4 text-white">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-medium text-white/95">{label}</h3>
+                <p className="mt-0.5 text-xs text-white/70">Selecciona una fecha y confirma.</p>
+              </div>
+              <button
+                type="button"
+                onClick={closePicker}
+                className="rounded-full border border-white/20 px-3 py-1 text-sm font-medium text-white transition hover:bg-white/10"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+
+          <div className="p-4">
+
+            <div className="mb-4 flex items-center justify-between">
+              <button
+                type="button"
+                onClick={() => setViewMonth((currentMonth) => currentMonth.subtract(1, 'month'))}
+                className="rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition hover:border-[#004863] hover:bg-[#f1f7fa]"
+              >
+                ←
+              </button>
+              <div className="text-base font-semibold capitalize text-gray-900">{monthTitle}</div>
+              <button
+                type="button"
+                onClick={() => setViewMonth((currentMonth) => currentMonth.add(1, 'month'))}
+                className="rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition hover:border-[#004863] hover:bg-[#f1f7fa]"
+              >
+                →
+              </button>
+            </div>
+
+            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
+              {weekDays.map((weekDay) => (
+                <div key={weekDay} className="py-1">
+                  {weekDay}
                 </div>
+              ))}
+            </div>
+
+            <div className="mt-2 grid grid-cols-7 gap-2">
+              {monthCells.map((cell, index) => {
+                if (!cell) {
+                  return <div key={`empty-${index}`} className="h-11 rounded-xl" />;
+                }
+
+                return (
+                  <button
+                    key={cell.date}
+                    type="button"
+                    disabled={cell.isDisabled}
+                    onClick={() => handleDayClick(cell.date, cell.isDisabled)}
+                    className={[
+                      'relative h-11 rounded-xl border text-sm font-medium transition',
+                      cell.isDisabled
+                        ? 'cursor-not-allowed border-transparent bg-gray-50 text-gray-300'
+                        : 'border-gray-200 bg-white text-gray-800 hover:border-[#004863] hover:bg-[#f1f7fa] hover:shadow-sm',
+                      cell.isSelected
+                        ? 'border-[#004863] bg-[#004863] text-white shadow-md ring-2 ring-[#7cc0df] ring-offset-0 scale-105 hover:bg-[#004863]'
+                        : '',
+                    ]
+                      .filter(Boolean)
+                      .join(' ')}
+                  >
+                    {cell.isSelected ? (
+                      <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold text-white">
+                        ✓
+                      </span>
+                    ) : null}
+                    {cell.day}
+                  </button>
+                );
+              })}
+            </div>
+
+            <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
+              <button
+                type="button"
+                onClick={() => {
+                  const today = dayjs().format('YYYY-MM-DD');
+                  setDraftValue(today);
+                  setViewMonth(dayjs(today).startOf('month'));
+                }}
+                className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+              >
+                Hoy
+              </button>
+              <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={closePicker}
-                  className="rounded-full border border-white/20 px-3 py-1 text-sm font-medium text-white transition hover:bg-white/10"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-
-            <div className="p-4">
-
-              <div className="mb-4 flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={() => setViewMonth((currentMonth) => currentMonth.subtract(1, 'month'))}
-                  className="rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition hover:border-[#004863] hover:bg-[#f1f7fa]"
-                >
-                  ←
-                </button>
-                <div className="text-base font-semibold capitalize text-gray-900">{monthTitle}</div>
-                <button
-                  type="button"
-                  onClick={() => setViewMonth((currentMonth) => currentMonth.add(1, 'month'))}
-                  className="rounded-full border border-gray-200 px-3 py-2 text-gray-700 transition hover:border-[#004863] hover:bg-[#f1f7fa]"
-                >
-                  →
-                </button>
-              </div>
-
-              <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold uppercase tracking-[0.18em] text-gray-400">
-                {weekDays.map((weekDay) => (
-                  <div key={weekDay} className="py-1">
-                    {weekDay}
-                  </div>
-                ))}
-              </div>
-
-              <div className="mt-2 grid grid-cols-7 gap-2">
-                {monthCells.map((cell, index) => {
-                  if (!cell) {
-                    return <div key={`empty-${index}`} className="h-11 rounded-xl" />;
-                  }
-
-                  return (
-                    <button
-                      key={cell.date}
-                      type="button"
-                      disabled={cell.isDisabled}
-                      onClick={() => handleDayClick(cell.date, cell.isDisabled)}
-                      className={[
-                        'relative h-11 rounded-xl border text-sm font-medium transition',
-                        cell.isDisabled
-                          ? 'cursor-not-allowed border-transparent bg-gray-50 text-gray-300'
-                          : 'border-gray-200 bg-white text-gray-800 hover:border-[#004863] hover:bg-[#f1f7fa] hover:shadow-sm',
-                        cell.isSelected
-                          ? 'border-[#004863] bg-[#004863] text-white shadow-md ring-2 ring-[#7cc0df] ring-offset-0 scale-105 hover:bg-[#004863]'
-                          : '',
-                      ]
-                        .filter(Boolean)
-                        .join(' ')}
-                    >
-                      {cell.isSelected ? (
-                        <span className="absolute right-1 top-1 flex h-4 w-4 items-center justify-center rounded-full bg-white/20 text-[10px] font-bold text-white">
-                          ✓
-                        </span>
-                      ) : null}
-                      {cell.day}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="mt-4 flex items-center justify-between gap-3 border-t border-gray-100 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    const today = dayjs().format('YYYY-MM-DD');
-                    setDraftValue(today);
-                    setViewMonth(dayjs(today).startOf('month'));
-                  }}
                   className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                 >
-                  Hoy
+                  Cancelar
                 </button>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={closePicker}
-                    className="rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="button"
-                    onClick={confirmSelection}
-                    className="rounded-xl bg-[#004863] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#00384d]"
-                    style={{ color: '#ffffff' }}
-                  >
-                    Confirmar
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={confirmSelection}
+                  className="rounded-xl bg-[#004863] px-4 py-2 text-sm font-medium text-white transition hover:bg-[#00384d]"
+                  style={{ color: '#ffffff' }}
+                >
+                  Confirmar
+                </button>
               </div>
             </div>
           </div>
         </div>
-      ) : null}
+      </ModalOverlay>
     </div>
   );
 };
