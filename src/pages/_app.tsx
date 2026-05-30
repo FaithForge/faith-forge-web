@@ -1,11 +1,10 @@
-import { Providers, store } from '@/libs/state/redux';
+import { Providers, persistor } from '@/libs/state/redux';
 import { themeVars } from '@/libs/utils/theme';
 import type { AppProps } from 'next/app';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
 import { useEffect } from 'react';
 import { ConfigProvider } from 'react-vant';
-import { persistStore } from 'redux-persist';
 import { PersistGate } from 'redux-persist/integration/react';
 import './theme.css';
 import { Toaster } from 'sonner';
@@ -13,7 +12,6 @@ import { Toaster } from 'sonner';
 const BLOCKED_ROUTES = ['/', '/admin', '/kid-registration', '/kid-church'];
 
 function MyApp({ Component, pageProps }: AppProps) {
-  const persistor = persistStore(store);
   const router = useRouter();
 
   useEffect(() => {

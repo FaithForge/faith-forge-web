@@ -7,6 +7,7 @@ import {
 } from '@/libs/state/redux';
 import { parseJwt } from '@/libs/utils/jwt';
 import { useRouter } from 'next/router';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'sonner';
 
@@ -27,24 +28,54 @@ export const AuthWrapper = ({ children }: Props) => {
   const dispatch = useDispatch();
   const { push } = useRouter();
   const authSlice = useSelector((state: RootState) => state.authSlice);
+  const handledInvalidTokenRef = useRef<string | null>(null);
+
+  let isSessionInvalid = false;
 
   if (!authSlice.token || authSlice.token === '') {
-    push('/');
-    dispatch(logout());
-    toastLogout();
-    return;
+    isSessionInvalid = true;
+  } else {
+    try {
+      const decodedToken = parseJwt(authSlice.token);
+      const currentTime = Date.now() / 1000;
+
+      if (decodedToken.exp && decodedToken.exp < currentTime) {
+        isSessionInvalid = true;
+      }
+    } catch {
+      isSessionInvalid = true;
+    }
   }
 
-  const decodedToken = parseJwt(authSlice.token);
-  const currentTime = Date.now() / 1000;
+  useEffect(() => {
+    if (!isSessionInvalid) {
+      handledInvalidTokenRef.current = null;
+      return;
+    }
 
-  if (decodedToken.exp && decodedToken.exp < currentTime) {
-    dispatch(resetChurchCampusState());
-    dispatch(resetChurchMeetingState());
-    dispatch(resetChurchPrinterState());
-    push('/');
-    toastLogout();
+    if (authSlice.token === '' && handledInvalidTokenRef.current !== null) {
+      return;
+    }
+
+    if (handledInvalidTokenRef.current === authSlice.token) {
+      return;
+    }
+
+    handledInvalidTokenRef.current = authSlice.token ?? '';
+
+    if (authSlice.token) {
+      dispatch(resetChurchCampusState());
+      dispatch(resetChurchMeetingState());
+      dispatch(resetChurchPrinterState());
+    }
+
     dispatch(logout());
+    toastLogout();
+    void push('/');
+  }, [authSlice.token, dispatch, isSessionInvalid, push]);
+
+  if (isSessionInvalid) {
+    return null;
   }
 
   return children;
