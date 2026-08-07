@@ -1,0 +1,158 @@
+services:
+  church:
+    container_name: church_ms
+    build:
+      context: ../faith-forge
+      dockerfile: ./Dockerfile
+      target: development
+      args:
+        APP_NAME: church
+    env_file:
+      - path: ../faith-forge/.env
+        format: raw
+    environment:
+      NODE_ENV: development
+      RESET_DB_ON_START: 'true'
+    command: sh ./scripts/init.sh church
+    ports:
+      - '4000:4000'
+    depends_on:
+      fgdb:
+        condition: service_healthy
+      fgredis:
+        condition: service_healthy
+    volumes:
+      - ../faith-forge:/app:delegated
+      - /app/node_modules
+    restart: unless-stopped
+
+  user:
+    container_name: user_ms
+    build:
+      context: ../faith-forge
+      dockerfile: ./Dockerfile
+      target: development
+      args:
+        APP_NAME: user
+    env_file:
+      - path: ../faith-forge/.env
+        format: raw
+    environment:
+      NODE_ENV: development
+      RESET_DB_ON_START: 'true'
+    command: sh ./scripts/init.sh user
+    ports:
+      - '4001:4001'
+    depends_on:
+      fgdb:
+        condition: service_healthy
+      fgredis:
+        condition: service_healthy
+    volumes:
+      - ../faith-forge:/app:delegated
+      - /app/node_modules
+    restart: unless-stopped
+
+  kidchurch:
+    container_name: kid_church_ms
+    build:
+      context: ../faith-forge
+      dockerfile: ./Dockerfile
+      target: development
+      args:
+        APP_NAME: kid-church
+    env_file:
+      - path: ../faith-forge/.env
+        format: raw
+    environment:
+      NODE_ENV: development
+      RESET_DB_ON_START: 'true'
+    command: sh ./scripts/init.sh kid-church
+    ports:
+      - '4002:4002'
+    depends_on:
+      fgdb:
+        condition: service_healthy
+      fgredis:
+        condition: service_healthy
+    volumes:
+      - ../faith-forge:/app:delegated
+      - /app/node_modules
+    restart: unless-stopped
+
+  fgdb:
+    container_name: database_fg
+    image: postgres:15
+    ports:
+      - '5432:5432'
+    volumes:
+      - ../faith-forge/scripts/db_init.sh:/docker-entrypoint-initdb.d/db_init.sh:ro
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB_NAMES: church,user,fg_kid_church
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U admin -d postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  fgredis:
+    container_name: Redis_fg
+    image: redis:7-alpine
+    command: ["redis-server", "--requirepass", "admin"]
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "admin", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  nginx:
+    container_name: nginx_reverse_proxy
+    image: nginx:alpine
+    ports:
+      - '80:80'
+    volumes:
+      - ../faith-forge/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - church
+      - user
+      - kidchurch
+    restart: unless-stopped
+
+  web:
+    container_name: faith-forge-web-dev
+    build:
+      context: .
+      target: development
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: http://localhost/api
+      NEXT_PUBLIC_CHURCH_ID: ${NEXT_PUBLIC_CHURCH_ID:-}
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app:delegated
+      - /app/node_modules
+    depends_on:
+      - nginx
+    restart: unless-stopped
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+
+networks:
+  default:
+    name: faith_forge_network
+    driver: bridge

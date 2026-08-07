@@ -7,6 +7,9 @@
   },
   "scripts": {
     "dev": "next dev",
+    "dev:stack": "docker compose -f docker-compose.stack.yml up --build",
+    "dev:stack:reset": "docker compose -f docker-compose.stack.yml down -v && docker compose -f docker-compose.stack.yml up --build",
+    "dev:stack:down": "docker compose -f docker-compose.stack.yml down",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"

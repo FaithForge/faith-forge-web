@@ -1,7 +1,9 @@
-export const API_BASE_URL =
+const defaultApiBaseUrl =
   process.env.NODE_ENV !== 'production'
     ? 'http://faith-forge.com/api'
     : 'https://faith-forge.jucarlospm.com/api';
+
+export const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? defaultApiBaseUrl;
 
 export enum HttpRequestMethod {
   GET = 'GET',

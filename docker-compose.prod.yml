@@ -1,0 +1,17 @@
+services:
+  web:
+    container_name: faith-forge-web
+    build:
+      context: .
+      target: production
+      args:
+        NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://faith-forge.jucarlospm.com/api}
+        NEXT_PUBLIC_CHURCH_ID: ${NEXT_PUBLIC_CHURCH_ID:-}
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: ${NEXT_PUBLIC_API_BASE_URL:-https://faith-forge.jucarlospm.com/api}
+      NEXT_PUBLIC_CHURCH_ID: ${NEXT_PUBLIC_CHURCH_ID:-}
+    ports:
+      - '3000:3000'
+    restart: unless-stopped

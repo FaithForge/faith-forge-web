@@ -1,0 +1,23 @@
+services:
+  web:
+    container_name: faith-forge-web-dev
+    build:
+      context: .
+      target: development
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      NEXT_PUBLIC_API_BASE_URL: http://nginx/api
+      NEXT_PUBLIC_CHURCH_ID: ${NEXT_PUBLIC_CHURCH_ID:-}
+    ports:
+      - '3000:3000'
+    volumes:
+      - .:/app:delegated
+      - /app/node_modules
+    networks:
+      - faith_forge_network
+    restart: unless-stopped
+
+networks:
+  faith_forge_network:
+    external: true
