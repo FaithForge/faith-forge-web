@@ -37,7 +37,7 @@ export const GetChurchMeetings = createAsyncThunk(
         method: HttpRequestMethod.GET,
         url: `/church-meeting`,
         options: {
-          params: { churchCampusId, state: stateMeeting },
+          params: { churchCampusId, states: [stateMeeting] },
           headers: { Authorization: `Bearer ${token}` },
         },
       })
@@ -63,7 +63,7 @@ export const GetAllChurchMeetingsAdmin = createAsyncThunk(
 
     const searchParams = new URLSearchParams();
     searchParams.append('churchCampusId', churchCampusId);
-    allStates.forEach((s) => searchParams.append('states[]', s));
+    allStates.forEach((s) => searchParams.append('states', s));
 
     const response = (
       await microserviceApiRequest({
