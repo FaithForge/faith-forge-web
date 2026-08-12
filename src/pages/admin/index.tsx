@@ -5,6 +5,7 @@ import { ColorType } from '@/libs/common-types/constants/theme';
 import { AppDispatch } from '@/libs/state/redux';
 import { CleanCache } from '@/libs/state/redux/thunks/admin/admin.thunk';
 import type { NextPage } from 'next';
+import { useRouter } from 'next/router';
 import { FaChildReaching, FaChildren } from 'react-icons/fa6';
 import { IoIosArrowForward } from 'react-icons/io';
 import {
@@ -16,28 +17,31 @@ import {
 } from 'react-icons/pi';
 import { useDispatch } from 'react-redux';
 
-const churchAdminOptions = [
-  {
-    key: 'servicios',
-    disable: true,
-    title: 'Servicios (Pronto)',
-    icon: <PiMapPinSimpleArea style={{ height: '3em', width: '1.2em' }} />,
-    label: 'Gestionar el tema de sedes. (des)habilitar y/o crear',
-    bgColorClass: '',
-    bgHoverColorClass: 'hover:bg-neutral-100',
-    onclick: () => null,
-  },
-  {
-    key: 'impresoras',
-    disable: true,
-    title: 'Impresoras (Pronto)',
-    icon: <PiPrinter style={{ height: '3em', width: '1.2em' }} />,
-    label: '',
-    bgColorClass: '',
-    bgHoverColorClass: 'hover:bg-neutral-100',
-    onclick: () => null,
-  },
-];
+const useChurchAdminOptions = () => {
+  const router = useRouter();
+  return [
+    {
+      key: 'servicios',
+      disable: false,
+      title: 'Servicios',
+      icon: <PiMapPinSimpleArea style={{ height: '3em', width: '1.2em' }} />,
+      label: 'Gestionar el estado de los servicios por sede',
+      bgColorClass: '',
+      bgHoverColorClass: 'hover:bg-neutral-100',
+      onclick: () => router.push('/admin/church-meetings'),
+    },
+    {
+      key: 'impresoras',
+      disable: true,
+      title: 'Impresoras (Pronto)',
+      icon: <PiPrinter style={{ height: '3em', width: '1.2em' }} />,
+      label: '',
+      bgColorClass: '',
+      bgHoverColorClass: 'hover:bg-neutral-100',
+      onclick: () => null,
+    },
+  ];
+};
 
 const kidChurchAdminOptions = [
   {
@@ -98,6 +102,7 @@ const systemAdminOptions = [
 ];
 const AdminHome: NextPage = () => {
   const dispatch = useDispatch<AppDispatch>();
+  const churchAdminOptions = useChurchAdminOptions();
 
   return (
     <>
