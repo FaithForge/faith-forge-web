@@ -1,5 +1,5 @@
-import { ChurchMeetingStateEnum } from '@/libs/models';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
+import { ChurchMeetingStateEnum } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
@@ -61,10 +61,9 @@ export const GetAllChurchMeetingsAdmin = createAsyncThunk(
 
     const allStates = Object.values(ChurchMeetingStateEnum);
 
-    // Serialize states as repeated query params: ?states=ACTIVE&states=DISABLE&...
     const searchParams = new URLSearchParams();
     searchParams.append('churchCampusId', churchCampusId);
-    allStates.forEach((s) => searchParams.append('states', s));
+    allStates.forEach((s) => searchParams.append('states[]', s));
 
     const response = (
       await microserviceApiRequest({
@@ -89,10 +88,7 @@ export const GetAllChurchMeetingsAdmin = createAsyncThunk(
  */
 export const BulkUpdateChurchMeetingStates = createAsyncThunk(
   'church/BulkUpdateChurchMeetingStates',
-  async (
-    items: { id: string; state: ChurchMeetingStateEnum }[],
-    { getState, rejectWithValue },
-  ) => {
+  async (items: { id: string; state: ChurchMeetingStateEnum }[], { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
