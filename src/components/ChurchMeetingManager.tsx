@@ -9,24 +9,26 @@ import {
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { PiCheckCircle, PiWarningCircle, PiSpinnerGap } from 'react-icons/pi';
 import { useDispatch, useSelector } from 'react-redux';
-import styles from './ChurchMeetingManager.module.css';
+import Button from '@/components/ui/Button';
+import Alert from '@/components/ui/Alert';
+import { ColorType } from '@/libs/common-types/constants/theme';
 
-/** Map from ChurchMeetingStateEnum to Spanish label + CSS class */
+/** Map from ChurchMeetingStateEnum to Spanish label + DaisyUI badge class */
 const STATE_META: Record<
   ChurchMeetingStateEnum,
-  { label: string; className: string }
+  { label: string; badgeClass: string }
 > = {
   [ChurchMeetingStateEnum.ACTIVE]: {
     label: 'Activo',
-    className: styles.stateActive,
+    badgeClass: 'badge-success',
   },
   [ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY]: {
     label: 'Activo sin pantalla',
-    className: styles.stateActiveNoDisplay,
+    badgeClass: 'badge-warning',
   },
   [ChurchMeetingStateEnum.DISABLE]: {
     label: 'Deshabilitado',
-    className: styles.stateDisable,
+    badgeClass: 'badge-neutral',
   },
 };
 
@@ -161,29 +163,31 @@ const ChurchMeetingManager: React.FC = () => {
   }, [dispatch, changedItems, hasPendingChanges, selectedCampusId]);
 
   return (
-    <div className={styles.container}>
+    <div className="max-w-2xl mx-auto p-4 space-y-6">
       {/* Header */}
-      <div className={styles.header}>
-        <h2 className={styles.title}>Gestión de Servicios</h2>
-        <p className={styles.subtitle}>
+      <div className="border-l-4 border-primary pl-4">
+        <h2 className="text-xl font-bold text-primary">Gestión de Servicios</h2>
+        <p className="text-sm text-gray-500">
           Selecciona una sede y actualiza el estado de sus servicios.
         </p>
       </div>
 
       {/* Campus selector */}
-      <div className={styles.selectorWrapper}>
-        <label htmlFor="campus-select" className={styles.label}>
-          Sede (Campus)
+      <div className="form-control">
+        <label htmlFor="campus-select" className="label">
+          <span className="label-text font-semibold uppercase text-xs tracking-wider">
+            Sede (Campus)
+          </span>
         </label>
         {campusesLoading ? (
-          <div className={styles.loadingRow}>
-            <PiSpinnerGap className={styles.spinner} />
-            <span>Cargando sedes…</span>
+          <div className="flex items-center gap-2 text-gray-500">
+            <PiSpinnerGap className="animate-spin text-lg" />
+            <span className="text-sm">Cargando sedes…</span>
           </div>
         ) : (
           <select
             id="campus-select"
-            className={styles.select}
+            className="select select-bordered w-full"
             value={selectedCampusId}
             onChange={(e) => setSelectedCampusId(e.target.value)}
           >
@@ -198,95 +202,98 @@ const ChurchMeetingManager: React.FC = () => {
 
       {/* Feedback banners */}
       {updateSuccess && (
-        <div className={`${styles.banner} ${styles.bannerSuccess}`}>
-          <PiCheckCircle className={styles.bannerIcon} />
-          Estados actualizados correctamente.
-        </div>
+        <Alert
+          type={ColorType.SUCCESS}
+          title="Estados actualizados correctamente."
+          icon={<PiCheckCircle className="text-lg" />}
+        />
       )}
       {updateError && (
-        <div className={`${styles.banner} ${styles.bannerError}`}>
-          <PiWarningCircle className={styles.bannerIcon} />
-          {updateError}
-        </div>
+        <Alert
+          type={ColorType.ERROR}
+          title={updateError}
+          icon={<PiWarningCircle className="text-lg" />}
+        />
       )}
 
       {/* Meetings list */}
-      <div className={styles.meetingsSection}>
-        {loadingMeetings ? (
-          <div className={styles.loadingBlock}>
-            <PiSpinnerGap className={`${styles.spinner} ${styles.spinnerLarge}`} />
-            <p>Cargando servicios…</p>
-          </div>
-        ) : meetings.length === 0 ? (
-          <div className={styles.emptyState}>
-            <p>No hay servicios registrados para esta sede.</p>
-          </div>
-        ) : (
-          <ul className={styles.meetingList}>
-            {meetings.map((meeting) => {
-              const current = effectiveState(meeting.id, meeting.state);
-              const meta = STATE_META[current];
-              const isChanged = pendingChanges[meeting.id] !== undefined;
+      <div className="card bg-base-100 shadow-lg">
+        <div className="card-body p-0">
+          {loadingMeetings ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-gray-400">
+              <PiSpinnerGap className="animate-spin text-4xl" />
+              <p className="text-sm">Cargando servicios…</p>
+            </div>
+          ) : meetings.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">
+              <p className="text-sm">No hay servicios registrados para esta sede.</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-base-200">
+              {meetings.map((meeting) => {
+                const current = effectiveState(meeting.id, meeting.state);
+                const meta = STATE_META[current];
+                const isChanged = pendingChanges[meeting.id] !== undefined;
 
-              return (
-                <li
-                  key={meeting.id}
-                  className={`${styles.meetingItem} ${isChanged ? styles.meetingItemDirty : ''}`}
-                >
-                  <div className={styles.meetingInfo}>
-                    <span className={styles.meetingName}>{meeting.name}</span>
-                    {isChanged && (
-                      <span className={styles.dirtyBadge}>modificado</span>
-                    )}
-                  </div>
+                return (
+                  <li
+                    key={meeting.id}
+                    className={`flex items-center justify-between gap-4 p-4 hover:bg-base-200 transition-colors ${
+                      isChanged ? 'bg-purple-50 border-l-4 border-purple-400' : ''
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-medium text-sm truncate">{meeting.name}</span>
+                      {isChanged && (
+                        <span className="badge badge-sm badge-secondary whitespace-nowrap">
+                          modificado
+                        </span>
+                      )}
+                    </div>
 
-                  <div className={styles.stateControl}>
-                    <span className={`${styles.stateBadge} ${meta.className}`}>
-                      {meta.label}
-                    </span>
-                    <select
-                      id={`meeting-state-${meeting.id}`}
-                      className={styles.stateSelect}
-                      value={current}
-                      onChange={(e) =>
-                        handleStateChange(
-                          meeting.id,
-                          meeting.state,
-                          e.target.value as ChurchMeetingStateEnum,
-                        )
-                      }
-                    >
-                      {Object.values(ChurchMeetingStateEnum).map((s) => (
-                        <option key={s} value={s}>
-                          {STATE_META[s].label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-        )}
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className={`badge badge-sm ${meta.badgeClass} whitespace-nowrap`}>
+                        {meta.label}
+                      </span>
+                      <select
+                        id={`meeting-state-${meeting.id}`}
+                        className="select select-xs select-bordered"
+                        value={current}
+                        onChange={(e) =>
+                          handleStateChange(
+                            meeting.id,
+                            meeting.state,
+                            e.target.value as ChurchMeetingStateEnum,
+                          )
+                        }
+                      >
+                        {Object.values(ChurchMeetingStateEnum).map((s) => (
+                          <option key={s} value={s}>
+                            {STATE_META[s].label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </div>
       </div>
 
       {/* Save button */}
-      <div className={styles.footer}>
-        <button
+      <div className="flex justify-end">
+        <Button
           id="save-meeting-states-btn"
-          className={styles.saveBtn}
-          disabled={!hasPendingChanges || loadingUpdate}
+          variant="primary"
+          loading={loadingUpdate}
+          loadingText="Guardando…"
+          disabled={!hasPendingChanges}
           onClick={handleSave}
         >
-          {loadingUpdate ? (
-            <>
-              <PiSpinnerGap className={styles.spinner} />
-              Guardando…
-            </>
-          ) : (
-            `Guardar cambios${hasPendingChanges ? ` (${changedItems.length})` : ''}`
-          )}
-        </button>
+          {`Guardar cambios${hasPendingChanges ? ` (${changedItems.length})` : ''}`}
+        </Button>
       </div>
     </div>
   );
