@@ -2,6 +2,7 @@ import ChurchMeetingManager from '@/components/ChurchMeetingManager';
 import HomeNavBar from '@/components/navbar/HomeNavBar';
 import type { NextPage } from 'next';
 import Head from 'next/head';
+import BackNavBar from '../../components/navbar/BackNavBar';
 
 /**
  * Admin page for managing church meeting states.
@@ -19,7 +20,7 @@ const ChurchMeetingsAdminPage: NextPage = () => {
         />
       </Head>
       <div className="bg-gray-50 min-h-screen">
-        <HomeNavBar />
+        <BackNavBar title="Gestión de Servicios" />
         <main className="p-2 py-4">
           <ChurchMeetingManager />
         </main>
