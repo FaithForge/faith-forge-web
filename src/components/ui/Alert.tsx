@@ -1,37 +1,38 @@
-import { ColorType } from '@/libs/common-types/constants/theme';
 import React from 'react';
+import clsx from 'clsx';
+import { AlertCircle, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
 
-type AlertProps = {
-  type: ColorType;
-  title: string;
-  subtitle?: string;
-  icon?: React.ReactNode;
-  iconRight?: React.ReactNode;
-  onClick?: () => void;
+interface AlertProps {
+  type: 'error' | 'success' | 'info' | 'warning';
+  title?: string;
+  message: string;
+  className?: string;
+}
+
+const iconMap = {
+  error: AlertCircle,
+  success: CheckCircle2,
+  info: Info,
+  warning: AlertTriangle,
 };
 
-const Alert: React.FC<AlertProps> = ({ type, title, subtitle, icon, iconRight, onClick }) => {
-  const alertThemes: Record<ColorType, string> = {
-    success: 'alert-success',
-    error: 'alert-error',
-    warning: 'alert-warning',
-    info: 'alert-info',
-  };
+const colorMap = {
+  error: 'bg-red-100 text-red-800 border-red-200',
+  success: 'bg-green-100 text-green-800 border-green-200',
+  info: 'bg-cyan-100 text-cyan-800 border-cyan-200', // Similar al cyan de la impresora en la imagen
+  warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+};
 
-  const confirmAlertTheme = alertThemes[type];
+const Alert = ({ type, title, message, className }: AlertProps) => {
+  const Icon = iconMap[type];
 
   return (
-    <div onClick={onClick} role="alert" className={`alert ${confirmAlertTheme} m-2`}>
-      {icon}
-      {subtitle ? (
-        <div>
-          <h3 className="font-bold">{title}</h3>
-          <div className="text-xs">{subtitle}</div>
-        </div>
-      ) : (
-        <span>{title}</span>
-      )}
-      {iconRight}
+    <div className={clsx('flex items-start gap-3 p-3 rounded-xl border text-sm', colorMap[type], className)}>
+      <Icon size={18} className="shrink-0 mt-0.5" />
+      <div className="flex-1">
+        {title && <h4 className="font-bold mb-0.5">{title}</h4>}
+        <p className="opacity-90 leading-tight">{message}</p>
+      </div>
     </div>
   );
 };

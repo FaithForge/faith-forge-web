@@ -1,0 +1,46 @@
+import React, { forwardRef } from 'react';
+import { twMerge } from "tailwind-merge";
+import clsx from 'clsx';
+import { ChevronDown } from 'lucide-react';
+
+export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  fullWidth?: boolean;
+  label?: string;
+  error?: string;
+}
+
+const Select = forwardRef<HTMLSelectElement, SelectProps>(
+  ({ className, fullWidth = true, label, error, required, children, ...props }, ref) => {
+    return (
+      <div className={twMerge(clsx('mb-4', fullWidth && 'w-full'))}>
+        {label && (
+          <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+        )}
+        <div className="relative">
+          <select
+            ref={ref}
+            required={required}
+            className={twMerge(clsx(
+              'block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 outline-none text-base shadow-sm appearance-none transition-colors',
+              error && 'border-red-500 focus:border-red-500',
+              className
+            ))}
+            {...props}
+          >
+            {children}
+          </select>
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+            <ChevronDown size={18} />
+          </div>
+        </div>
+        {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
+      </div>
+    );
+  }
+);
+
+Select.displayName = 'Select';
+
+export default Select;

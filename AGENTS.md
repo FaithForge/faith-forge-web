@@ -24,16 +24,11 @@
 
 ## UI/UX Guidelines
 
-- **Always use daisyUI for styling**: The project uses daisyUI (currently v5.7.17) as the primary styling framework. Never use pure CSS or CSS modules when daisyUI classes can achieve the same result.
-- **Use custom UI components first**: Before using daisyUI classes directly, check if there's an existing custom component in `src/components/ui/` that provides the needed functionality:
-  - `Button` - Custom button component with variants (primary, secondary, success, ghost, default) and loading states
-  - `Alert` - Custom alert component with types (success, error, warning, info)
-  - `Cell` - Custom cell component for list items
-  - `Input` - Custom input components
-  - `Skeleton` - Loading skeleton components
-  - Other UI components in `src/components/ui/`
-- **Component hierarchy**: Custom UI components → daisyUI classes → Tailwind utilities → Pure CSS (as last resort)
-- **Consistency**: Maintain visual consistency by using the project's established component library and styling patterns
+- **Stack**: Vite + React + TypeScript + Tailwind CSS + Radix UI (primitives) + Vaul (bottom sheets) + Framer Motion.
+- **NEVER use DaisyUI or React-Vant**: We are building our own custom UI components following the shadcn/ui pattern.
+- **Use custom UI components first**: Before building from scratch, check `src/components/ui/` for existing primitives like `Button`, `ConfirmModal`, `SettingsDrawer`, etc.
+- **Component hierarchy**: Custom UI components → Tailwind utilities.
+- **Mobile First**: Optimize for touch. Use Vaul for bottom sheets with drag gestures. intercept `popstate` to prevent accidental back navigations. Use full-width forms.
 
 ## Build And Test
 

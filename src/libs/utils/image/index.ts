@@ -1,4 +1,5 @@
-const pica = require('pica')();
+import Pica from 'pica';
+const pica = new (Pica as any)();
 
 /**
  * Resize an image file to a maximum width and return a Blob.
