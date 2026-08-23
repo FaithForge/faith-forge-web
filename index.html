@@ -35,7 +35,7 @@
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        background: radial-gradient(circle at 50% 40%, #ffffff 0%, #f1f5f9 100%);
+        background: #ffffff;
         z-index: 99999;
         overflow: hidden;
       }
@@ -44,23 +44,14 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        margin-bottom: 2rem;
+        margin-bottom: 1.75rem;
       }
       .app-splash-logo {
-        width: 180px;
-        max-width: 60vw;
+        width: 200px;
+        max-width: 65vw;
         height: auto;
+        object-fit: contain;
         animation: splash-float 2.5s ease-in-out infinite;
-        filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.08));
-      }
-      .app-splash-glow {
-        position: absolute;
-        width: 220px;
-        height: 220px;
-        background: radial-gradient(circle, rgba(22, 101, 52, 0.15) 0%, rgba(22, 101, 52, 0) 70%);
-        border-radius: 50%;
-        animation: splash-glow 3s ease-in-out infinite alternate;
-        z-index: -1;
       }
       .app-splash-loader {
         width: 140px;
@@ -99,7 +90,6 @@
     <div id="root">
       <div class="app-splash-screen">
         <div class="app-splash-logo-wrapper">
-          <div class="app-splash-glow"></div>
           <img src="/logo-iglekids.png" alt="Iglekids" class="app-splash-logo" />
         </div>
         <div class="app-splash-loader">
