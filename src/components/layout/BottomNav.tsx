@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import SettingsDrawer from '@/components/modal/SettingsDrawer';
 import ReportDrawer from '@/components/modal/ReportDrawer';
+import KidChurchReportDrawer from '@/components/modal/KidChurchReportDrawer';
 import { APP_ROUTES } from '@/config/routes';
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppSelector } from '@/libs/state/redux/hooks';
@@ -108,7 +109,11 @@ const BottomNav = () => {
 
       {/* Drawer Modals */}
       <SettingsDrawer open={openSettings} onOpenChange={setOpenSettings} />
-      <ReportDrawer open={openReport} onOpenChange={setOpenReport} />
+      {isKidChurchRole ? (
+        <KidChurchReportDrawer open={openReport} onOpenChange={setOpenReport} />
+      ) : (
+        <ReportDrawer open={openReport} onOpenChange={setOpenReport} />
+      )}
     </>
   );
 };

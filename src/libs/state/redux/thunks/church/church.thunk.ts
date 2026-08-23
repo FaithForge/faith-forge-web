@@ -27,17 +27,31 @@ export const GetChurchCampuses = createAsyncThunk(
 
 export const GetChurchMeetings = createAsyncThunk(
   'church/GetChurchMeetings',
-  async (payload: { churchCampusId: string; state?: string }, { getState }) => {
-    const { churchCampusId, state: stateMeeting } = payload;
+  async (
+    payload: { churchCampusId: string; state?: string; states?: string[] },
+    { getState },
+  ) => {
+    const { churchCampusId, state: stateMeeting, states: statesList } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
+
+    const statesToSend =
+      statesList && statesList.length > 0
+        ? statesList
+        : stateMeeting
+          ? [stateMeeting]
+          : [ChurchMeetingStateEnum.ACTIVE];
+
+    const searchParams = new URLSearchParams();
+    searchParams.append('churchCampusId', churchCampusId);
+    statesToSend.forEach((s) => searchParams.append('states', s));
+
     const response = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/church-meeting`,
+        url: `/church-meeting?${searchParams.toString()}`,
         options: {
-          params: { churchCampusId, states: [stateMeeting] },
           headers: { Authorization: `Bearer ${token}` },
         },
       })

@@ -25,36 +25,59 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>('');
   const [selectedPrinterId, setSelectedPrinterId] = useState<string>('');
 
+  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const isKidChurchRole =
+    currentRole === 'KID_GROUP_ADMIN' ||
+    currentRole === 'KID_GROUP_SUPERVISOR' ||
+    currentRole === 'KID_GROUP_USER';
+
   // Initial load
   useEffect(() => {
     if (open) {
       if (campuses.data.length === 0) {
         dispatch(GetChurchCampuses());
       }
-      setSelectedCampusId(campuses.current?.id || '');
+      const activeCampusId = campuses.current?.id || '';
+      setSelectedCampusId(activeCampusId);
       setSelectedMeetingId(meetings.current?.id || '');
       setSelectedPrinterId(printers.current?.id || '');
+
+      if (activeCampusId) {
+        dispatch(
+          GetChurchMeetings({
+            churchCampusId: activeCampusId,
+            state: ChurchMeetingStateEnum.ACTIVE,
+          })
+        );
+      }
     }
   }, [open]);
 
   // Load meetings and printers when campus changes
   useEffect(() => {
-    if (selectedCampusId) {
-      dispatch(GetChurchMeetings({ churchCampusId: selectedCampusId, state: ChurchMeetingStateEnum.ACTIVE }));
-      dispatch(GetChurchPrinters(selectedCampusId));
+    if (selectedCampusId && open) {
+      dispatch(
+        GetChurchMeetings({
+          churchCampusId: selectedCampusId,
+          state: ChurchMeetingStateEnum.ACTIVE,
+        })
+      );
+      if (!isKidChurchRole) {
+        dispatch(GetChurchPrinters(selectedCampusId));
+      }
     }
-  }, [selectedCampusId, dispatch]);
+  }, [selectedCampusId, isKidChurchRole, open, dispatch]);
 
   const handleSave = () => {
     if (selectedCampusId) dispatch(updateCurrentChurchCampus(selectedCampusId));
     if (selectedMeetingId) dispatch(updateCurrentChurchMeeting(selectedMeetingId));
-    if (selectedPrinterId) dispatch(updateCurrentChurchPrinter(selectedPrinterId));
+    if (selectedPrinterId && !isKidChurchRole) dispatch(updateCurrentChurchPrinter(selectedPrinterId));
 
     toast.success("Configuración guardada correctamente");
     onOpenChange(false);
   };
 
-  const isConfigured = !!meetings.current && !!printers.current;
+  const isConfigured = isKidChurchRole ? !!meetings.current : (!!meetings.current && !!printers.current);
 
   // Handle Campus Change
   const handleCampusChange = (campusId: string) => {
@@ -144,35 +167,41 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
               </div>
             </div>
 
-            {/* Impresora */}
-            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isPrinterDisabled ? 'opacity-60' : ''}`}>
-              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                <Printer size={16} className="text-primary" /> Impresora a usar
-              </label>
-              <div className="relative">
-                <select 
-                  className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-                  value={selectedPrinterId}
-                  onChange={(e) => setSelectedPrinterId(e.target.value)}
-                  disabled={isPrinterDisabled}
-                >
-                  <option value="" disabled>Seleccione impresora...</option>
-                  {printers.data.map((printer) => (
-                    <option key={printer.id} value={printer.id}>{printer.name}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                  {printers.loading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
+            {/* Impresora (solo para Regikids) */}
+            {!isKidChurchRole && (
+              <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isPrinterDisabled ? 'opacity-60' : ''}`}>
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  <Printer size={16} className="text-primary" /> Impresora a usar
+                </label>
+                <div className="relative">
+                  <select 
+                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    value={selectedPrinterId}
+                    onChange={(e) => setSelectedPrinterId(e.target.value)}
+                    disabled={isPrinterDisabled}
+                  >
+                    <option value="" disabled>Seleccione impresora...</option>
+                    {printers.data.map((printer) => (
+                      <option key={printer.id} value={printer.id}>{printer.name}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                    {printers.loading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             <Button 
               onClick={handleSave}
               block
               variant="primary"
               className="mt-2"
-              disabled={!selectedCampusId || !selectedMeetingId || !selectedPrinterId}
+              disabled={
+                !selectedCampusId ||
+                !selectedMeetingId ||
+                (!isKidChurchRole && !selectedPrinterId)
+              }
             >
               Finalizar
             </Button>

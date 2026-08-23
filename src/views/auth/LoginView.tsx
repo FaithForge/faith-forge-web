@@ -104,7 +104,7 @@ const LoginView = () => {
           </Button>
         </form>
 
-        <p className="text-center mt-8 text-sm text-gray-400 font-medium">V 2.2.0 Beta</p>
+        <p className="text-center mt-8 text-sm text-gray-400 font-medium">v3.0.0</p>
       </div>
     </div>
   );

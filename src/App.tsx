@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster } from 'sonner';
+import NetworkStatusBanner from '@/components/common/NetworkStatusBanner';
 import MainLayout from '@/components/layout/MainLayout';
 import RegistrationDashboard from '@/views/kid-registration/RegistrationDashboard';
 import NewKidView from '@/views/kid-registration/NewKidView';
@@ -35,6 +36,7 @@ const IndexRedirect = () => {
 function App() {
   return (
     <>
+      <NetworkStatusBanner />
       <Toaster position="top-center" richColors swipeDirections={['top', 'left', 'right']} />
       <BrowserRouter>
         <Routes>

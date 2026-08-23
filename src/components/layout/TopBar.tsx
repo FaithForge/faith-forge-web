@@ -182,6 +182,10 @@ const TopBar = () => {
                 <LogOut size={16} />
                 Cerrar Sesión
               </DropdownMenu.Item>
+
+              <div className="mt-2 pt-2 border-t border-gray-100 text-center">
+                <span className="text-[10px] font-semibold text-gray-400">Iglekids v3.0.0</span>
+              </div>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
         </DropdownMenu.Root>

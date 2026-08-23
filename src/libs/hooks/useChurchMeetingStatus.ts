@@ -98,7 +98,12 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     return () => clearInterval(timer);
   }, []);
 
-  const isConfigured = !!currentMeeting && !!currentPrinter;
+  const isKidChurchRole =
+    currentRole === 'KID_GROUP_ADMIN' ||
+    currentRole === 'KID_GROUP_SUPERVISOR' ||
+    currentRole === 'KID_GROUP_USER';
+
+  const isConfigured = isKidChurchRole ? !!currentMeeting : (!!currentMeeting && !!currentPrinter);
   const activeRoles = currentRole ? [currentRole] : [];
   const isAdmin = IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
 

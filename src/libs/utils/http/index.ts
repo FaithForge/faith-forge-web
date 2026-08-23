@@ -6,6 +6,7 @@ interface ApiRequestOptions {
   params?: any;
   data?: any;
   headers?: any;
+  responseType?: any;
 }
 
 /**
@@ -24,20 +25,20 @@ const executeApiRequest = async (
   url: string,
   options: ApiRequestOptions = {},
 ): Promise<AxiosResponse<any, any>> => {
-  const { params = {}, data = {}, headers = {} } = options;
+  const { params = {}, data = {}, headers = {}, responseType } = options;
   const instance = axios.create({ baseURL });
 
   switch (method) {
     case HttpRequestMethod.GET:
-      return await instance.get(url, { params, headers });
+      return await instance.get(url, { params, headers, responseType });
     case HttpRequestMethod.POST:
-      return await instance.post(url, data, { headers });
+      return await instance.post(url, data, { headers, responseType });
     case HttpRequestMethod.PATCH:
-      return await instance.patch(url, data, { headers });
+      return await instance.patch(url, data, { headers, responseType });
     case HttpRequestMethod.PUT:
-      return await instance.put(url, data, { headers });
+      return await instance.put(url, data, { headers, responseType });
     case HttpRequestMethod.DELETE:
-      return await instance.delete(url, { headers });
+      return await instance.delete(url, { headers, responseType });
     default:
       throw new Error(`Invalid HTTP verb: ${method}`);
   }

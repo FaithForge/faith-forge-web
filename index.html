@@ -105,8 +105,22 @@
         <div class="app-splash-loader">
           <div class="app-splash-loader-bar"></div>
         </div>
+        <div id="app-splash-fallback" style="display:none; margin-top:2rem; text-align:center; animation: fadeIn 0.4s ease-out forwards;">
+          <p style="font-size:12px; color:#64748b; margin-bottom:0.75rem; font-weight:600;">¿La carga está demorando?</p>
+          <button onclick="window.location.reload(true)" style="background:#166534; color:white; border:none; padding:10px 20px; border-radius:9999px; font-size:13px; font-weight:700; cursor:pointer; box-shadow:0 4px 12px rgba(22, 101, 52, 0.25); display:inline-flex; align-items:center; gap:6px;">
+            ↻ Recargar Aplicación
+          </button>
+        </div>
       </div>
     </div>
+    <script>
+      setTimeout(function() {
+        var fallback = document.getElementById('app-splash-fallback');
+        if (fallback) {
+          fallback.style.display = 'block';
+        }
+      }, 4000);
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

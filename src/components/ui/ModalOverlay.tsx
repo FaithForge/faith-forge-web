@@ -82,13 +82,15 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
 
   return createPortal(
     <div
-      className={mergeClasses('fixed inset-0 z-[110] flex items-end justify-center p-3 sm:items-center', wrapperClassName)}
+      className={mergeClasses('fixed inset-0 z-[9999] flex items-end justify-center p-3 sm:items-center pointer-events-auto', wrapperClassName)}
       aria-modal="true"
       role="dialog"
+      data-vaul-no-drag
+      onClick={(e) => e.stopPropagation()}
     >
       <div
         className={mergeClasses(
-          'absolute inset-0 bg-black/45 backdrop-blur-[2px] transition-opacity duration-300 ease-out',
+          'absolute inset-0 bg-black/45 backdrop-blur-[2px] transition-opacity duration-300 ease-out pointer-events-auto',
           isVisible ? 'opacity-100' : 'opacity-0',
           backdropClassName,
         )}
@@ -96,10 +98,12 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
       />
       <div
         className={mergeClasses(
-          'relative z-10 w-full transition-all duration-300 ease-out will-change-transform',
+          'relative z-10 w-full transition-all duration-300 ease-out will-change-transform pointer-events-auto',
           isVisible ? 'translate-y-0 scale-100 opacity-100' : 'translate-y-6 scale-[0.96] opacity-0',
           panelClassName,
         )}
+        data-vaul-no-drag
+        onClick={(e) => e.stopPropagation()}
       >
         {children}
       </div>
