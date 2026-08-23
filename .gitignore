@@ -41,8 +41,11 @@ Thumbs.db
 .nx/cache
 .nx/workspace-data
 
-# Next.js
+# Next.js & Vite
 .next
 out
+dev-dist
+tsconfig.tsbuildinfo
 
 .env
+.env*.local
