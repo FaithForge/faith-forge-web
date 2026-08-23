@@ -343,10 +343,10 @@ const NewKidView = () => {
         className="bg-primary text-primary-foreground shadow-md flex flex-col relative z-30"
         style={{ boxShadow: '0 -2px 0 0 var(--color-primary), 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
       >
-        <div className="px-4 py-4 flex items-center">
-          <button onClick={handleCancelClick} className="flex items-center gap-1 opacity-90 hover:opacity-100">
-            <ArrowLeft size={20} />
-            <span className="font-medium">Nuevo Registro</span>
+        <div className="px-4 py-2 flex items-center border-t border-white/15">
+          <button onClick={handleCancelClick} className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold">
+            <ArrowLeft size={18} />
+            <span>Nuevo Registro</span>
           </button>
         </div>
         <StepProgress currentStep={step} />

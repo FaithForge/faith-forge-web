@@ -282,11 +282,11 @@ const KidCheckInView = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* TopBar con Menú de 3 Puntos */}
-      <div className="bg-primary text-primary-foreground p-4 flex items-center justify-between shadow-md relative z-40">
-        <button onClick={() => navigate(APP_ROUTES.kidRegistration.root)} className="flex items-center gap-1 opacity-90 hover:opacity-100">
-          <ArrowLeft size={20} />
-          <span className="font-medium">Detalle y Registro</span>
+      {/* Sub-Header con Menú de 3 Puntos */}
+      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between shadow-xs relative z-40 border-t border-white/15">
+        <button onClick={() => navigate(APP_ROUTES.kidRegistration.root)} className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold">
+          <ArrowLeft size={18} />
+          <span>Detalle y Registro</span>
         </button>
 
         {/* Menú Desplegable de 3 Puntos */}

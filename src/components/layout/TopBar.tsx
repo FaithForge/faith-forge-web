@@ -89,17 +89,17 @@ const TopBar = () => {
 
   const roleTriggerContent = (
     <div className={clsx(
-      "flex items-center gap-2 outline-none rounded-lg p-1 transition-colors",
+      "flex items-center gap-1.5 outline-none rounded-lg p-0.5 transition-colors",
       hasMultipleRoles ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
     )}>
-      <div className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 p-1">
-         <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain drop-shadow-sm" />
+      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-white/20 p-0.5">
+         <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain drop-shadow-xs" />
       </div>
       <div className="text-left">
-        <h1 className="font-bold leading-tight">{activeVisualRole.appTitle}</h1>
-        <div className="flex items-center gap-1 text-xs uppercase tracking-wider opacity-90 font-medium">
+        <h1 className="font-bold text-sm leading-none">{activeVisualRole.appTitle}</h1>
+        <div className="flex items-center gap-1 text-[10.5px] uppercase tracking-wide opacity-90 font-medium mt-0.5">
           Rol: {activeVisualRole.label}
-          {hasMultipleRoles && <ChevronDown size={12} />}
+          {hasMultipleRoles && <ChevronDown size={11} />}
         </div>
       </div>
     </div>
@@ -107,7 +107,7 @@ const TopBar = () => {
 
   return (
     <>
-      <header className="bg-primary text-primary-foreground px-4 py-2 flex justify-between items-center shrink-0 transition-colors duration-300 z-[120] relative shadow-none border-none outline-none">
+      <header className="bg-primary text-primary-foreground px-3.5 py-1.5 flex justify-between items-center shrink-0 transition-colors duration-300 z-[120] relative shadow-none border-none outline-none">
         
         {/* Lado Izquierdo: Menú de Roles */}
         {hasMultipleRoles ? (
@@ -153,12 +153,12 @@ const TopBar = () => {
         )}
 
       {/* Lado Derecho: Iconos y Avatar de Usuario */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2.5">
         
         {/* Menú de Usuario */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative">
-            <div className="w-9 h-9 rounded-full bg-black/20 text-sm flex items-center justify-center font-bold">
+            <div className="w-7.5 h-7.5 rounded-full bg-black/20 text-xs flex items-center justify-center font-bold">
               {userInitials}
             </div>
           </DropdownMenu.Trigger>
