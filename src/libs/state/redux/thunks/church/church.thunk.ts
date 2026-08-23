@@ -16,7 +16,7 @@ export const GetChurchCampuses = createAsyncThunk(
         method: HttpRequestMethod.GET,
         url: `/church-campus`,
         options: {
-          params: { churchId: process.env.NEXT_PUBLIC_CHURCH_ID },
+          params: { churchId: import.meta.env.VITE_CHURCH_ID },
           headers: { Authorization: `Bearer ${token}` },
         },
       })

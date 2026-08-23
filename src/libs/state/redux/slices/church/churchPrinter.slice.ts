@@ -32,10 +32,13 @@ const churchPrinterSlice = createSlice({
     });
     builder.addCase(GetChurchPrinters.fulfilled, (state, action) => {
       state.data = action.payload;
-      state.current = action.payload[0];
       state.error = initialState.error;
       state.loading = false;
     });
+    builder.addCase("auth/logout", (state) => {
+      state.current = undefined;
+    });
+
     builder.addCase(GetChurchPrinters.rejected, (state, action) => {
       state.data = initialState.data;
       state.error = action.error.message;

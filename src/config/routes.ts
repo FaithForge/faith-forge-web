@@ -2,14 +2,24 @@ export const APP_ROUTES = {
   auth: {
     login: '/login',
   },
+  admin: {
+    root: '/admin',
+    churchMeetings: '/admin/church-meetings',
+  },
+  kidChurch: {
+    root: '/kid-church',
+    attendance: '/kid-church/attendance',
+    report: '/kid-church/report',
+  },
   kidRegistration: {
     root: '/kid-registration',
     new: '/kid-registration/new',
     checkInBase: '/kid-registration/check-in',
     checkInDynamic: '/kid-registration/check-in/:id',
     checkIn: (id: string | number) => `/kid-registration/check-in/${id}`,
-  },
-  scanner: {
-    root: '/scanner',
+    updateKidDynamic: '/kid-registration/update-kid/:id',
+    updateKid: (id: string | number) => `/kid-registration/update-kid/${id}`,
+    scanner: '/kid-registration/scanner',
+    generateQR: '/kid-registration/generate-guardian-qr',
   },
 } as const;

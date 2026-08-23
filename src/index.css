@@ -11,8 +11,8 @@
 
 @layer base {
   :root {
-    /* Default (Tutor theme for now) */
-    --color-primary: #4f46e5; /* Indigo 600 */
+    /* Default (Primary fallback) */
+    --color-primary: #15803d; /* Green 700 */
     --color-primary-foreground: #ffffff;
     --color-background: #f3f4f6; /* Gray 100 */
     --color-surface: #ffffff;
@@ -20,21 +20,15 @@
     --color-text-muted: #6b7280; /* Gray 500 */
   }
 
-  .theme-tutor {
-    --color-primary: #4f46e5; /* Indigo */
-  }
-
-  .theme-admin {
-    --color-primary: #059669; /* Emerald */
-  }
-
-  .theme-volunteer {
-    --color-primary: #ea580c; /* Orange */
-  }
-
-  .theme-registrar {
-    --color-primary: #0284c7; /* Sky 600 */
-  }
+  .theme-SUPER_ADMIN { --color-primary: #9ca3af; /* bg-gray-400 */ }
+  .theme-ADMIN { --color-primary: #fbbf24; /* bg-amber-400 */ }
+  .theme-KID_REGISTER_ADMIN { --color-primary: #166534; /* bg-green-800 */ }
+  .theme-KID_GROUP_ADMIN { --color-primary: #db2777; /* bg-pink-600 */ }
+  .theme-KID_REGISTER_SUPERVISOR { --color-primary: #15803d; /* bg-green-700 */ }
+  .theme-KID_GROUP_SUPERVISOR { --color-primary: #9333ea; /* bg-purple-600 */ }
+  .theme-KID_REGISTER_USER { --color-primary: #16a34a; /* bg-green-600 */ }
+  .theme-KID_GROUP_USER { --color-primary: #fbbf24; /* bg-amber-400 */ }
+  .theme-USER { --color-primary: #fbbf24; /* bg-amber-400 */ }
 
   body {
     background-color: var(--color-background);

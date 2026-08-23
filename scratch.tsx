@@ -13,18 +13,15 @@ interface ReportDrawerProps {
 }
 
 const NumberInput = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-  <div className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0 gap-3">
-    <span className="text-sm font-bold text-gray-700">{label}</span>
+  <div className="flex items-center justify-between border-b border-gray-100 py-3 last:border-0">
+    <span className="text-sm font-bold text-gray-700 pr-4">{label}</span>
     <input 
       type="number" 
       min={0}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      autoComplete="off"
-      autoCorrect="off"
-      autoCapitalize="off"
-      spellCheck={false}
-      className="w-20 text-center font-semibold text-base rounded-xl border-2 border-gray-200 bg-white py-2 px-2 text-text-main focus:border-primary transition-colors outline-none shadow-sm shrink-0"
+      placeholder="Digite un número"
+      className="w-32 text-center font-bold text-sm rounded-lg border-2 border-gray-200 bg-gray-50 py-2 focus:border-primary focus:bg-white transition-colors outline-none"
     />
   </div>
 );
@@ -246,22 +243,18 @@ ${state.observationGeneral}`;
                     condiciones para el siguiente grupo.
                   </p>
                   <textarea 
-                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-sm shadow-sm"
+                    className="block w-full rounded-xl border-2 border-gray-200 bg-gray-50 text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-sm shadow-inner"
                     rows={4}
                     value={state.observationGeneral}
                     onChange={(e) => updateState({ observationGeneral: e.target.value })}
                     placeholder="Escriba aqui su observación"
-                    autoComplete="off"
-                    autoCorrect="off"
-                    autoCapitalize="off"
-                    spellCheck={false}
                   ></textarea>
                 </div>
 
                 <Button 
                   onClick={handleSave}
                   block
-                  variant="primary"
+                  variant="success"
                   className="mt-2"
                 >
                   Generar informe para compartir

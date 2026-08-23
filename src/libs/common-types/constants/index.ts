@@ -5,3 +5,4 @@ export * from './days';
 export * from './pagination';
 export * from './registration';
 export * from './s3';
+export * from './kid-age';

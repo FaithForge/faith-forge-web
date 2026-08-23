@@ -12,7 +12,7 @@ export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElemen
 const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ className, fullWidth = true, label, error, required, children, ...props }, ref) => {
     return (
-      <div className={twMerge(clsx('mb-4', fullWidth && 'w-full'))}>
+      <div className={twMerge(clsx(fullWidth && 'w-full', className))}>
         {label && (
           <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
             {label} {required && <span className="text-red-500">*</span>}
@@ -23,7 +23,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             required={required}
             className={twMerge(clsx(
-              'block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 outline-none text-base shadow-sm appearance-none transition-colors',
+              'block w-full rounded-xl border-2 border-gray-200 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 outline-none text-base shadow-sm appearance-none transition-colors',
+              'text-text-main has-[option[value=""]:checked]:text-gray-400',
               error && 'border-red-500 focus:border-red-500',
               className
             ))}

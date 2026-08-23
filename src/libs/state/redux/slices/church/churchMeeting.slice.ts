@@ -32,10 +32,13 @@ const churchMeetingSlice = createSlice({
     });
     builder.addCase(GetChurchMeetings.fulfilled, (state, action) => {
       state.data = action.payload;
-      state.current = action.payload[0];
       state.error = undefined;
       state.loading = false;
     });
+    builder.addCase("auth/logout", (state) => {
+      state.current = undefined;
+    });
+
     builder.addCase(GetChurchMeetings.rejected, (state, action) => {
       state.data = [];
       state.error = action.error.message;

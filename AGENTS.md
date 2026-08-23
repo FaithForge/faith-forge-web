@@ -14,6 +14,7 @@
 - Prefer small, focused components and hooks over large multi-purpose files.
 - Preserve the existing naming patterns in `src/components`, `src/libs`, `src/services`, and `src/pages`.
 - Do not convert the project to the App Router unless explicitly requested.
+- **Route and URL Naming**: All routes, paths, and URLs MUST be strictly in English (e.g. `/kid-registration/generate-guardian-qr`, `/kid-church/attendance`, `/admin/church-meetings`). NEVER mix Spanish and English in route names or URL paths.
 
 ## Architecture
 

@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { toast } from 'sonner';
-import { APP_ROUTES } from "@/config/routes";
-import Input from "@/components/ui/Input";
+import { APP_ROUTES } from '@/config/routes';
+import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { useAppDispatch } from '@/libs/state/redux/hooks';
+import { UserLogin } from '@/libs/state/redux/thunks/user/auth.thunk';
 
 interface IFormLoginInput {
   username: string;
@@ -13,26 +15,38 @@ interface IFormLoginInput {
 
 const LoginView = () => {
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [isLoading, setIsLoading] = useState(false);
   
   const { register, handleSubmit, formState: { errors } } = useForm<IFormLoginInput>();
 
+  /**
+   * Handles form submission: dispatches the UserLogin thunk and redirects on success.
+   *
+   * @param {IFormLoginInput} data - Form values containing username and password.
+   * @returns {Promise<void>}
+   */
   const onSubmit: SubmitHandler<IFormLoginInput> = async (data) => {
     setIsLoading(true);
-    
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      const username = data.username.toLowerCase().trim();
-      
-      if (username === 'error') {
-        toast.error('Usuario o contraseña incorrectos');
-      } else {
+    try {
+      const resultAction = await dispatch(UserLogin({ username: data.username.trim(), password: data.password }));
+      if (UserLogin.fulfilled.match(resultAction)) {
         toast.success('¡Bienvenido!');
-        // Por ahora redirigimos al rol de registro
-        navigate(APP_ROUTES.kidRegistration.root);
+        navigate('/', { replace: true });
+      } else {
+        const rawMsg = resultAction.error?.message || '';
+        const isAuthError = rawMsg.includes('401') || rawMsg.includes('404');
+        const errMsg = isAuthError 
+          ? 'Usuario o contraseña incorrectos' 
+          : (resultAction.payload as any)?.message ?? rawMsg ?? 'Ocurrió un error inesperado';
+        
+        toast.error(errMsg);
       }
-    }, 1000);
+    } catch {
+      toast.error('Error de conexión. Intenta de nuevo.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -55,6 +69,10 @@ const LoginView = () => {
             label="Usuario / Email"
             type="text" 
             placeholder="Ingresa tu usuario"
+            autoComplete="username"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
             error={errors.username?.message}
             {...register('username', { required: 'Este campo es obligatorio' })}
           />
@@ -63,6 +81,10 @@ const LoginView = () => {
             label="Contraseña"
             type="password" 
             placeholder="Ingresa tu contraseña"
+            autoComplete="current-password"
+            autoCorrect="off"
+            autoCapitalize="none"
+            spellCheck={false}
             error={errors.password?.message}
             {...register('password', { 
               required: 'La contraseña es obligatoria',
