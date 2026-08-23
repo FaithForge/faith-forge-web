@@ -143,14 +143,14 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* TopBar */}
-      <div className="bg-primary text-primary-foreground p-4 flex items-center shadow-md">
+      {/* Sub-Header */}
+      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center shadow-xs border-t border-white/15">
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-1 opacity-90 hover:opacity-100 transition-opacity"
+          className="flex items-center gap-1.5 opacity-90 hover:opacity-100 transition-opacity text-sm font-semibold"
         >
-          <ArrowLeft size={20} />
-          <span className="font-semibold text-base">Generar Código QR</span>
+          <ArrowLeft size={18} />
+          <span>Generar Código QR</span>
         </button>
       </div>
 

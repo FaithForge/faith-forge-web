@@ -226,14 +226,14 @@ const ScannerView = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-primary text-primary-foreground p-4 sticky top-0 z-30 shadow-md flex items-center justify-between">
+      <div className="bg-primary text-primary-foreground px-4 py-2 sticky top-0 z-30 shadow-xs flex items-center justify-between border-t border-white/15">
         <button 
           onClick={handleCancelClick}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors"
+          className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold"
         >
-          <ArrowLeft size={24} />
+          <ArrowLeft size={18} />
+          <span>Registro por QR</span>
         </button>
-        <span className="font-bold text-lg">Registro por QR</span>
         <div className="w-6" /> {/* Spacer */}
       </div>
 
