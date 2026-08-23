@@ -17,18 +17,19 @@ export type ThemeRole = {
   appTitle: string;
   label: string;
   themeClass: string;
+  color: string;
   dashboardUrl: string;
 };
 
 export const userRolesNavBarConfig: Partial<Record<UserRole, ThemeRole>> = {
-  SUPER_ADMIN: { id: UserRole.SUPER_ADMIN, appTitle: 'Admin', label: 'Super Administrador', themeClass: 'theme-SUPER_ADMIN', dashboardUrl: APP_ROUTES.admin.root },
-  ADMIN: { id: UserRole.ADMIN, appTitle: 'Admin', label: 'Administrador', themeClass: 'theme-ADMIN', dashboardUrl: APP_ROUTES.admin.root },
-  KID_REGISTER_ADMIN: { id: UserRole.KID_REGISTER_ADMIN, appTitle: 'Regikids', label: 'Coordinador', themeClass: 'theme-KID_REGISTER_ADMIN', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_ADMIN: { id: UserRole.KID_GROUP_ADMIN, appTitle: 'Iglekids', label: 'Coordinador', themeClass: 'theme-KID_GROUP_ADMIN', dashboardUrl: APP_ROUTES.kidChurch.root },
-  KID_REGISTER_SUPERVISOR: { id: UserRole.KID_REGISTER_SUPERVISOR, appTitle: 'Regikids', label: 'Supervisor', themeClass: 'theme-KID_REGISTER_SUPERVISOR', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_SUPERVISOR: { id: UserRole.KID_GROUP_SUPERVISOR, appTitle: 'Iglekids', label: 'Supervisor', themeClass: 'theme-KID_GROUP_SUPERVISOR', dashboardUrl: APP_ROUTES.kidChurch.root },
-  KID_REGISTER_USER: { id: UserRole.KID_REGISTER_USER, appTitle: 'Regikids', label: 'Maestro', themeClass: 'theme-KID_REGISTER_USER', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_USER: { id: UserRole.KID_GROUP_USER, appTitle: 'Iglekids', label: 'Maestro', themeClass: 'theme-KID_GROUP_USER', dashboardUrl: APP_ROUTES.kidChurch.root },
+  SUPER_ADMIN: { id: UserRole.SUPER_ADMIN, appTitle: 'Admin', label: 'Super Administrador', themeClass: 'theme-SUPER_ADMIN', color: '#334155', dashboardUrl: APP_ROUTES.admin.root },
+  ADMIN: { id: UserRole.ADMIN, appTitle: 'Admin', label: 'Administrador', themeClass: 'theme-ADMIN', color: '#475569', dashboardUrl: APP_ROUTES.admin.root },
+  KID_REGISTER_ADMIN: { id: UserRole.KID_REGISTER_ADMIN, appTitle: 'Regikids', label: 'Coordinador', themeClass: 'theme-KID_REGISTER_ADMIN', color: '#166534', dashboardUrl: APP_ROUTES.kidRegistration.root },
+  KID_GROUP_ADMIN: { id: UserRole.KID_GROUP_ADMIN, appTitle: 'Iglekids', label: 'Coordinador', themeClass: 'theme-KID_GROUP_ADMIN', color: '#db2777', dashboardUrl: APP_ROUTES.kidChurch.root },
+  KID_REGISTER_SUPERVISOR: { id: UserRole.KID_REGISTER_SUPERVISOR, appTitle: 'Regikids', label: 'Supervisor', themeClass: 'theme-KID_REGISTER_SUPERVISOR', color: '#15803d', dashboardUrl: APP_ROUTES.kidRegistration.root },
+  KID_GROUP_SUPERVISOR: { id: UserRole.KID_GROUP_SUPERVISOR, appTitle: 'Iglekids', label: 'Supervisor', themeClass: 'theme-KID_GROUP_SUPERVISOR', color: '#9333ea', dashboardUrl: APP_ROUTES.kidChurch.root },
+  KID_REGISTER_USER: { id: UserRole.KID_REGISTER_USER, appTitle: 'Regikids', label: 'Maestro', themeClass: 'theme-KID_REGISTER_USER', color: '#16a34a', dashboardUrl: APP_ROUTES.kidRegistration.root },
+  KID_GROUP_USER: { id: UserRole.KID_GROUP_USER, appTitle: 'Iglekids', label: 'Maestro', themeClass: 'theme-KID_GROUP_USER', color: '#fbbf24', dashboardUrl: APP_ROUTES.kidChurch.root },
 };
 
 const TopBar = () => {
@@ -48,7 +49,7 @@ const TopBar = () => {
 
   // Safe fallback if user has no mapped roles
   if (availableRoles.length === 0) {
-    availableRoles.push({ id: UserRole.USER, appTitle: 'Regikids', label: 'Usuario', themeClass: 'theme-USER', dashboardUrl: APP_ROUTES.kidRegistration.root });
+    availableRoles.push({ id: UserRole.USER, appTitle: 'Regikids', label: 'Usuario', themeClass: 'theme-USER', color: '#fbbf24', dashboardUrl: APP_ROUTES.kidRegistration.root });
   }
 
   // Find the active visual role based on Redux currentRole
@@ -131,11 +132,17 @@ const TopBar = () => {
                       activeVisualRole.id === role.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-gray-100"
                     )}
                   >
-                    <div className="flex flex-col">
-                      <span className="font-medium text-xs text-gray-500 uppercase">{role.appTitle}</span>
-                      <span>{role.label}</span>
+                    <div className="flex items-center gap-2.5">
+                      <span
+                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs ring-1 ring-black/10"
+                        style={{ backgroundColor: role.color }}
+                      />
+                      <div className="flex flex-col">
+                        <span className="font-bold text-[10px] text-gray-400 uppercase tracking-wider">{role.appTitle}</span>
+                        <span className="font-semibold text-gray-800 text-sm leading-tight">{role.label}</span>
+                      </div>
                     </div>
-                    {activeVisualRole.id === role.id && <Check size={16} />}
+                    {activeVisualRole.id === role.id && <Check size={16} className="text-primary shrink-0 ml-2" />}
                   </DropdownMenu.Item>
                 ))}
               </DropdownMenu.Content>
