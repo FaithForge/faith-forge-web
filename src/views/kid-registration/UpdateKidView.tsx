@@ -190,14 +190,14 @@ const UpdateKidView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* TopBar */}
-      <div className="bg-primary text-primary-foreground p-4 flex items-center shadow-md">
+      {/* Sub-Header */}
+      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center shadow-xs border-t border-white/15">
         <button
           onClick={() => navigate(APP_ROUTES.kidRegistration.checkIn(id || ''))}
-          className="flex items-center gap-1 opacity-90 hover:opacity-100"
+          className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold"
         >
-          <ArrowLeft size={20} />
-          <span className="font-medium">Actualizar Datos del Niño</span>
+          <ArrowLeft size={18} />
+          <span>Actualizar Datos del Niño</span>
         </button>
       </div>
 
