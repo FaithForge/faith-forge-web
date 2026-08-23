@@ -56,6 +56,22 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
 
   const isConfigured = !!meetings.current && !!printers.current;
 
+  // Handle Campus Change
+  const handleCampusChange = (campusId: string) => {
+    setSelectedCampusId(campusId);
+    setSelectedMeetingId('');
+    setSelectedPrinterId('');
+  };
+
+  // Handle Meeting Change
+  const handleMeetingChange = (meetingId: string) => {
+    setSelectedMeetingId(meetingId);
+    setSelectedPrinterId('');
+  };
+
+  const isMeetingDisabled = !selectedCampusId || meetings.loading;
+  const isPrinterDisabled = !selectedCampusId || !selectedMeetingId || printers.loading;
+
   return (
     <Drawer.Root open={open} onOpenChange={onOpenChange} dismissible={isConfigured}>
       <Drawer.Portal>
@@ -92,7 +108,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                 <select 
                   className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                   value={selectedCampusId}
-                  onChange={(e) => setSelectedCampusId(e.target.value)}
+                  onChange={(e) => handleCampusChange(e.target.value)}
                 >
                   <option value="" disabled>Seleccione sede...</option>
                   {campuses.data.map((campus) => (
@@ -106,7 +122,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
             </div>
 
             {/* Servicio */}
-            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${(!selectedCampusId || meetings.loading) ? 'opacity-60' : ''}`}>
+            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isMeetingDisabled ? 'opacity-60' : ''}`}>
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
                 <CalendarClock size={16} className="text-primary" /> Servicio a registrar
               </label>
@@ -114,8 +130,8 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                 <select 
                   className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                   value={selectedMeetingId}
-                  onChange={(e) => setSelectedMeetingId(e.target.value)}
-                  disabled={!selectedCampusId || meetings.loading}
+                  onChange={(e) => handleMeetingChange(e.target.value)}
+                  disabled={isMeetingDisabled}
                 >
                   <option value="" disabled>Seleccione servicio...</option>
                   {meetings.data.map((meeting) => (
@@ -129,7 +145,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
             </div>
 
             {/* Impresora */}
-            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${(!selectedCampusId || printers.loading) ? 'opacity-60' : ''}`}>
+            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isPrinterDisabled ? 'opacity-60' : ''}`}>
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
                 <Printer size={16} className="text-primary" /> Impresora a usar
               </label>
@@ -138,7 +154,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                   className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                   value={selectedPrinterId}
                   onChange={(e) => setSelectedPrinterId(e.target.value)}
-                  disabled={!selectedCampusId || printers.loading}
+                  disabled={isPrinterDisabled}
                 >
                   <option value="" disabled>Seleccione impresora...</option>
                   {printers.data.map((printer) => (

@@ -93,14 +93,16 @@ export interface IUser {
 }
 
 export interface IUpdateUser {
+  id?: string;
   nationalIdType?: UserIdType;
   nationalId?: string;
   firstName?: string;
   lastName?: string;
+  dialCodePhone?: string;
   phone?: string;
   email?: string;
-  gender: UserGender;
-  birthday?: Date;
+  gender?: UserGender | string;
+  birthday?: string | Date;
   state?: UserState;
   photoUrl?: string;
   username?: string;
@@ -185,6 +187,80 @@ export enum UserState {
   VERIFICATION_PENDING = 'VERIFICATION_PENDING',
 }
 
+export const userStateSelect = [
+  { value: UserState.ACTIVE, label: 'Activo' },
+  { value: UserState.DISABLE, label: 'Deshabilitado' },
+  { value: UserState.VERIFICATION_PENDING, label: 'Pendiente de verificación' },
+];
+
 export interface IEditUser extends ReduxDefaultStateWithoutData {
   user?: IUser;
+}
+
+/** Interface para el payload de creación de persona/usuario (POST /user) */
+export interface ICreateUser {
+  nationalId?: string;
+  nationalIdType?: UserIdType;
+  firstName: string;
+  lastName: string;
+  dialCodePhone?: string;
+  phone?: string;
+  photoUrl?: string;
+  email?: string;
+  state: UserState;
+  birthday?: string | Date;
+  gender: UserGenderCode | string;
+  healthSecurityEntity?: string;
+}
+
+/** Interface para el payload de creación de cuenta de acceso (POST /user/account) */
+export interface ICreateUserAccount {
+  userId: string;
+  username: string;
+  password?: string;
+  email?: string;
+}
+
+/** Interface para el payload de asignación de rol a usuario (POST /user/assign-role) */
+export interface IAssignUserRelationRole {
+  userId: string;
+  userRole: UserRole;
+}
+
+/**
+ * Genera un nombre de usuario sugerido basado en los nombres y apellidos.
+ * Fórmula: Inicial del primer nombre + primer apellido completo + inicial del segundo apellido (si existe).
+ *
+ * @param {string} firstName - Nombres del usuario (ej: 'Juan Carlos')
+ * @param {string} lastName - Apellidos del usuario (ej: 'Peña Merlano')
+ * @returns {string} Nombre de usuario normalizado en minúsculas (ej: 'jpenam')
+ */
+export function generateSuggestedUsername(firstName: string, lastName: string): string {
+  if (!firstName || !lastName) return '';
+
+  const cleanFirst = firstName
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/ñ/g, 'n');
+
+  const cleanLast = lastName
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/ñ/g, 'n');
+
+  const firstNames = cleanFirst.split(/\s+/).filter(Boolean);
+  const lastNames = cleanLast.split(/\s+/).filter(Boolean);
+
+  if (firstNames.length === 0 || lastNames.length === 0) return '';
+
+  const firstInitial = firstNames[0].charAt(0);
+  const primaryLastName = lastNames[0];
+  const secondLastInitial = lastNames.length > 1 ? lastNames[1].charAt(0) : '';
+
+  const rawUsername = `${firstInitial}${primaryLastName}${secondLastInitial}`;
+  return rawUsername.replace(/[^a-z0-9]/g, '');
 }

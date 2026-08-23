@@ -119,7 +119,7 @@ const DatePickerWheel = ({
   required, 
   value, 
   onChange, 
-  minDate = dayjs().subtract(12, 'year').format('YYYY-MM-DD'), 
+  minDate = dayjs().subtract(100, 'year').format('YYYY-MM-DD'), 
   maxDate = dayjs().format('YYYY-MM-DD'), 
   className 
 }: DatePickerWheelProps) => {

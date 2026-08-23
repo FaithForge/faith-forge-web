@@ -79,7 +79,8 @@ export const GetMoreKids = createAsyncThunk(
     const kid = state.kidSlice;
     const churchMeeting = state.churchMeetingSlice;
     const { token } = state.authSlice;
-    const isNumber = typeof payload.findText === 'number';
+    const isNumber =
+      typeof Number(payload.findText) === 'number' && !Number.isNaN(Number(payload.findText));
 
     let filterByFaithForge;
     let filterByFirstName;

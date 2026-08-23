@@ -2,13 +2,111 @@
 <html lang="es">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#4f46e5" />
-    <title>FaithForge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <title>Iglekids</title>
+    
+    <!-- PWA & Mobile Meta Tags -->
+    <meta name="description" content="Aplicativo para el registro y control de niños en Rios de Vida" />
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="application-name" content="Iglekids" />
+    <meta name="apple-mobile-web-app-title" content="Iglekids" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+
+    <!-- Icons -->
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192x192.png" />
+    <link rel="shortcut icon" href="/icons/icon-192x192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <style>
+      /* Pre-React Splash Screen Styling */
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: #f8fafc;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      }
+      .app-splash-screen {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(circle at 50% 40%, #ffffff 0%, #f1f5f9 100%);
+        z-index: 99999;
+        overflow: hidden;
+      }
+      .app-splash-logo-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 2rem;
+      }
+      .app-splash-logo {
+        width: 180px;
+        max-width: 60vw;
+        height: auto;
+        animation: splash-float 2.5s ease-in-out infinite;
+        filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.08));
+      }
+      .app-splash-glow {
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        background: radial-gradient(circle, rgba(22, 101, 52, 0.15) 0%, rgba(22, 101, 52, 0) 70%);
+        border-radius: 50%;
+        animation: splash-glow 3s ease-in-out infinite alternate;
+        z-index: -1;
+      }
+      .app-splash-loader {
+        width: 140px;
+        height: 4px;
+        background-color: #e2e8f0;
+        border-radius: 9999px;
+        overflow: hidden;
+        position: relative;
+      }
+      .app-splash-loader-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: 45%;
+        background: linear-gradient(90deg, #166534, #22c55e);
+        border-radius: 9999px;
+        animation: splash-indeterminate 1.5s cubic-bezier(0.65, 0.815, 0.735, 0.395) infinite;
+      }
+      @keyframes splash-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+      @keyframes splash-glow {
+        0% { transform: scale(0.9); opacity: 0.5; }
+        100% { transform: scale(1.15); opacity: 0.9; }
+      }
+      @keyframes splash-indeterminate {
+        0% { left: -45%; width: 45%; }
+        50% { left: 30%; width: 60%; }
+        100% { left: 100%; width: 45%; }
+      }
+    </style>
   </head>
-  <body class="theme-tutor antialiased">
-    <div id="root"></div>
+  <body class="antialiased">
+    <div id="root">
+      <div class="app-splash-screen">
+        <div class="app-splash-logo-wrapper">
+          <div class="app-splash-glow"></div>
+          <img src="/logo-iglekids.png" alt="Iglekids" class="app-splash-logo" />
+        </div>
+        <div class="app-splash-loader">
+          <div class="app-splash-loader-bar"></div>
+        </div>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

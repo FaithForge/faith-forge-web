@@ -20,8 +20,8 @@
     --color-text-muted: #6b7280; /* Gray 500 */
   }
 
-  .theme-SUPER_ADMIN { --color-primary: #9ca3af; /* bg-gray-400 */ }
-  .theme-ADMIN { --color-primary: #fbbf24; /* bg-amber-400 */ }
+  .theme-SUPER_ADMIN { --color-primary: #334155; /* slate-700: Dark modern charcoal gray */ }
+  .theme-ADMIN { --color-primary: #475569; /* slate-600: Medium-dark slate gray */ }
   .theme-KID_REGISTER_ADMIN { --color-primary: #166534; /* bg-green-800 */ }
   .theme-KID_GROUP_ADMIN { --color-primary: #db2777; /* bg-pink-600 */ }
   .theme-KID_REGISTER_SUPERVISOR { --color-primary: #15803d; /* bg-green-700 */ }

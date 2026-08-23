@@ -10,7 +10,7 @@
     "dev:stack": "docker compose -f docker-compose.stack.yml up --build",
     "dev:stack:reset": "docker compose -f docker-compose.stack.yml down -v && docker compose -f docker-compose.stack.yml up --build",
     "dev:stack:down": "docker compose -f docker-compose.stack.yml down",
-    "build": "tsc && vite build",
+    "build": "tsc && NODE_OPTIONS=\"--experimental-global-webcrypto\" vite build",
     "start": "vite preview",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
   },

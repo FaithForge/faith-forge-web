@@ -1,10 +1,92 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { IUpdateUser } from '@/libs/models';
+import { IAssignUserRelationRole, ICreateUser, ICreateUserAccount, IUpdateUser } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
+import { AxiosError } from 'axios';
 import { RootState } from '../../store';
+
+export const CreateUser = createAsyncThunk(
+  'user/CreateUser',
+  async (payload: ICreateUser, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.POST,
+          url: `/user`,
+          options: {
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al crear usuario');
+    }
+  },
+);
+
+export const CreateUserAccount = createAsyncThunk(
+  'user/CreateUserAccount',
+  async (payload: ICreateUserAccount, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.POST,
+          url: `/user/account`,
+          options: {
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al crear cuenta de usuario');
+    }
+  },
+);
+
+export const AssignUserRole = createAsyncThunk(
+  'user/AssignUserRole',
+  async (payload: IAssignUserRelationRole, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.POST,
+          url: `/user/assign-role`,
+          options: {
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al asignar rol al usuario');
+    }
+  },
+);
 
 export const UploadUserImage = createAsyncThunk(
   'user/uploadUserImage',
@@ -32,24 +114,29 @@ export const UploadUserImage = createAsyncThunk(
 
 export const GetUserByNationalId = createAsyncThunk(
   'user/GetUserByNationalId',
-  async (nationalId: string, { getState }) => {
+  async (nationalId: string, { getState, rejectWithValue }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
-    const response = (
-      await microserviceApiRequest({
-        microservice: MS.User,
-        method: HttpRequestMethod.GET,
-        url: `/user/search-by-national-id`,
-        options: {
-          headers: { Authorization: `Bearer ${token}` },
-          params: {
-            nationalId,
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.GET,
+          url: `/user/search-by-national-id`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+              nationalId,
+            },
           },
-        },
-      })
-    ).data;
+        })
+      ).data;
 
-    return response;
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Usuario no encontrado');
+    }
   },
 );
 
@@ -78,24 +165,31 @@ export const GetUserByFullName = createAsyncThunk(
 
 export const UpdateUser = createAsyncThunk(
   'user/UpdateUser',
-  async (payload: { id: string; updateUser: IUpdateUser }, { getState }) => {
+  async (payload: { id: string; updateUser: IUpdateUser }, { getState, rejectWithValue }) => {
     const { id, updateUser } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    await microserviceApiRequest({
-      microservice: MS.User,
-      method: HttpRequestMethod.PUT,
-      url: `/user/${id}`,
-      options: {
-        data: {
-          ...updateUser,
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    });
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.PUT,
+          url: `/user/${id}`,
+          options: {
+            data: {
+              ...updateUser,
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
 
-    return updateUser;
+      return response ?? updateUser;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al actualizar usuario');
+    }
   },
 );
 

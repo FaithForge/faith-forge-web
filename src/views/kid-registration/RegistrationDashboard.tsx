@@ -5,7 +5,7 @@ import Alert from '@/components/ui/Alert';
 import { APP_ROUTES } from "@/config/routes";
 import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
+import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { Loader2 } from 'lucide-react';
 import dayjs from 'dayjs';
@@ -19,9 +19,11 @@ const RegistrationDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchText, setSearchText] = useState('');
+  const [loadingMore, setLoadingMore] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: kids, loading } = useAppSelector((state) => state.kidSlice);
+  const { data: kids, loading, currentPage, totalPages } = useAppSelector((state) => state.kidSlice);
   
   const {
     isConfigured,
@@ -48,6 +50,39 @@ const RegistrationDashboard = () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [searchText, isConfigured, shouldBlockKids, dispatch, currentMeeting?.id]);
+
+  // Infinite Scroll logic via IntersectionObserver
+  const handleLoadMore = React.useCallback(async () => {
+    if (loading || loadingMore || currentPage >= totalPages) return;
+    setLoadingMore(true);
+    try {
+      await dispatch(GetMoreKids({ findText: searchText })).unwrap();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loading, loadingMore, currentPage, totalPages, dispatch, searchText]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target || !isConfigured || shouldBlockKids) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && currentPage < totalPages && !loading && !loadingMore) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '250px' }
+    );
+
+    observer.observe(target);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, [handleLoadMore, currentPage, totalPages, loading, loadingMore, isConfigured, shouldBlockKids]);
 
   return (
     <div className="p-3 flex flex-col gap-3">
@@ -189,6 +224,23 @@ const RegistrationDashboard = () => {
               />
             );
           })}
+
+          {/* Infinite Scroll Sentinel & Load More Spinner */}
+          {!loading && kids.length > 0 && (
+            <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
+              {loadingMore && (
+                <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
+                  <Loader2 size={18} className="animate-spin text-primary" />
+                  <span>Cargando más niños...</span>
+                </div>
+              )}
+              {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
+                <p className="text-xs font-medium text-gray-400 py-3">
+                  Hemos llegado al final de la lista
+                </p>
+              )}
+            </div>
+          )}
         </div>
       )}
       

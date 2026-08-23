@@ -5,6 +5,9 @@ export const APP_ROUTES = {
   admin: {
     root: '/admin',
     churchMeetings: '/admin/church-meetings',
+    createUser: '/admin/users/new',
+    users: '/admin/users',
+    userRoles: '/admin/users/roles',
   },
   kidChurch: {
     root: '/kid-church',

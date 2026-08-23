@@ -9,6 +9,10 @@ import GenerateGuardianQRView from '@/views/kid-registration/GenerateGuardianQRV
 import KidCheckInView from '@/views/kid-registration/KidCheckInView';
 import UpdateKidView from '@/views/kid-registration/UpdateKidView';
 import AdminDashboard from '@/views/admin/AdminDashboard';
+import CreateUserView from '@/views/admin/users/CreateUserView';
+import ModifyUserView from '@/views/admin/users/ModifyUserView';
+import AssignUserRolesView from '@/views/admin/users/AssignUserRolesView';
+import ChurchMeetingsView from '@/views/admin/ChurchMeetingsView';
 import KidChurchDashboard from '@/views/kid-church/KidChurchDashboard';
 import { APP_ROUTES } from '@/config/routes';
 import LoginView from '@/views/auth/LoginView';
@@ -39,6 +43,10 @@ function App() {
             <Route path="/" element={<MainLayout />}>
               <Route index element={<IndexRedirect />} />
               <Route path={APP_ROUTES.admin.root} element={<AdminDashboard />} />
+              <Route path={APP_ROUTES.admin.createUser} element={<CreateUserView />} />
+              <Route path={APP_ROUTES.admin.users} element={<ModifyUserView />} />
+              <Route path={APP_ROUTES.admin.userRoles} element={<AssignUserRolesView />} />
+              <Route path={APP_ROUTES.admin.churchMeetings} element={<ChurchMeetingsView />} />
               <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
               <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />
               <Route path={APP_ROUTES.kidRegistration.new} element={<NewKidView />} />

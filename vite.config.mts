@@ -1,3 +1,11 @@
+import { webcrypto } from 'node:crypto';
+if (!globalThis.crypto) {
+  Object.defineProperty(globalThis, 'crypto', { value: webcrypto, writable: true, configurable: true });
+}
+if (!(global as any).crypto) {
+  Object.defineProperty(global, 'crypto', { value: webcrypto, writable: true, configurable: true });
+}
+
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
@@ -11,24 +19,44 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
+      includeAssets: ['favicon.ico', 'logo-iglekids.png', 'icons/*.png'],
       devOptions: {
         enabled: false,
       },
       manifest: {
-        name: 'FaithForge',
-        short_name: 'FaithForge',
-        description: 'Gestión de la Iglesia',
-        theme_color: '#4f46e5',
+        name: 'Iglekids',
+        short_name: 'Iglekids',
+        description: 'Aplicativo para el registro y control de niños en Rios de Vida',
+        theme_color: '#ffffff',
+        background_color: '#ffffff',
+        display: 'standalone',
+        orientation: 'portrait',
+        scope: '/',
+        start_url: '/',
         icons: [
           {
-            src: '/icon-192x192.png',
+            src: '/icons/icon-192x192.png',
             sizes: '192x192',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
-            src: '/icon-512x512.png',
+            src: '/icons/icon-256x256.png',
+            sizes: '256x256',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icons/icon-384x384.png',
+            sizes: '384x384',
+            type: 'image/png',
+            purpose: 'any maskable'
+          },
+          {
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
-            type: 'image/png'
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
