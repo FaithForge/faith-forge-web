@@ -15,6 +15,7 @@
 - Preserve the existing naming patterns in `src/components`, `src/libs`, `src/services`, and `src/pages`.
 - Do not convert the project to the App Router unless explicitly requested.
 - **Route and URL Naming**: All routes, paths, and URLs MUST be strictly in English (e.g. `/kid-registration/generate-guardian-qr`, `/kid-church/attendance`, `/admin/church-meetings`). NEVER mix Spanish and English in route names or URL paths.
+- **Brand Name in User-Facing Copy**: The user-facing app name presented to the end user in UI texts, modals, alerts, and messages is strictly **Iglekids** (and its sub-modules Regikids/Iglekids). NEVER use "Faith Forge" in user-facing copy or modals. "Faith Forge" is only the internal/project codebase name.
 
 ## Architecture
 

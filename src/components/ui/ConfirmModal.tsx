@@ -14,6 +14,7 @@ interface ConfirmModalProps {
   cancelText?: string;
   onConfirm: () => void;
   type?: 'danger' | 'warning' | 'info';
+  disableBackClose?: boolean;
 }
 
 const ConfirmModal = ({ 
@@ -24,9 +25,10 @@ const ConfirmModal = ({
   confirmText = 'Confirmar', 
   cancelText = 'Cancelar', 
   onConfirm,
-  type = 'warning'
+  type = 'warning',
+  disableBackClose = false
 }: ConfirmModalProps) => {
-  useModalBackClose(open, () => onOpenChange(false));
+  useModalBackClose(disableBackClose ? false : open, () => onOpenChange(false));
 
   const handleConfirm = () => {
     onConfirm();

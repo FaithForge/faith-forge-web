@@ -79,6 +79,8 @@ const MainLayout = () => {
     }
   }, [pathname, currentRole, navigate, isAdminRole]);
 
+  const isExitingRef = useRef(false);
+
   // Prevent back navigation from exiting without confirmation when on root dashboard views
   useEffect(() => {
     const isRootDashboard =
@@ -92,10 +94,15 @@ const MainLayout = () => {
     window.history.pushState({ isDashboardRoot: true }, '', window.location.href);
 
     const handlePopState = (event: PopStateEvent) => {
+      if (isExitingRef.current) {
+        return;
+      }
+
       // If a modal or drawer is handling its own popstate, let the modal close
       if (event.state?.modalOpen || window.history.state?.modalOpen) {
         return;
       }
+
       // Re-push dashboard state so user remains on root dashboard and open confirmation dialog
       window.history.pushState({ isDashboardRoot: true }, '', window.location.href);
       setShowExitModal(true);
@@ -108,12 +115,16 @@ const MainLayout = () => {
   }, [pathname]);
 
   const handleConfirmExit = () => {
-    // Attempt to close standalone PWA window
+    isExitingRef.current = true;
+    setShowExitModal(false);
+
+    // 1. Try to close standalone PWA window
     window.close();
-    // Fallback if window.close() is prevented by browser
-    if (!window.closed) {
-      window.location.replace('about:blank');
-    }
+
+    // 2. Clear history trap and navigate back to exit the app cleanly
+    setTimeout(() => {
+      window.history.go(-2);
+    }, 50);
   };
 
   // Restore scroll position when returning to a previous route, or scroll to top for new views
@@ -174,10 +185,11 @@ const MainLayout = () => {
           open={showExitModal}
           onOpenChange={setShowExitModal}
           title="¿Deseas salir de la aplicación?"
-          description="¿Estás seguro de que deseas salir de Faith Forge?"
+          description="¿Estás seguro de que deseas salir de Iglekids?"
           confirmText="Sí, salir"
           cancelText="Permanecer"
           type="warning"
+          disableBackClose={true}
           onConfirm={handleConfirmExit}
         />
       </div>
