@@ -197,7 +197,7 @@ export interface IEditUser extends ReduxDefaultStateWithoutData {
   user?: IUser;
 }
 
-/** Interface para el payload de creación de persona/usuario (POST /user) */
+/** Interface for the user/person creation payload (POST /user) */
 export interface ICreateUser {
   nationalId?: string;
   nationalIdType?: UserIdType;
@@ -213,7 +213,7 @@ export interface ICreateUser {
   healthSecurityEntity?: string;
 }
 
-/** Interface para el payload de creación de cuenta de acceso (POST /user/account) */
+/** Interface for user account creation payload (POST /user/account) */
 export interface ICreateUserAccount {
   userId: string;
   username: string;
@@ -221,7 +221,7 @@ export interface ICreateUserAccount {
   email?: string;
 }
 
-/** Interface para el payload de asignación de rol a usuario (POST /user/assign-role) */
+/** Interface for assigning a role to a user payload (POST /user/assign-role) */
 export interface IAssignUserRelationRole {
   userId: string;
   userRole: UserRole;

@@ -59,10 +59,10 @@ interface ModifyUserFormData {
 }
 
 /**
- * Vista para la búsqueda y modificación de usuarios existentes.
- * Permite buscar por cédula/documento y editar los campos del DTO UpdateUserDTO.
+ * View for searching and editing existing users.
+ * Allows searching by national ID and modifying fields according to UpdateUserDTO.
  *
- * @returns {JSX.Element} Componente renderizado de la vista.
+ * @returns {JSX.Element} Rendered view component.
  */
 const ModifyUserView: React.FC = () => {
   const navigate = useNavigate();
@@ -74,7 +74,7 @@ const ModifyUserView: React.FC = () => {
   const [hasSearched, setHasSearched] = useState(false);
   const [foundUser, setFoundUser] = useState<IUser | null>(null);
 
-  // Estados de imagen y formulario
+  // Image and form states
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -107,12 +107,12 @@ const ModifyUserView: React.FC = () => {
   const watchedGender = watch('gender');
 
   /**
-   * Carga los datos del usuario encontrado en el formulario.
+   * Loads found user data into form fields.
    *
-   * @param {IUser} user - Datos del usuario devuelto por la API.
+   * @param {IUser} user - User data returned by API.
    */
   const populateUserData = (user: IUser) => {
-    // Normalizar género
+    // Normalize gender
     const userGender = 
       user.gender === 'F' || (user.gender as unknown) === UserGender.FEMALE 
         ? UserGender.FEMALE 
@@ -146,9 +146,9 @@ const ModifyUserView: React.FC = () => {
   };
 
   /**
-   * Ejecuta la búsqueda de usuario por su número de cédula / documento.
+   * Executes user search by national ID / document number.
    *
-   * @param {React.FormEvent} [e] - Evento de submit del formulario de búsqueda.
+   * @param {React.FormEvent} [e] - Search form submit event.
    */
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -179,9 +179,9 @@ const ModifyUserView: React.FC = () => {
   };
 
   /**
-   * Procesa la captura o selección de imagen del usuario y la optimiza.
+   * Processes and optimizes captured or selected user image.
    *
-   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio del input de archivo.
+   * @param {React.ChangeEvent<HTMLInputElement>} e - File input change event.
    */
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -198,7 +198,7 @@ const ModifyUserView: React.FC = () => {
   };
 
   /**
-   * Elimina la foto seleccionada o precargada.
+   * Removes selected or pre-loaded photo.
    */
   const removePhoto = () => {
     setPhotoPreview('');
@@ -206,7 +206,7 @@ const ModifyUserView: React.FC = () => {
   };
 
   /**
-   * Restablece el formulario a los valores originales del usuario cargado.
+   * Resets form to original loaded user values.
    */
   const handleResetForm = () => {
     if (foundUser) {
@@ -216,9 +216,9 @@ const ModifyUserView: React.FC = () => {
   };
 
   /**
-   * Envía el formulario para actualizar el usuario vía PUT /user/:id.
+   * Submits form to update user via PUT /user/:id.
    *
-   * @param {ModifyUserFormData} data - Datos recopilados del formulario.
+   * @param {ModifyUserFormData} data - Collected form data.
    */
   const onSubmit = async (data: ModifyUserFormData) => {
     if (!foundUser) return;
@@ -229,7 +229,7 @@ const ModifyUserView: React.FC = () => {
     try {
       let finalPhotoUrl = photoPreview;
 
-      // 1. Subir nueva foto si fue cambiada
+      // 1. Upload new photo if changed
       if (photoFile) {
         try {
           const formData = new FormData();
@@ -243,7 +243,7 @@ const ModifyUserView: React.FC = () => {
         }
       }
 
-      // 2. Construir payload con DTO UpdateUserDTO
+      // 2. Construct payload with UpdateUserDTO
       const updatePayload: IUpdateUser = {
         id: foundUser.id,
         nationalIdType: data.nationalIdType,
@@ -269,7 +269,7 @@ const ModifyUserView: React.FC = () => {
 
       toast.success('¡Usuario actualizado exitosamente!', { id: toastId });
 
-      // Actualizar el estado local del usuario
+      // Update local user state
       setFoundUser((prev) => {
         if (!prev) return null;
         return {
@@ -290,7 +290,7 @@ const ModifyUserView: React.FC = () => {
   };
 
   /**
-   * Maneja el retroceso comprobando si existen cambios sin guardar.
+   * Handles back navigation by checking for unsaved changes.
    */
   const handleBack = () => {
     if (isDirty || photoFile) {
@@ -320,7 +320,7 @@ const ModifyUserView: React.FC = () => {
           </p>
         </div>
 
-        {/* Card de Búsqueda por Documento */}
+        {/* Search by Document Card */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
           <div className="flex items-center gap-2 pb-3 border-b border-gray-100 mb-4">
             <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
@@ -361,7 +361,7 @@ const ModifyUserView: React.FC = () => {
           </form>
         </div>
 
-        {/* Estado no encontrado */}
+        {/* Not Found State */}
         {hasSearched && !isSearching && !foundUser && (
           <div className="bg-white rounded-2xl p-8 border border-gray-200/80 shadow-xs text-center flex flex-col items-center animate-in fade-in">
             <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-3">
@@ -374,7 +374,7 @@ const ModifyUserView: React.FC = () => {
           </div>
         )}
 
-        {/* Formulario de Edición */}
+        {/* Edit Form */}
         {foundUser && (
           <form 
             onSubmit={handleSubmit(onSubmit)} 
@@ -437,7 +437,7 @@ const ModifyUserView: React.FC = () => {
               </div>
             </div>
 
-            {/* Card: Datos Personales */}
+            {/* Card: Personal Information */}
             <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col gap-4">
               <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
                 <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
@@ -496,7 +496,7 @@ const ModifyUserView: React.FC = () => {
                 />
               </div>
 
-              {/* Género */}
+              {/* Gender */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                   Género
@@ -575,7 +575,7 @@ const ModifyUserView: React.FC = () => {
                 </h2>
               </div>
 
-              {/* Teléfono */}
+              {/* Phone */}
               <Controller
                 name="phone"
                 control={control}
@@ -654,7 +654,7 @@ const ModifyUserView: React.FC = () => {
         )}
       </div>
 
-      {/* Modal de Descarte de Cambios al Salir */}
+      {/* Discard Changes on Exit Modal */}
       <ConfirmModal
         open={showDiscardModal}
         onOpenChange={setShowDiscardModal}

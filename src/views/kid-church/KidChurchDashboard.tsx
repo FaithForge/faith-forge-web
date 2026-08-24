@@ -118,7 +118,7 @@ const KidChurchDashboard: React.FC = () => {
         />
       </div>
 
-      {/* Salones de Iglekids (Exactamente 3 filas) */}
+      {/* Iglekids Classrooms (Exactly 3 rows) */}
       {kidGroups && kidGroups.length > 0 && (
         <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2">
           <div className="flex items-center justify-between px-0.5">
@@ -137,7 +137,7 @@ const KidChurchDashboard: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-3 gap-2">
-            {/* Filas 1 y 2: Primeros 6 salones (2 filas de 3 columnas) */}
+            {/* Rows 1 and 2: First 6 classrooms (2 rows of 3 columns) */}
             {kidGroups.slice(0, 6).map((group: IKidGroup) => {
               const isSelected = selectedKidGroupId === group.id;
               const count = kids.filter((k: IKid) => k.kidGroup?.id === group.id).length;
@@ -164,7 +164,7 @@ const KidChurchDashboard: React.FC = () => {
               );
             })}
 
-            {/* Fila 3: Yo Soy Iglekids (ancho completo col-span-3) */}
+            {/* Row 3: "Yo Soy Iglekids" (full width col-span-3) */}
             {kidGroups.length > 6 &&
               kidGroups.slice(6, 7).map((group: IKidGroup) => {
                 const isSelected = selectedKidGroupId === group.id;

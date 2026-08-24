@@ -55,7 +55,7 @@ const KidCheckInView = () => {
     setImageError(false);
   }, [kid?.photoUrl]);
 
-  // Consultar siempre la información detallada del niño, sus grupos especiales y su registro para la reunión actual
+  // Always fetch detailed child info, special groups, and current meeting registration
   useEffect(() => {
     if (id) {
       dispatch(GetKid({ id }));
@@ -68,7 +68,7 @@ const KidCheckInView = () => {
     return (KID_RELATION_CODE_MAPPER as Record<string, string>)[code] || code;
   };
 
-  // Formatear relaciones/acudientes con nombre completo y parentesco traducido
+  // Format relationships/guardians with full name and localized relationship label
   const relationsList = kid?.relations?.map((rel: any) => {
     const g = rel?.guardian || rel;
     const rawRelation = rel?.relationCode || rel?.relation || g?.relation || '';
@@ -97,7 +97,7 @@ const KidCheckInView = () => {
     };
   }) || [];
 
-  // Acudiente que realizó el registro actual del niño
+  // Guardian who performed the current check-in for the child
   const registrationGuardian = useMemo(() => {
     const guardianId = kid?.currentKidRegistration?.guardianId;
     if (!guardianId || !kid?.relations) return null;
@@ -126,7 +126,7 @@ const KidCheckInView = () => {
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
   };
 
-  // Seleccionar automáticamente el primer acudiente cuando se cargan las relaciones
+  // Automatically select the first guardian when relationships are loaded
   useEffect(() => {
     if (relationsList.length > 0 && !selectedGuardian) {
       setSelectedGuardian(relationsList[0].id);

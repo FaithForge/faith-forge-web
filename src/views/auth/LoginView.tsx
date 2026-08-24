@@ -147,7 +147,7 @@ const LoginView = () => {
         <div className="w-full bg-white p-7 rounded-3xl shadow-sm border border-gray-100/90 flex flex-col gap-5">
           <h2 className="text-xl font-bold text-gray-800 text-center">Iniciar Sesión</h2>
           
-          {/* Botón de Acceso Rápido con Huella / Face ID si ya está registrada */}
+          {/* Quick Access Button with Fingerprint / Face ID if already registered */}
           {bioAvailable && registeredBioData && (
             <div className="flex flex-col gap-2.5 p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl animate-in fade-in zoom-in-95 duration-300">
               <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 px-0.5">
@@ -223,7 +223,7 @@ const LoginView = () => {
         <p className="text-center mt-6 text-xs text-gray-400 font-medium">Iglekids • v3.0.0</p>
       </div>
 
-      {/* Modal para sugerir registro de biometría en primer login */}
+      {/* Modal suggesting biometric registration on first login */}
       <ConfirmModal
         open={showRegisterBioModal}
         onOpenChange={(open) => !open && handleSkipRegisterBio()}

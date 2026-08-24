@@ -31,7 +31,7 @@ import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 
 // ---------------------------------------------------------------------------
-// Constantes y Diccionarios de Apoyo
+// Helper Constants and Dictionaries
 // ---------------------------------------------------------------------------
 
 const DAY_LABEL: Record<Days, string> = {
@@ -92,10 +92,10 @@ const STATE_CONFIG: Record<
 };
 
 /**
- * Normaliza y formatea cualquier formato de hora (string ISO, HH:mm:ss o HH:mm) a "HH:mm".
+ * Normalizes and formats any time string (ISO, HH:mm:ss or HH:mm) to "HH:mm".
  *
- * @param {unknown} val - Valor original proveniente del servicio backend.
- * @returns {string} Hora formateada en "HH:mm" o string vacío.
+ * @param {unknown} val - Original value from the backend service.
+ * @returns {string} Formatted time in "HH:mm" or empty string.
  */
 const formatTime = (val: unknown): string => {
   if (!val) return '';
@@ -124,10 +124,10 @@ interface MeetingCardProps {
 }
 
 /**
- * Tarjeta individual para visualizar y cambiar el estado de un servicio.
+ * Individual card to view and update the state of a church meeting.
  *
- * @param {MeetingCardProps} props - Propiedades del componente.
- * @returns {JSX.Element} Tarjeta interactiva del servicio.
+ * @param {MeetingCardProps} props - Component props.
+ * @returns {JSX.Element} Interactive church meeting card.
  */
 const MeetingCard: React.FC<MeetingCardProps> = ({
   meeting,
@@ -151,7 +151,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
           : 'border-gray-200/80 hover:border-gray-300'
       )}
     >
-      {/* Encabezado del Servicio */}
+      {/* Meeting Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
@@ -171,7 +171,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
           )}
         </div>
 
-        {/* Badge del Estado Actual */}
+        {/* Current Status Badge */}
         <div
           className={clsx(
             'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0',
@@ -193,7 +193,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
         </div>
       )}
 
-      {/* Selector de Estado en Segmentos (Pills) */}
+      {/* Segmented State Selector (Pills) */}
       <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-gray-200/70">
         {Object.values(ChurchMeetingStateEnum).map((stateKey) => {
           const itemConfig = STATE_CONFIG[stateKey];
@@ -227,10 +227,10 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
 // ---------------------------------------------------------------------------
 
 /**
- * Vista de Administración para gestionar los estados de los servicios por sede.
- * Permite cambiar estados de forma individual o masiva y guardarlos vía PATCH /church-meeting/bulk-state.
+ * Admin view to manage church meeting states by campus.
+ * Allows individual or bulk state updates saved via PATCH /church-meeting/bulk-state.
  *
- * @returns {JSX.Element} Componente renderizado de la vista.
+ * @returns {JSX.Element} Rendered view component.
  */
 const ChurchMeetingsView: React.FC = () => {
   const navigate = useNavigate();
@@ -241,24 +241,24 @@ const ChurchMeetingsView: React.FC = () => {
     useAppSelector((state) => state.adminChurchMeetingSlice);
 
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
-  /** Registro local de cambios pendientes: meetingId -> nuevo estado */
+  /** Local registry of pending changes: meetingId -> new state */
   const [pendingChanges, setPendingChanges] = useState<Record<string, ChurchMeetingStateEnum>>({});
 
-  // Cargar sedes al montar la vista
+  // Load campuses on view mount
   useEffect(() => {
     if (campuses.data.length === 0) {
       dispatch(GetChurchCampuses());
     }
   }, [dispatch, campuses.data.length]);
 
-  // Autoseleccionar la primera sede disponible si no hay una seleccionada
+  // Auto-select the first available campus if none is selected
   useEffect(() => {
     if (!selectedCampusId && campuses.data.length > 0) {
       setSelectedCampusId(campuses.data[0].id);
     }
   }, [campuses.data, selectedCampusId]);
 
-  // Cargar los servicios de la sede seleccionada
+  // Load meetings for the selected campus
   useEffect(() => {
     if (selectedCampusId) {
       dispatch(resetAdminChurchMeetingStatus());
@@ -284,11 +284,11 @@ const ChurchMeetingsView: React.FC = () => {
   }, [success, error, selectedCampusId, dispatch]);
 
   /**
-   * Maneja el cambio de estado de un servicio, revirtiéndolo si coincide con el original.
+   * Handles meeting state toggle, reverting if it matches the original value.
    *
-   * @param {string} meetingId - ID del servicio.
-   * @param {ChurchMeetingStateEnum | undefined} originalState - Estado original proveniente del servidor.
-   * @param {ChurchMeetingStateEnum} newState - Nuevo estado seleccionado.
+   * @param {string} meetingId - Church meeting ID.
+   * @param {ChurchMeetingStateEnum | undefined} originalState - Original state from the server.
+   * @param {ChurchMeetingStateEnum} newState - New selected state.
    */
   const handleStateChange = useCallback(
     (
@@ -310,7 +310,7 @@ const ChurchMeetingsView: React.FC = () => {
   );
 
   /**
-   * Descarta todos los cambios locales pendientes.
+   * Discards all pending local changes.
    */
   const handleDiscardChanges = () => {
     setPendingChanges({});
@@ -318,7 +318,7 @@ const ChurchMeetingsView: React.FC = () => {
   };
 
   /**
-   * Guarda todos los cambios pendientes en bloque mediante la API.
+   * Saves all pending changes in bulk via the API.
    */
   const handleSave = () => {
     const items = Object.entries(pendingChanges).map(([id, state]) => ({ id, state }));
@@ -328,7 +328,7 @@ const ChurchMeetingsView: React.FC = () => {
 
   const dirtyCount = Object.keys(pendingChanges).length;
 
-  // Agrupación de servicios por día de la semana, ordenados de Domingo a Sábado
+  // Group meetings by day of the week, ordered Sunday to Saturday
   const meetingsByDay = useMemo(() => {
     const grouped: Record<string, IChurchMeeting[]> = {};
     [...meetings]
@@ -373,7 +373,7 @@ const ChurchMeetingsView: React.FC = () => {
           </p>
         </div>
 
-        {/* Selector de Sede */}
+        {/* Campus Selector */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col gap-3">
           <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
             <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
@@ -432,7 +432,7 @@ const ChurchMeetingsView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Agrupación por Días */}
+                {/* Grouped by Days */}
                 {Object.entries(meetingsByDay).map(([day, dayMeetings]) => (
                   <div key={day} className="flex flex-col gap-3">
                     <div className="flex items-center gap-2 px-1">

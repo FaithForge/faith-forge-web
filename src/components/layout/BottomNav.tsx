@@ -25,13 +25,13 @@ const BottomNav = () => {
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
 
   React.useEffect(() => {
-    // Solo forzar configuración si no es un rol de administrador
+    // Only force configuration if not an admin role
     if (!isAdminRole && !isConfigured && !openSettings) {
       setOpenSettings(true);
     }
   }, [isConfigured, openSettings, isAdminRole]);
 
-  // Si es administrador, no mostramos la barra inferior (comportamiento de AdminLayout antiguo)
+  // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
   if (isAdminRole) {
     return null;
   }
@@ -45,7 +45,7 @@ const BottomNav = () => {
   let navItems = [];
 
   if (isKidChurchRole) {
-    // Tabs para Iglekids (KidChurchLayout)
+    // Tabs for Iglekids (KidChurchLayout)
     navItems = [
       { path: APP_ROUTES.kidChurch.root, icon: Users, label: 'Niños Registrados', action: 'link' },
       { path: '#', icon: Settings, label: 'Configurar', action: 'settings' },
@@ -54,7 +54,7 @@ const BottomNav = () => {
       navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
     }
   } else {
-    // Tabs para Regikids (KidRegistrationLayout)
+    // Tabs for Regikids (KidRegistrationLayout)
     navItems = [
       { path: APP_ROUTES.kidRegistration.root, icon: Home, label: 'Inicio', action: 'link' },
       { path: APP_ROUTES.kidRegistration.new, icon: UserPlus, label: 'Crear Niño', action: 'link' },
@@ -82,7 +82,7 @@ const BottomNav = () => {
             }
             if (item.action === 'settings') { setOpenSettings(true); return; }
             if (item.action === 'report') { setOpenReport(true); return; }
-            // Consulta el guard antes de navegar
+            // Check navigation guard before navigating
             if (requestNavigation(item.path)) {
               navigate(item.path);
             }

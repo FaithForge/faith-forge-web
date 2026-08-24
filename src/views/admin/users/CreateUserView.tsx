@@ -72,8 +72,8 @@ interface CreatedAccountResult {
 }
 
 /**
- * Vista para Crear un Nuevo Usuario en el Panel de Administraci√≥n.
- * Soporta creaci√≥n de datos de persona (POST /user) y opcionalmente cuenta de acceso (POST /user/account).
+ * View to Create a New User in the Admin Panel.
+ * Supports creating person data (POST /user) and optional access account (POST /user/account).
  */
 const CreateUserView: React.FC = () => {
   const navigate = useNavigate();
@@ -89,7 +89,7 @@ const CreateUserView: React.FC = () => {
   const [isPasswordManuallyEdited, setIsPasswordManuallyEdited] = useState(false);
   const [hasCopiedText, setHasCopiedText] = useState(false);
 
-  // Estado para la pantalla de confirmaci√≥n tras crear cuenta
+  // State for confirmation screen after account creation
   const [createdAccountResult, setCreatedAccountResult] = useState<CreatedAccountResult | null>(null);
 
   const {
@@ -128,7 +128,7 @@ const CreateUserView: React.FC = () => {
   const watchedCreateAccount = watch('createAccount');
   const watchedGender = watch('gender');
 
-  // Auto-sugerir username cuando cambian nombres/apellidos si no ha sido editado manualmente
+  // Auto-suggest username when names change if not manually edited
   useEffect(() => {
     if (!isUsernameManuallyEdited) {
       const suggested = generateSuggestedUsername(watchedFirstName, watchedLastName);
@@ -136,7 +136,7 @@ const CreateUserView: React.FC = () => {
     }
   }, [watchedFirstName, watchedLastName, isUsernameManuallyEdited, setValue]);
 
-  // Auto-completar password con el tel√©fono si no ha sido editado manualmente
+  // Auto-fill password with phone number if not manually edited
   useEffect(() => {
     if (!isPasswordManuallyEdited) {
       setValue('password', watchedPhone || '');
@@ -144,7 +144,7 @@ const CreateUserView: React.FC = () => {
   }, [watchedPhone, isPasswordManuallyEdited, setValue]);
 
   /**
-   * Maneja el clic en la casilla de crear cuenta validando y activando requisitos.
+   * Handles create account checkbox click by validating and toggling requirements.
    */
   const handleToggleCreateAccount = async () => {
     const nextState = !watchedCreateAccount;
@@ -160,9 +160,9 @@ const CreateUserView: React.FC = () => {
   };
 
   /**
-   * Procesa la captura o selecci√≥n de imagen del usuario y la optimiza.
+   * Processes and optimizes captured or selected user image.
    *
-   * @param {React.ChangeEvent<HTMLInputElement>} e - Evento de cambio del input de archivo
+   * @param {React.ChangeEvent<HTMLInputElement>} e - File input change event
    */
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -179,7 +179,7 @@ const CreateUserView: React.FC = () => {
   };
 
   /**
-   * Elimina la foto seleccionada.
+   * Removes the selected photo.
    */
   const removePhoto = () => {
     setPhotoUrl('');
@@ -187,7 +187,7 @@ const CreateUserView: React.FC = () => {
   };
 
   /**
-   * Maneja el intento de salida de la pantalla.
+   * Handles navigation exit attempt.
    */
   const handleBackClick = () => {
     if (isDirty || photoFile) {
@@ -198,7 +198,7 @@ const CreateUserView: React.FC = () => {
   };
 
   /**
-   * Confirma la salida descartando los cambios.
+   * Confirms exit and discards pending changes.
    */
   const handleConfirmCancel = () => {
     setShowCancelModal(false);
@@ -206,9 +206,9 @@ const CreateUserView: React.FC = () => {
   };
 
   /**
-   * Env√≠a el formulario para crear el usuario y opcionalmente su cuenta de acceso.
+   * Submits form to create the user and optional login account.
    *
-   * @param {CreateUserFormData} data - Datos recopilados del formulario
+   * @param {CreateUserFormData} data - Collected form data
    */
   const onSubmit = async (data: CreateUserFormData) => {
     if (data.createAccount) {
@@ -233,7 +233,7 @@ const CreateUserView: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // 1. Subir foto si existe
+      // 1. Upload photo if present
       let uploadedPhotoKey: string | undefined = undefined;
       if (photoFile) {
         try {
@@ -246,7 +246,7 @@ const CreateUserView: React.FC = () => {
         }
       }
 
-      // 2. Crear persona/usuario (POST /user)
+      // 2. Create person/user (POST /user)
       const userPayload: ICreateUser = {
         firstName: data.firstName.trim(),
         lastName: data.lastName.trim(),
@@ -265,7 +265,7 @@ const CreateUserView: React.FC = () => {
       const userResponse = await dispatch(CreateUser(userPayload)).unwrap();
       const createdUserId = userResponse?.id || userResponse?.userId;
 
-      // 3. Crear cuenta de acceso si est√° activada (POST /user/account)
+      // 3. Create login account if enabled (POST /user/account)
       if (data.createAccount) {
         if (!createdUserId) {
           toast.error('Usuario creado, pero no se pudo obtener su identificador para la cuenta de acceso.');
@@ -283,7 +283,7 @@ const CreateUserView: React.FC = () => {
             
             toast.success('¬°Usuario y cuenta de acceso creados con √©xito!');
             
-            // Mostrar pantalla de confirmaci√≥n con credenciales y compartir WhatsApp
+            // Display confirmation screen with credentials and WhatsApp share button
             setCreatedAccountResult({
               fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
               username: data.username.trim().toLowerCase(),
@@ -310,7 +310,7 @@ const CreateUserView: React.FC = () => {
   };
 
   /**
-   * Genera el mensaje formateado para WhatsApp.
+   * Generates formatted message for WhatsApp.
    */
   const whatsappMessage = useMemo(() => {
     if (!createdAccountResult) return '';
@@ -327,7 +327,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
   }, [createdAccountResult]);
 
   /**
-   * Copia el mensaje formateado al portapapeles.
+   * Copies formatted message to clipboard.
    */
   const handleCopyMessage = async () => {
     try {
@@ -341,7 +341,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
   };
 
   /**
-   * Abre WhatsApp con el mensaje precargado.
+   * Opens WhatsApp with pre-filled message.
    */
   const handleShareWhatsApp = () => {
     if (!createdAccountResult) return;
@@ -421,7 +421,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
               {whatsappMessage}
             </div>
 
-            {/* Botones de acci√≥n para WhatsApp */}
+            {/* Action buttons for WhatsApp */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <Button
                 type="button"
@@ -451,7 +451,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
             </div>
           </div>
 
-          {/* Bot√≥n Finalizar */}
+          {/* Finish Button */}
           <Button
             type="button"
             variant="default"
@@ -468,7 +468,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
   }
 
   // =========================================================================
-  // VISTA 1: Formulario Principal de Creaci√≥n de Usuario
+  // VIEW 1: Main User Creation Form
   // =========================================================================
   return (
     <div className="min-h-full bg-slate-50/60 pb-20">
@@ -517,7 +517,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
             )}
           </div>
 
-          {/* Card 2: Datos Personales */}
+          {/* Card 2: Personal Information */}
           <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col gap-4">
             <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
               <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
@@ -730,7 +730,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
           )}>
             <div className="p-5 sm:p-6 flex flex-col gap-4">
               
-              {/* Checkbox Header con Validaci√≥n Previa */}
+              {/* Checkbox Header with Pre-validation */}
               <div 
                 onClick={handleToggleCreateAccount}
                 className="flex items-center gap-3.5 cursor-pointer select-none"
@@ -757,7 +757,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
                 </div>
               </div>
 
-              {/* Contenido desplegable si est√° marcado */}
+              {/* Collapsible content if checked */}
               {watchedCreateAccount && (
                 <div className="pt-3 border-t border-emerald-100/80 flex flex-col gap-4 animate-in fade-in slide-in-from-top-2 duration-300">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -806,7 +806,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
             </div>
           </div>
 
-          {/* Bot√≥n Submit */}
+          {/* Submit Button */}
           <Button
             type="submit"
             variant="primary"
@@ -828,7 +828,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
         </form>
       </div>
 
-      {/* Modal Confirmar Cancelar */}
+      {/* Confirm Cancel Modal */}
       <ConfirmModal
         open={showCancelModal}
         onOpenChange={setShowCancelModal}

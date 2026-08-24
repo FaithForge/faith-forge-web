@@ -26,7 +26,7 @@ import Button from '@/components/ui/Button';
 import PageHeader from '@/components/ui/PageHeader';
 
 /**
- * Vista para la Búsqueda y Asignación de Roles a Usuarios.
+ * View for Searching and Assigning Roles to Users.
  */
 const AssignUserRolesView: React.FC = () => {
   const navigate = useNavigate();
@@ -43,7 +43,7 @@ const AssignUserRolesView: React.FC = () => {
   const [isAssigning, setIsAssigning] = useState(false);
 
   /**
-   * Ejecuta la búsqueda de usuario por su número de cédula / documento.
+   * Executes user search by national ID / document number.
    */
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -74,7 +74,7 @@ const AssignUserRolesView: React.FC = () => {
   };
 
   /**
-   * Asigna el nuevo rol seleccionado al usuario actual.
+   * Assigns the selected new role to current user.
    */
   const handleAssignRole = async () => {
     if (!foundUser) return;
@@ -101,7 +101,7 @@ const AssignUserRolesView: React.FC = () => {
 
       toast.success(`¡Rol "${ALL_SYSTEM_ROLES_METADATA[roleEnum]?.name || roleEnum}" asignado con éxito!`);
 
-      // Actualizar los roles del usuario en la vista local
+      // Update user roles in local view state
       setFoundUser((prev) => {
         if (!prev) return null;
         const currentRoles = prev.roles || [];
@@ -119,7 +119,7 @@ const AssignUserRolesView: React.FC = () => {
     }
   };
 
-  // Roles disponibles para asignar (excluyendo los que el usuario ya tiene)
+  // Available roles to assign (excluding existing roles user already has)
   const availableRolesToAssign = Object.values(UserRole)
     .filter((role) => role !== UserRole.KID) // Excluir rol KID de asignaciones
     .filter((role) => !foundUser?.roles?.includes(role))
@@ -137,7 +137,7 @@ const AssignUserRolesView: React.FC = () => {
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
         
-        {/* Card de Búsqueda por Documento */}
+        {/* Search by Document Card */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
           <div className="flex items-center gap-2 pb-3 border-b border-gray-100 mb-4">
             <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
@@ -178,7 +178,7 @@ const AssignUserRolesView: React.FC = () => {
           </form>
         </div>
 
-        {/* Estado no encontrado */}
+        {/* Not Found State */}
         {hasSearched && !isSearching && !foundUser && (
           <div className="bg-white rounded-2xl p-8 border border-gray-200/80 shadow-xs text-center flex flex-col items-center animate-in fade-in">
             <div className="w-12 h-12 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center mb-3">
@@ -191,11 +191,11 @@ const AssignUserRolesView: React.FC = () => {
           </div>
         )}
 
-        {/* Información del Usuario Encontrado */}
+        {/* Found User Information */}
         {foundUser && (
           <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-top-3 duration-300">
             
-            {/* Card 1: Perfil del Usuario */}
+            {/* Card 1: User Profile */}
             <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
               <div className="flex items-center gap-4">
                 <div className={clsx(

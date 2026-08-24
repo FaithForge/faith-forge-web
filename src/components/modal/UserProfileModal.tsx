@@ -119,7 +119,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
                 </div>
               </div>
 
-              {/* Sección de Biometría / Huella / Face ID */}
+              {/* Biometrics / Fingerprint / Face ID Section */}
               {bioAvailable && (
                 <div className="pt-2 border-t border-gray-100">
                   <button
@@ -142,7 +142,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
                 </div>
               )}
 
-              {/* Botón de limpiar caché y actualizar */}
+              {/* Purge cache and update app button */}
               <div className="pt-2 border-t border-gray-100">
                 <button
                   type="button"
@@ -158,7 +158,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* Confirmación para limpiar caché */}
+      {/* Cache purge confirmation */}
       <ConfirmModal
         open={showClearCacheConfirm}
         onOpenChange={setShowClearCacheConfirm}

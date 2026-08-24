@@ -38,7 +38,7 @@ const SelectSearch = ({
   useModalBackClose(open, () => setOpen(false));
   const [search, setSearch] = useState('');
 
-  // Solo mostrar barra de búsqueda si se indica explícitamente o si hay más de 5 opciones
+  // Only show search bar if explicitly enabled or if there are more than 5 options
   const isSearchable = searchable !== undefined ? searchable : options.length > 5;
 
   const filteredOptions = useMemo(() => {

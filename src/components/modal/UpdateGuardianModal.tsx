@@ -30,7 +30,7 @@ interface UpdateGuardianModalProps {
 
 const sanitizePhoneDigits = (raw: string) => {
   if (!raw) return '';
-  return raw.replace(/\D/g, ''); // Dejar solo dígitos numéricos
+  return raw.replace(/\D/g, ''); // Leave only numeric digits
 };
 
 const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose, guardian }) => {
@@ -41,7 +41,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
   const [relation, setRelation] = useState('');
   const [error, setError] = useState('');
 
-  // Filtrar lista de relaciones según el género si está disponible, o mostrar todas
+  // Filter relationship list by gender if available, or display all
   const availableRelations = useMemo(() => {
     if (guardian?.gender) {
       const filtered = kidRelationSelect
@@ -92,7 +92,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
         kidId: guardian.kidId,
       })).unwrap();
 
-      // Si la API responde con un objeto de error explícito
+      // If the API responds with an explicit error object
       if (response && (response as any).error) {
         const msg = (response as any)?.message || 'El teléfono ingresado ya existe o no es válido';
         toast.error(msg);
@@ -100,7 +100,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
       }
 
       toast.success(`Datos de ${guardian.fullName} actualizados con éxito`);
-      // Actualizar la vista re-consultando el detalle del niño
+      // Refresh view by re-fetching child details
       await dispatch(GetKid({ id: guardian.kidId }));
       onClose();
     } catch (err: any) {
@@ -114,7 +114,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
   return (
     <ModalOverlay open={open} onClose={onClose}>
       <div className="bg-white rounded-2xl p-5 shadow-xl mx-auto w-full max-w-sm flex flex-col relative overflow-hidden">
-        {/* Cabecera modal */}
+        {/* Modal header */}
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
           <div>
             <h3 className="text-lg font-bold text-gray-800">Actualizar Acudiente</h3>
@@ -129,7 +129,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
           </button>
         </div>
 
-        {/* Formulario */}
+        {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
           {/* Selector de Parentesco / Relación */}
           <SelectSearch
@@ -141,7 +141,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
             placeholder="Seleccionar parentesco..."
           />
 
-          {/* Teléfono */}
+          {/* Phone */}
           <PhoneInput 
             label="Teléfono"
             dialCode={dialCode}

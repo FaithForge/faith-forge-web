@@ -48,9 +48,9 @@ const RegistrationDashboard = () => {
     const isMeetingChanged = prevMeetingIdRef.current !== undefined && prevMeetingIdRef.current !== currentMeeting?.id;
     const isSearchChanged = searchText !== prevSearchTextRef.current;
 
-    // Si ya tenemos lista en Redux, NO hay cambios en la data (needsRefresh === false),
-    // es el primer montaje y no cambió la búsqueda ni el servicio:
-    // MANTENER la lista intacta sin volver a llamar a la API
+    // If we already have list in Redux and no data changes (needsRefresh === false),
+    // on initial mount without search or meeting change:
+    // KEEP the list intact without re-fetching from API
     if (!hasInitializedRef.current && kids.length > 0 && !needsRefresh && !isSearchChanged && !isMeetingChanged) {
       hasInitializedRef.current = true;
       prevMeetingIdRef.current = currentMeeting?.id;
@@ -58,7 +58,7 @@ const RegistrationDashboard = () => {
       return;
     }
 
-    // Si ya inicializó y ni la búsqueda, ni el servicio, ni los datos cambiaron:
+    // If already initialized and search, meeting, and data did not change:
     if (hasInitializedRef.current && !needsRefresh && !isSearchChanged && !isMeetingChanged) {
       return;
     }

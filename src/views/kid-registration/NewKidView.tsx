@@ -57,7 +57,7 @@ const NewKidView = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
 
-  // Refs para acceder a los valores actuales desde el guard sin re-registrar
+  // Refs to access current values from navigation guard without re-subscribing
   const stepRef = React.useRef(step);
   const isUploadingRef = React.useRef(isUploading);
   stepRef.current = step;
@@ -82,7 +82,7 @@ const NewKidView = () => {
     }
   });
 
-  // Registra el guard al montar: bloquea la navegación del BottomNav cuando hay datos en progreso
+  // Register navigation guard on mount: blocks BottomNav navigation when unsaved data exists
   useEffect(() => {
     const unregister = registerGuard((to) => {
       if (!isUploadingRef.current && stepRef.current <= 2) {
@@ -101,7 +101,7 @@ const NewKidView = () => {
     return () => { dispatch(cleanCurrentKidGuardian()); };
   }, [dispatch]);
 
-  // Desplazar automáticamente al tope de la página y del contenedor <main> al cambiar de paso
+  // Automatically scroll to top of page and <main> container on step change
   const scrollToTop = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
     document.documentElement.scrollTop = 0;
@@ -121,7 +121,7 @@ const NewKidView = () => {
     }
   }, [step]);
 
-  // Autocompletar datos del acudiente si ya existe en BD
+  // Auto-fill guardian details if already existing in database
   useEffect(() => {
     if (kidGuardianSlice.current && step === 2) {
       setGuardianValue('nationalIdType', kidGuardianSlice.current.nationalIdType);
@@ -155,7 +155,7 @@ const NewKidView = () => {
 
   const handleCancelClick = () => setShowCancelModal(true);
 
-  /** Confirma la salida y navega al dashboard. */
+  /** Confirms discarding changes and navigates back to dashboard. */
   const handleConfirmCancel = () => {
     setShowCancelModal(false);
     navigate(APP_ROUTES.kidRegistration.root);
@@ -577,7 +577,7 @@ const NewKidView = () => {
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col gap-4">
               <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2">Información del Acudiente</h3>
 
-              {/* Banner si ya existe en la base de datos */}
+              {/* Banner if already exists in database */}
               {kidGuardianSlice.current && (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl flex items-center justify-between text-xs font-semibold">
                   <div className="flex items-center gap-2">
@@ -693,7 +693,7 @@ const NewKidView = () => {
                 error={guardianErrors.lastName?.message as string}
               />
 
-              {/* Teléfono */}
+              {/* Phone */}
               <Controller
                 name="phone"
                 control={guardianControl}
@@ -712,7 +712,7 @@ const NewKidView = () => {
                 )}
               />
 
-              {/* Género */}
+              {/* Gender */}
               <Controller
                 name="gender"
                 control={guardianControl}
@@ -736,7 +736,7 @@ const NewKidView = () => {
                 )}
               />
 
-              {/* Relación con el Niño */}
+              {/* Relationship to Child */}
               <Controller
                 name="relation"
                 control={guardianControl}

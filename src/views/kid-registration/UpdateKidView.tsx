@@ -115,7 +115,7 @@ const UpdateKidView: React.FC = () => {
     try {
       let uploadedPhotoUrl: string | undefined = undefined;
 
-      // Subir nueva foto ÚNICAMENTE si el usuario seleccionó una nueva
+      // Upload new photo ONLY if the user selected a new one
       if (photoBlob) {
         const formData = new FormData();
         formData.append('file', photoBlob);
@@ -259,7 +259,7 @@ const UpdateKidView: React.FC = () => {
               })}
             />
 
-            {/* Fecha de Nacimiento (Hasta 13 años exclusivamente para edición) */}
+            {/* Date of Birth (Up to 13 years old for edition) */}
             <div className="mb-2">
               <DatePickerWheel
                 label="Fecha de Nacimiento"
@@ -280,7 +280,7 @@ const UpdateKidView: React.FC = () => {
               )}
             </div>
 
-            {/* Género */}
+            {/* Gender */}
             <Controller
               name="gender"
               control={control}

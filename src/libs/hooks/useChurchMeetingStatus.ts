@@ -33,7 +33,7 @@ const DAYS_MAP: Record<string, number> = {
 const normalizeTime = (val: any): string => {
   if (!val) return '';
   if (typeof val === 'string') {
-    // Si ya viene como "HH:mm" o "HH:mm:ss"
+    // If already in "HH:mm" or "HH:mm:ss" format
     if (val.includes(':') && !val.includes('T')) {
       const parts = val.split(':');
       const h = parts[0]?.trim().padStart(2, '0') || '00';
@@ -41,7 +41,7 @@ const normalizeTime = (val: any): string => {
       const s = parts[2]?.trim().split('.')[0]?.padStart(2, '0') || '00';
       return `${h}:${m}:${s}`;
     }
-    // Si viene como ISO string "YYYY-MM-DDTHH:mm:ss..."
+    // If provided as ISO string "YYYY-MM-DDTHH:mm:ss..."
     if (val.includes('T')) {
       const timePart = val.split('T')[1]?.split('.')[0]?.split('Z')[0];
       if (timePart && timePart.includes(':')) {
@@ -121,7 +121,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     } else {
       const currentTimeStr = currentTime.format('HH:mm:ss');
       
-      // Usar específicamente los campos de hora de registro (initialRegistrationHour / finalRegistrationHour)
+      // Specifically use registration hour fields (initialRegistrationHour / finalRegistrationHour)
       const m = currentMeeting as any;
       const initRaw = 
         m.initialRegistrationHour ?? 

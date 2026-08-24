@@ -10,7 +10,7 @@ export interface CountryDialCode {
   flag: string;
 }
 
-// Listado amplio y completo de países reconocidos
+// Comprehensive list of recognized countries and dialing codes
 export const countryDialCodes: CountryDialCode[] = [
   // Prioritarios
   { name: 'Colombia', code: '+57', flag: '🇨🇴' },
@@ -41,7 +41,7 @@ export const countryDialCodes: CountryDialCode[] = [
   { name: 'Jamaica', code: '+1', flag: '🇯🇲' },
   { name: 'Trinidad y Tobago', code: '+1', flag: '🇹🇹' },
 
-  // Europa
+  // Europe
   { name: 'Alemania', code: '+49', flag: '🇩🇪' },
   { name: 'Austria', code: '+43', flag: '🇦🇹' },
   { name: 'Bélgica', code: '+32', flag: '🇧🇪' },
@@ -61,7 +61,7 @@ export const countryDialCodes: CountryDialCode[] = [
   { name: 'Turquía', code: '+90', flag: '🇹🇷' },
   { name: 'Ucrania', code: '+380', flag: '🇺🇦' },
 
-  // Asia y Medio Oriente
+  // Asia and Middle East
   { name: 'Arabia Saudita', code: '+966', flag: '🇸🇦' },
   { name: 'China', code: '+86', flag: '🇨🇳' },
   { name: 'Corea del Sur', code: '+82', flag: '🇰🇷' },
@@ -75,7 +75,7 @@ export const countryDialCodes: CountryDialCode[] = [
   { name: 'Qatar', code: '+974', flag: '🇶🇦' },
   { name: 'Singapur', code: '+65', flag: '🇸🇬' },
 
-  // Oceanía y África
+  // Oceania y África
   { name: 'Australia', code: '+61', flag: '🇦🇺' },
   { name: 'Nueva Zelanda', code: '+64', flag: '🇳🇿' },
   { name: 'Egipto', code: '+20', flag: '🇪🇬' },

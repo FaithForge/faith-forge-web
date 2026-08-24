@@ -26,7 +26,7 @@ import { userRolesNavBarConfig } from '@/components/layout/TopBar';
 const IndexRedirect = () => {
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
   
-  // Encontrar la URL del dashboard base para el rol actual
+  // Find the base dashboard URL for the current role
   const dashboardUrl = currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
     ? userRolesNavBarConfig[currentRole]!.dashboardUrl
     : APP_ROUTES.kidRegistration.root;

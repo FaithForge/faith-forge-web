@@ -44,7 +44,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
   const registeredGuardianId = kid?.currentKidRegistration?.guardianId;
   const kidRelations = kid?.relations;
 
-  // Encontrar el acudiente que realizó el ingreso hoy
+  // Find the guardian who performed check-in today
   const primaryGuardian = useMemo(() => {
     if (!registeredGuardianId || !kidRelations) return null;
     return (
@@ -54,7 +54,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     );
   }, [kidRelations, registeredGuardianId]);
 
-  // Otros acudientes autorizados
+  // Other authorized guardians
   const otherGuardians = useMemo(() => {
     if (!kidRelations) return [];
     if (!primaryGuardian) return kidRelations;

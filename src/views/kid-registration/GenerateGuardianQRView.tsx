@@ -64,7 +64,7 @@ const GenerateGuardianQRView: React.FC = () => {
       if (guardian && guardian.id) {
         setIsGeneratingUrl(true);
         try {
-          // Esperar un ciclo para que el canvas oculto se renderice completamente
+          // Wait one animation cycle for the hidden canvas to fully render
           await new Promise((resolve) => setTimeout(resolve, 300));
           const canvas: HTMLCanvasElement | null = document.getElementById(
             'qr-code-generate-kid-guardian'
@@ -84,7 +84,7 @@ const GenerateGuardianQRView: React.FC = () => {
             const phoneDigits = (guardian.phone || '').replace(/\D/g, '');
             const fullName = `${capitalizeWords(guardian.firstName)} ${capitalizeWords(guardian.lastName)}`;
 
-            // Mensaje completo para el botón de Compartir por WhatsApp
+            // Full message for WhatsApp Share button
             const fullMessage = `¡Hola *${fullName}*!
 Desde Iglekids te enviamos este enlace para descargar tu código QR personal, el cual podrás mostrar cada vez que registres a tu(s) niño(s) para agilizar el proceso:
 
@@ -97,7 +97,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
             )}`;
             setWhatsappUrl(fullUrl);
 
-            // Mensaje corto y optimizado para el código QR en pantalla (reduce drásticamente la densidad del QR para lectura instantánea)
+            // Short optimized message for on-screen QR code (drastically reduces QR density para lectura instantánea)
             const qrShortMessage = `¡Hola *${fullName}*! Tu código QR de Iglekids:\n${photoUrl}`;
             const qrScanUrl = `https://wa.me/${dialDigits}${phoneDigits}?text=${encodeURIComponent(qrShortMessage)}`;
             setQrCodeUrl(qrScanUrl);
@@ -207,10 +207,10 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
           </div>
         )}
 
-        {/* Vista del Acudiente y su QR */}
+        {/* Guardian View and QR code */}
         {!guardianLoading && guardian && (
           <div className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-200">
-            {/* Tarjeta de Datos del Acudiente */}
+            {/* Guardian Data Card */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3">
               <div className="flex items-center gap-3 border-b border-gray-100 pb-3">
                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0">

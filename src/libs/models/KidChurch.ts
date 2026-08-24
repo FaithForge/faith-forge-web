@@ -23,8 +23,8 @@ export enum KidGuardianRelationCodeEnum {
   FEMALE_COUSIN = 'FEMALE_COUSIN', // Prima
   STEPMOTHER = 'STEPMOTHER', // Madrastra
   STEPFATHER = 'STEPFATHER', // Padrastro
-  MALE_ACQUAINTANCE = 'MALE_ACQUAINTANCE', // Conocido
-  FEMALE_ACQUAINTANCE = 'FEMALE_ACQUAINTANCE', // Conocida
+  MALE_ACQUAINTANCE = 'MALE_ACQUAINTANCE', // Known (Male)
+  FEMALE_ACQUAINTANCE = 'FEMALE_ACQUAINTANCE', // Known (Female)
 }
 
 export enum KidGuardianRelationEnum {
@@ -40,8 +40,8 @@ export enum KidGuardianRelationEnum {
   FEMALE_COUSIN = 'Prima', // Prima
   STEPMOTHER = 'Madrastra', // Madrastra
   STEPFATHER = 'Padrastro', // Padrastro
-  MALE_ACQUAINTANCE = 'Conocido', // Conocido
-  FEMALE_ACQUAINTANCE = 'Conocida', // Conocida
+  MALE_ACQUAINTANCE = 'Conocido', // Known (Male)
+  FEMALE_ACQUAINTANCE = 'Conocida', // Known (Female)
 }
 
 export const KID_RELATION_CODE_MAPPER = {

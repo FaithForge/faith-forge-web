@@ -42,7 +42,7 @@ const ScannerView = () => {
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<'back' | 'home' | null>(null);
 
-  // Cargar grupos especiales (Yo Soy Iglekids)
+  // Load special groups (Yo Soy Iglekids)
   useEffect(() => {
     dispatch(GetKidGroups({ type: KidGroupType.SPECIAL }));
   }, [dispatch]);
@@ -59,7 +59,7 @@ const ScannerView = () => {
       // Desde paso 3 regresa directamente a paso 2 sin alerta
       setStep(2);
     } else if (step === 2) {
-      // Desde paso 2 muestra el modal de alerta
+      // Show alert modal from step 2 onwards
       setShowCancelModal(true);
       setPendingNavigation('home');
     } else {
@@ -205,7 +205,7 @@ const ScannerView = () => {
               <p className="text-sm text-gray-500 text-center mb-4">Apunta la cámara al código QR del acudiente para buscar a los niños asociados.</p>
               
               <div className="rounded-xl overflow-hidden bg-black aspect-square relative border-4 border-gray-100 shadow-inner">
-                {/* Lector QR - Usando el mismo componente que tenían en el viejo */}
+                {/* QR Scanner component */}
                 <Scanner 
                   onScan={handleScan}
                   // paused={false}

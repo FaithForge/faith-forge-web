@@ -52,7 +52,7 @@ export const resizeImage = async (file: File): Promise<Blob> => {
 export const resizeAndCropImageToSquare = async (
   file: File,
   targetSizeInPixels = 800, // Tamaño final (ancho y alto)
-  maxSizeInBytes: number = 500 * 1024, // Tamaño máximo en bytes
+  maxSizeInBytes: number = 500 * 1024, // Maximum size in bytes
 ): Promise<Blob> => {
   const img = document.createElement('img');
   const canvas = document.createElement('canvas');
@@ -63,7 +63,7 @@ export const resizeAndCropImageToSquare = async (
     reader.onload = (e) => {
       img.src = e.target?.result as string;
       img.onload = async () => {
-        // Define el tamaño del cuadrado basado en el lado más corto
+        // Define square crop size based on the shorter side
         const size = Math.min(img.width, img.height);
         tempCanvas.width = size;
         tempCanvas.height = size;
@@ -74,7 +74,7 @@ export const resizeAndCropImageToSquare = async (
           return;
         }
 
-        // Recorta el cuadrado centrado
+        // Crop centered square
         tempCtx.drawImage(
           img,
           (img.width - size) / 2, // Offset X

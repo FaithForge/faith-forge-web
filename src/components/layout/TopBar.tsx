@@ -81,7 +81,7 @@ const TopBar = () => {
   };
 
   React.useEffect(() => {
-    // Restaurar la inyección por clases de Tailwind v4 en el body
+    // Restore Tailwind v4 class injection on body
     document.body.className = `${activeVisualRole.themeClass} antialiased`;
   }, [activeVisualRole]);
 

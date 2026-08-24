@@ -20,7 +20,7 @@ const WheelColumn = ({ options, value, onChange, title }: any) => {
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
   const ITEM_HEIGHT = 40;
 
-  // Sincronizar posición del scroll con el valor seleccionado
+  // Synchronize scroll position with selected value
   useEffect(() => {
     if (containerRef.current) {
       const index = options.findIndex((o: any) => o.value === value);
@@ -34,7 +34,7 @@ const WheelColumn = ({ options, value, onChange, title }: any) => {
     }
   }, [options, value]);
 
-  // Interceptar la rueda del ratón en escritorio para avanzar exactamente de 1 en 1
+  // Intercept mouse wheel on desktop to step exactly 1 item at a time
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
@@ -137,7 +137,7 @@ const DatePickerWheel = ({
   const [month, setMonth] = useState(initialDate.month() + 1); // 1-12
   const [year, setYear] = useState(initialDate.year());
 
-  // Sincronizar estado cuando se abre el modal o cambia el valor
+  // Synchronize state when modal opens or value changes
   useEffect(() => {
     if (open) {
       const target = value ? dayjs(value) : dayjs();

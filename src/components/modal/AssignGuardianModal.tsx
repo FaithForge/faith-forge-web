@@ -195,7 +195,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
           </div>
 
           <form onSubmit={handleSubmit} className="p-5 overflow-y-auto flex flex-col gap-4 pb-10">
-            {/* Banner si ya existe en la base de datos */}
+            {/* Banner if already exists in database */}
             {existingGuardian && (
               <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl flex items-center justify-between text-xs font-semibold">
                 <div className="flex items-center gap-2">
@@ -223,7 +223,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               disabled={!!existingGuardian}
             />
 
-            {/* Documento y Botón de Búsqueda */}
+            {/* Document and Search Button */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
                 Número de Documento <span className="text-red-500">*</span>
@@ -273,7 +273,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               placeholder="Escribir apellidos..."
             />
 
-            {/* Teléfono */}
+            {/* Phone */}
             <PhoneInput
               label="Teléfono"
               required
@@ -284,7 +284,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               onPhoneChange={setPhone}
             />
 
-            {/* Género */}
+            {/* Gender */}
             <SelectSearch
               label="Género"
               required
@@ -298,7 +298,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               disabled={!!existingGuardian}
             />
 
-            {/* Relación con el Niño */}
+            {/* Relationship to Child */}
             <SelectSearch
               label="Relación con el Niño"
               required

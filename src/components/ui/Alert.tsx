@@ -19,7 +19,7 @@ const iconMap = {
 const colorMap = {
   error: 'bg-red-100 text-red-800 border-red-200',
   success: 'bg-green-100 text-green-800 border-green-200',
-  info: 'bg-cyan-100 text-cyan-800 border-cyan-200', // Similar al cyan de la impresora en la imagen
+  info: 'bg-cyan-100 text-cyan-800 border-cyan-200', // Cyan style matching printer notification badge
   warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
 };
 

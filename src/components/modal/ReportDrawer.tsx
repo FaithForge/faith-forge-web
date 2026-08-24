@@ -311,7 +311,7 @@ ${state.observationGeneral}`;
       </Drawer.Portal>
     </Drawer.Root>
 
-    {/* Confirmación al cancelar el reporte */}
+    {/* Confirmation when cancelling report */}
     <ConfirmModal
       open={showCancelModal}
       onOpenChange={setShowCancelModal}
