@@ -35,6 +35,7 @@ import {
 } from '@/libs/models/User';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 import { APP_ROUTES } from '@/config/routes';
 import dayjs from 'dayjs';
 import Input from '@/components/ui/Input';
@@ -178,6 +179,12 @@ const CreateUserView: React.FC = () => {
     }
   };
 
+  const isBackGuardActive = (isDirty || Boolean(photoFile)) && !createdAccountResult;
+  const { allowNavigation } = useBackSwipeGuard({
+    enabled: isBackGuardActive,
+    onBlockBack: () => setShowCancelModal(true),
+  });
+
   /**
    * Removes the selected photo.
    */
@@ -193,6 +200,7 @@ const CreateUserView: React.FC = () => {
     if (isDirty || photoFile) {
       setShowCancelModal(true);
     } else {
+      allowNavigation();
       navigate(APP_ROUTES.admin.root);
     }
   };
@@ -201,6 +209,7 @@ const CreateUserView: React.FC = () => {
    * Confirms exit and discards pending changes.
    */
   const handleConfirmCancel = () => {
+    allowNavigation();
     setShowCancelModal(false);
     navigate(APP_ROUTES.admin.root);
   };
@@ -838,6 +847,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con Ã
         cancelText="Continuar editando"
         onConfirm={handleConfirmCancel}
         type="danger"
+        disableBackClose={true}
       />
     </div>
   );

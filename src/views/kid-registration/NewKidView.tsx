@@ -24,6 +24,7 @@ import { CreateKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
 import { cleanCurrentKidGuardian } from '@/libs/state/redux/slices/kid-church/kid-guardian.slice';
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
+import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 
 import { healthSecurityEntitySelect, IdType, UserIdType } from '@/libs/models/User';
 import { ID_TYPE_CODE_MAPPER, kidRelationSelect } from '@/libs/models';
@@ -87,12 +88,19 @@ const NewKidView = () => {
     const unregister = registerGuard((to) => {
       if (!isUploadingRef.current && stepRef.current <= 2) {
         setShowCancelModal(true);
-        return false; // bloquear
+        return false;
       }
-      return true; // permitir
+      return true;
     });
     return unregister;
   }, [registerGuard]);
+
+  // Intercept mobile back swipe / popstate when form is in progress
+  const isBackGuardActive = !isUploading && step <= 2;
+  const { allowNavigation } = useBackSwipeGuard({
+    enabled: isBackGuardActive,
+    onBlockBack: () => setShowCancelModal(true),
+  });
 
   useEffect(() => {
     dispatch(GetKidGroups({}));
@@ -157,11 +165,12 @@ const NewKidView = () => {
 
   /** Confirms discarding changes and navigates back to dashboard. */
   const handleConfirmCancel = () => {
+    allowNavigation();
     setShowCancelModal(false);
-    navigate(APP_ROUTES.kidRegistration.root);
+    navigate(APP_ROUTES.kidRegistration.root, { replace: true });
   };
 
-  /** Cancela la salida — el usuario sigue llenando el formulario. */
+  /** Closes cancel modal and continues filling the form. */
   const handleCloseModal = (open: boolean) => {
     setShowCancelModal(open);
   };
@@ -776,6 +785,7 @@ const NewKidView = () => {
         cancelText="Continuar llenando"
         onConfirm={handleConfirmCancel}
         type="danger"
+        disableBackClose={true}
       />
     </div>
   );
