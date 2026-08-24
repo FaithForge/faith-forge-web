@@ -11,12 +11,31 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { VitePWA } from 'vite-plugin-pwa';
 import path from 'path';
+import fs from 'node:fs';
+
+const currentBuildTime = Date.now();
+
+const versionPlugin = () => ({
+  name: 'generate-version-json',
+  buildStart() {
+    const buildInfo = {
+      version: '3.0.0',
+      buildTime: currentBuildTime,
+      buildDate: new Date().toISOString(),
+    };
+    if (!fs.existsSync('public')) {
+      fs.mkdirSync('public', { recursive: true });
+    }
+    fs.writeFileSync('public/version.json', JSON.stringify(buildInfo, null, 2));
+  },
+});
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
     react(),
     tailwindcss(),
+    versionPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'logo-iglekids.png', 'icons/*.png'],
@@ -70,5 +89,6 @@ export default defineConfig({
   define: {
     'process.env': {},
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
+    '__APP_BUILD_TIME__': currentBuildTime,
   },
 });

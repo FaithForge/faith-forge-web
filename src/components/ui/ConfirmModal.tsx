@@ -38,8 +38,8 @@ const ConfirmModal = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[100] animate-in fade-in duration-200" />
-        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-3xl shadow-2xl p-6 w-[90vw] max-w-sm z-[101] animate-in zoom-in-95 fade-in duration-200 outline-none">
+        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[999] animate-in fade-in duration-200" />
+        <Dialog.Content className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-3xl shadow-2xl p-6 w-[90vw] max-w-sm z-[1000] animate-in zoom-in-95 fade-in duration-200 outline-none">
           <div className="flex flex-col items-center text-center">
             
             <div className={clsx(
