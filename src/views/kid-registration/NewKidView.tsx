@@ -4,13 +4,14 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { APP_ROUTES } from "@/config/routes";
-import { Camera, ChevronRight, Check, ArrowLeft, QrCode, Pencil, Trash2, Search, UserCheck, AlertTriangle } from 'lucide-react';
+import { Camera, ChevronRight, Check, ArrowLeft, QrCode, Pencil, Trash2, Search, UserCheck, AlertTriangle, X } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import SelectSearch from '@/components/ui/SelectSearch';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import PageHeader from '@/components/ui/PageHeader';
 import dayjs from 'dayjs';
 import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
@@ -39,25 +40,9 @@ import { validateTwoLastNames } from '@/libs/utils/validator';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import Alert from '@/components/ui/Alert';
+import StepProgress from '@/components/ui/StepProgress';
 
-const StepProgress = ({ currentStep }: { currentStep: number }) => {
-  return (
-    <div className="bg-primary px-4 pb-3">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary-foreground">
-          {currentStep === 1 ? 'Paso 1: Datos del Niño' : 'Paso 2: Acudiente Responsable'}
-        </span>
-        <span className="text-xs font-medium text-primary-foreground/70">{currentStep} / 2</span>
-      </div>
-      <div className="w-full bg-primary-foreground/20 rounded-full h-1.5">
-        <div 
-          className="bg-primary-foreground h-1.5 rounded-full transition-all duration-500 ease-out" 
-          style={{ width: `${(currentStep / 2) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-};
+const NEW_KID_STEPS = ['Datos del Niño', 'Acudiente Responsable'];
 
 const NewKidView = () => {
   const navigate = useNavigate();
@@ -92,7 +77,7 @@ const NewKidView = () => {
       lastName: '',
       dialCodePhone: '+57',
       phone: '',
-      gender: 'F',
+      gender: '',
       relation: '',
     }
   });
@@ -129,9 +114,11 @@ const NewKidView = () => {
   };
 
   useEffect(() => {
-    scrollToTop();
-    const timer = setTimeout(scrollToTop, 50);
-    return () => clearTimeout(timer);
+    if (step > 1) {
+      scrollToTop();
+      const timer = setTimeout(scrollToTop, 50);
+      return () => clearTimeout(timer);
+    }
   }, [step]);
 
   // Autocompletar datos del acudiente si ya existe en BD
@@ -338,19 +325,8 @@ const NewKidView = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Unified Header: Back Bar & Step Progress */}
-      <div 
-        className="bg-primary text-primary-foreground shadow-md flex flex-col relative z-30"
-        style={{ boxShadow: '0 -2px 0 0 var(--color-primary), 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)' }}
-      >
-        <div className="px-4 py-2 flex items-center border-t border-white/15">
-          <button onClick={handleCancelClick} className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold">
-            <ArrowLeft size={18} />
-            <span>Nuevo Registro</span>
-          </button>
-        </div>
-        <StepProgress currentStep={step} />
-      </div>
+      <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
+      <StepProgress currentStep={step} steps={NEW_KID_STEPS} />
 
       <div className="p-4">
         {step === 1 && (
@@ -393,7 +369,7 @@ const NewKidView = () => {
                 />
               </label>
               <span className="text-xs text-gray-500 font-medium mt-2.5">
-                {photoUrl ? 'Toca la foto o la cámara para cambiar foto' : 'Toca la foto o la cámara para agregar foto'}
+                {photoUrl ? 'Toca la imagen o la cámara para cambiar foto' : 'Toca la imagen o la cámara para agregar foto'}
               </span>
               {photoUrl && (
                 <button 
@@ -580,7 +556,7 @@ const NewKidView = () => {
                   className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm"
                   rows={3}
                   maxLength={300}
-                  placeholder="Si seleccionó Otra condición describala aquí"
+                  placeholder="Si tiene alguna otra observación médica, alimentaria o a la que debamos prestar atención, anótala aquí..."
                 ></textarea>
               </div>
             </div>
@@ -618,7 +594,7 @@ const NewKidView = () => {
                       setGuardianValue('lastName', '');
                       setGuardianValue('dialCodePhone', '+57');
                       setGuardianValue('phone', '');
-                      setGuardianValue('gender', 'F');
+                      setGuardianValue('gender', '');
                       setGuardianValue('relation', '');
                     }}
                     className="text-xs text-emerald-700 underline font-bold"
@@ -662,8 +638,26 @@ const NewKidView = () => {
                     autoCorrect="off"
                     autoCapitalize="off"
                     spellCheck={false}
-                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 outline-none text-base shadow-sm transition-colors disabled:bg-gray-100 disabled:text-gray-500"
+                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 pl-3 pr-16 focus:border-primary focus:ring-0 outline-none text-base shadow-sm transition-colors disabled:bg-gray-100 disabled:text-gray-500"
                   />
+                  {watchGuardian('nationalId') && !kidGuardianSlice.current && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setGuardianValue('nationalId', '');
+                        setGuardianValue('firstName', '');
+                        setGuardianValue('lastName', '');
+                        setGuardianValue('phone', '');
+                      }}
+                      className="absolute right-9 text-gray-400 hover:text-gray-600 p-1 transition-colors"
+                      tabIndex={-1}
+                      aria-label="Limpiar documento"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 transition-transform active:scale-90">
+                        <X size={12} strokeWidth={2.5} />
+                      </div>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={checkNationalId}
@@ -686,14 +680,14 @@ const NewKidView = () => {
                 error={guardianErrors.firstName?.message as string}
               />
 
-              {/* Apellido */}
+              {/* Apellidos */}
               <Input
-                label="Apellido"
+                label="Apellidos"
                 required
                 placeholder="Apellidos del acudiente"
                 disabled={!!kidGuardianSlice.current}
                 {...registerGuardian('lastName', { 
-                  required: 'El apellido es requerido',
+                  required: 'Los apellidos son requeridos',
                   validate: validateTwoLastNames
                 })}
                 error={guardianErrors.lastName?.message as string}

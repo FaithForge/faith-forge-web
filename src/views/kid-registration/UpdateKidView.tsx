@@ -23,6 +23,8 @@ import {
 import { resizeAndCropImageToSquare } from '@/libs/utils/image/index';
 import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import PageHeader from '@/components/ui/PageHeader';
+import { UpdateKidSkeleton } from '@/components/ui/DetailSkeleton';
 import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -190,22 +192,13 @@ const UpdateKidView: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Sub-Header */}
-      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center shadow-xs border-t border-white/15">
-        <button
-          onClick={() => navigate(APP_ROUTES.kidRegistration.checkIn(id || ''))}
-          className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold"
-        >
-          <ArrowLeft size={18} />
-          <span>Actualizar Datos del Niño</span>
-        </button>
-      </div>
+      <PageHeader
+        title="Actualizar Datos del Niño"
+        onBack={() => navigate(APP_ROUTES.kidRegistration.checkIn(id || ''))}
+      />
 
       {kidLoading && !kid ? (
-        <div className="flex flex-col items-center justify-center p-12 text-gray-500">
-          <Loader2 className="animate-spin text-primary mb-3" size={32} />
-          <p className="font-medium text-sm">Cargando información del niño...</p>
-        </div>
+        <UpdateKidSkeleton />
       ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="p-4 flex flex-col gap-4 max-w-lg mx-auto">
           {/* Foto de Perfil */}
@@ -241,7 +234,7 @@ const UpdateKidView: React.FC = () => {
               />
             </label>
             <span className="text-xs text-gray-500 font-medium mt-2.5">
-              Toca la foto o la cámara para cambiar la foto
+              Toca la imagen o la cámara para cambiar la foto
             </span>
           </div>
 
@@ -256,12 +249,12 @@ const UpdateKidView: React.FC = () => {
             />
 
             <Input
-              label="Apellido"
+              label="Apellidos"
               required
               placeholder="Ej: Peña Merlano"
               error={errors.lastName?.message as string}
               {...register('lastName', { 
-                required: 'El apellido es obligatorio',
+                required: 'Los apellidos son obligatorios',
                 validate: validateTwoLastNames
               })}
             />
@@ -396,7 +389,7 @@ const UpdateKidView: React.FC = () => {
                 className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary outline-none text-base shadow-sm"
                 rows={3}
                 maxLength={300}
-                placeholder="Observaciones médicas o notas generales sobre el niño..."
+                placeholder="Si tiene alguna otra observación médica, alimentaria o a la que debamos prestar atención, anótala aquí..."
               />
             </div>
           </div>

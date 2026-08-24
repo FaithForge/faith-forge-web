@@ -13,6 +13,7 @@ import { GetKidGroups, GetKidGroupRegistered } from '@/libs/state/redux/thunks/k
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 /**
  * Main dashboard for Iglekids (Coordinators, Supervisors, Teachers).
@@ -111,6 +112,7 @@ const KidChurchDashboard: React.FC = () => {
           placeholder="Buscar niño en salones..."
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
+          onClear={() => setSearchText('')}
           wrapperClassName="mb-0"
           className="border-0 shadow-sm text-base bg-white focus:ring-0"
         />
@@ -194,52 +196,54 @@ const KidChurchDashboard: React.FC = () => {
       )}
 
       {/* Registered Kids List */}
-      <div className="flex flex-col gap-2 mt-1">
-        {loading && (
-          <div className="flex flex-col items-center justify-center p-8 text-gray-400 gap-2">
-            <RefreshCw size={24} className="animate-spin text-primary" />
-            <span className="text-xs font-medium">Cargando salones...</span>
-          </div>
-        )}
+      <PullToRefresh onRefresh={handleRefresh} disabled={loading || isRefreshing}>
+        <div className="flex flex-col gap-2 mt-1">
+          {loading && (
+            <div className="flex flex-col items-center justify-center p-8 text-gray-400 gap-2">
+              <RefreshCw size={24} className="animate-spin text-primary" />
+              <span className="text-xs font-medium">Cargando salones...</span>
+            </div>
+          )}
 
-        {!loading && filteredKids.length === 0 && (
-          <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400">
-            <Users size={36} className="mx-auto mb-2 opacity-40" />
-            <p className="text-sm font-semibold text-gray-600">No hay niños registrados en esta vista</p>
-            <p className="text-xs text-gray-400 mt-1">
-              {searchText ? 'Intenta con otro término de búsqueda.' : 'Los niños aparecerán aquí una vez registrados en la entrada.'}
-            </p>
-          </div>
-        )}
+          {!loading && filteredKids.length === 0 && (
+            <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400">
+              <Users size={36} className="mx-auto mb-2 opacity-40" />
+              <p className="text-sm font-semibold text-gray-600">No hay niños registrados en esta vista</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {searchText ? 'Intenta con otro término de búsqueda.' : 'Los niños aparecerán aquí una vez registrados en la entrada.'}
+              </p>
+            </div>
+          )}
 
-        {!loading &&
-          filteredKids.map((kid: IKid) => {
-            const ageYears = Math.floor(kid.age ?? 0);
-            const ageMonths = kid.ageInMonths ? kid.ageInMonths - ageYears * 12 : 0;
-            const subtitleText = `Salón: ${kid.kidGroup?.name || 'Sin salón'} • ${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`;
+          {!loading &&
+            filteredKids.map((kid: IKid) => {
+              const ageYears = Math.floor(kid.age ?? 0);
+              const ageMonths = kid.ageInMonths ? kid.ageInMonths - ageYears * 12 : 0;
+              const subtitleText = `Salón: ${kid.kidGroup?.name || 'Sin salón'} • ${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`;
 
-            const badgeElement = (
-              <div className="flex items-center gap-1 shrink-0">
-                <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                  En Salón
-                </span>
-              </div>
-            );
+              const badgeElement = (
+                <div className="flex items-center gap-1 shrink-0">
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                    En Salón
+                  </span>
+                </div>
+              );
 
-            return (
-              <Cell
-                key={kid.id || kid.faithForgeId}
-                title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
-                subtitle={subtitleText}
-                gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}
-                photoUrl={kid.photoUrl}
-                isRegistered={true}
-                badge={badgeElement}
-                onClick={() => handleKidClick(kid)}
-              />
-            );
-          })}
-      </div>
+              return (
+                <Cell
+                  key={kid.id || kid.faithForgeId}
+                  title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
+                  subtitle={subtitleText}
+                  gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}
+                  photoUrl={kid.photoUrl}
+                  isRegistered={true}
+                  badge={badgeElement}
+                  onClick={() => handleKidClick(kid)}
+                />
+              );
+            })}
+        </div>
+      </PullToRefresh>
 
       {/* Floating Action Button (FAB) for Reload */}
       <button

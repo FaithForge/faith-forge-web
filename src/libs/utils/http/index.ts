@@ -11,13 +11,14 @@ interface ApiRequestOptions {
 
 /**
  * Executes an API request using the specified method, URL, and options.
+ * Dispatches an 'auth:unauthorized' event globally on HTTP 401.
  *
  * @param {string} baseURL - The base URL of the API.
  * @param {HttpRequestMethod} method - The HTTP method to use for the request.
  * @param {string} url - The endpoint URL relative to the base URL.
  * @param {ApiRequestOptions} [options={}] - The optional parameters, data, and headers for the request.
  * @returns {Promise<AxiosResponse<any, any>>} - A promise that resolves with the Axios response.
- * @throws {Error} If an invalid HTTP method is provided.
+ * @throws {Error} If an invalid HTTP method is provided or on request failure.
  */
 const executeApiRequest = async (
   baseURL: string,
@@ -28,19 +29,28 @@ const executeApiRequest = async (
   const { params = {}, data = {}, headers = {}, responseType } = options;
   const instance = axios.create({ baseURL });
 
-  switch (method) {
-    case HttpRequestMethod.GET:
-      return await instance.get(url, { params, headers, responseType });
-    case HttpRequestMethod.POST:
-      return await instance.post(url, data, { headers, responseType });
-    case HttpRequestMethod.PATCH:
-      return await instance.patch(url, data, { headers, responseType });
-    case HttpRequestMethod.PUT:
-      return await instance.put(url, data, { headers, responseType });
-    case HttpRequestMethod.DELETE:
-      return await instance.delete(url, { headers, responseType });
-    default:
-      throw new Error(`Invalid HTTP verb: ${method}`);
+  try {
+    switch (method) {
+      case HttpRequestMethod.GET:
+        return await instance.get(url, { params, headers, responseType });
+      case HttpRequestMethod.POST:
+        return await instance.post(url, data, { headers, responseType });
+      case HttpRequestMethod.PATCH:
+        return await instance.patch(url, data, { headers, responseType });
+      case HttpRequestMethod.PUT:
+        return await instance.put(url, data, { headers, responseType });
+      case HttpRequestMethod.DELETE:
+        return await instance.delete(url, { headers, responseType });
+      default:
+        throw new Error(`Invalid HTTP verb: ${method}`);
+    }
+  } catch (error: any) {
+    if (error?.response?.status === 401) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      }
+    }
+    throw error;
   }
 };
 

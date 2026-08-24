@@ -30,6 +30,31 @@ const DAYS_TO_NUM: Record<string, number> = {
   SÁBADO: 6,
 };
 
+const DAY_TRANSLATIONS: Record<string, string> = {
+  SUNDAY: 'Domingos',
+  DOMINGO: 'Domingos',
+  MONDAY: 'Lunes',
+  LUNES: 'Lunes',
+  TUESDAY: 'Martes',
+  MARTES: 'Martes',
+  WEDNESDAY: 'Miércoles',
+  MIERCOLES: 'Miércoles',
+  MIÉRCOLES: 'Miércoles',
+  THURSDAY: 'Jueves',
+  JUEVES: 'Jueves',
+  FRIDAY: 'Viernes',
+  VIERNES: 'Viernes',
+  SATURDAY: 'Sábados',
+  SABADO: 'Sábados',
+  SÁBADO: 'Sábados',
+};
+
+const getTranslatedDay = (dayString?: string): string => {
+  if (!dayString) return '';
+  const key = String(dayString).toUpperCase().trim();
+  return DAY_TRANSLATIONS[key] || dayString;
+};
+
 interface KidChurchReportDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -46,6 +71,8 @@ type ReportData = {
   statistics: ReportStatistics;
 };
 
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+
 /**
  * Bottom sheet drawer for Iglekids service attendance and statistics reporting.
  *
@@ -53,6 +80,8 @@ type ReportData = {
  * @returns {JSX.Element}
  */
 const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onOpenChange }) => {
+  useModalBackClose(open, () => onOpenChange(false));
+
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.authSlice.token);
   const campuses = useAppSelector((state) => state.churchCampusSlice);
@@ -224,22 +253,24 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
   };
 
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root handleOnly open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
-        <Drawer.Content className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[101] outline-none mt-16 max-h-[calc(100vh-4rem)]">
+        <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[150]" />
+        <Drawer.Content 
+          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] outline-none mt-20 max-h-[calc(100vh-5rem)]"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
           {/* Top Bar */}
-          <div className="p-4 bg-white rounded-t-[24px] border-b border-gray-100 shadow-sm z-20 flex items-center justify-between sticky top-0">
-            <div className="w-8" />
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-1.5 rounded-full bg-gray-300 mb-1" />
-              <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <FileText size={20} className="text-primary" /> Reporte de Asistencia Iglekids
-              </h3>
-            </div>
+          <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
+            <div className="w-8 shrink-0" />
+            <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
+              <FileText size={18} className="text-primary shrink-0" />
+              <span className="truncate">Reporte de Asistencia Iglekids</span>
+            </h3>
             <button
+              type="button"
               onClick={() => onOpenChange(false)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
             >
               <X size={18} />
             </button>
@@ -307,7 +338,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   }}
                   helpText={
                     selectedMeetingObj?.day
-                      ? `Solo se habilitan los días correspondientes a este servicio (${selectedMeetingObj.day}).`
+                      ? `Solo se habilitan los días correspondientes a este servicio (${getTranslatedDay(selectedMeetingObj.day)}).`
                       : 'Selecciona la fecha exacta del servicio a consultar.'
                   }
                 />

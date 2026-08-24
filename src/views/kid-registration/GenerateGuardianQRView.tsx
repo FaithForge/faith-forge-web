@@ -12,8 +12,10 @@ import {
   User,
   Phone,
   FileText,
-  Check
+  Check,
+  X
 } from 'lucide-react';
+import clsx from 'clsx';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { 
@@ -23,6 +25,7 @@ import {
 import { cleanCurrentKidGuardian } from '@/libs/state/redux/slices/kid-church/kid-guardian.slice';
 import { capitalizeWords } from '@/libs/utils/text';
 import Button from '@/components/ui/Button';
+import PageHeader from '@/components/ui/PageHeader';
 import { APP_ROUTES } from '@/config/routes';
 
 const GenerateGuardianQRView: React.FC = () => {
@@ -143,16 +146,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Sub-Header */}
-      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center shadow-xs border-t border-white/15">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-1.5 opacity-90 hover:opacity-100 transition-opacity text-sm font-semibold"
-        >
-          <ArrowLeft size={18} />
-          <span>Generar Código QR</span>
-        </button>
-      </div>
+      <PageHeader title="Generar Código QR" onBack={() => navigate(-1)} />
 
       <div className="p-4 max-w-md mx-auto flex flex-col gap-4 animate-in fade-in duration-300">
         {/* Buscador de Documento */}
@@ -161,7 +155,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
             Cédula o Documento del Acudiente
           </label>
           <form onSubmit={handleSearch} className="flex gap-2">
-            <div className="relative flex-1">
+            <div className="relative flex-1 flex items-center">
               <input
                 type="text"
                 value={nationalIdQuery}
@@ -171,9 +165,25 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
                 autoCorrect="off"
                 autoCapitalize="off"
                 spellCheck={false}
-                className="block w-full pl-3.5 pr-3 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-text-main focus:border-primary outline-none text-base font-semibold shadow-sm transition-colors"
+                className={clsx(
+                  "block w-full pl-3.5 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-text-main focus:border-primary outline-none text-base font-semibold shadow-sm transition-colors",
+                  nationalIdQuery ? "pr-10" : "pr-3"
+                )}
                 autoFocus
               />
+              {nationalIdQuery && (
+                <button
+                  type="button"
+                  onClick={() => setNationalIdQuery('')}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                  tabIndex={-1}
+                  aria-label="Limpiar cédula"
+                >
+                  <div className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 transition-transform active:scale-90">
+                    <X size={12} strokeWidth={2.5} />
+                  </div>
+                </button>
+              )}
             </div>
             <Button
               type="submit"

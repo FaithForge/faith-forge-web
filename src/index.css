@@ -30,11 +30,16 @@
   .theme-KID_GROUP_USER { --color-primary: #fbbf24; /* bg-amber-400 */ }
   .theme-USER { --color-primary: #fbbf24; /* bg-amber-400 */ }
 
-  body {
+  html,
+  body,
+  #root {
     background-color: var(--color-background);
     color: var(--color-text-main);
     /* Mobile optimal reset */
     -webkit-tap-highlight-color: transparent;
+    overscroll-behavior: none;
+    overscroll-behavior-x: none;
     overscroll-behavior-y: none;
+    touch-action: pan-y pinch-zoom;
   }
 }

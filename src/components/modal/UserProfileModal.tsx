@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { User, X, Mail, Smartphone } from 'lucide-react';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords } from '@/libs/utils/text';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 interface UserProfileModalProps {
   open: boolean;
@@ -10,6 +11,8 @@ interface UserProfileModalProps {
 }
 
 const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
+  useModalBackClose(open, () => onOpenChange(false));
+
   const user = useAppSelector((state) => state.authSlice.user);
 
   if (!user) return null;

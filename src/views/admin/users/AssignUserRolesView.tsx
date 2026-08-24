@@ -23,6 +23,7 @@ import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
 import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
+import PageHeader from '@/components/ui/PageHeader';
 
 /**
  * Vista para la Búsqueda y Asignación de Roles a Usuarios.
@@ -132,23 +133,7 @@ const AssignUserRolesView: React.FC = () => {
 
   return (
     <div className="min-h-full bg-slate-50/60 pb-20">
-      {/* TopBar Header */}
-      <div 
-        className="bg-primary text-primary-foreground p-4 sticky -top-1 z-30 shadow-md flex items-center justify-between"
-        style={{
-          boxShadow: '0 -6px 0 0 var(--color-primary), 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate(APP_ROUTES.admin.root)}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors flex items-center gap-1.5"
-        >
-          <ArrowLeft size={22} />
-          <span className="font-bold text-base">Asignar Roles</span>
-        </button>
-        <div className="w-6" /> {/* Spacer */}
-      </div>
+      <PageHeader title="Asignar Roles" onBack={() => navigate(APP_ROUTES.admin.root)} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
         
@@ -170,6 +155,7 @@ const AssignUserRolesView: React.FC = () => {
                 placeholder="Escribir número de documento..."
                 value={searchNationalId}
                 onChange={(e) => setSearchNationalId(e.target.value)}
+                onClear={() => setSearchNationalId('')}
                 autoFocus
               />
             </div>

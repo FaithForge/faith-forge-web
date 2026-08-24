@@ -15,7 +15,11 @@ interface SettingsDrawerProps {
   onOpenChange: (open: boolean) => void;
 }
 
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+
 const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
+  useModalBackClose(open, () => onOpenChange(false));
+
   const dispatch = useAppDispatch();
   const campuses = useAppSelector((state) => state.churchCampusSlice);
   const meetings = useAppSelector((state) => state.churchMeetingSlice);
@@ -96,27 +100,49 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const isPrinterDisabled = !selectedCampusId || !selectedMeetingId || printers.loading;
 
   return (
-    <Drawer.Root open={open} onOpenChange={onOpenChange} dismissible={isConfigured}>
+    <Drawer.Root handleOnly open={open} onOpenChange={onOpenChange} dismissible={isConfigured}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[100]" />
-        <Drawer.Content className="bg-gray-50 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-[101] outline-none mt-24 max-h-[calc(100vh-6rem)]">
-          <div className="p-4 bg-white rounded-t-[20px] border-b border-gray-100 shadow-sm z-20 flex items-center justify-between sticky top-0">
-            <div className="w-8" /> {/* Spacer */}
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-1.5 rounded-full bg-gray-300 mb-2" />
-              <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-                <Settings size={20} className="text-primary" /> Configuración de Sesión
-              </h3>
-            </div>
+        <Drawer.Overlay 
+          onClick={() => isConfigured && onOpenChange(false)} 
+          className="fixed inset-0 bg-black/50 z-[150] cursor-pointer" 
+        />
+        <Drawer.Content 
+          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] outline-none mt-20 max-h-[calc(100vh-5rem)]"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+          onPointerDownOutside={(e) => {
+            if (!isConfigured) {
+              e.preventDefault();
+            } else {
+              onOpenChange(false);
+            }
+          }}
+          onInteractOutside={(e) => {
+            if (!isConfigured) {
+              // Allow interacting with TopBar elements even if unconfigured
+              const target = e.target as HTMLElement | null;
+              if (!target?.closest('header') && !target?.closest('[role="menu"]')) {
+                e.preventDefault();
+              }
+            }
+          }}
+        >
+          {/* Header */}
+          <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
+            <div className="w-8 shrink-0" /> {/* Spacer */}
+            <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
+              <Settings size={18} className="text-primary shrink-0" />
+              <span className="truncate">Configuración de Sesión</span>
+            </h3>
             {isConfigured ? (
               <button 
+                type="button"
                 onClick={() => onOpenChange(false)} 
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
               >
                 <X size={18} />
               </button>
             ) : (
-              <div className="w-8" />
+              <div className="w-8 shrink-0" />
             )}
           </div>
           

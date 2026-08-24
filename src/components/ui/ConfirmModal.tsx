@@ -3,6 +3,7 @@ import * as Dialog from '@radix-ui/react-dialog';
 import { AlertTriangle, X } from 'lucide-react';
 import clsx from 'clsx';
 import Button from '@/components/ui/Button';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 interface ConfirmModalProps {
   open: boolean;
@@ -25,7 +26,8 @@ const ConfirmModal = ({
   onConfirm,
   type = 'warning'
 }: ConfirmModalProps) => {
-  
+  useModalBackClose(open, () => onOpenChange(false));
+
   const handleConfirm = () => {
     onConfirm();
     onOpenChange(false);

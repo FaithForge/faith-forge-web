@@ -89,15 +89,15 @@ const TopBar = () => {
 
   const roleTriggerContent = (
     <div className={clsx(
-      "flex items-center gap-1.5 outline-none rounded-lg p-0.5 transition-colors",
-      hasMultipleRoles ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
+      "flex items-center gap-2 outline-none rounded-xl py-0.5 px-1 transition-colors",
+      hasMultipleRoles ? "hover:bg-black/10 cursor-pointer active:scale-98" : "cursor-default"
     )}>
-      <div className="w-7 h-7 rounded-full flex items-center justify-center bg-white/20 p-0.5">
+      <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full flex items-center justify-center bg-white/20 p-0.5 shadow-xs shrink-0">
          <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain drop-shadow-xs" />
       </div>
       <div className="text-left">
-        <h1 className="font-bold text-sm leading-none">{activeVisualRole.appTitle}</h1>
-        <div className="flex items-center gap-1 text-[10.5px] uppercase tracking-wide opacity-90 font-medium mt-0.5">
+        <h1 className="font-extrabold text-[14px] sm:text-[15px] leading-tight tracking-tight">{activeVisualRole.appTitle}</h1>
+        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] uppercase tracking-wide opacity-90 font-semibold mt-0.5">
           Rol: {activeVisualRole.label}
           {hasMultipleRoles && <ChevronDown size={11} />}
         </div>
@@ -107,7 +107,7 @@ const TopBar = () => {
 
   return (
     <>
-      <header className="bg-primary text-primary-foreground px-3.5 py-1.5 flex justify-between items-center shrink-0 transition-colors duration-300 z-[120] relative shadow-none border-none outline-none">
+      <header className="bg-primary text-primary-foreground px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 transition-colors duration-300 z-[200] relative shadow-none border-none outline-none">
         
         {/* Lado Izquierdo: Menú de Roles */}
         {hasMultipleRoles ? (
@@ -118,7 +118,7 @@ const TopBar = () => {
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content 
-                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[200px] z-[130] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[200px] z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
                 sideOffset={8}
                 align="start"
               >
@@ -157,15 +157,15 @@ const TopBar = () => {
         
         {/* Menú de Usuario */}
         <DropdownMenu.Root>
-          <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative">
-            <div className="w-7.5 h-7.5 rounded-full bg-black/20 text-xs flex items-center justify-center font-bold">
+          <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95">
+            <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-black/20 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner">
               {userInitials}
             </div>
           </DropdownMenu.Trigger>
 
           <DropdownMenu.Portal>
             <DropdownMenu.Content 
-              className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[180px] z-[130] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+              className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[180px] z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
               sideOffset={8}
               align="end"
             >

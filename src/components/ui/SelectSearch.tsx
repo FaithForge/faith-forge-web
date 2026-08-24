@@ -19,6 +19,8 @@ interface SelectSearchProps {
   searchable?: boolean;
 }
 
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+
 const SelectSearch = ({
   label,
   options,
@@ -33,6 +35,7 @@ const SelectSearch = ({
   searchable
 }: SelectSearchProps) => {
   const [open, setOpen] = useState(false);
+  useModalBackClose(open, () => setOpen(false));
   const [search, setSearch] = useState('');
 
   // Solo mostrar barra de búsqueda si se indica explícitamente o si hay más de 5 opciones
@@ -78,43 +81,42 @@ const SelectSearch = ({
 
       {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
 
-      <Drawer.Root open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root handleOnly open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[200]" />
+          <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content 
-            className="bg-gray-50 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-[201] outline-none max-h-[85vh]"
+            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85vh]"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
+            {/* Header */}
+            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 flex items-center justify-between px-4 py-3.5 sticky top-0">
+              <div className="w-8 shrink-0" />
+              <h3 className="font-bold text-gray-800 text-base flex-1 text-center truncate px-2 uppercase tracking-wide">
+                {label}
+              </h3>
+              <button 
+                type="button"
+                onClick={() => setOpen(false)} 
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
             <div className={clsx(
-              "p-4 bg-white rounded-t-[20px] border-b border-gray-100 shadow-sm z-10 flex flex-col",
-              isSearchable ? "gap-4" : "gap-1"
+              "px-4 pb-3 pt-2 bg-white flex flex-col",
+              isSearchable ? "gap-3" : "hidden"
             )}>
-              <div className="flex items-center justify-between">
-                <div className="w-8" />
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-1.5 rounded-full bg-gray-300 mb-2" />
-                  <h3 className="font-bold text-gray-800 text-lg uppercase tracking-wide">
-                    {label}
-                  </h3>
-                </div>
-                <button 
-                  type="button"
-                  onClick={() => setOpen(false)} 
-                  className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
-                >
-                  <X size={18} />
-                </button>
-              </div>
 
               {/* Search Bar sólo cuando es necesario */}
               {isSearchable && (
-                <div className="relative">
+                <div className="relative flex items-center">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                     <Search size={18} className="text-gray-400" />
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-10 pr-3 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-text-main focus:border-primary focus:ring-0 transition-colors outline-none text-base"
+                    className="block w-full pl-10 pr-10 py-3 rounded-xl border-2 border-gray-200 bg-gray-50 text-text-main focus:border-primary focus:ring-0 transition-colors outline-none text-base"
                     placeholder={placeholder}
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -123,6 +125,19 @@ const SelectSearch = ({
                     autoCapitalize="off"
                     spellCheck={false}
                   />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                      aria-label="Limpiar búsqueda"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 transition-transform active:scale-90">
+                        <X size={12} strokeWidth={2.5} />
+                      </div>
+                    </button>
+                  )}
                 </div>
               )}
             </div>

@@ -21,6 +21,7 @@ import {
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CreateUser, CreateUserAccount, UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
 import { 
@@ -98,6 +99,7 @@ const CreateUserView: React.FC = () => {
     watch,
     setValue,
     trigger,
+    clearErrors,
     formState: { errors, isDirty },
   } = useForm<CreateUserFormData>({
     defaultValues: {
@@ -105,7 +107,7 @@ const CreateUserView: React.FC = () => {
       lastName: '',
       nationalIdType: UserIdType.CC,
       nationalId: '',
-      gender: 'M',
+      gender: '',
       birthday: '',
       dialCodePhone: '+57',
       phone: '',
@@ -126,22 +128,6 @@ const CreateUserView: React.FC = () => {
   const watchedCreateAccount = watch('createAccount');
   const watchedGender = watch('gender');
 
-  // Validar si los campos obligatorios previos para la cuenta están completos
-  const isRequiredInfoCompleteForAccount = useMemo(() => {
-    const hasFirst = watchedFirstName?.trim()?.length >= 2;
-    const hasLast = validateTwoLastNames(watchedLastName) === true;
-    const hasPhone = watchedPhone?.trim()?.length >= 7;
-    const hasEmail = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(watchedEmail || '');
-    return Boolean(hasFirst && hasLast && hasPhone && hasEmail);
-  }, [watchedFirstName, watchedLastName, watchedPhone, watchedEmail]);
-
-  // Si los datos obligatorios se invalidan mientras la cuenta estaba marcada, desmarcarla
-  useEffect(() => {
-    if (watchedCreateAccount && !isRequiredInfoCompleteForAccount) {
-      setValue('createAccount', false);
-    }
-  }, [isRequiredInfoCompleteForAccount, watchedCreateAccount, setValue]);
-
   // Auto-sugerir username cuando cambian nombres/apellidos si no ha sido editado manualmente
   useEffect(() => {
     if (!isUsernameManuallyEdited) {
@@ -158,24 +144,18 @@ const CreateUserView: React.FC = () => {
   }, [watchedPhone, isPasswordManuallyEdited, setValue]);
 
   /**
-   * Maneja el clic en la casilla de crear cuenta validando requisitos previos.
+   * Maneja el clic en la casilla de crear cuenta validando y activando requisitos.
    */
   const handleToggleCreateAccount = async () => {
-    if (!watchedCreateAccount) {
-      // Validar campos obligatorios
-      const isValidFirst = await trigger('firstName');
-      const isValidLast = await trigger('lastName');
-      const isValidPhone = await trigger('phone');
-      const isValidEmail = await trigger('email');
+    const nextState = !watchedCreateAccount;
+    setValue('createAccount', nextState, { shouldDirty: true });
 
-      if (!isValidFirst || !isValidLast || !isValidPhone || !isValidEmail || !isRequiredInfoCompleteForAccount) {
-        toast.error('Para habilitar la cuenta de acceso, completa primero Nombres, ambos Apellidos, Teléfono y Correo Electrónico.');
-        return;
-      }
-
-      setValue('createAccount', true, { shouldDirty: true });
+    if (nextState) {
+      setTimeout(() => {
+        trigger(['phone', 'email', 'firstName', 'lastName']);
+      }, 0);
     } else {
-      setValue('createAccount', false, { shouldDirty: true });
+      clearErrors(['phone', 'email']);
     }
   };
 
@@ -492,23 +472,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
   // =========================================================================
   return (
     <div className="min-h-full bg-slate-50/60 pb-20">
-      {/* TopBar Header */}
-      <div 
-        className="bg-primary text-primary-foreground p-4 sticky -top-1 z-30 shadow-md flex items-center justify-between"
-        style={{
-          boxShadow: '0 -6px 0 0 var(--color-primary), 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleBackClick}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors flex items-center gap-1.5"
-        >
-          <ArrowLeft size={22} />
-          <span className="font-bold text-base">Crear Usuario</span>
-        </button>
-        <div className="w-6" /> {/* Spacer */}
-      </div>
+      <PageHeader title="Crear Usuario" onBack={handleBackClick} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6">
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
@@ -539,7 +503,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
             </label>
 
             <span className="text-xs text-gray-500 font-medium mt-2.5 text-center">
-              {photoUrl ? 'Toca la foto para cambiarla' : 'Toca para agregar una foto de perfil (Opcional)'}
+              {photoUrl ? 'Toca la imagen para cambiarla' : 'Toca la imagen para agregar foto de perfil (Opcional)'}
             </span>
 
             {photoUrl && (
@@ -674,7 +638,13 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
               name="phone"
               control={control}
               rules={{
-                required: watchedCreateAccount ? 'El teléfono es requerido para crear la cuenta' : false,
+                validate: (val) => {
+                  if (!watch('createAccount')) return true;
+                  if (!val || !val.trim()) return 'El teléfono es obligatorio para crear la cuenta de acceso';
+                  const clean = val.replace(/\D/g, '');
+                  if (clean.length < 7) return 'El teléfono debe tener al menos 7 dígitos';
+                  return true;
+                },
               }}
               render={({ field }) => (
                 <PhoneInput
@@ -683,7 +653,10 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
                   dialCode={watch('dialCodePhone') || '+57'}
                   phone={field.value}
                   onDialCodeChange={(code) => setValue('dialCodePhone', code, { shouldDirty: true })}
-                  onPhoneChange={field.onChange}
+                  onPhoneChange={(val) => {
+                    field.onChange(val);
+                    if (watchedCreateAccount) trigger('phone');
+                  }}
                   error={errors.phone?.message}
                 />
               )}
@@ -696,10 +669,18 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
               placeholder="Correo electrónico del usuario"
               error={errors.email?.message}
               {...register('email', {
-                required: watchedCreateAccount ? 'El correo es requerido para crear la cuenta' : false,
-                pattern: {
-                  value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                  message: 'Ingrese un correo electrónico válido',
+                validate: (val) => {
+                  if (!watch('createAccount')) {
+                    if (val && !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(val)) {
+                      return 'Ingrese un correo electrónico válido';
+                    }
+                    return true;
+                  }
+                  if (!val || !val.trim()) return 'El correo electrónico es obligatorio para crear la cuenta de acceso';
+                  if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(val)) {
+                    return 'Ingrese un correo electrónico válido';
+                  }
+                  return true;
                 },
               })}
             />
@@ -724,7 +705,7 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
               <Controller
                 name="state"
                 control={control}
-                rules={{ required: 'Requerido' }}
+                rules={{ required: 'El estado es obligatorio' }}
                 render={({ field }) => (
                   <SelectSearch
                     label="Estado Inicial"
@@ -768,16 +749,11 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
                     </span>
                   </div>
                   
-                  {!isRequiredInfoCompleteForAccount ? (
-                    <p className="text-xs text-amber-700 font-medium mt-1 flex items-center gap-1">
-                      <AlertCircle size={13} className="shrink-0" />
-                      Completa nombres, ambos apellidos, teléfono y correo para habilitar.
-                    </p>
-                  ) : (
-                    <p className="text-xs text-gray-500 mt-0.5">
-                      Habilita el inicio de sesión para este usuario con credenciales personalizadas.
-                    </p>
-                  )}
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {watchedCreateAccount
+                      ? 'Se crearán credenciales de acceso con el correo y teléfono indicados.'
+                      : 'Habilita credenciales (usuario y contraseña) para iniciar sesión.'}
+                  </p>
                 </div>
               </div>
 

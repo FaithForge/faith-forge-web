@@ -12,6 +12,7 @@ import dayjs from 'dayjs';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 
@@ -23,7 +24,7 @@ const RegistrationDashboard = () => {
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
-  const { data: kids, loading, currentPage, totalPages } = useAppSelector((state) => state.kidSlice);
+  const { data: kids, loading, currentPage, totalPages, needsRefresh } = useAppSelector((state) => state.kidSlice);
   
   const {
     isConfigured,
@@ -36,20 +37,57 @@ const RegistrationDashboard = () => {
     currentCampus,
   } = useChurchMeetingStatus();
 
-  // Search logic with debounce
+  const hasInitializedRef = useRef(false);
+  const prevMeetingIdRef = useRef<string | undefined>(currentMeeting?.id);
+  const prevSearchTextRef = useRef<string>('');
+
+  // Search logic with debounce and automatic refresh on mutations
   useEffect(() => {
-    if (!isConfigured || shouldBlockKids) return; // Don't search if not configured or blocked
-    
+    if (!isConfigured || shouldBlockKids) return;
+
+    const isMeetingChanged = prevMeetingIdRef.current !== undefined && prevMeetingIdRef.current !== currentMeeting?.id;
+    const isSearchChanged = searchText !== prevSearchTextRef.current;
+
+    // Si ya tenemos lista en Redux, NO hay cambios en la data (needsRefresh === false),
+    // es el primer montaje y no cambió la búsqueda ni el servicio:
+    // MANTENER la lista intacta sin volver a llamar a la API
+    if (!hasInitializedRef.current && kids.length > 0 && !needsRefresh && !isSearchChanged && !isMeetingChanged) {
+      hasInitializedRef.current = true;
+      prevMeetingIdRef.current = currentMeeting?.id;
+      prevSearchTextRef.current = searchText;
+      return;
+    }
+
+    // Si ya inicializó y ni la búsqueda, ni el servicio, ni los datos cambiaron:
+    if (hasInitializedRef.current && !needsRefresh && !isSearchChanged && !isMeetingChanged) {
+      return;
+    }
+
+    hasInitializedRef.current = true;
+    prevMeetingIdRef.current = currentMeeting?.id;
+    prevSearchTextRef.current = searchText;
+
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    
+
+    const delay = isSearchChanged ? 400 : 0;
+
     timeoutRef.current = setTimeout(() => {
-      dispatch(GetKids({ findText: searchText }));
-    }, 500);
+      dispatch(GetKids({ findText: searchText.trim() }));
+    }, delay);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
-  }, [searchText, isConfigured, shouldBlockKids, dispatch, currentMeeting?.id]);
+  }, [searchText, isConfigured, shouldBlockKids, dispatch, currentMeeting?.id, needsRefresh]);
+
+  const handleRefreshKids = async () => {
+    if (!isConfigured || shouldBlockKids) return;
+    try {
+      await dispatch(GetKids({ findText: searchText })).unwrap();
+    } catch {
+      // ignore
+    }
+  };
 
   // Infinite Scroll logic via IntersectionObserver
   const handleLoadMore = React.useCallback(async () => {
@@ -93,6 +131,7 @@ const RegistrationDashboard = () => {
           placeholder={shouldBlockKids ? "Búsqueda no disponible" : "Buscar niño por nombre o código"}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
+          onClear={() => setSearchText('')}
           wrapperClassName="mb-0"
           className={`border-0 shadow-sm text-base focus:ring-0 transition-colors ${
             shouldBlockKids || !isConfigured ? 'bg-gray-100 opacity-70 cursor-not-allowed text-gray-500' : 'bg-white'
@@ -150,98 +189,101 @@ const RegistrationDashboard = () => {
 
       {/* Lista de Niños */}
       {!shouldBlockKids && (
-        <div className="flex flex-col gap-2 mt-1">
-          {loading && isConfigured && <div className="flex justify-center p-4"><Loader2 className="animate-spin text-primary" size={24} /></div>}
-          
-          {!loading && kids.length === 0 && isConfigured && (
-            <div className="text-center p-8 text-gray-500">
-              {searchText ? "No se encontraron niños." : "Busca un niño por nombre o documento."}
-            </div>
-          )}
-
-          {!loading && kids.map((kid) => {
-            const isRegistered = !!kid.currentKidRegistration;
-            const overage = isKidOverage(kid);
-            const isBday = (() => {
-              if (!kid.birthday) return false;
-              const str = typeof kid.birthday === 'string' ? kid.birthday : new Date(kid.birthday).toISOString();
-              if (str.length >= 10 && str.includes('-')) {
-                const parts = str.substring(0, 10).split('-');
-                if (parts.length === 3) {
-                  return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
-                }
-              }
-              return dayjs(kid.birthday).format('MM-DD') === dayjs().format('MM-DD');
-            })();
-
-            let subtitleText = `Codigo: ${kid.faithForgeId || kid.id}`;
-            let showOverageStyle = false;
-
-            if (isRegistered) {
-              subtitleText = `Codigo: ${kid.faithForgeId || kid.id}${
-                kid.currentKidRegistration?.date ? ` • a las ${dayjs(kid.currentKidRegistration.date).format('h:mm:ss A')}` : ''
-              }`;
-            } else if (overage) {
-              subtitleText = KID_AGE_COPY.maxAgeDashboardSubtitle;
-              showOverageStyle = true;
-            }
-
-            const badgeElement = (
-              <div className="flex items-center gap-1.5 shrink-0">
-                {isBday && (
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
-                    🎂 Hoy
-                  </span>
-                )}
-                {isRegistered ? (
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                    Registrado
-                  </span>
-                ) : overage ? (
-                  <span className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
-                    {KID_AGE_COPY.maxAgeBadge}
-                  </span>
-                ) : null}
+        <PullToRefresh onRefresh={handleRefreshKids} disabled={loading}>
+          <div className="flex flex-col gap-2 mt-1">
+            {loading && isConfigured && <div className="flex justify-center p-4"><Loader2 className="animate-spin text-primary" size={24} /></div>}
+            
+            {!loading && kids.length === 0 && isConfigured && (
+              <div className="text-center p-8 text-gray-500">
+                {searchText ? "No se encontraron niños." : "Busca un niño por nombre o documento."}
               </div>
-            );
+            )}
 
-            return (
-              <Cell 
-                key={kid.id}
-                title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-                subtitle={subtitleText}
-                gender={kid.gender === 'F' ? 'F' : 'M'}
-                photoUrl={kid.photoUrl}
-                isRegistered={isRegistered}
-                isOverage={showOverageStyle}
-                badge={badgeElement}
-                onClick={() => {
-                  if (isRegistered || !overage || isAdmin) {
-                    dispatch(updateCurrentKid(kid));
-                    navigate(APP_ROUTES.kidRegistration.checkIn(kid.id));
+            {!loading && kids.map((kid) => {
+              const isRegistered = !!kid.currentKidRegistration;
+              const overage = isKidOverage(kid);
+              const isBday = (() => {
+                if (!kid.birthday) return false;
+                const str = typeof kid.birthday === 'string' ? kid.birthday : new Date(kid.birthday).toISOString();
+                if (str.length >= 10 && str.includes('-')) {
+                  const parts = str.substring(0, 10).split('-');
+                  if (parts.length === 3) {
+                    return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
                   }
-                }}
-              />
-            );
-          })}
+                }
+                return dayjs(kid.birthday).format('MM-DD') === dayjs().format('MM-DD');
+              })();
 
-          {/* Infinite Scroll Sentinel & Load More Spinner */}
-          {!loading && kids.length > 0 && (
-            <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
-              {loadingMore && (
-                <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
-                  <Loader2 size={18} className="animate-spin text-primary" />
-                  <span>Cargando más niños...</span>
+              let subtitleText = `Código: ${kid.faithForgeId || kid.id}`;
+              let showOverageStyle = false;
+
+              if (isRegistered) {
+                subtitleText = `Código: ${kid.faithForgeId || kid.id}${
+                  kid.currentKidRegistration?.date ? ` • a las ${dayjs(kid.currentKidRegistration.date).format('h:mm:ss A')}` : ''
+                }`;
+              } else if (overage) {
+                subtitleText = KID_AGE_COPY.maxAgeDashboardSubtitle;
+                showOverageStyle = true;
+              }
+
+              const badgeElement = (
+                <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                  {isBday && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
+                      🎂 Hoy
+                    </span>
+                  )}
+                  {overage && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
+                      {KID_AGE_COPY.maxAgeBadge}
+                    </span>
+                  )}
+                  {isRegistered && (
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                      Registrado
+                    </span>
+                  )}
                 </div>
-              )}
-              {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
-                <p className="text-xs font-medium text-gray-400 py-3">
-                  Hemos llegado al final de la lista
-                </p>
-              )}
-            </div>
-          )}
-        </div>
+              );
+
+              return (
+                <Cell 
+                  key={kid.id}
+                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+                  subtitle={subtitleText}
+                  gender={kid.gender === 'F' ? 'F' : 'M'}
+                  photoUrl={kid.photoUrl}
+                  isRegistered={isRegistered}
+                  isOverage={showOverageStyle}
+                  badge={badgeElement}
+                  onClick={() => {
+                    if (isRegistered || !overage || isAdmin) {
+                      dispatch(updateCurrentKid(kid));
+                      navigate(APP_ROUTES.kidRegistration.checkIn(kid.id));
+                    }
+                  }}
+                />
+              );
+            })}
+
+            {/* Infinite Scroll Sentinel & Load More Spinner */}
+            {!loading && kids.length > 0 && (
+              <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
+                    <Loader2 size={18} className="animate-spin text-primary" />
+                    <span>Cargando más niños...</span>
+                  </div>
+                )}
+                {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
+                  <p className="text-xs font-medium text-gray-400 py-3">
+                    Hemos llegado al final de la lista
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </PullToRefresh>
       )}
       
     </div>

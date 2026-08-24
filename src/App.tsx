@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'sonner';
+import { Toaster, toast } from 'sonner';
 import NetworkStatusBanner from '@/components/common/NetworkStatusBanner';
 import MainLayout from '@/components/layout/MainLayout';
 import RegistrationDashboard from '@/views/kid-registration/RegistrationDashboard';
@@ -19,7 +19,8 @@ import { APP_ROUTES } from '@/config/routes';
 import LoginView from '@/views/auth/LoginView';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import PrivateRoute from '@/components/auth/PrivateRoute';
-import { useAppSelector } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { userRolesNavBarConfig } from '@/components/layout/TopBar';
 
 const IndexRedirect = () => {
@@ -34,6 +35,18 @@ const IndexRedirect = () => {
 };
 
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      dispatch(logout());
+      toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+    };
+
+    window.addEventListener('auth:unauthorized', handleUnauthorized);
+    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+  }, [dispatch]);
+
   return (
     <>
       <NetworkStatusBanner />

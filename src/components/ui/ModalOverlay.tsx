@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 type ModalOverlayProps = {
   open: boolean;
@@ -28,6 +29,8 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
   backdropClassName = '',
   closeOnBackdropClick = true,
 }) => {
+  useModalBackClose(open, onClose);
+
   const [isMounted, setIsMounted] = useState(false);
   const [shouldRender, setShouldRender] = useState(open);
   const [isVisible, setIsVisible] = useState(open);

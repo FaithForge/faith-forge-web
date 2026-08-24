@@ -9,6 +9,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import TagKidGroup from '@/components/ui/TagKidGroup';
+import PageHeader from '@/components/ui/PageHeader';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { ScanCodeKidRegistration, CreateKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
@@ -18,25 +19,9 @@ import { capitalizeWords } from '@/libs/utils/text';
 import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import StepProgress from '@/components/ui/StepProgress';
 
-const StepProgress = ({ currentStep }: { currentStep: number }) => {
-  return (
-    <div className="bg-white px-4 py-4 border-b border-gray-100 sticky top-0 z-20 shadow-sm">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary">
-          {currentStep === 1 ? 'Paso 1: Escanear' : currentStep === 2 ? 'Paso 2: Selección' : 'Paso 3: Observaciones'}
-        </span>
-        <span className="text-xs font-medium text-gray-400">{currentStep} / 3</span>
-      </div>
-      <div className="w-full bg-gray-100 rounded-full h-2">
-        <div 
-          className="bg-primary h-2 rounded-full transition-all duration-500 ease-out" 
-          style={{ width: `${(currentStep / 3) * 100}%` }}
-        />
-      </div>
-    </div>
-  );
-};
+const SCAN_STEPS = ['Escanear', 'Selección', 'Observaciones'];
 
 const ScannerView = () => {
   const navigate = useNavigate();
@@ -68,25 +53,6 @@ const ScannerView = () => {
       dispatch(cleanScanQRSearch());
     };
   }, [dispatch]);
-
-  // Intercept browser back button
-  useEffect(() => {
-    if (step > 1) {
-      window.history.pushState(null, '', window.location.href);
-      const handlePopState = () => {
-        if (step === 3) {
-          // Desde paso 3 regresa directamente a paso 2 sin alerta
-          setStep(2);
-        } else if (step === 2) {
-          // Desde paso 2 muestra el modal de alerta antes de salir
-          setShowCancelModal(true);
-          setPendingNavigation('back');
-        }
-      };
-      window.addEventListener('popstate', handlePopState);
-      return () => window.removeEventListener('popstate', handlePopState);
-    }
-  }, [step]);
 
   const handleCancelClick = () => {
     if (step === 3) {
@@ -226,18 +192,9 @@ const ScannerView = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      <div className="bg-primary text-primary-foreground px-4 py-2 sticky top-0 z-30 shadow-xs flex items-center justify-between border-t border-white/15">
-        <button 
-          onClick={handleCancelClick}
-          className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold"
-        >
-          <ArrowLeft size={18} />
-          <span>Registro por QR</span>
-        </button>
-        <div className="w-6" /> {/* Spacer */}
-      </div>
+      <PageHeader title="Registro por QR" onBack={handleCancelClick} />
 
-      <StepProgress currentStep={step} />
+      <StepProgress currentStep={step} steps={SCAN_STEPS} />
 
       <div className="p-4">
         

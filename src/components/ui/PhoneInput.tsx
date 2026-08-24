@@ -96,6 +96,8 @@ interface PhoneInputProps {
   className?: string;
 }
 
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+
 const DEFAULT_DIAL_CODE = '+57';
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -110,6 +112,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   className,
 }) => {
   const [open, setOpen] = useState(false);
+  useModalBackClose(open, () => setOpen(false));
   const [search, setSearch] = useState('');
 
   const selectedCountry = useMemo(() => {
@@ -190,49 +193,62 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
 
       {/* Drawer de Búsqueda de Indicativo */}
-      <Drawer.Root open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root handleOnly open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[200]" />
+          <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content
-            className="bg-gray-50 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-[201] outline-none max-h-[85vh]"
+            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85vh]"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             {/* Header del Drawer */}
-            <div className="p-4 bg-white rounded-t-[20px] border-b border-gray-100 shadow-sm z-10 flex flex-col gap-3">
-              <div className="flex items-center justify-between">
-                <div className="w-8" />
-                <div className="flex flex-col items-center">
-                  <div className="w-12 h-1.5 rounded-full bg-gray-300 mb-2" />
-                  <h3 className="font-bold text-gray-800 text-base uppercase tracking-wide">
-                    Seleccionar Indicativo
-                  </h3>
-                </div>
+            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 flex flex-col sticky top-0">
+              {/* Title Row */}
+              <div className="px-4 py-3.5 w-full flex items-center justify-between">
+                <div className="w-8 shrink-0" />
+                <h3 className="font-bold text-gray-800 text-base uppercase tracking-wide flex-1 text-center truncate px-2">
+                  Seleccionar Indicativo
+                </h3>
                 <button
                   type="button"
                   onClick={() => setOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
+                  className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Barra de Búsqueda */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                  <Search size={18} className="text-gray-400" />
+              <div className="px-4 pb-3 pt-1">
+                <div className="relative flex items-center">
+                  <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Search size={18} className="text-gray-400" />
+                  </div>
+                  <input
+                    type="text"
+                    className="block w-full pl-10 pr-10 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-text-main focus:border-primary focus:bg-white transition-colors outline-none text-sm font-medium"
+                    placeholder="Buscar país o indicativo (+57, Colombia)..."
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    autoComplete="off"
+                    autoCorrect="off"
+                    autoCapitalize="off"
+                    spellCheck={false}
+                    autoFocus
+                  />
+                  {search && (
+                    <button
+                      type="button"
+                      onClick={() => setSearch('')}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
+                      tabIndex={-1}
+                      aria-label="Limpiar búsqueda"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600 transition-transform active:scale-90">
+                        <X size={12} strokeWidth={2.5} />
+                      </div>
+                    </button>
+                  )}
                 </div>
-                <input
-                  type="text"
-                  className="block w-full pl-10 pr-3 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-text-main focus:border-primary focus:bg-white transition-colors outline-none text-sm font-medium"
-                  placeholder="Buscar país o indicativo (+57, Colombia)..."
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  autoFocus
-                />
               </div>
             </div>
 

@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import ModalOverlay from '@/components/ui/ModalOverlay';
 import Button from '@/components/ui/Button';
 import PhoneInput from '@/components/ui/PhoneInput';
+import SelectSearch from '@/components/ui/SelectSearch';
 import { toast } from 'sonner';
 import { X } from 'lucide-react';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { UpdateKidGuardianPhone } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
+import { kidRelationSelect } from '@/libs/models/KidChurch';
 
 export interface GuardianToUpdate {
   id: string;
   firstName: string;
   lastName: string;
   fullName: string;
+  gender?: string;
   dialCodePhone?: string;
   phone: string;
   relation: string;
@@ -35,12 +38,25 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
   const [isLoading, setIsLoading] = useState(false);
   const [dialCode, setDialCode] = useState('+57');
   const [phone, setPhone] = useState('');
+  const [relation, setRelation] = useState('');
   const [error, setError] = useState('');
+
+  // Filtrar lista de relaciones según el género si está disponible, o mostrar todas
+  const availableRelations = useMemo(() => {
+    if (guardian?.gender) {
+      const filtered = kidRelationSelect
+        .filter((r) => r.gender === guardian.gender)
+        .map((r) => ({ id: r.value, name: r.label }));
+      if (filtered.length > 0) return filtered;
+    }
+    return kidRelationSelect.map((r) => ({ id: r.value, name: r.label }));
+  }, [guardian?.gender]);
 
   useEffect(() => {
     if (guardian) {
       setDialCode(guardian.dialCodePhone || '+57');
       setPhone(sanitizePhoneDigits(guardian.phone));
+      setRelation(guardian.relation || '');
       setError('');
     }
   }, [guardian]);
@@ -59,6 +75,11 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
       return;
     }
 
+    if (!relation) {
+      toast.error('Por favor seleccione la relación con el niño');
+      return;
+    }
+
     setError('');
     setIsLoading(true);
 
@@ -67,7 +88,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
         id: guardian.id,
         dialCodePhone: dialCode,
         phone: cleanPhone,
-        relation: guardian.relation as any,
+        relation: relation as any,
         kidId: guardian.kidId,
       })).unwrap();
 
@@ -78,12 +99,12 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
         return;
       }
 
-      toast.success(`Teléfono de ${guardian.fullName} actualizado`);
+      toast.success(`Datos de ${guardian.fullName} actualizados con éxito`);
       // Actualizar la vista re-consultando el detalle del niño
       await dispatch(GetKid({ id: guardian.kidId }));
       onClose();
     } catch (err: any) {
-      const errMsg = err?.message || err?.error || err?.response?.data?.message || 'Error al actualizar el teléfono';
+      const errMsg = err?.message || err?.error || err?.response?.data?.message || 'Error al actualizar el acudiente';
       toast.error(errMsg);
     } finally {
       setIsLoading(false);
@@ -110,7 +131,19 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
 
         {/* Formulario */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+          {/* Selector de Parentesco / Relación */}
+          <SelectSearch
+            label="Parentesco / Relación"
+            required
+            value={relation}
+            onChange={(val) => setRelation(val)}
+            options={availableRelations}
+            placeholder="Seleccionar parentesco..."
+          />
+
+          {/* Teléfono */}
           <PhoneInput 
+            label="Teléfono"
             dialCode={dialCode}
             phone={phone}
             onDialCodeChange={(code) => setDialCode(code)}

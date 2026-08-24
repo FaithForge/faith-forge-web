@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { 
   GetUserByNationalId, 
@@ -301,23 +302,7 @@ const ModifyUserView: React.FC = () => {
 
   return (
     <div className="min-h-full bg-slate-50/60 pb-28">
-      {/* TopBar Header */}
-      <div 
-        className="bg-primary text-primary-foreground p-4 sticky -top-1 z-30 shadow-md flex items-center justify-between"
-        style={{
-          boxShadow: '0 -6px 0 0 var(--color-primary), 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={handleBack}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors flex items-center gap-1.5"
-        >
-          <ArrowLeft size={22} />
-          <span className="font-bold text-base">Modificar Usuario</span>
-        </button>
-        <div className="w-6" /> {/* Spacer */}
-      </div>
+      <PageHeader title="Modificar Usuario" onBack={handleBack} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
         
@@ -353,6 +338,7 @@ const ModifyUserView: React.FC = () => {
                 placeholder="Escribir número de documento..."
                 value={searchNationalId}
                 onChange={(e) => setSearchNationalId(e.target.value)}
+                onClear={() => setSearchNationalId('')}
                 autoFocus
               />
             </div>

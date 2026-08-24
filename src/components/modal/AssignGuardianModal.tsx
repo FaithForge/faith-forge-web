@@ -12,6 +12,7 @@ import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import {
   IdType,
   UserIdType,
@@ -43,6 +44,8 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
   onClose,
   kidId,
 }) => {
+  useModalBackClose(open, onClose);
+
   const dispatch = useAppDispatch();
   const { current: existingGuardian, loading: guardianLoading } = useAppSelector(
     (state) => state.kidGuardianSlice
@@ -54,7 +57,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
   const [lastName, setLastName] = useState('');
   const [dialCodePhone, setDialCodePhone] = useState('+57');
   const [phone, setPhone] = useState('');
-  const [gender, setGender] = useState<string>('F');
+  const [gender, setGender] = useState<string>('');
   const [relation, setRelation] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -68,7 +71,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
       setLastName('');
       setDialCodePhone('+57');
       setPhone('');
-      setGender('F');
+      setGender('');
       setRelation('');
     }
   }, [open, dispatch]);
@@ -101,7 +104,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     setLastName('');
     setDialCodePhone('+57');
     setPhone('');
-    setGender('F');
+    setGender('');
     setRelation('');
   };
 
@@ -128,6 +131,10 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     }
     if (!phone.trim() || phone.trim().length < 7) {
       toast.error('Por favor ingrese un número de teléfono válido (mínimo 7 dígitos)');
+      return;
+    }
+    if (!gender) {
+      toast.error('Por favor seleccione el género del acudiente');
       return;
     }
     if (!relation) {
@@ -165,22 +172,23 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
   };
 
   return (
-    <Drawer.Root open={open} onOpenChange={(o) => !o && onClose()}>
+    <Drawer.Root handleOnly open={open} onOpenChange={(o) => !o && onClose()}>
       <Drawer.Portal>
         <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[150]" />
-        <Drawer.Content className="bg-surface flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-[151] max-h-[90vh] outline-none">
-          <div className="p-4 bg-white rounded-t-[20px] border-b border-gray-100 shadow-sm flex items-center justify-between">
-            <div className="w-8" />
-            <div className="flex flex-col items-center">
-              <div className="w-12 h-1.5 rounded-full bg-gray-300 mb-2" />
-              <Drawer.Title className="font-bold text-gray-800 text-base uppercase tracking-wide">
-                Asignar Nuevo Acudiente
-              </Drawer.Title>
-            </div>
+        <Drawer.Content 
+          className="bg-surface flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] max-h-[90vh] outline-none"
+          onCloseAutoFocus={(e) => e.preventDefault()}
+        >
+          {/* Header */}
+          <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 flex items-center justify-between px-4 py-3.5 sticky top-0">
+            <div className="w-8 shrink-0" />
+            <Drawer.Title className="font-bold text-gray-800 text-base flex-1 text-center truncate px-2">
+              Asignar Nuevo Acudiente
+            </Drawer.Title>
             <button
               type="button"
               onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 transition-colors"
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
             >
               <X size={18} />
             </button>
@@ -255,14 +263,14 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               placeholder="Escribir nombre..."
             />
 
-            {/* Apellido */}
+            {/* Apellidos */}
             <Input
-              label="Apellido"
+              label="Apellidos"
               required
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               disabled={!!existingGuardian}
-              placeholder="Escribir apellido..."
+              placeholder="Escribir apellidos..."
             />
 
             {/* Teléfono */}

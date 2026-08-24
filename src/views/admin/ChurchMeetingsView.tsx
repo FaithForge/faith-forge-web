@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import PageHeader from '@/components/ui/PageHeader';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { 
   GetChurchCampuses, 
@@ -355,23 +356,7 @@ const ChurchMeetingsView: React.FC = () => {
 
   return (
     <div className="min-h-full bg-slate-50/60 pb-28">
-      {/* TopBar Header con botón de regresar */}
-      <div 
-        className="bg-primary text-primary-foreground p-4 sticky -top-1 z-30 shadow-md flex items-center justify-between"
-        style={{
-          boxShadow: '0 -6px 0 0 var(--color-primary), 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-        }}
-      >
-        <button
-          type="button"
-          onClick={() => navigate(APP_ROUTES.admin.root)}
-          className="p-1 hover:bg-white/10 rounded-full transition-colors flex items-center gap-1.5"
-        >
-          <ArrowLeft size={22} />
-          <span className="font-bold text-base">Estado de Servicios</span>
-        </button>
-        <div className="w-6" /> {/* Spacer */}
-      </div>
+      <PageHeader title="Estado de Servicios" onBack={() => navigate(APP_ROUTES.admin.root)} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {/* Card de Encabezado Informativo */}

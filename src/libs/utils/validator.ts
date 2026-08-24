@@ -5,7 +5,7 @@
  * @returns {boolean | string} True if valid, or error message string if invalid.
  */
 export const validateTwoLastNames = (value?: string) => {
-  if (!value || !value.trim()) return 'El apellido es requerido';
+  if (!value || !value.trim()) return 'Los apellidos son requeridos';
   const parts = value.trim().split(/\s+/).filter(Boolean);
   if (parts.length < 2) {
     return 'Se deben colocar ambos apellidos';

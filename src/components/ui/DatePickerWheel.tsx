@@ -114,6 +114,8 @@ const WheelColumn = ({ options, value, onChange, title }: any) => {
   );
 };
 
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+
 const DatePickerWheel = ({ 
   label, 
   required, 
@@ -124,6 +126,7 @@ const DatePickerWheel = ({
   className 
 }: DatePickerWheelProps) => {
   const [open, setOpen] = useState(false);
+  useModalBackClose(open, () => setOpen(false));
   
   const min = dayjs(minDate);
   const max = dayjs(maxDate);
@@ -193,7 +196,7 @@ const DatePickerWheel = ({
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       
-      <Drawer.Root open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root handleOnly open={open} onOpenChange={setOpen} nested>
         <Drawer.Trigger asChild>
           <div className="relative w-full cursor-pointer">
             <input 
@@ -214,18 +217,16 @@ const DatePickerWheel = ({
           </div>
         </Drawer.Trigger>
         <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/40 z-[200]" />
+          <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content 
-            className="bg-gray-50 flex flex-col rounded-t-[20px] fixed bottom-0 left-0 right-0 z-[201] outline-none max-h-[85vh]"
+            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85vh]"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            <div className="p-4 bg-white rounded-t-[20px] rounded-b-3xl shadow-sm z-10">
-              <div className="mx-auto w-12 h-1.5 flex-shrink-0 rounded-full bg-gray-300 mb-4" />
-              <div className="flex items-center justify-between mb-2">
-                <button type="button" onClick={() => setOpen(false)} className="text-gray-500 font-medium p-2">Cancelar</button>
-                <h3 className="font-bold text-gray-800">Seleccionar Fecha</h3>
-                <button type="button" onClick={handleConfirm} className="text-primary font-bold p-2">Confirmar</button>
-              </div>
+            {/* Header */}
+            <div className="w-full bg-white rounded-t-[24px] rounded-b-3xl shadow-xs z-10 flex items-center justify-between px-4 py-3.5 sticky top-0">
+              <button type="button" onClick={() => setOpen(false)} className="text-gray-500 font-medium py-1 px-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">Cancelar</button>
+              <h3 className="font-bold text-gray-800 text-base">Seleccionar Fecha</h3>
+              <button type="button" onClick={handleConfirm} className="text-primary font-bold py-1 px-2 hover:bg-primary/10 rounded-lg transition-colors text-sm">Confirmar</button>
             </div>
             
             <div className="flex px-4 py-6 bg-white mt-2">

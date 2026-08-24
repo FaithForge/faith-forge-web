@@ -42,7 +42,7 @@ const scanQRKidGuardianSlice = createSlice({
       }
     });
     builder.addCase(ScanCodeKidRegistration.rejected, (state) => {
-      state.error = 'Error en el Codigo QR. No existe en la base de datos';
+      state.error = 'Error en el Código QR. No existe en la base de datos';
       state.loading = false;
     });
   },

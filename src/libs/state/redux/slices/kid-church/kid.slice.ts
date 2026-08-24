@@ -8,6 +8,10 @@ import {
   GetMoreKids,
   UpdateKid,
 } from '../../thunks/kid-church/kid.thunk';
+import {
+  CreateKidRegistration,
+  RemoveKidRegistration,
+} from '../../thunks/kid-church/kid-registration.thunk';
 
 const initialState: IKids = {
   data: [],
@@ -16,6 +20,7 @@ const initialState: IKids = {
   loading: false,
   currentPage: 1,
   totalPages: 0,
+  needsRefresh: false,
 };
 
 const kidSlice = createSlice({
@@ -31,10 +36,15 @@ const kidSlice = createSlice({
     updateCurrentKid: (state, action: PayloadAction<IKid>) => {
       state.current = action.payload;
     },
+    markKidsNeedsRefresh: (state) => {
+      state.needsRefresh = true;
+    },
+    resetKidsNeedsRefresh: (state) => {
+      state.needsRefresh = false;
+    },
   },
   extraReducers(builder) {
     builder.addCase(GetKids.pending, (state) => {
-      state.data = [];
       state.loading = true;
     });
     builder.addCase(GetKids.fulfilled, (state, action) => {
@@ -43,6 +53,7 @@ const kidSlice = createSlice({
       state.loading = false;
       state.currentPage = action.payload.currentPage;
       state.totalPages = action.payload.totalPages;
+      state.needsRefresh = false;
     });
     builder.addCase(GetKids.rejected, (state, action) => {
       state.data = [];
@@ -86,6 +97,7 @@ const kidSlice = createSlice({
       state.current = action.payload;
       state.error = undefined;
       state.loading = false;
+      state.needsRefresh = true;
     });
     builder.addCase(CreateKid.rejected, (state, action) => {
       const apiError = action.payload as IApiErrorResponse;
@@ -103,6 +115,7 @@ const kidSlice = createSlice({
       };
       state.error = undefined;
       state.loading = false;
+      state.needsRefresh = true;
     });
     builder.addCase(UpdateKid.rejected, (state, action) => {
       state.error = action.error.message;
@@ -114,13 +127,20 @@ const kidSlice = createSlice({
     builder.addCase(DeleteKid.fulfilled, (state) => {
       state.error = undefined;
       state.loading = false;
+      state.needsRefresh = true;
     });
     builder.addCase(DeleteKid.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
     });
+    builder.addCase(CreateKidRegistration.fulfilled, (state) => {
+      state.needsRefresh = true;
+    });
+    builder.addCase(RemoveKidRegistration.fulfilled, (state) => {
+      state.needsRefresh = true;
+    });
   },
 });
 
-export const { loadingKidEnable, loadingKidDisable, updateCurrentKid } = kidSlice.actions;
+export const { loadingKidEnable, loadingKidDisable, updateCurrentKid, markKidsNeedsRefresh, resetKidsNeedsRefresh } = kidSlice.actions;
 export default kidSlice.reducer;

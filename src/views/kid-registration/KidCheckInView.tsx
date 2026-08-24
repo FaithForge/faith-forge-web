@@ -14,6 +14,7 @@ import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import TagKidGroup from '@/components/ui/TagKidGroup';
+import PageHeader from '@/components/ui/PageHeader';
 import UpdateGuardianModal from '@/components/modal/UpdateGuardianModal';
 import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
 import { APP_ROUTES } from '@/config/routes';
@@ -22,6 +23,7 @@ import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch'
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import Alert from '@/components/ui/Alert';
+import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
 
 dayjs.locale('es');
 
@@ -78,12 +80,14 @@ const KidCheckInView = () => {
     const fullName = capitalizeWords(`${firstName} ${lastName}`.trim());
     const relationLabel = getTranslatedRelation(rawRelation);
     const displayPhone = `${dialCodePhone} ${rawPhone}`.trim();
+    const rawGender = g?.gender || rel?.gender || '';
 
     return {
       id: g?.id || rel?.id,
       fullName,
       firstName,
       lastName,
+      gender: rawGender,
       relation: relationLabel,
       dialCodePhone,
       rawPhone,
@@ -144,7 +148,7 @@ const KidCheckInView = () => {
   }, [kid?.birthday]);
 
   const isEpsUnknown = useMemo(() => {
-    if (!kid?.healthSecurityEntity) return true;
+    if (!kid?.healthSecurityEntity) return false;
     const eps = kid.healthSecurityEntity.trim().toUpperCase();
     return eps === 'NO SABE' || eps === 'NO_SABE' || eps === 'NOSABE' || eps === 'SIN EPS';
   }, [kid?.healthSecurityEntity]);
@@ -280,87 +284,82 @@ const KidCheckInView = () => {
     ? (kid?.currentKidRegistration?.groupId !== kid?.kidGroup?.id ? false : kid?.staticGroup)
     : (isKidVolunteer ? false : kid?.staticGroup);
 
+  const rightMenuAction = (
+    <div className="relative">
+      <button
+        type="button"
+        onClick={() => setShowMenu((prev) => !prev)}
+        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/20 active:scale-95 transition-all text-primary-foreground"
+        title="Opciones"
+      >
+        <MoreVertical size={20} />
+      </button>
+
+      {showMenu && (
+        <>
+          <div 
+            className="fixed inset-0 z-40" 
+            onClick={() => setShowMenu(false)} 
+          />
+          <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-800 animate-in fade-in zoom-in-95 duration-150">
+            <button
+              type="button"
+              onClick={() => {
+                setShowMenu(false);
+                if (id) navigate(APP_ROUTES.kidRegistration.updateKid(id));
+              }}
+              className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
+            >
+              <Pencil size={17} className="text-gray-500" />
+              <span>Actualizar datos del niño</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setShowMenu(false);
+                setShowAssignGuardianModal(true);
+              }}
+              className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
+            >
+              <UserPlus size={17} className="text-gray-500" />
+              <span>Asignar nuevo acudiente</span>
+            </button>
+
+            {isAdmin && (
+              <>
+                <div className="border-t border-gray-100 my-1" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMenu(false);
+                    setShowDeleteKidModal(true);
+                  }}
+                  className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-sm font-semibold text-red-600 transition-colors"
+                >
+                  <Trash2 size={17} className="text-red-500" />
+                  <span>Eliminar niño</span>
+                </button>
+              </>
+            )}
+          </div>
+        </>
+      )}
+    </div>
+  );
+
   return (
     <div className="min-h-screen bg-gray-50 pb-20">
-      {/* Sub-Header con Menú de 3 Puntos */}
-      <div className="bg-primary text-primary-foreground px-4 py-2 flex items-center justify-between shadow-xs relative z-40 border-t border-white/15">
-        <button onClick={() => navigate(APP_ROUTES.kidRegistration.root)} className="flex items-center gap-1.5 opacity-90 hover:opacity-100 text-sm font-semibold">
-          <ArrowLeft size={18} />
-          <span>Detalle y Registro</span>
-        </button>
-
-        {/* Menú Desplegable de 3 Puntos */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => setShowMenu((prev) => !prev)}
-            className="p-1.5 rounded-full hover:bg-white/20 transition-colors"
-            title="Opciones"
-          >
-            <MoreVertical size={20} />
-          </button>
-
-          {showMenu && (
-            <>
-              <div 
-                className="fixed inset-0 z-40" 
-                onClick={() => setShowMenu(false)} 
-              />
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-gray-100 py-2 z-50 text-gray-800 animate-in fade-in zoom-in-95 duration-150">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMenu(false);
-                    if (id) navigate(APP_ROUTES.kidRegistration.updateKid(id));
-                  }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
-                >
-                  <Pencil size={17} className="text-gray-500" />
-                  <span>Actualizar datos del niño</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMenu(false);
-                    setShowAssignGuardianModal(true);
-                  }}
-                  className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
-                >
-                  <UserPlus size={17} className="text-gray-500" />
-                  <span>Asignar nuevo acudiente</span>
-                </button>
-
-                {isAdmin && (
-                  <>
-                    <div className="border-t border-gray-100 my-1" />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setShowMenu(false);
-                        setShowDeleteKidModal(true);
-                      }}
-                      className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-sm font-semibold text-red-600 transition-colors"
-                    >
-                      <Trash2 size={17} className="text-red-500" />
-                      <span>Eliminar niño</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            </>
-          )}
-        </div>
-      </div>
+      <PageHeader
+        title="Detalle y Registro"
+        onBack={() => navigate(APP_ROUTES.kidRegistration.root)}
+        rightAction={rightMenuAction}
+      />
 
       <div className="p-4 animate-in fade-in slide-in-from-right-4 duration-300">
-        {loading && (
-          <div className="flex justify-center p-8">
-            <Loader2 className="animate-spin text-primary" size={32} />
-          </div>
-        )}
+        {(!kid || kid.id !== id || (loading && !kid.relations)) && <KidCheckInSkeleton />}
 
-        {!loading && kid && (
+        {kid && kid.id === id && (!loading || !!kid.relations) && (
           <>
             {/* Banner de cumpleaños */}
             {isBirthdayToday && (
@@ -435,11 +434,26 @@ const KidCheckInView = () => {
                   <h4 className="text-sm text-gray-500 font-medium mt-0.5">
                     Código: {kid?.faithForgeId || kid?.id}{formattedAge ? ` • Edad: ${formattedAge}` : ''}
                   </h4>
-                  <div className="flex items-center gap-2 mt-2.5">
+                  <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                     <TagKidGroup
                       kidGroup={displayedGroupName}
                       staticGroup={isStaticGroup}
                     />
+                    {isOverage && (
+                      <span className="px-2.5 py-0.5 text-xs font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
+                        {KID_AGE_COPY.maxAgeBadge}
+                      </span>
+                    )}
+                    {isBirthdayToday && (
+                      <span className="px-2.5 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
+                        🎂 Hoy
+                      </span>
+                    )}
+                    {isRegistered && (
+                      <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                        Registrado
+                      </span>
+                    )}
                     {!isRegistered && (
                       <button
                         type="button"
@@ -587,6 +601,7 @@ const KidCheckInView = () => {
                               firstName: rel.firstName,
                               lastName: rel.lastName,
                               fullName: rel.fullName,
+                              gender: rel.gender,
                               dialCodePhone: rel.dialCodePhone,
                               phone: rel.rawPhone,
                               relation: rel.rawRelation,
@@ -665,6 +680,7 @@ const KidCheckInView = () => {
                                   firstName: rel.firstName,
                                   lastName: rel.lastName,
                                   fullName: rel.fullName,
+                                  gender: rel.gender,
                                   dialCodePhone: rel.dialCodePhone,
                                   phone: rel.rawPhone,
                                   relation: rel.rawRelation,

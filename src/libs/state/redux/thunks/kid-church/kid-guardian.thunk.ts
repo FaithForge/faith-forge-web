@@ -55,16 +55,18 @@ export const GetKidGuardian = createAsyncThunk(
   },
 );
 
+export interface IUpdateKidGuardian {
+  id: string;
+  phone: string;
+  dialCodePhone?: string;
+  relation?: KidGuardianRelationCodeEnum | string;
+  kidId?: string;
+}
+
 export const UpdateKidGuardianPhone = createAsyncThunk(
   'kid-church/UpdateKidGuardianPhone',
   async (
-    payload: {
-      id: string;
-      dialCodePhone: string;
-      phone: string;
-      relation: KidGuardianRelationCodeEnum.FATHER;
-      kidId: string;
-    },
+    payload: IUpdateKidGuardian,
     { getState, rejectWithValue },
   ) => {
     const { id, phone, dialCodePhone, relation, kidId } = payload;
