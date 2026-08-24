@@ -51,3 +51,22 @@ export const removeAccentsAndFormat = (text: string): string => {
 
   return text;
 };
+
+/**
+ * Formats a person's name to show their first name(s) and only the first last name,
+ * formatted in Camel/Title Case (e.g., "Juan Carlos Peña" from "JUAN CARLOS PEÑA MERLANO").
+ *
+ * @param {string} [firstName] - The first name(s).
+ * @param {string} [lastName] - The last name(s).
+ * @returns {string} The formatted name.
+ */
+export const formatPersonShortName = (firstName?: string, lastName?: string): string => {
+  const cleanFirst = capitalizeWords(firstName?.trim() || '');
+  const firstLastName = capitalizeWords(lastName?.trim()?.split(/\s+/)?.[0] || '');
+
+  if (cleanFirst && firstLastName) {
+    return `${cleanFirst} ${firstLastName}`.trim();
+  }
+  return cleanFirst || firstLastName || '';
+};
+

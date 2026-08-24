@@ -1,4 +1,5 @@
 import { isTokenExpired } from './jwt';
+import { formatPersonShortName } from './text';
 
 const BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
 
@@ -89,6 +90,9 @@ export const registerBiometrics = async ({
     const userId = new Uint8Array(16);
     window.crypto.getRandomValues(userId);
 
+    const formattedDisplayName =
+      formatPersonShortName(user?.firstName, user?.lastName) || username;
+
     const credential = (await navigator.credentials.create({
       publicKey: {
         challenge,
@@ -99,7 +103,7 @@ export const registerBiometrics = async ({
         user: {
           id: userId,
           name: username,
-          displayName: user?.firstName || username,
+          displayName: formattedDisplayName,
         },
         pubKeyCredParams: [
           { alg: -7, type: 'public-key' }, // ES256

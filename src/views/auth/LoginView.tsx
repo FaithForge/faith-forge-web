@@ -17,6 +17,7 @@ import {
   registerBiometrics,
   BiometricSessionData,
 } from '@/libs/utils/biometrics';
+import { formatPersonShortName } from '@/libs/utils/text';
 
 interface IFormLoginInput {
   username: string;
@@ -60,7 +61,9 @@ const LoginView = () => {
             token: session.token,
           })
         );
-        const name = session.user?.firstName || session.username;
+        const name =
+          formatPersonShortName(session.user?.firstName, session.user?.lastName) ||
+          session.username;
         toast.success(`¡Bienvenido de nuevo, ${name}!`);
         navigate('/', { replace: true });
       }
@@ -149,7 +152,15 @@ const LoginView = () => {
             <div className="flex flex-col gap-2 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl animate-in fade-in zoom-in-95 duration-300">
               <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 px-1">
                 <UserCheck size={16} className="text-emerald-600 shrink-0" />
-                <span className="truncate">Cuenta guardada: <strong>{registeredBioData.user?.firstName || registeredBioData.username}</strong></span>
+                <span className="truncate">
+                  Cuenta guardada:{' '}
+                  <strong>
+                    {formatPersonShortName(
+                      registeredBioData.user?.firstName,
+                      registeredBioData.user?.lastName
+                    ) || registeredBioData.username}
+                  </strong>
+                </span>
               </div>
               <Button
                 type="button"
