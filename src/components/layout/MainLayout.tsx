@@ -1,8 +1,9 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import BottomNav from './BottomNav';
 import TopBar, { userRolesNavBarConfig } from './TopBar';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
@@ -19,6 +20,7 @@ const MainLayout = () => {
   const dispatch = useAppDispatch();
   const mainRef = useRef<HTMLElement>(null);
   const prevPathnameRef = useRef<string>(pathname);
+  const [showExitModal, setShowExitModal] = useState(false);
 
   const token = useAppSelector((state) => state.authSlice.token);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -77,7 +79,7 @@ const MainLayout = () => {
     }
   }, [pathname, currentRole, navigate, isAdminRole]);
 
-  // Prevent back navigation from exiting or jumping away when on root dashboard views
+  // Prevent back navigation from exiting without confirmation when on root dashboard views
   useEffect(() => {
     const isRootDashboard =
       pathname === APP_ROUTES.kidRegistration.root ||
@@ -94,8 +96,9 @@ const MainLayout = () => {
       if (event.state?.modalOpen || window.history.state?.modalOpen) {
         return;
       }
-      // Re-push dashboard state so user remains on root dashboard
+      // Re-push dashboard state so user remains on root dashboard and open confirmation dialog
       window.history.pushState({ isDashboardRoot: true }, '', window.location.href);
+      setShowExitModal(true);
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -103,6 +106,15 @@ const MainLayout = () => {
       window.removeEventListener('popstate', handlePopState);
     };
   }, [pathname]);
+
+  const handleConfirmExit = () => {
+    // Attempt to close standalone PWA window
+    window.close();
+    // Fallback if window.close() is prevented by browser
+    if (!window.closed) {
+      window.location.replace('about:blank');
+    }
+  };
 
   // Restore scroll position when returning to a previous route, or scroll to top for new views
   useEffect(() => {
@@ -156,6 +168,18 @@ const MainLayout = () => {
 
         {/* Fixed bottom navigation */}
         <BottomNav />
+
+        {/* Modal de confirmación para salir de la aplicación */}
+        <ConfirmModal
+          open={showExitModal}
+          onOpenChange={setShowExitModal}
+          title="¿Deseas salir de la aplicación?"
+          description="¿Estás seguro de que deseas salir de Faith Forge?"
+          confirmText="Sí, salir"
+          cancelText="Permanecer"
+          type="warning"
+          onConfirm={handleConfirmExit}
+        />
       </div>
     </NavigationGuardProvider>
   );

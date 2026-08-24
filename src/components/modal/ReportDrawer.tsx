@@ -75,15 +75,46 @@ const defaultState = {
 };
 
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 const ReportDrawer = ({ open, onOpenChange }: ReportDrawerProps) => {
-  useModalBackClose(open, () => onOpenChange(false));
-
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
 
   const [state, setState] = useState(defaultState);
   const [isFinished, setIsFinished] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+
+  const hasData = Boolean(
+    state.group ||
+    state.printer ||
+    state.printerCables ||
+    state.printerCharger ||
+    state.scissors ||
+    state.markers ||
+    state.pencils ||
+    state.printerRolls ||
+    state.observationGeneral.trim()
+  );
+
+  const handleRequestClose = () => {
+    if (hasData && !isFinished) {
+      setShowCancelModal(true);
+    } else {
+      setState(defaultState);
+      setIsFinished(false);
+      onOpenChange(false);
+    }
+  };
+
+  useModalBackClose(open, handleRequestClose);
+
+  const handleConfirmDiscard = () => {
+    setState(defaultState);
+    setIsFinished(false);
+    setShowCancelModal(false);
+    onOpenChange(false);
+  };
 
   const updateState = (updates: Partial<typeof defaultState>) => {
     setState(prev => ({ ...prev, ...updates }));
@@ -102,12 +133,6 @@ const ReportDrawer = ({ open, onOpenChange }: ReportDrawerProps) => {
     if (!state.observationGeneral.trim()) return toast.error("Por favor escriba su observación general");
 
     setIsFinished(true);
-  };
-
-  const onFinish = () => {
-    setState(defaultState);
-    setIsFinished(false);
-    onOpenChange(false);
   };
 
   const generateReport = () => {
@@ -158,28 +183,33 @@ ${state.observationGeneral}`;
   };
 
   return (
-    <Drawer.Root handleOnly open={open} onOpenChange={onOpenChange}>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[150]" />
-        <Drawer.Content 
-          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] outline-none mt-20 max-h-[calc(100vh-5rem)]"
-          onCloseAutoFocus={(e) => e.preventDefault()}
-        >
-          {/* Header */}
-          <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
-            <div className="w-8 shrink-0" />
-            <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
-              <FileText size={18} className="text-primary shrink-0" />
-              <span className="truncate">Reporte Regikids</span>
-            </h3>
-            <button 
-              type="button"
-              onClick={onFinish} 
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
-            >
-              <X size={18} />
-            </button>
-          </div>
+    <>
+      <Drawer.Root handleOnly open={open} onOpenChange={(o) => !o && handleRequestClose()}>
+        <Drawer.Portal>
+          <Drawer.Overlay onClick={handleRequestClose} className="fixed inset-0 bg-black/50 z-[150] cursor-pointer" />
+          <Drawer.Content 
+            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] outline-none mt-20 max-h-[calc(100vh-5rem)]"
+            onCloseAutoFocus={(e) => e.preventDefault()}
+            onPointerDownOutside={(e) => {
+              e.preventDefault();
+              handleRequestClose();
+            }}
+          >
+            {/* Header */}
+            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
+              <div className="w-8 shrink-0" />
+              <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
+                <FileText size={18} className="text-primary shrink-0" />
+                <span className="truncate">Reporte Regikids</span>
+              </h3>
+              <button 
+                type="button"
+                onClick={handleRequestClose} 
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
+              >
+                <X size={18} />
+              </button>
+            </div>
           
           <div className="overflow-y-auto p-4 flex flex-col gap-4 pb-8 z-10">
             {isFinished ? (
@@ -280,7 +310,20 @@ ${state.observationGeneral}`;
         </Drawer.Content>
       </Drawer.Portal>
     </Drawer.Root>
-  );
+
+    {/* Confirmación al cancelar el reporte */}
+    <ConfirmModal
+      open={showCancelModal}
+      onOpenChange={setShowCancelModal}
+      title="¿Descartar reporte?"
+      description="Se perderán todos los datos que has ingresado en este reporte de Regikids."
+      confirmText="Descartar reporte"
+      cancelText="Continuar editando"
+      type="danger"
+      onConfirm={handleConfirmDiscard}
+    />
+  </>
+);
 };
 
 export default ReportDrawer;
