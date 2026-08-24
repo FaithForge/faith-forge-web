@@ -1,9 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import BottomNav from './BottomNav';
 import TopBar, { userRolesNavBarConfig } from './TopBar';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
@@ -20,7 +19,6 @@ const MainLayout = () => {
   const dispatch = useAppDispatch();
   const mainRef = useRef<HTMLElement>(null);
   const prevPathnameRef = useRef<string>(pathname);
-  const [showExitModal, setShowExitModal] = useState(false);
 
   const token = useAppSelector((state) => state.authSlice.token);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -79,54 +77,6 @@ const MainLayout = () => {
     }
   }, [pathname, currentRole, navigate, isAdminRole]);
 
-  const isExitingRef = useRef(false);
-
-  // Prevent back navigation from exiting without confirmation when on root dashboard views
-  useEffect(() => {
-    const isRootDashboard =
-      pathname === APP_ROUTES.kidRegistration.root ||
-      pathname === APP_ROUTES.kidChurch.root ||
-      pathname === APP_ROUTES.admin.root;
-
-    if (!isRootDashboard) return;
-
-    // Push a dummy history state so the phone back button is trapped on the dashboard
-    window.history.pushState({ isDashboardRoot: true }, '', window.location.href);
-
-    const handlePopState = (event: PopStateEvent) => {
-      if (isExitingRef.current) {
-        return;
-      }
-
-      // If a modal or drawer is handling its own popstate, let the modal close
-      if (event.state?.modalOpen || window.history.state?.modalOpen) {
-        return;
-      }
-
-      // Re-push dashboard state so user remains on root dashboard and open confirmation dialog
-      window.history.pushState({ isDashboardRoot: true }, '', window.location.href);
-      setShowExitModal(true);
-    };
-
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [pathname]);
-
-  const handleConfirmExit = () => {
-    isExitingRef.current = true;
-    setShowExitModal(false);
-
-    // 1. Try to close standalone PWA window
-    window.close();
-
-    // 2. Clear history trap and navigate back to exit the app cleanly
-    setTimeout(() => {
-      window.history.go(-2);
-    }, 50);
-  };
-
   // Restore scroll position when returning to a previous route, or scroll to top for new views
   useEffect(() => {
     if (!mainRef.current) return;
@@ -179,19 +129,6 @@ const MainLayout = () => {
 
         {/* Fixed bottom navigation */}
         <BottomNav />
-
-        {/* Modal de confirmación para salir de la aplicación */}
-        <ConfirmModal
-          open={showExitModal}
-          onOpenChange={setShowExitModal}
-          title="¿Deseas salir de la aplicación?"
-          description="¿Estás seguro de que deseas salir de Iglekids?"
-          confirmText="Sí, salir"
-          cancelText="Permanecer"
-          type="warning"
-          disableBackClose={true}
-          onConfirm={handleConfirmExit}
-        />
       </div>
     </NavigationGuardProvider>
   );

@@ -1,11 +1,18 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { User, X, Mail, Smartphone, RotateCcw } from 'lucide-react';
+import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { clearAppCacheAndReload } from '@/libs/utils/appCache';
+import {
+  isBiometricsAvailable,
+  hasRegisteredBiometrics,
+  registerBiometrics,
+  clearBiometricSession,
+} from '@/libs/utils/biometrics';
 
 interface UserProfileModalProps {
   open: boolean;
@@ -14,9 +21,21 @@ interface UserProfileModalProps {
 
 const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
   const [showClearCacheConfirm, setShowClearCacheConfirm] = useState(false);
+  const [bioAvailable, setBioAvailable] = useState(false);
+  const [isBioEnabled, setIsBioEnabled] = useState(false);
   useModalBackClose(open, () => onOpenChange(false));
 
   const user = useAppSelector((state) => state.authSlice.user);
+  const token = useAppSelector((state) => state.authSlice.token);
+
+  useEffect(() => {
+    if (open) {
+      isBiometricsAvailable().then((available) => {
+        setBioAvailable(available);
+        setIsBioEnabled(hasRegisteredBiometrics());
+      });
+    }
+  }, [open]);
 
   if (!user) return null;
 
@@ -25,6 +44,26 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
   const userPhone = user.phone 
     ? ((user as any).dialCodePhone ? `${(user as any).dialCodePhone} ${user.phone}` : user.phone)
     : 'No disponible';
+
+  const handleToggleBiometrics = async () => {
+    if (isBioEnabled) {
+      clearBiometricSession();
+      setIsBioEnabled(false);
+      toast.success('Inicio de sesión con huella desactivado');
+    } else {
+      const success = await registerBiometrics({
+        username: user.email || user.username || userName,
+        user,
+        token,
+      });
+      if (success) {
+        setIsBioEnabled(true);
+        toast.success('¡Huella configurada con éxito!');
+      } else {
+        toast.error('No se pudo configurar la huella en este dispositivo.');
+      }
+    }
+  };
 
   return (
     <>
@@ -50,10 +89,6 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
 
             {/* Info list */}
             <div className="p-6 flex flex-col gap-4">
-              <div className="bg-blue-50/50 border border-blue-100 p-3 rounded-xl text-xs text-blue-800 text-center">
-                La edición de tu información personal estará disponible en una futura actualización.
-              </div>
-
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center shrink-0">
                   <User size={20} />
@@ -84,12 +119,35 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
                 </div>
               </div>
 
+              {/* Sección de Biometría / Huella */}
+              {bioAvailable && (
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={handleToggleBiometrics}
+                    className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                      isBioEnabled
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Fingerprint size={16} className={isBioEnabled ? 'text-emerald-600' : 'text-gray-500'} />
+                      <span>{isBioEnabled ? 'Huella activada' : 'Activar inicio con huella'}</span>
+                    </div>
+                    <span className="text-[11px] font-semibold underline">
+                      {isBioEnabled ? 'Desactivar' : 'Configurar'}
+                    </span>
+                  </button>
+                </div>
+              )}
+
               {/* Botón de limpiar caché y actualizar */}
-              <div className="pt-3 border-t border-gray-100">
+              <div className="pt-2 border-t border-gray-100">
                 <button
                   type="button"
                   onClick={() => setShowClearCacheConfirm(true)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-98 transition-all"
+                  className="w-full flex items-center justify-center gap-2 py-2 px-4 rounded-xl text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-98 transition-all"
                 >
                   <RotateCcw size={14} className="text-gray-500" />
                   Limpiar caché y actualizar app

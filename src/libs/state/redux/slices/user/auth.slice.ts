@@ -22,6 +22,20 @@ const AuthSlice = createSlice({
     changeCurrentRole: (state, action: PayloadAction<UserRole>) => {
       state.currentRole = action.payload;
     },
+    setAuthSession: (
+      state,
+      action: PayloadAction<{ user: any; token: string; currentRole?: UserRole }>
+    ) => {
+      state.user = {
+        ...action.payload.user,
+        roles: sortUserRolesByPriority(action.payload.user?.roles),
+      };
+      state.currentRole =
+        action.payload.currentRole || getMainUserRole(action.payload.user?.roles);
+      state.token = action.payload.token;
+      state.error = undefined;
+      state.loading = false;
+    },
     logout: (state) => {
       state.user = undefined;
       state.token = '';
@@ -54,5 +68,5 @@ const AuthSlice = createSlice({
   },
 });
 
-export const { logout, changeCurrentRole } = AuthSlice.actions;
+export const { logout, changeCurrentRole, setAuthSession } = AuthSlice.actions;
 export default AuthSlice.reducer;
