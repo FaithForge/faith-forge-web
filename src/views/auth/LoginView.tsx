@@ -144,13 +144,13 @@ const LoginView = () => {
           <img src="/logo-iglekids.png" alt="Iglekids Logo" className="w-60 h-auto drop-shadow-sm" />
         </div>
 
-        <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4">
+        <div className="w-full bg-white p-7 rounded-3xl shadow-sm border border-gray-100/90 flex flex-col gap-5">
           <h2 className="text-xl font-bold text-gray-800 text-center">Iniciar Sesión</h2>
           
           {/* Botón de Acceso Rápido con Huella / Face ID si ya está registrada */}
           {bioAvailable && registeredBioData && (
-            <div className="flex flex-col gap-2 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl animate-in fade-in zoom-in-95 duration-300">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 px-1">
+            <div className="flex flex-col gap-2.5 p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl animate-in fade-in zoom-in-95 duration-300">
+              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 px-0.5">
                 <UserCheck size={16} className="text-emerald-600 shrink-0" />
                 <span className="truncate">
                   Cuenta guardada:{' '}
@@ -168,18 +168,18 @@ const LoginView = () => {
                 loading={isBioLoading}
                 loadingText="Verificando biometría..."
                 block
-                className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 py-2.5 shadow-xs"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 py-3 shadow-xs font-semibold"
               >
                 <Fingerprint size={20} />
                 Ingresar con Huella / Face ID
               </Button>
-              <div className="text-center">
+              <div className="text-center pt-0.5">
                 <span className="text-[11px] text-gray-400 font-medium">o ingresa con tus credenciales abajo</span>
               </div>
             </div>
           )}
 
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-2">
+          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
             <Input 
               label="Usuario / Email"
               type="text" 
@@ -213,7 +213,7 @@ const LoginView = () => {
               variant="primary" 
               loading={isLoading}
               loadingText="Ingresando..."
-              className="mt-3 py-3"
+              className="mt-2 py-3 text-sm font-semibold"
             >
               Ingresar con Contraseña
             </Button>
