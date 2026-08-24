@@ -1,9 +1,18 @@
+const BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
+
 /**
  * Clears all PWA caches, Service Workers, and client storage, then reloads the application.
+ * Safely preserves the user's registered fingerprint / Face ID credentials by default.
  *
+ * @param {object} [options] - Options for cache purge.
+ * @param {boolean} [options.preserveBiometrics=true] - Whether to preserve biometric login credentials.
  * @returns {Promise<void>} Resolves when cleanup is complete before reload.
  */
-export const clearAppCacheAndReload = async (): Promise<void> => {
+export const clearAppCacheAndReload = async (options?: {
+  preserveBiometrics?: boolean;
+}): Promise<void> => {
+  const { preserveBiometrics = true } = options || {};
+
   try {
     // 1. Clear Cache Storage (PWA Assets)
     if ('caches' in window) {
@@ -19,11 +28,21 @@ export const clearAppCacheAndReload = async (): Promise<void> => {
       }
     }
 
-    // 3. Clear LocalStorage and SessionStorage
+    // 3. Backup biometric session so user doesn't lose Face ID / fingerprint
+    const savedBio = preserveBiometrics
+      ? localStorage.getItem(BIOMETRIC_STORAGE_KEY)
+      : null;
+
+    // 4. Clear LocalStorage and SessionStorage
     localStorage.clear();
     sessionStorage.clear();
 
-    // 4. Delete IndexedDB databases if supported
+    // 5. Restore biometric session if preserved
+    if (savedBio) {
+      localStorage.setItem(BIOMETRIC_STORAGE_KEY, savedBio);
+    }
+
+    // 6. Delete IndexedDB databases if supported
     if (window.indexedDB && indexedDB.databases) {
       try {
         const dbs = await indexedDB.databases();
@@ -37,7 +56,7 @@ export const clearAppCacheAndReload = async (): Promise<void> => {
   } catch (err) {
     console.error('Error while purging app cache:', err);
   } finally {
-    // 5. Force reload bypassing cache
+    // 7. Force reload bypassing cache
     window.location.replace('/');
   }
 };
