@@ -68,7 +68,7 @@ const LoginView = () => {
         navigate('/', { replace: true });
       }
     } catch (err: any) {
-      toast.error(err.message || 'No se pudo verificar la huella digital.');
+      toast.error(err.message || 'No se pudo verificar la biometría.');
     } finally {
       setIsBioLoading(false);
     }
@@ -119,7 +119,7 @@ const LoginView = () => {
     if (pendingLoginData) {
       const success = await registerBiometrics(pendingLoginData);
       if (success) {
-        toast.success('¡Huella digital configurada con éxito!');
+        toast.success('¡Biometría (Huella / Face ID) configurada con éxito!');
       }
     }
     setShowRegisterBioModal(false);
@@ -147,7 +147,7 @@ const LoginView = () => {
         <div className="w-full bg-white p-6 rounded-3xl shadow-sm border border-gray-100 flex flex-col gap-4">
           <h2 className="text-xl font-bold text-gray-800 text-center">Iniciar Sesión</h2>
           
-          {/* Botón de Acceso Rápido con Huella si ya está registrada */}
+          {/* Botón de Acceso Rápido con Huella / Face ID si ya está registrada */}
           {bioAvailable && registeredBioData && (
             <div className="flex flex-col gap-2 p-3.5 bg-emerald-50/70 border border-emerald-200 rounded-2xl animate-in fade-in zoom-in-95 duration-300">
               <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 px-1">
@@ -166,12 +166,12 @@ const LoginView = () => {
                 type="button"
                 onClick={handleBiometricLogin}
                 loading={isBioLoading}
-                loadingText="Verificando huella..."
+                loadingText="Verificando biometría..."
                 block
                 className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 py-2.5 shadow-xs"
               >
                 <Fingerprint size={20} />
-                Ingresar con Huella
+                Ingresar con Huella / Face ID
               </Button>
               <div className="text-center">
                 <span className="text-[11px] text-gray-400 font-medium">o ingresa con tus credenciales abajo</span>
@@ -223,13 +223,13 @@ const LoginView = () => {
         <p className="text-center mt-6 text-xs text-gray-400 font-medium">Iglekids • v3.0.0</p>
       </div>
 
-      {/* Modal para sugerir registro de huella en primer login */}
+      {/* Modal para sugerir registro de biometría en primer login */}
       <ConfirmModal
         open={showRegisterBioModal}
         onOpenChange={(open) => !open && handleSkipRegisterBio()}
-        title="¿Activar ingreso con huella?"
-        description="Puedes usar el sensor de huella de tu dispositivo para iniciar sesión de forma rápida y segura en las próximas ocasiones."
-        confirmText="Activar huella"
+        title="¿Activar ingreso con Huella / Face ID?"
+        description="Puedes usar el sensor de huella o Face ID de tu dispositivo para iniciar sesión de forma rápida y segura en las próximas ocasiones."
+        confirmText="Activar biometría"
         cancelText="Ahora no"
         type="info"
         onConfirm={handleConfirmRegisterBio}

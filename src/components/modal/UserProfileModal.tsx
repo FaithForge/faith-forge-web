@@ -49,7 +49,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
     if (isBioEnabled) {
       clearBiometricSession();
       setIsBioEnabled(false);
-      toast.success('Inicio de sesión con huella desactivado');
+      toast.success('Inicio de sesión con biometría desactivado');
     } else {
       const success = await registerBiometrics({
         username: user.email || user.username || userName,
@@ -58,9 +58,9 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
       });
       if (success) {
         setIsBioEnabled(true);
-        toast.success('¡Huella configurada con éxito!');
+        toast.success('¡Biometría (Huella / Face ID) configurada con éxito!');
       } else {
-        toast.error('No se pudo configurar la huella en este dispositivo.');
+        toast.error('No se pudo configurar la biometría en este dispositivo.');
       }
     }
   };
@@ -119,7 +119,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
                 </div>
               </div>
 
-              {/* Sección de Biometría / Huella */}
+              {/* Sección de Biometría / Huella / Face ID */}
               {bioAvailable && (
                 <div className="pt-2 border-t border-gray-100">
                   <button
@@ -133,7 +133,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
                   >
                     <div className="flex items-center gap-2">
                       <Fingerprint size={16} className={isBioEnabled ? 'text-emerald-600' : 'text-gray-500'} />
-                      <span>{isBioEnabled ? 'Huella activada' : 'Activar inicio con huella'}</span>
+                      <span>{isBioEnabled ? 'Biometría activada (Huella / Face ID)' : 'Activar biometría (Huella / Face ID)'}</span>
                     </div>
                     <span className="text-[11px] font-semibold underline">
                       {isBioEnabled ? 'Desactivar' : 'Configurar'}
