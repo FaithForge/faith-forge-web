@@ -101,12 +101,18 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       const name = await bluetoothPrinter.requestAndConnect();
       toast.success(`Conectado a ${name}`);
     } catch (err: any) {
-      if (err.name !== 'NotFoundError') {
+      if (err.name !== 'NotFoundError' && !err.message?.includes('User cancelled')) {
         toast.error(err.message || 'Error al conectar impresora Bluetooth');
       }
     } finally {
       setIsBtConnecting(false);
     }
+  };
+
+  const handleCancelBluetooth = () => {
+    bluetoothPrinter.cancelConnect();
+    setIsBtConnecting(false);
+    toast.info('Búsqueda cancelada');
   };
 
   const handleTestBluetoothPrint = async () => {
@@ -282,15 +288,15 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                     </button>
                     <button
                       type="button"
-                      onClick={() => setSelectedMode('BLUETOOTH')}
-                      className={`py-2 px-3 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                        selectedMode === 'BLUETOOTH'
-                          ? 'bg-white text-primary shadow-xs'
-                          : 'text-gray-500 hover:text-gray-700'
-                      }`}
+                      disabled
+                      className="py-2 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 text-gray-400 cursor-not-allowed bg-gray-50/50 border border-dashed border-gray-300 relative group"
+                      title="Impresión móvil por Bluetooth (Próximamente)"
                     >
-                      <Bluetooth size={14} />
-                      <span>Bluetooth Móvil</span>
+                      <Bluetooth size={14} className="text-gray-400" />
+                      <span>Bluetooth</span>
+                      <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-semibold border border-amber-200">
+                        Próximamente
+                      </span>
                     </button>
                   </div>
                 )}
@@ -326,28 +332,46 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                           }`}
                         />
                         <div className="truncate">
-                          <p className="text-xs font-bold text-gray-800 truncate">
-                            {printerModeSlice?.bluetoothDevice?.name || 'Sin impresora vinculada'}
-                          </p>
+                          <div className="flex items-center gap-1.5 truncate">
+                            <p className="text-xs font-bold text-gray-800 truncate">
+                              {printerModeSlice?.bluetoothDevice?.name || 'Sin impresora vinculada'}
+                            </p>
+                            {isBluetoothConnected && (
+                              <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary shrink-0">
+                                {bluetoothPrinter.isNiimbot() ? 'Niimbot' : 'ESC/POS'}
+                              </span>
+                            )}
+                          </div>
                           <p className="text-[11px] text-gray-500">
-                            {isBluetoothConnected ? 'Conectada y lista' : 'No conectada'}
+                            {isBluetoothConnected ? 'Conectada y lista para imprimir' : isBtConnecting ? 'Conectando...' : 'No conectada'}
                           </p>
                         </div>
                       </div>
 
-                      <button
-                        type="button"
-                        onClick={handleConnectBluetooth}
-                        disabled={isBtConnecting}
-                        className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition-all flex items-center gap-1 shrink-0 disabled:opacity-50"
-                      >
-                        {isBtConnecting ? (
-                          <Loader2 size={13} className="animate-spin" />
-                        ) : (
-                          <Bluetooth size={13} />
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {isBtConnecting && (
+                          <button
+                            type="button"
+                            onClick={handleCancelBluetooth}
+                            className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-all active:scale-95"
+                          >
+                            Cancelar
+                          </button>
                         )}
-                        <span>{isBluetoothConnected ? 'Cambiar' : 'Vincular'}</span>
-                      </button>
+                        <button
+                          type="button"
+                          onClick={handleConnectBluetooth}
+                          disabled={isBtConnecting}
+                          className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-xs font-bold transition-all flex items-center gap-1 shrink-0 disabled:opacity-50"
+                        >
+                          {isBtConnecting ? (
+                            <Loader2 size={13} className="animate-spin" />
+                          ) : (
+                            <Bluetooth size={13} />
+                          )}
+                          <span>{isBluetoothConnected ? 'Cambiar' : 'Vincular'}</span>
+                        </button>
+                      </div>
                     </div>
 
                     {isBluetoothConnected && (

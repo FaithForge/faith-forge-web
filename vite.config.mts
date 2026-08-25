@@ -84,6 +84,10 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      '@stoprocent/noble': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
+      'serialport': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
+      '@serialport/bindings-cpp': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
+      'events': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
     },
   },
   define: {

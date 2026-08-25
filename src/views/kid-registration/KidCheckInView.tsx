@@ -25,6 +25,7 @@ import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import Alert from '@/components/ui/Alert';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
+import ProcessingPrintModal from '@/components/modal/ProcessingPrintModal';
 
 dayjs.locale('es');
 
@@ -53,6 +54,8 @@ const KidCheckInView = () => {
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState('Registrando...');
 
   // Reset imageError when kid or photoUrl changes
   useEffect(() => {
@@ -205,6 +208,8 @@ const KidCheckInView = () => {
     }
 
     try {
+      setIsProcessing(true);
+      setProcessingStep('Guardando registro...');
       const regResponse: any = await dispatch(CreateKidRegistration({
         kidId: kid.id,
         observation: finalObservation || undefined,
@@ -213,6 +218,7 @@ const KidCheckInView = () => {
       })).unwrap();
 
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+        setProcessingStep('Imprimiendo etiqueta Bluetooth...');
         const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
         const group = kidGroupSlice.data?.find((g: any) => g.id === targetGroupId);
         const currentReg = kid.currentKidRegistration as any;
@@ -226,6 +232,7 @@ const KidCheckInView = () => {
           campusName: currentCampus?.name,
           meetingName: currentMeeting?.name,
           isVolunteer: isKidVolunteer,
+          gender: kid.gender || (kid as any).sex,
         });
         toast.success("¡Etiqueta impresa por Bluetooth con éxito!");
       } else {
@@ -234,6 +241,8 @@ const KidCheckInView = () => {
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Error al registrar");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -264,8 +273,11 @@ const KidCheckInView = () => {
   const handleReprint = async () => {
     if (!kid?.currentKidRegistration) return;
     try {
+      setIsProcessing(true);
+      setProcessingStep('Solicitando reimpresión...');
       await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id, copies: 1 })).unwrap();
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+        setProcessingStep('Imprimiendo etiqueta Bluetooth...');
         const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
         const currentReg = kid.currentKidRegistration as any;
         await bluetoothPrinter.printKidTicket({
@@ -277,6 +289,7 @@ const KidCheckInView = () => {
           campusName: currentCampus?.name,
           meetingName: currentMeeting?.name,
           isVolunteer: isKidVolunteer,
+          gender: kid.gender || (kid as any).sex,
         });
         toast.success("¡Reimpresión Bluetooth realizada con éxito!");
       } else {
@@ -285,6 +298,8 @@ const KidCheckInView = () => {
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Error al reimprimir");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -786,7 +801,9 @@ const KidCheckInView = () => {
                   onClick={handleCheckIn} 
                   block 
                   variant="primary"
-                  disabled={shouldBlockKids || loading || relationsList.length === 0 || (isOverage && !isAdmin)}
+                  loading={isProcessing}
+                  loadingText={processingStep}
+                  disabled={shouldBlockKids || loading || isProcessing || relationsList.length === 0 || (isOverage && !isAdmin)}
                 >
                   <QrCode size={20} className="mr-2 inline" /> Registrar e Imprimir Etiqueta
                 </Button>
@@ -795,6 +812,12 @@ const KidCheckInView = () => {
           </>
         )}
       </div>
+
+      <ProcessingPrintModal 
+        open={isProcessing} 
+        isBluetooth={printerModeSlice?.mode === 'BLUETOOTH'} 
+        stepText={processingStep} 
+      />
 
       <UpdateGuardianModal 
         open={!!selectedGuardianToUpdate} 

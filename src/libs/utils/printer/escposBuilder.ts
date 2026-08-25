@@ -17,6 +17,7 @@ export interface KidTicketData {
   meetingName?: string;
   date?: string;
   isVolunteer?: boolean;
+  gender?: string;
 }
 
 /**
@@ -256,7 +257,7 @@ export const buildKidRegistrationTicket = (data: KidTicketData): Uint8Array => {
     .line(data.kidName.toUpperCase())
     .size('normal')
     .bold(false)
-    .line(`Aula: ${data.kidGroup || 'General'}`);
+    .line(`Salón: ${data.kidGroup || 'General'}`);
 
   if (data.isVolunteer) {
     builder

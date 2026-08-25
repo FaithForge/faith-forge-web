@@ -21,6 +21,7 @@ import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import StepProgress from '@/components/ui/StepProgress';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
+import ProcessingPrintModal from '@/components/modal/ProcessingPrintModal';
 
 const SCAN_STEPS = ['Escanear', 'Selección', 'Observaciones'];
 
@@ -45,6 +46,8 @@ const ScannerView = () => {
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<'back' | 'home' | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processingStep, setProcessingStep] = useState('Registrando niños...');
 
   // Load special groups (Yo Soy Iglekids)
   useEffect(() => {
@@ -149,6 +152,9 @@ const ScannerView = () => {
     const specialGroup = kidGroupSlice.data?.find((g: any) => g.name === 'Yo Soy Iglekids' || g.type === KidGroupType.SPECIAL) || kidGroupSlice.data?.[0];
 
     try {
+      setIsProcessing(true);
+      setProcessingStep('Guardando registros...');
+
       const promises = selectedKids.map(kidId => {
         const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
         const kid = relation?.kid || relation;
@@ -185,6 +191,8 @@ const ScannerView = () => {
           const finalObs = obsType === 'OTHER' ? customObservations[kidId]?.trim() : (obsType !== 'NONE' ? obsType : undefined);
           const regRes = results[i];
 
+          setProcessingStep(`Imprimiendo etiqueta Bluetooth (${i + 1}/${selectedKids.length})...`);
+
           await bluetoothPrinter.printKidTicket({
             kidName: `${kid?.firstName || ''} ${kid?.lastName || ''}`.trim(),
             kidGroup: group?.name || kid?.kidGroup?.name || 'General',
@@ -195,6 +203,7 @@ const ScannerView = () => {
             campusName: currentCampus?.name,
             meetingName: currentMeeting?.name,
             isVolunteer: isVol,
+            gender: kid?.gender || (kid as any)?.sex,
           });
           await new Promise((resolve) => setTimeout(resolve, 300));
         }
@@ -206,6 +215,8 @@ const ScannerView = () => {
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Ocurrió un error al registrar los niños");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -456,12 +467,21 @@ const ScannerView = () => {
               type="submit"
               block
               variant="primary"
+              loading={isProcessing}
+              loadingText={processingStep}
+              disabled={isProcessing}
             >
               <Check size={20} className="mr-2 inline" /> Registrar Niños
             </Button>
           </form>
         )}
       </div>
+
+      <ProcessingPrintModal 
+        open={isProcessing} 
+        isBluetooth={printerModeSlice?.mode === 'BLUETOOTH'} 
+        stepText={processingStep} 
+      />
 
       <ConfirmModal
         open={showCancelModal}
