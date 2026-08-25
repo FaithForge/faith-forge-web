@@ -24,6 +24,7 @@ import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import Alert from '@/components/ui/Alert';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
+import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 
 dayjs.locale('es');
 
@@ -34,6 +35,9 @@ const KidCheckInView = () => {
 
   const { current: kid, loading } = useAppSelector(state => state.kidSlice);
   const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
+  const printerModeSlice = useAppSelector(state => state.printerModeSlice);
+  const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
+  const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
   const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin } = useChurchMeetingStatus();
 
   const [selectedGuardian, setSelectedGuardian] = useState<string>('');
@@ -201,13 +205,32 @@ const KidCheckInView = () => {
     }
 
     try {
-      await dispatch(CreateKidRegistration({
+      const regResponse: any = await dispatch(CreateKidRegistration({
         kidId: kid.id,
         observation: finalObservation || undefined,
         kidGuardianId: selectedGuardian,
         kidGroupId: targetGroupId
       })).unwrap();
-      toast.success("¡Etiqueta de registro enviada a impresión!");
+
+      if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+        const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
+        const group = kidGroupSlice.data?.find((g: any) => g.id === targetGroupId);
+        const currentReg = kid.currentKidRegistration as any;
+        await bluetoothPrinter.printKidTicket({
+          kidName: `${kid.firstName} ${kid.lastName}`.trim(),
+          kidGroup: group?.name || kid.kidGroup?.name || 'General',
+          securityCode: regResponse?.securityCode || regResponse?.code || currentReg?.securityCode,
+          guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : undefined,
+          guardianPhone: guardian?.displayPhone || guardian?.rawPhone,
+          observation: finalObservation || undefined,
+          campusName: currentCampus?.name,
+          meetingName: currentMeeting?.name,
+          isVolunteer: isKidVolunteer,
+        });
+        toast.success("¡Etiqueta impresa por Bluetooth con éxito!");
+      } else {
+        toast.success("¡Etiqueta de registro enviada a impresión!");
+      }
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Error al registrar");
@@ -242,7 +265,23 @@ const KidCheckInView = () => {
     if (!kid?.currentKidRegistration) return;
     try {
       await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id, copies: 1 })).unwrap();
-      toast.success("Reimpresión solicitada correctamente");
+      if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+        const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
+        const currentReg = kid.currentKidRegistration as any;
+        await bluetoothPrinter.printKidTicket({
+          kidName: `${kid.firstName} ${kid.lastName}`.trim(),
+          kidGroup: kid.kidGroup?.name || 'General',
+          securityCode: currentReg?.securityCode || currentReg?.code,
+          guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : undefined,
+          guardianPhone: guardian?.displayPhone || guardian?.rawPhone,
+          campusName: currentCampus?.name,
+          meetingName: currentMeeting?.name,
+          isVolunteer: isKidVolunteer,
+        });
+        toast.success("¡Reimpresión Bluetooth realizada con éxito!");
+      } else {
+        toast.success("Reimpresión solicitada correctamente");
+      }
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Error al reimprimir");

@@ -14,6 +14,8 @@ export const CreateKidRegistration = createAsyncThunk(
     const authSlice = state.authSlice;
     const accountSlice = state.accountSlice;
     const churchPrinterSlice = state.churchPrinterSlice;
+    const printerMode = state.printerModeSlice?.mode || 'NETWORK';
+    const isBluetooth = printerMode === 'BLUETOOTH';
 
     const response = (
       await microserviceApiRequest({
@@ -25,7 +27,8 @@ export const CreateKidRegistration = createAsyncThunk(
             ...payload,
             churchId: churchCampusSlice.current?.id,
             churchMeetingId: churchMeetingSlice.current?.id,
-            churchPrinterId: churchPrinterSlice.current?.name,
+            churchPrinterId: isBluetooth ? undefined : churchPrinterSlice.current?.name,
+            skipServerPrint: isBluetooth || payload.skipServerPrint || false,
             log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del ${accountSlice.churchGroup}`,
           },
           headers: { Authorization: `Bearer ${token}` },
@@ -50,6 +53,8 @@ export const ReprintKidRegistration = createAsyncThunk(
     const { token } = state.authSlice;
     const { id, copies } = payload;
     const churchPrinterSlice = state.churchPrinterSlice;
+    const printerMode = state.printerModeSlice?.mode || 'NETWORK';
+    const isBluetooth = printerMode === 'BLUETOOTH';
 
     const response = (
       await microserviceApiRequest({
@@ -60,7 +65,8 @@ export const ReprintKidRegistration = createAsyncThunk(
           data: {
             id,
             copies,
-            churchPrinterId: churchPrinterSlice.current?.name,
+            churchPrinterId: isBluetooth ? undefined : churchPrinterSlice.current?.name,
+            skipServerPrint: isBluetooth,
           },
           headers: { Authorization: `Bearer ${token}` },
         },

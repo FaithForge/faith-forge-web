@@ -20,6 +20,7 @@ import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import StepProgress from '@/components/ui/StepProgress';
+import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 
 const SCAN_STEPS = ['Escanear', 'Selección', 'Observaciones'];
 
@@ -28,6 +29,9 @@ const ScannerView = () => {
   const dispatch = useAppDispatch();
   const { kidGuardian, relations, loading } = useAppSelector(state => state.scanQRKidGuardianSlice);
   const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
+  const printerModeSlice = useAppSelector(state => state.printerModeSlice);
+  const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
+  const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
   const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin } = useChurchMeetingStatus();
   
   const [step, setStep] = useState(1);
@@ -167,8 +171,38 @@ const ScannerView = () => {
         })).unwrap();
       });
       
-      await Promise.all(promises);
-      toast.success("¡Niños registrados con éxito!");
+      const results: any[] = await Promise.all(promises);
+
+      if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+        for (let i = 0; i < selectedKids.length; i++) {
+          const kidId = selectedKids[i];
+          const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
+          const kid = relation?.kid || relation;
+          const isVol = volunteerKids.includes(kidId);
+          const kidGroupId = isVol && specialGroup?.id ? specialGroup.id : (kid?.kidGroup?.id || '');
+          const group = kidGroupSlice.data?.find((g: any) => g.id === kidGroupId);
+          const obsType = observationTypes[kidId] || 'NONE';
+          const finalObs = obsType === 'OTHER' ? customObservations[kidId]?.trim() : (obsType !== 'NONE' ? obsType : undefined);
+          const regRes = results[i];
+
+          await bluetoothPrinter.printKidTicket({
+            kidName: `${kid?.firstName || ''} ${kid?.lastName || ''}`.trim(),
+            kidGroup: group?.name || kid?.kidGroup?.name || 'General',
+            securityCode: regRes?.securityCode || regRes?.code,
+            guardianName: `${kidGuardian.firstName} ${kidGuardian.lastName}`.trim(),
+            guardianPhone: kidGuardian.phone,
+            observation: finalObs,
+            campusName: currentCampus?.name,
+            meetingName: currentMeeting?.name,
+            isVolunteer: isVol,
+          });
+          await new Promise((resolve) => setTimeout(resolve, 300));
+        }
+        toast.success("¡Niños registrados e impresos por Bluetooth!");
+      } else {
+        toast.success("¡Niños registrados con éxito!");
+      }
+
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Ocurrió un error al registrar los niños");

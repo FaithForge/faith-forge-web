@@ -252,6 +252,7 @@ export interface ICreateKidRegistration {
   kidGuardianId: string;
   kidGroupId: string;
   observation?: string;
+  skipServerPrint?: boolean;
 }
 
 // UPDATE

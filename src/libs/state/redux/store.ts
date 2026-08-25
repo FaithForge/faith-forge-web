@@ -14,6 +14,7 @@ import adminChurchMeetingSlice from './slices/church/adminChurchMeeting.slice';
 import churchCampusSlice from './slices/church/churchCampus.slice';
 import churchMeetingSlice from './slices/church/churchMeeting.slice';
 import churchPrinterSlice from './slices/church/churchPrinter.slice';
+import printerModeSlice from './slices/church/printerMode.slice';
 import kidGroupRegisteredSlice from './slices/kid-church/kid-group-registered.slice';
 import kidGroupSlice from './slices/kid-church/kid-group.slice';
 import kidGuardianSlice from './slices/kid-church/kid-guardian.slice';
@@ -31,6 +32,7 @@ const reducers = combineReducers({
   churchCampusSlice,
   churchMeetingSlice,
   churchPrinterSlice,
+  printerModeSlice,
   kidGroupSlice,
   kidMedicalConditionSlice,
   kidRegistrationSlice,

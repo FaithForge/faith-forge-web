@@ -103,7 +103,11 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     currentRole === 'KID_GROUP_SUPERVISOR' ||
     currentRole === 'KID_GROUP_USER';
 
-  const isConfigured = isKidChurchRole ? !!currentMeeting : (!!currentMeeting && !!currentPrinter);
+  const printerMode = useAppSelector((state) => state.printerModeSlice?.mode || 'NETWORK');
+  const bluetoothDevice = useAppSelector((state) => state.printerModeSlice?.bluetoothDevice);
+
+  const isPrinterConfigured = printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
+  const isConfigured = isKidChurchRole ? !!currentMeeting : (!!currentMeeting && isPrinterConfigured);
   const activeRoles = currentRole ? [currentRole] : [];
   const isAdmin = IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
 
