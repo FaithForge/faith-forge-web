@@ -243,6 +243,7 @@ const KidCheckInView = () => {
     try {
       await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id, copies: 1 })).unwrap();
       toast.success("Reimpresión solicitada correctamente");
+      navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
       toast.error("Error al reimprimir");
     }
