@@ -1,6 +1,6 @@
 import React from 'react';
 import clsx from 'clsx';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, User as UserIcon } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 
 interface CellProps {
@@ -14,9 +14,22 @@ interface CellProps {
   badge?: React.ReactNode;
   isRegistered?: boolean;
   isOverage?: boolean;
+  iconType?: 'child' | 'user';
 }
 
-const Cell = ({ title, subtitle, onClick, className, showChevron = true, photoUrl, gender, badge, isRegistered, isOverage }: CellProps) => {
+const Cell = ({
+  title,
+  subtitle,
+  onClick,
+  className,
+  showChevron = true,
+  photoUrl,
+  gender,
+  badge,
+  isRegistered,
+  isOverage,
+  iconType = 'child',
+}: CellProps) => {
   return (
     <div 
       onClick={onClick}
@@ -43,6 +56,8 @@ const Cell = ({ title, subtitle, onClick, className, showChevron = true, photoUr
       )}>
         {photoUrl ? (
           <img src={photoUrl} alt={title} className="w-full h-full object-cover" />
+        ) : iconType === 'user' ? (
+          <UserIcon size={20} />
         ) : gender === 'F' || (gender as string)?.toUpperCase() === 'FEMALE' ? (
           <FaChildDress size={20} />
         ) : (

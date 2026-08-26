@@ -81,6 +81,7 @@ export interface IUser {
   nationalId?: string;
   firstName: string;
   lastName: string;
+  dialCodePhone?: string;
   phone?: string;
   email?: string;
   gender: UserGenderCode;

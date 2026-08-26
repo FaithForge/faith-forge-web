@@ -7,6 +7,10 @@ export const APP_ROUTES = {
     churchMeetings: '/admin/church-meetings',
     createUser: '/admin/users/new',
     users: '/admin/users',
+    userDetailDynamic: '/admin/users/:id',
+    userDetail: (id: string | number) => `/admin/users/${id}`,
+    updateUserDynamic: '/admin/users/edit/:id',
+    updateUser: (id: string | number) => `/admin/users/edit/${id}`,
     userRoles: '/admin/users/roles',
   },
   kidChurch: {

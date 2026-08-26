@@ -11,8 +11,9 @@ import KidCheckInView from '@/views/kid-registration/KidCheckInView';
 import UpdateKidView from '@/views/kid-registration/UpdateKidView';
 import AdminDashboard from '@/views/admin/AdminDashboard';
 import CreateUserView from '@/views/admin/users/CreateUserView';
-import ModifyUserView from '@/views/admin/users/ModifyUserView';
-import AssignUserRolesView from '@/views/admin/users/AssignUserRolesView';
+import UserManagementView from '@/views/admin/users/UserManagementView';
+import UserDetailView from '@/views/admin/users/UserDetailView';
+import UpdateUserView from '@/views/admin/users/UpdateUserView';
 import ChurchMeetingsView from '@/views/admin/ChurchMeetingsView';
 import KidChurchDashboard from '@/views/kid-church/KidChurchDashboard';
 import { APP_ROUTES } from '@/config/routes';
@@ -59,8 +60,10 @@ function App() {
               <Route index element={<IndexRedirect />} />
               <Route path={APP_ROUTES.admin.root} element={<AdminDashboard />} />
               <Route path={APP_ROUTES.admin.createUser} element={<CreateUserView />} />
-              <Route path={APP_ROUTES.admin.users} element={<ModifyUserView />} />
-              <Route path={APP_ROUTES.admin.userRoles} element={<AssignUserRolesView />} />
+              <Route path={APP_ROUTES.admin.users} element={<UserManagementView />} />
+              <Route path={APP_ROUTES.admin.userDetailDynamic} element={<UserDetailView />} />
+              <Route path={APP_ROUTES.admin.updateUserDynamic} element={<UpdateUserView />} />
+              <Route path={APP_ROUTES.admin.userRoles} element={<Navigate to={APP_ROUTES.admin.users} replace />} />
               <Route path={APP_ROUTES.admin.churchMeetings} element={<ChurchMeetingsView />} />
               <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
               <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />

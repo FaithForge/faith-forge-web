@@ -88,6 +88,77 @@ export const AssignUserRole = createAsyncThunk(
   },
 );
 
+/**
+ * Unassigns a role from a user via DELETE /user/unassign-role.
+ *
+ * @param {IAssignUserRelationRole} payload - User ID and role to unassign.
+ * @returns {Promise<any>} The server response.
+ */
+export const UnassignUserRole = createAsyncThunk(
+  'user/UnassignUserRole',
+  async (payload: IAssignUserRelationRole, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.DELETE,
+          url: `/user/unassign-role`,
+          options: {
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al eliminar rol del usuario');
+    }
+  },
+);
+
+/**
+ * Fetches a single user by ID via GET /user/:id.
+ *
+ * @param {Object} payload - The payload containing the user ID.
+ * @param {string} payload.id - The unique user UUID.
+ * @returns {Promise<any>} The user object.
+ */
+export const GetUser = createAsyncThunk(
+  'user/GetUser',
+  async (payload: { id: string }, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.GET,
+          url: `/user/${payload.id}`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Usuario no encontrado');
+    }
+  },
+);
+
+/**
+ * Uploads a profile image for a user via POST /user/upload-image.
+ *
+ * @param {Object} payload - The form data containing the image file.
+ * @returns {Promise<string>} The uploaded image key/URL.
+ */
 export const UploadUserImage = createAsyncThunk(
   'user/uploadUserImage',
   async (payload: { formData: any }, { getState }) => {
@@ -112,6 +183,12 @@ export const UploadUserImage = createAsyncThunk(
   },
 );
 
+/**
+ * Searches a user by national ID / document number via GET /user/search-by-national-id.
+ *
+ * @param {string} nationalId - The national document number.
+ * @returns {Promise<any>} The user object.
+ */
 export const GetUserByNationalId = createAsyncThunk(
   'user/GetUserByNationalId',
   async (nationalId: string, { getState, rejectWithValue }) => {
@@ -140,6 +217,12 @@ export const GetUserByNationalId = createAsyncThunk(
   },
 );
 
+/**
+ * Searches a user by first and last name via GET /user/search-by-full-name.
+ *
+ * @param {Object} payload - First name and last name.
+ * @returns {Promise<any>} The user object.
+ */
 export const GetUserByFullName = createAsyncThunk(
   'user/GetUserByFullName',
   async (payload: { firstName: string; lastName: string }, { getState }) => {
@@ -163,6 +246,12 @@ export const GetUserByFullName = createAsyncThunk(
   },
 );
 
+/**
+ * Updates user information via PUT /user/:id.
+ *
+ * @param {Object} payload - User ID and updated user data.
+ * @returns {Promise<any>} The updated user object.
+ */
 export const UpdateUser = createAsyncThunk(
   'user/UpdateUser',
   async (payload: { id: string; updateUser: IUpdateUser }, { getState, rejectWithValue }) => {
@@ -193,25 +282,42 @@ export const UpdateUser = createAsyncThunk(
   },
 );
 
+/**
+ * Helper function to extract search filter parameters from input search text.
+ *
+ * @param {string} findText - Raw search text.
+ * @returns {Object} Search parameters object.
+ */
+const parseUserSearchParams = (findText: string) => {
+  const clean = findText.trim();
+  if (!clean) {
+    return {};
+  }
+
+  const isNumericOnly = /^\d+$/.test(clean);
+  if (isNumericOnly) {
+    return { filterByNationalId: clean };
+  }
+
+  const parts = clean.split(/\s+/).filter(Boolean);
+  return {
+    filterByFirstName: parts[0] || undefined,
+    filterByLastName: parts.slice(1).join(' ') || undefined,
+  };
+};
+
+/**
+ * Fetches the first page of users with optional search filtering via GET /users.
+ *
+ * @param {Object} payload - Search payload with findText.
+ * @returns {Promise<any>} Paginated user data.
+ */
 export const GetUsers = createAsyncThunk(
   'user/GetUsers',
   async (payload: { findText: string }, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
-    const isNumber =
-      typeof Number(payload.findText) === 'number' &&
-      !Number.isNaN(Number(payload.findText));
-    let filterByNationalId;
-    let filterByFirstName;
-    let filterByLastName;
-
-    if (isNumber) {
-      filterByNationalId = payload.findText;
-    } else {
-      const findArray = payload.findText.split(' ');
-      filterByFirstName = findArray[0];
-      filterByLastName = findArray[1];
-    }
+    const filters = parseUserSearchParams(payload.findText);
 
     const response = (
       await microserviceApiRequest({
@@ -222,9 +328,7 @@ export const GetUsers = createAsyncThunk(
           params: {
             limit: PAGINATION_REGISTRATION_LIMIT,
             page: 1,
-            filterByFirstName,
-            filterByLastName,
-            filterByNationalId,
+            ...filters,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -234,24 +338,19 @@ export const GetUsers = createAsyncThunk(
   },
 );
 
+/**
+ * Fetches additional pages of users for infinite scrolling via GET /users.
+ *
+ * @param {Object} payload - Search payload with findText.
+ * @returns {Promise<any>} Paginated user data.
+ */
 export const GetMoreUsers = createAsyncThunk(
   'user/GetMoreUsers',
   async (payload: { findText: string }, { getState }) => {
     const state = getState() as RootState;
     const user = state.userSlice;
     const { token } = state.authSlice;
-    const isNumber = typeof payload.findText === 'number';
-
-    let filterByNationalId;
-    let filterByFirstName;
-    let filterByLastName;
-    if (isNumber) {
-      filterByNationalId = payload.findText;
-    } else {
-      const findArray = payload.findText.split(' ');
-      filterByFirstName = findArray[0];
-      filterByLastName = findArray[1];
-    }
+    const filters = parseUserSearchParams(payload.findText);
 
     const response = (
       await microserviceApiRequest({
@@ -262,9 +361,7 @@ export const GetMoreUsers = createAsyncThunk(
           params: {
             limit: PAGINATION_REGISTRATION_LIMIT,
             page: user.currentPage + 1,
-            filterByFirstName,
-            filterByLastName,
-            filterByNationalId,
+            ...filters,
           },
           headers: { Authorization: `Bearer ${token}` },
         },

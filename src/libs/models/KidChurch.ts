@@ -270,7 +270,9 @@ export interface IUpdateKid {
 }
 
 // SLIDES
-export interface IUsers extends ReduxDefaultStateWithPagination<IUser> {}
+export interface IUsers extends ReduxDefaultStateWithPagination<IUser> {
+  needsRefresh?: boolean;
+}
 export interface IKids extends ReduxDefaultStateWithPagination<IKid> {
   needsRefresh?: boolean;
 }

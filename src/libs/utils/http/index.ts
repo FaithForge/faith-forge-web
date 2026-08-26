@@ -40,7 +40,7 @@ const executeApiRequest = async (
       case HttpRequestMethod.PUT:
         return await instance.put(url, data, { headers, responseType });
       case HttpRequestMethod.DELETE:
-        return await instance.delete(url, { headers, responseType });
+        return await instance.delete(url, { data, params, headers, responseType });
       default:
         throw new Error(`Invalid HTTP verb: ${method}`);
     }
