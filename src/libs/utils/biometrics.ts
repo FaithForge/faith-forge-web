@@ -6,10 +6,115 @@ const BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
 export interface BiometricSessionData {
   username: string;
   user: any;
-  token: string;
+  token?: string;
+  encryptedPassword?: string;
+  iv?: string;
+  salt?: string;
   credentialId: string;
   registeredAt: number;
 }
+
+export interface BiometricAuthResult {
+  username: string;
+  user: any;
+  token?: string;
+  password?: string;
+  tokenValid: boolean;
+}
+
+/**
+ * Derives an AES-GCM CryptoKey using PBKDF2 from the credentialId and salt.
+ *
+ * @param {string} credentialId - The unique credential ID used as secret seed.
+ * @param {Uint8Array} salt - The cryptographic salt for key derivation.
+ * @returns {Promise<CryptoKey>} The derived AES-GCM crypto key.
+ */
+const deriveKeyFromCredentialId = async (
+  credentialId: string,
+  salt: Uint8Array
+): Promise<CryptoKey> => {
+  const enc = new TextEncoder();
+  const baseKey = await window.crypto.subtle.importKey(
+    'raw',
+    enc.encode(credentialId),
+    { name: 'PBKDF2' },
+    false,
+    ['deriveKey']
+  );
+
+  return window.crypto.subtle.deriveKey(
+    {
+      name: 'PBKDF2',
+      salt,
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    baseKey,
+    { name: 'AES-GCM', length: 256 },
+    false,
+    ['encrypt', 'decrypt']
+  );
+};
+
+/**
+ * Encrypts plain text using AES-GCM 256-bit with a key derived from the credential ID.
+ *
+ * @param {string} plainText - The text to encrypt.
+ * @param {string} credentialId - The credential ID used for key derivation.
+ * @returns {Promise<{ ciphertext: string; iv: string; salt: string }>} Encrypted data, IV, and salt in Base64.
+ */
+const encryptData = async (
+  plainText: string,
+  credentialId: string
+): Promise<{ ciphertext: string; iv: string; salt: string }> => {
+  const salt = window.crypto.getRandomValues(new Uint8Array(16));
+  const iv = window.crypto.getRandomValues(new Uint8Array(12));
+  const key = await deriveKeyFromCredentialId(credentialId, salt);
+  const enc = new TextEncoder();
+  const encoded = enc.encode(plainText);
+
+  const encrypted = await window.crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    encoded
+  );
+
+  return {
+    ciphertext: btoa(String.fromCharCode(...new Uint8Array(encrypted))),
+    iv: btoa(String.fromCharCode(...iv)),
+    salt: btoa(String.fromCharCode(...salt)),
+  };
+};
+
+/**
+ * Decrypts ciphertext using AES-GCM 256-bit with a key derived from the credential ID.
+ *
+ * @param {string} ciphertext - Base64 encoded encrypted text.
+ * @param {string} iv - Base64 encoded initialization vector.
+ * @param {string} salt - Base64 encoded salt.
+ * @param {string} credentialId - The credential ID used for key derivation.
+ * @returns {Promise<string>} The decrypted plain text.
+ */
+const decryptData = async (
+  ciphertext: string,
+  iv: string,
+  salt: string,
+  credentialId: string
+): Promise<string> => {
+  const saltBytes = Uint8Array.from(atob(salt), (c) => c.charCodeAt(0));
+  const ivBytes = Uint8Array.from(atob(iv), (c) => c.charCodeAt(0));
+  const encryptedBytes = Uint8Array.from(atob(ciphertext), (c) => c.charCodeAt(0));
+  const key = await deriveKeyFromCredentialId(credentialId, saltBytes);
+
+  const decrypted = await window.crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv: ivBytes },
+    key,
+    encryptedBytes
+  );
+
+  const dec = new TextDecoder();
+  return dec.decode(decrypted);
+};
 
 /**
  * Checks if the current browser and device support biometric authentication (fingerprint / FaceID / TouchID / Windows Hello).
@@ -21,7 +126,8 @@ export const isBiometricsAvailable = async (): Promise<boolean> => {
     if (
       typeof window === 'undefined' ||
       !window.PublicKeyCredential ||
-      !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable
+      !PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable ||
+      !window.crypto?.subtle
     ) {
       return false;
     }
@@ -42,7 +148,7 @@ export const hasRegisteredBiometrics = (): boolean => {
     const data = localStorage.getItem(BIOMETRIC_STORAGE_KEY);
     if (!data) return false;
     const parsed: BiometricSessionData = JSON.parse(data);
-    return Boolean(parsed && parsed.token && !isTokenExpired(parsed.token));
+    return Boolean(parsed && parsed.credentialId && parsed.username);
   } catch {
     return false;
   }
@@ -51,7 +157,7 @@ export const hasRegisteredBiometrics = (): boolean => {
 /**
  * Returns the saved biometric session metadata (like user name).
  *
- * @returns {BiometricSessionData | null}
+ * @returns {BiometricSessionData | null} The saved session metadata or null if not found.
  */
 export const getRegisteredBiometricData = (): BiometricSessionData | null => {
   try {
@@ -64,20 +170,25 @@ export const getRegisteredBiometricData = (): BiometricSessionData | null => {
 };
 
 /**
- * Registers biometrics on the device using WebAuthn.
- * Triggers the native fingerprint / Face ID prompt.
+ * Registers biometrics on the device using WebAuthn and stores encrypted credentials.
  *
- * @param {object} params - The user session data to secure.
+ * @param {object} params - The parameters containing username, password, user object, and token.
+ * @param {string} params.username - The user identifier.
+ * @param {string} [params.password] - The password to securely store encrypted on the device.
+ * @param {any} params.user - The user metadata object.
+ * @param {string} [params.token] - The current auth token if available.
  * @returns {Promise<boolean>} True if registration was successful.
  */
 export const registerBiometrics = async ({
   username,
+  password,
   user,
   token,
 }: {
   username: string;
+  password?: string;
   user: any;
-  token: string;
+  token?: string;
 }): Promise<boolean> => {
   try {
     if (!(await isBiometricsAvailable())) {
@@ -125,10 +236,24 @@ export const registerBiometrics = async ({
       String.fromCharCode(...new Uint8Array(credential.rawId))
     );
 
+    let encryptedPassword: string | undefined;
+    let iv: string | undefined;
+    let salt: string | undefined;
+
+    if (password) {
+      const encResult = await encryptData(password, credentialId);
+      encryptedPassword = encResult.ciphertext;
+      iv = encResult.iv;
+      salt = encResult.salt;
+    }
+
     const sessionData: BiometricSessionData = {
       username,
       user,
       token,
+      encryptedPassword,
+      iv,
+      salt,
       credentialId,
       registeredAt: Date.now(),
     };
@@ -136,28 +261,51 @@ export const registerBiometrics = async ({
     localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(sessionData));
     return true;
   } catch (error: any) {
-    // User cancelled prompt or platform error
     console.warn('Biometric registration error/cancelled:', error);
     return false;
   }
 };
 
 /**
- * Prompts the user with the native fingerprint / Face ID scanner and returns the validated session.
+ * Updates the stored biometric session token and user data without touching credentials.
  *
- * @returns {Promise<BiometricSessionData | null>} The session data if verification succeeded, null otherwise.
+ * @param {object} params - The session payload.
+ * @param {string} params.token - The new JWT token.
+ * @param {any} [params.user] - Updated user info.
+ * @returns {void}
  */
-export const authenticateWithBiometrics = async (): Promise<BiometricSessionData | null> => {
+export const updateBiometricSessionToken = ({
+  token,
+  user,
+}: {
+  token: string;
+  user?: any;
+}): void => {
+  try {
+    const saved = getRegisteredBiometricData();
+    if (!saved) return;
+    const updated: BiometricSessionData = {
+      ...saved,
+      token,
+      user: user || saved.user,
+    };
+    localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(updated));
+  } catch (error) {
+    console.warn('Could not update biometric session token:', error);
+  }
+};
+
+/**
+ * Prompts the user with the native fingerprint / Face ID scanner and returns the validated session.
+ * If the cached token is expired, returns decrypted credentials for backend re-authentication.
+ *
+ * @returns {Promise<BiometricAuthResult | null>} The authentication result or null.
+ */
+export const authenticateWithBiometrics = async (): Promise<BiometricAuthResult | null> => {
   try {
     const savedData = getRegisteredBiometricData();
     if (!savedData || !savedData.credentialId) {
       return null;
-    }
-
-    // Verify token validity
-    if (isTokenExpired(savedData.token)) {
-      clearBiometricSession();
-      throw new Error('La sesión guardada ha expirado. Ingresa con tu contraseña.');
     }
 
     const challenge = new Uint8Array(32);
@@ -182,11 +330,41 @@ export const authenticateWithBiometrics = async (): Promise<BiometricSessionData
       },
     });
 
-    if (assertion) {
-      return savedData;
+    if (!assertion) {
+      return null;
     }
 
-    return null;
+    // Check if current cached token is still valid
+    const isTokenStillValid = Boolean(savedData.token && !isTokenExpired(savedData.token));
+
+    if (isTokenStillValid) {
+      return {
+        username: savedData.username,
+        user: savedData.user,
+        token: savedData.token,
+        tokenValid: true,
+      };
+    }
+
+    // If token expired but encrypted password is present, decrypt it
+    if (savedData.encryptedPassword && savedData.iv && savedData.salt) {
+      const decryptedPassword = await decryptData(
+        savedData.encryptedPassword,
+        savedData.iv,
+        savedData.salt,
+        savedData.credentialId
+      );
+
+      return {
+        username: savedData.username,
+        user: savedData.user,
+        password: decryptedPassword,
+        tokenValid: false,
+      };
+    }
+
+    // Legacy fallback without encrypted password: throw meaningful error without wiping credentials
+    throw new Error('La sesión anterior expiró. Por favor, ingresa con tu contraseña una vez para actualizar la huella.');
   } catch (error: any) {
     if (error?.name === 'NotAllowedError') {
       throw new Error('Autenticación biométrica cancelada.');
@@ -197,6 +375,8 @@ export const authenticateWithBiometrics = async (): Promise<BiometricSessionData
 
 /**
  * Removes the biometric session from local storage.
+ *
+ * @returns {void}
  */
 export const clearBiometricSession = (): void => {
   localStorage.removeItem(BIOMETRIC_STORAGE_KEY);

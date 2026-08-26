@@ -50,6 +50,13 @@ const persistConfig = {
   timeout: 10,
   key: 'root',
   storage,
+  whitelist: [
+    'authSlice',
+    'churchCampusSlice',
+    'churchMeetingSlice',
+    'churchPrinterSlice',
+    'printerModeSlice',
+  ],
 };
 
 const persistedReducer = persistReducer(persistConfig, reducers);

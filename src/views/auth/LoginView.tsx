@@ -15,6 +15,7 @@ import {
   getRegisteredBiometricData,
   authenticateWithBiometrics,
   registerBiometrics,
+  updateBiometricSessionToken,
   BiometricSessionData,
 } from '@/libs/utils/biometrics';
 import { formatPersonShortName } from '@/libs/utils/text';
@@ -31,7 +32,12 @@ const LoginView = () => {
   const [isBioLoading, setIsBioLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [registeredBioData, setRegisteredBioData] = useState<BiometricSessionData | null>(null);
-  const [pendingLoginData, setPendingLoginData] = useState<{ username: string; user: any; token: string } | null>(null);
+  const [pendingLoginData, setPendingLoginData] = useState<{
+    username: string;
+    password?: string;
+    user: any;
+    token: string;
+  } | null>(null);
   const [showRegisterBioModal, setShowRegisterBioModal] = useState(false);
   
   const { register, handleSubmit, formState: { errors } } = useForm<IFormLoginInput>();
@@ -49,23 +55,53 @@ const LoginView = () => {
 
   /**
    * Handles biometric fingerprint / Face ID login.
+   * If session token is expired, re-authenticates in the background with decrypted credentials.
    */
   const handleBiometricLogin = async () => {
     setIsBioLoading(true);
     try {
-      const session = await authenticateWithBiometrics();
-      if (session && session.token && session.user) {
+      const result = await authenticateWithBiometrics();
+      if (!result) return;
+
+      if (result.tokenValid && result.token && result.user) {
         dispatch(
           setAuthSession({
-            user: session.user,
-            token: session.token,
+            user: result.user,
+            token: result.token,
           })
         );
         const name =
-          formatPersonShortName(session.user?.firstName, session.user?.lastName) ||
-          session.username;
+          formatPersonShortName(result.user?.firstName, result.user?.lastName) ||
+          result.username;
         toast.success(`¡Bienvenido de nuevo, ${name}!`);
         navigate('/', { replace: true });
+        return;
+      }
+
+      if (result.password) {
+        const loginResult = await dispatch(
+          UserLogin({ username: result.username, password: result.password })
+        );
+
+        if (UserLogin.fulfilled.match(loginResult)) {
+          const payload = loginResult.payload;
+          updateBiometricSessionToken({
+            token: payload.token,
+            user: payload.user,
+          });
+          const name =
+            formatPersonShortName(payload.user?.firstName, payload.user?.lastName) ||
+            result.username;
+          toast.success(`¡Bienvenido de nuevo, ${name}!`);
+          navigate('/', { replace: true });
+        } else {
+          const rawMsg = loginResult.error?.message || '';
+          const isAuthError = rawMsg.includes('401') || rawMsg.includes('404');
+          const errMsg = isAuthError
+            ? 'Tus credenciales han cambiado. Por favor, ingresa con tu contraseña.'
+            : (loginResult.payload as any)?.message ?? rawMsg ?? 'Error al iniciar sesión';
+          toast.error(errMsg);
+        }
       }
     } catch (err: any) {
       toast.error(err.message || 'No se pudo verificar la biometría.');
@@ -91,11 +127,19 @@ const LoginView = () => {
         if (bioAvailable && (!registeredBioData || registeredBioData.username !== cleanUsername)) {
           setPendingLoginData({
             username: cleanUsername,
+            password: data.password,
             user: payload.user,
             token: payload.token,
           });
           setShowRegisterBioModal(true);
         } else {
+          // If already registered for this user, update token silently
+          if (registeredBioData && registeredBioData.username === cleanUsername) {
+            updateBiometricSessionToken({
+              token: payload.token,
+              user: payload.user,
+            });
+          }
           toast.success('¡Bienvenido!');
           navigate('/', { replace: true });
         }

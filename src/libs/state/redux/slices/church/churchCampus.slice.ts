@@ -32,11 +32,20 @@ const churchCampusSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(GetChurchCampuses.fulfilled, (state, action) => {
-      state.data = action.payload;
+      state.data = action.payload || [];
       state.error = initialState.error;
       state.loading = false;
+
+      if (state.current) {
+        const freshMatch = state.data.find(
+          (c: IChurchCampus) => c.id === state.current?.id,
+        );
+        state.current = freshMatch ?? (state.data[0] ?? undefined);
+      } else if (state.data.length > 0) {
+        state.current = state.data[0];
+      }
     });
-    builder.addCase("auth/logout", (state) => {
+    builder.addCase('auth/logout', (state) => {
       state.current = undefined;
     });
 

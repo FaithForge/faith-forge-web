@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Trash2 } from 'lucide-react';
+import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Lock } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import Input from '@/components/ui/Input';
+import Button from '@/components/ui/Button';
 import { clearAppCacheAndReload } from '@/libs/utils/appCache';
 import {
   isBiometricsAvailable,
@@ -21,6 +23,9 @@ interface UserProfileModalProps {
 
 const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
   const [showClearCacheConfirm, setShowClearCacheConfirm] = useState(false);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [passwordInput, setPasswordInput] = useState('');
+  const [isRegisteringBio, setIsRegisteringBio] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [isBioEnabled, setIsBioEnabled] = useState(false);
   useModalBackClose(open, () => onOpenChange(false));
@@ -51,17 +56,37 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
       setIsBioEnabled(false);
       toast.success('Inicio de sesión con biometría desactivado');
     } else {
+      setPasswordInput('');
+      setShowPasswordModal(true);
+    }
+  };
+
+  const handleConfirmPasswordAndRegisterBio = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!passwordInput) {
+      toast.error('Por favor, ingresa tu contraseña.');
+      return;
+    }
+    setIsRegisteringBio(true);
+    try {
       const success = await registerBiometrics({
         username: user.email || user.username || userName,
+        password: passwordInput,
         user,
         token,
       });
       if (success) {
         setIsBioEnabled(true);
+        setShowPasswordModal(false);
+        setPasswordInput('');
         toast.success('¡Biometría (Huella / Face ID) configurada con éxito!');
       } else {
         toast.error('No se pudo configurar la biometría en este dispositivo.');
       }
+    } catch {
+      toast.error('Ocurrió un error al configurar la biometría.');
+    } finally {
+      setIsRegisteringBio(false);
     }
   };
 
@@ -173,6 +198,61 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
         type="info"
         onConfirm={clearAppCacheAndReload}
       />
+
+      {/* Biometrics Password Confirmation Dialog */}
+      <Dialog.Root open={showPasswordModal} onOpenChange={setShowPasswordModal}>
+        <Dialog.Portal>
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[140] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface w-[90%] max-w-sm rounded-2xl shadow-xl z-[141] p-6 outline-none animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                <Fingerprint size={22} />
+              </div>
+              <div>
+                <Dialog.Title className="text-base font-bold text-gray-800">
+                  Activar Huella / Face ID
+                </Dialog.Title>
+                <Dialog.Description className="text-xs text-gray-500">
+                  Ingresa tu contraseña para habilitar el inicio de sesión biométrico en este dispositivo.
+                </Dialog.Description>
+              </div>
+            </div>
+
+            <form onSubmit={handleConfirmPasswordAndRegisterBio} className="flex flex-col gap-4">
+              <Input
+                label="Contraseña"
+                type="password"
+                placeholder="Ingresa tu contraseña"
+                value={passwordInput}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                autoComplete="current-password"
+                required
+              />
+
+              <div className="flex gap-2 justify-end mt-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  size="sm"
+                  onClick={() => setShowPasswordModal(false)}
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                  loading={isRegisteringBio}
+                  loadingText="Escaneando..."
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Confirmar y escanear
+                </Button>
+              </div>
+            </form>
+          </Dialog.Content>
+        </Dialog.Portal>
+      </Dialog.Root>
     </>
   );
 };

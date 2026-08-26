@@ -7,6 +7,8 @@ import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { isTokenExpired } from '@/libs/utils/jwt';
+import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
+import { ChurchMeetingStateEnum } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
 import { toast } from 'sonner';
 
@@ -22,7 +24,23 @@ const MainLayout = () => {
 
   const token = useAppSelector((state) => state.authSlice.token);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+
+  // Automatically refresh church campuses and active meetings from BE on mount/focus
+  useEffect(() => {
+    if (!token) return;
+
+    dispatch(GetChurchCampuses());
+    if (currentCampus?.id) {
+      dispatch(
+        GetChurchMeetings({
+          churchCampusId: currentCampus.id,
+          state: ChurchMeetingStateEnum.ACTIVE,
+        })
+      );
+    }
+  }, [token, currentCampus?.id, dispatch]);
 
   // Active session expiration watcher (checks every 15 seconds or when returning to tab)
   useEffect(() => {
