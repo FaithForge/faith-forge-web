@@ -17,7 +17,8 @@ import {
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import PageHeader from '@/components/ui/PageHeader';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { updateAuthUser } from '@/libs/state/redux/slices/user/auth.slice';
 import { 
   GetUserByNationalId, 
   UpdateUser, 
@@ -28,7 +29,7 @@ import {
   IUpdateUser, 
   UserIdType, 
   UserState, 
-  UserGender,
+  UserGenderCode,
   idTypeSelect, 
   healthSecurityEntitySelect, 
   userStateSelect 
@@ -49,7 +50,7 @@ interface ModifyUserFormData {
   lastName: string;
   nationalIdType: UserIdType;
   nationalId: string;
-  gender: UserGender;
+  gender: UserGenderCode;
   birthday: string;
   dialCodePhone: string;
   phone: string;
@@ -67,6 +68,7 @@ interface ModifyUserFormData {
 const ModifyUserView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const currentUser = useAppSelector((state) => state.authSlice.user);
 
   // Estados de búsqueda
   const [searchNationalId, setSearchNationalId] = useState('');
@@ -94,7 +96,7 @@ const ModifyUserView: React.FC = () => {
       lastName: '',
       nationalIdType: UserIdType.CC,
       nationalId: '',
-      gender: UserGender.MALE,
+      gender: UserGenderCode.MALE,
       birthday: '',
       dialCodePhone: '+57',
       phone: '',
@@ -114,9 +116,9 @@ const ModifyUserView: React.FC = () => {
   const populateUserData = (user: IUser) => {
     // Normalize gender
     const userGender = 
-      user.gender === 'F' || (user.gender as unknown) === UserGender.FEMALE 
-        ? UserGender.FEMALE 
-        : UserGender.MALE;
+      user.gender === UserGenderCode.FEMALE || (user.gender as unknown) === 'FEMALE' 
+        ? UserGenderCode.FEMALE 
+        : UserGenderCode.MALE;
 
     // Normalizar fecha de nacimiento
     let formattedBirthday = '';
@@ -245,7 +247,6 @@ const ModifyUserView: React.FC = () => {
 
       // 2. Construct payload with UpdateUserDTO
       const updatePayload: IUpdateUser = {
-        id: foundUser.id,
         nationalIdType: data.nationalIdType,
         nationalId: data.nationalId ? data.nationalId.trim() : undefined,
         firstName: data.firstName.trim(),
@@ -278,6 +279,16 @@ const ModifyUserView: React.FC = () => {
           photoUrl: finalPhotoUrl,
         } as IUser;
       });
+
+      // Si el usuario editado es el usuario autenticado actualmente, actualizar la sesión
+      if (currentUser?.id === foundUser.id) {
+        dispatch(
+          updateAuthUser({
+            ...updatePayload,
+            photoUrl: finalPhotoUrl,
+          })
+        );
+      }
 
       // Sincronizar form
       reset(data);
@@ -385,7 +396,7 @@ const ModifyUserView: React.FC = () => {
               <div className="relative group shrink-0">
                 <div className={clsx(
                   'w-24 h-24 rounded-full overflow-hidden border-2 border-primary/20 flex items-center justify-center shadow-xs transition-transform',
-                  watchedGender === UserGender.FEMALE ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'
+                  watchedGender === UserGenderCode.FEMALE ? 'bg-pink-50 text-pink-500' : 'bg-blue-50 text-blue-500'
                 )}>
                   {photoPreview ? (
                     <img src={photoPreview} alt="Foto de perfil" className="w-full h-full object-cover" />
@@ -504,10 +515,10 @@ const ModifyUserView: React.FC = () => {
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() => setValue('gender', UserGender.MALE, { shouldDirty: true })}
+                    onClick={() => setValue('gender', UserGenderCode.MALE, { shouldDirty: true })}
                     className={clsx(
                       'flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all',
-                      watchedGender === UserGender.MALE
+                      watchedGender === UserGenderCode.MALE
                         ? 'border-blue-500 bg-blue-50/80 text-blue-700 shadow-xs'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                     )}
@@ -517,10 +528,10 @@ const ModifyUserView: React.FC = () => {
 
                   <button
                     type="button"
-                    onClick={() => setValue('gender', UserGender.FEMALE, { shouldDirty: true })}
+                    onClick={() => setValue('gender', UserGenderCode.FEMALE, { shouldDirty: true })}
                     className={clsx(
                       'flex items-center justify-center gap-2 py-3 px-4 rounded-xl border-2 font-bold text-sm transition-all',
-                      watchedGender === UserGender.FEMALE
+                      watchedGender === UserGenderCode.FEMALE
                         ? 'border-pink-500 bg-pink-50/80 text-pink-700 shadow-xs'
                         : 'border-gray-200 bg-white text-gray-600 hover:bg-gray-50'
                     )}

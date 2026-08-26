@@ -158,8 +158,12 @@ const TopBar = () => {
         {/* Menú de Usuario */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95">
-            <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-black/20 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner">
-              {userInitials}
+            <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-black/20 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner overflow-hidden">
+              {user?.photoUrl ? (
+                <img src={user.photoUrl} alt={userName} className="w-full h-full object-cover" />
+              ) : (
+                userInitials
+              )}
             </div>
           </DropdownMenu.Trigger>
 
@@ -169,9 +173,18 @@ const TopBar = () => {
               sideOffset={8}
               align="end"
             >
-              <div className="px-3 py-2 border-b border-gray-100 mb-1">
-                <p className="font-bold text-sm">{userName}</p>
-                {userEmail && <p className="text-xs text-text-muted">{userEmail}</p>}
+              <div className="px-3 py-2 border-b border-gray-100 mb-1 flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold overflow-hidden shrink-0">
+                  {user?.photoUrl ? (
+                    <img src={user.photoUrl} alt={userName} className="w-full h-full object-cover" />
+                  ) : (
+                    userInitials
+                  )}
+                </div>
+                <div className="overflow-hidden">
+                  <p className="font-bold text-sm truncate">{userName}</p>
+                  {userEmail && <p className="text-xs text-text-muted truncate">{userEmail}</p>}
+                </div>
               </div>
               
               <DropdownMenu.Item 

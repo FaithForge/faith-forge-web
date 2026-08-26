@@ -101,7 +101,7 @@ export interface IUpdateUser {
   dialCodePhone?: string;
   phone?: string;
   email?: string;
-  gender?: UserGender | string;
+  gender?: UserGenderCode | string;
   birthday?: string | Date;
   state?: UserState;
   photoUrl?: string;

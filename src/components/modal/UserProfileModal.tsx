@@ -80,8 +80,12 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
               >
                 <X size={18} />
               </button>
-              <div className="w-20 h-20 bg-white text-primary rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-sm ring-4 ring-primary-foreground/20">
-                {userInitials}
+              <div className="w-20 h-20 bg-white text-primary rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-sm ring-4 ring-primary-foreground/20 overflow-hidden">
+                {user.photoUrl ? (
+                  <img src={user.photoUrl} alt={userName} className="w-full h-full object-cover" />
+                ) : (
+                  userInitials
+                )}
               </div>
               <h2 className="text-xl font-bold">{userName}</h2>
               <p className="opacity-90 text-sm mt-1">Perfil de Usuario</p>
