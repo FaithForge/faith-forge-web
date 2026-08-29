@@ -275,7 +275,7 @@ const KidCheckInView = () => {
     try {
       setIsProcessing(true);
       setProcessingStep('Solicitando reimpresión...');
-      await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id, copies: 1 })).unwrap();
+      await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id })).unwrap();
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
         setProcessingStep('Imprimiendo etiqueta Bluetooth...');
         const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);

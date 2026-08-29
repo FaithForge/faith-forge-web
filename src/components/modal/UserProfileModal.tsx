@@ -94,8 +94,8 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
     <>
       <Dialog.Root open={open} onOpenChange={onOpenChange}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[130] animate-in fade-in" />
-          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface w-[90%] max-w-sm rounded-2xl shadow-xl z-[131] p-0 overflow-hidden outline-none animate-in fade-in zoom-in-95 duration-200">
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[300] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface w-[90%] max-w-sm rounded-2xl shadow-xl z-[301] p-0 overflow-hidden outline-none animate-in fade-in zoom-in-95 duration-200">
             
             {/* Header */}
             <div className="bg-primary p-6 text-white flex flex-col items-center relative">
@@ -202,8 +202,8 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
       {/* Biometrics Password Confirmation Dialog */}
       <Dialog.Root open={showPasswordModal} onOpenChange={setShowPasswordModal}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[140] animate-in fade-in" />
-          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface w-[90%] max-w-sm rounded-2xl shadow-xl z-[141] p-6 outline-none animate-in fade-in zoom-in-95 duration-200">
+          <Dialog.Overlay className="fixed inset-0 bg-black/40 z-[310] animate-in fade-in" />
+          <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface w-[90%] max-w-sm rounded-2xl shadow-xl z-[311] p-6 outline-none animate-in fade-in zoom-in-95 duration-200">
             <div className="flex items-center gap-3 mb-4">
               <div className="w-10 h-10 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
                 <Fingerprint size={22} />

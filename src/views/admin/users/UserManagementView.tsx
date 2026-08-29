@@ -6,6 +6,7 @@ import Cell from '@/components/ui/Cell';
 import Button from '@/components/ui/Button';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import PageHeader from '@/components/ui/PageHeader';
+import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetUsers, GetMoreUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import { updateCurrentUser } from '@/libs/state/redux/slices/user/users.slice';
@@ -57,10 +58,10 @@ const UserManagementView: React.FC = () => {
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    const delay = isSearchChanged ? 400 : 0;
+    const delay = isSearchChanged && searchText ? 400 : 0;
 
     timeoutRef.current = setTimeout(() => {
-      dispatch(GetUsers({ findText: searchText.trim() }));
+      dispatch(GetUsers({ findText: searchText }));
     }, delay);
 
     return () => {
@@ -69,11 +70,21 @@ const UserManagementView: React.FC = () => {
   }, [searchText, dispatch, needsRefresh, users.length]);
 
   /**
+   * Clears search input and immediately fetches full user list without debounce delay.
+   */
+  const handleClearSearch = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    prevSearchTextRef.current = '';
+    setSearchText('');
+    dispatch(GetUsers({ findText: '' }));
+  };
+
+  /**
    * Refreshes the user list manually via pull-to-refresh.
    */
   const handleRefreshUsers = async () => {
     try {
-      await dispatch(GetUsers({ findText: searchText.trim() })).unwrap();
+      await dispatch(GetUsers({ findText: searchText })).unwrap();
     } catch {
       // ignore
     }
@@ -86,7 +97,7 @@ const UserManagementView: React.FC = () => {
     if (loading || loadingMore || currentPage >= totalPages) return;
     setLoadingMore(true);
     try {
-      await dispatch(GetMoreUsers({ findText: searchText.trim() })).unwrap();
+      await dispatch(GetMoreUsers({ findText: searchText })).unwrap();
     } catch (e) {
       console.error(e);
     } finally {
@@ -127,14 +138,14 @@ const UserManagementView: React.FC = () => {
   );
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-20">
+    <div className="min-h-full bg-slate-50/60 pb-20 flex flex-col flex-1">
       <PageHeader
         title="Gestión de Usuarios"
         onBack={() => navigate(APP_ROUTES.admin.root)}
         rightAction={rightHeaderAction}
       />
 
-      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3">
+      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full min-h-0">
         {/* Search Bar - Sticky */}
         <div className="sticky top-0 z-20 bg-background py-2 -mx-3 px-3 sm:-mx-4 sm:px-4">
           <Input
@@ -142,20 +153,16 @@ const UserManagementView: React.FC = () => {
             placeholder="Buscar usuario por nombre o documento"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
-            onClear={() => setSearchText('')}
+            onClear={handleClearSearch}
             wrapperClassName="mb-0"
             className="border-0 shadow-sm text-base focus:ring-0 transition-colors bg-white"
           />
         </div>
 
         {/* User List */}
-        <PullToRefresh onRefresh={handleRefreshUsers} disabled={loading}>
-          <div className="flex flex-col gap-2 mt-1">
-            {loading && (
-              <div className="flex justify-center p-6">
-                <Loader2 className="animate-spin text-primary" size={26} />
-              </div>
-            )}
+        <PullToRefresh onRefresh={handleRefreshUsers} disabled={loading} className="flex-1 flex flex-col min-h-0">
+          <div className="flex flex-col gap-2 mt-1 flex-1 min-h-0">
+            {loading && <CellListSkeleton count={6} />}
 
             {!loading && users.length === 0 && (
               <div className="text-center p-12 bg-white rounded-2xl border border-gray-200/80 shadow-xs flex flex-col items-center">

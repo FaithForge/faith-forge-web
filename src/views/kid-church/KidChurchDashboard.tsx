@@ -11,9 +11,10 @@ import KidDetailsDrawer from '@/components/modal/KidDetailsDrawer';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKidGroups, GetKidGroupRegistered } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
-import { capitalizeWords } from '@/libs/utils/text';
+import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import PullToRefresh from '@/components/ui/PullToRefresh';
+import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
 /**
  * Main dashboard for Iglekids (Coordinators, Supervisors, Teachers).
@@ -62,13 +63,22 @@ const KidChurchDashboard: React.FC = () => {
       result = result.filter((kid: IKid) => kid.kidGroup?.id === selectedKidGroupId);
     }
 
-    if (searchText.trim()) {
-      const search = searchText.toLowerCase().trim();
-      result = result.filter((kid: IKid) => {
-        const fullName = `${kid.firstName || ''} ${kid.lastName || ''}`.toLowerCase();
-        const code = String(kid.faithForgeId || kid.id || '').toLowerCase();
-        return fullName.includes(search) || code.includes(search);
-      });
+    if (searchText) {
+      const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(searchText);
+      if (numericId) {
+        result = result.filter((kid: IKid) => {
+          const code = String(kid.faithForgeId || kid.id || '').toLowerCase();
+          return code.includes(numericId.toLowerCase());
+        });
+      } else if (filterByFirstName || filterByLastName) {
+        result = result.filter((kid: IKid) => {
+          const first = (kid.firstName || '').toLowerCase();
+          const last = (kid.lastName || '').toLowerCase();
+          const matchFirst = filterByFirstName ? first.includes(filterByFirstName.toLowerCase()) : true;
+          const matchLast = filterByLastName ? last.includes(filterByLastName.toLowerCase()) : true;
+          return matchFirst && matchLast;
+        });
+      }
     }
 
     return result;
@@ -80,7 +90,7 @@ const KidChurchDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-3 flex flex-col gap-3 min-h-screen pb-28 relative">
+    <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-28 relative">
       {/* Service Info Banner */}
       {isConfigured && currentMeeting ? (
         <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
@@ -196,14 +206,9 @@ const KidChurchDashboard: React.FC = () => {
       )}
 
       {/* Registered Kids List */}
-      <PullToRefresh onRefresh={handleRefresh} disabled={loading || isRefreshing}>
-        <div className="flex flex-col gap-2 mt-1">
-          {loading && (
-            <div className="flex flex-col items-center justify-center p-8 text-gray-400 gap-2">
-              <RefreshCw size={24} className="animate-spin text-primary" />
-              <span className="text-xs font-medium">Cargando salones...</span>
-            </div>
-          )}
+      <PullToRefresh onRefresh={handleRefresh} disabled={loading || isRefreshing} className="flex-1 flex flex-col min-h-0">
+        <div className="flex flex-col gap-2 mt-1 flex-1 min-h-0">
+          {loading && <CellListSkeleton count={6} />}
 
           {!loading && filteredKids.length === 0 && (
             <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400">

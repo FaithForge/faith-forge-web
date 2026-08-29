@@ -45,13 +45,12 @@ export const ReprintKidRegistration = createAsyncThunk(
   async (
     payload: {
       id: string;
-      copies: number;
     },
     { getState },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
-    const { id, copies } = payload;
+    const { id } = payload;
     const churchPrinterSlice = state.churchPrinterSlice;
     const printerMode = state.printerModeSlice?.mode || 'NETWORK';
     const isBluetooth = printerMode === 'BLUETOOTH';
@@ -64,7 +63,6 @@ export const ReprintKidRegistration = createAsyncThunk(
         options: {
           data: {
             id,
-            copies,
             churchPrinterId: isBluetooth ? undefined : churchPrinterSlice.current?.name,
             skipServerPrint: isBluetooth,
           },

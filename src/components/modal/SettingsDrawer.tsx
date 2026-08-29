@@ -172,14 +172,14 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     (!isKidChurchRole && isBluetoothMode && !isBluetoothConnected);
 
   return (
-    <Drawer.Root handleOnly open={open} onOpenChange={onOpenChange} dismissible={isConfigured}>
+    <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={onOpenChange} dismissible={isConfigured}>
       <Drawer.Portal>
         <Drawer.Overlay 
           onClick={() => isConfigured && onOpenChange(false)} 
-          className="fixed inset-0 bg-black/50 z-[150] cursor-pointer" 
+          className="fixed inset-0 bg-black/50 z-[300] cursor-pointer" 
         />
         <Drawer.Content 
-          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] outline-none mt-20 max-h-[calc(100vh-5rem)]"
+          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[301] outline-none mt-20 max-h-[calc(100dvh-3rem)]"
           onCloseAutoFocus={(e) => e.preventDefault()}
           onPointerDownOutside={(e) => {
             if (!isConfigured) {

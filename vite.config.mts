@@ -17,6 +17,7 @@ const currentBuildTime = Date.now();
 
 const versionPlugin = () => ({
   name: 'generate-version-json',
+  apply: 'build' as const,
   buildStart() {
     const buildInfo = {
       version: '3.0.0',

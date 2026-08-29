@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { isAnyModalOpen, isInternalModalBack } from '@/libs/hooks/useModalBackClose';
 
 interface UseBackSwipeGuardProps {
   /**
@@ -34,6 +35,17 @@ export const useBackSwipeGuard = ({ enabled, onBlockBack }: UseBackSwipeGuardPro
 
     const handlePopState = (event: PopStateEvent) => {
       if (isLeavingRef.current) {
+        return;
+      }
+
+      // If a modal was closed internally by useModalBackClose or any modal is currently open in stack, do not block
+      if (isInternalModalBack() || isAnyModalOpen()) {
+        return;
+      }
+
+      // If the destination state is still our form guard (e.g. user popped back from a modal to this page),
+      // they are still on the form, so do not trigger the discard prompt.
+      if (event.state?.formGuard === guardKey) {
         return;
       }
 

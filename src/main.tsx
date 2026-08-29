@@ -12,8 +12,10 @@ import { setupRemoteVersionWatcher } from '@/libs/utils/versionCheck';
 // Automatically recover when dynamic chunks fail after new deployments
 setupChunkLoadErrorAutoRecover();
 
-// Automatically check if a new version was deployed and purge client caches
-setupRemoteVersionWatcher();
+// Automatically check if a new version was deployed and purge client caches (production only)
+if (import.meta.env.PROD) {
+  setupRemoteVersionWatcher();
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

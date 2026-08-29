@@ -8,7 +8,6 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
   async (
     payload: {
       kidId: string;
-      copies: number;
     },
     { getState },
   ) => {
@@ -17,7 +16,7 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
     const churchPrinter = state.churchCampusSlice.current;
 
     const churchMeeting = state.churchMeetingSlice.current;
-    const { kidId, copies } = payload;
+    const { kidId } = payload;
 
     const response = (
       await microserviceApiRequest({
@@ -30,7 +29,6 @@ export const ReprintRegisterLabelKid = createAsyncThunk(
             churchId: churchCampus?.id,
             churchMeetingId: churchMeeting?.id,
             churchPrinterId: churchPrinter?.name,
-            copies,
           },
         },
       })

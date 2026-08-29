@@ -3,6 +3,7 @@ import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { IAssignUserRelationRole, ICreateUser, ICreateUserAccount, IUpdateUser } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { parseEntitySearchParams } from '@/libs/utils/text';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { RootState } from '../../store';
@@ -285,24 +286,15 @@ export const UpdateUser = createAsyncThunk(
 /**
  * Helper function to extract search filter parameters from input search text.
  *
- * @param {string} findText - Raw search text.
+ * @param {string} [findText] - Raw search text.
  * @returns {Object} Search parameters object.
  */
-const parseUserSearchParams = (findText: string) => {
-  const clean = findText.trim();
-  if (!clean) {
-    return {};
-  }
-
-  const isNumericOnly = /^\d+$/.test(clean);
-  if (isNumericOnly) {
-    return { filterByNationalId: clean };
-  }
-
-  const parts = clean.split(/\s+/).filter(Boolean);
+const parseUserSearchParams = (findText?: string) => {
+  const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(findText);
   return {
-    filterByFirstName: parts[0] || undefined,
-    filterByLastName: parts.slice(1).join(' ') || undefined,
+    filterByFirstName,
+    filterByLastName,
+    filterByNationalId: numericId,
   };
 };
 

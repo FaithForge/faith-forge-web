@@ -253,11 +253,11 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
   };
 
   return (
-    <Drawer.Root handleOnly open={open} onOpenChange={onOpenChange}>
+    <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={onOpenChange}>
       <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[150]" />
+        <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[300]" />
         <Drawer.Content 
-          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[151] outline-none mt-20 max-h-[calc(100vh-5rem)]"
+          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[301] outline-none mt-20 max-h-[calc(100dvh-3rem)]"
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
           {/* Top Bar */}

@@ -70,3 +70,58 @@ export const formatPersonShortName = (firstName?: string, lastName?: string): st
   return cleanFirst || firstLastName || '';
 };
 
+export interface EntitySearchParams {
+  filterByFirstName?: string;
+  filterByLastName?: string;
+  numericId?: string;
+}
+
+/**
+ * Parses raw search input for entity search bars (kids and users) according to search rules:
+ * 1. If composed strictly of digits, treats input as numeric ID (faithForgeId or nationalId).
+ * 2. If it starts with a space (e.g. " Peña"), searches solely by last name.
+ * 3. The first word is parsed as firstName.
+ * 4. All remaining words (second in adelante) are parsed as lastName.
+ *
+ * @param {string} [rawText] - Raw text from the search input.
+ * @returns {EntitySearchParams} Structured search filters.
+ */
+export const parseEntitySearchParams = (rawText?: string): EntitySearchParams => {
+  if (!rawText) {
+    return {};
+  }
+
+  const trimmed = rawText.trim();
+  if (!trimmed) {
+    return {};
+  }
+
+  // Rule 4: Pure digits -> ID search
+  if (/^\d+$/.test(trimmed)) {
+    return { numericId: trimmed };
+  }
+
+  // Rule 3: Starts with a space -> only search by last name
+  if (rawText.startsWith(' ')) {
+    return {
+      filterByLastName: trimmed,
+    };
+  }
+
+  // Rule 1 & 2: First word is firstName; second word and onwards is lastName
+  const firstSpaceIndex = rawText.indexOf(' ');
+  if (firstSpaceIndex === -1) {
+    return {
+      filterByFirstName: trimmed,
+    };
+  }
+
+  const firstName = rawText.substring(0, firstSpaceIndex).trim();
+  const lastName = rawText.substring(firstSpaceIndex + 1).trim();
+
+  return {
+    filterByFirstName: firstName || undefined,
+    filterByLastName: lastName || undefined,
+  };
+};
+

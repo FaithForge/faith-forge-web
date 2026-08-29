@@ -2,6 +2,7 @@ import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { ICreateKid, IUpdateKid } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { parseEntitySearchParams } from '@/libs/utils/text';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { RootState } from '../../store';
@@ -19,7 +20,7 @@ export const GetKid = createAsyncThunk(
         url: `/kid/${payload.id}`,
         options: {
           params: {
-            registrationChurchMeetingId: churchMeeting.current?.id,
+            churchMeetingId: churchMeeting.current?.id,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -36,19 +37,7 @@ export const GetKids = createAsyncThunk(
     const state = getState() as RootState;
     const churchMeeting = state.churchMeetingSlice;
     const { token } = state.authSlice;
-    const isNumber =
-      typeof Number(payload.findText) === 'number' && !Number.isNaN(Number(payload.findText));
-    let filterByFaithForge;
-    let filterByFirstName;
-    let filterByLastName;
-
-    if (isNumber) {
-      filterByFaithForge = payload.findText;
-    } else {
-      const findArray = payload.findText.split(' ');
-      filterByFirstName = findArray[0];
-      filterByLastName = findArray[1];
-    }
+    const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(payload.findText);
 
     const response = (
       await microserviceApiRequest({
@@ -62,7 +51,7 @@ export const GetKids = createAsyncThunk(
             registrationChurchMeetingId: churchMeeting.current?.id,
             filterByFirstName,
             filterByLastName,
-            filterByFaithForge,
+            filterByFaithForge: numericId,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -79,19 +68,7 @@ export const GetMoreKids = createAsyncThunk(
     const kid = state.kidSlice;
     const churchMeeting = state.churchMeetingSlice;
     const { token } = state.authSlice;
-    const isNumber =
-      typeof Number(payload.findText) === 'number' && !Number.isNaN(Number(payload.findText));
-
-    let filterByFaithForge;
-    let filterByFirstName;
-    let filterByLastName;
-    if (isNumber) {
-      filterByFaithForge = payload.findText;
-    } else {
-      const findArray = payload.findText.split(' ');
-      filterByFirstName = findArray[0];
-      filterByLastName = findArray[1];
-    }
+    const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(payload.findText);
 
     const response = (
       await microserviceApiRequest({
@@ -105,7 +82,7 @@ export const GetMoreKids = createAsyncThunk(
             registrationChurchMeetingId: churchMeeting.current?.id,
             filterByFirstName,
             filterByLastName,
-            filterByFaithForge,
+            filterByFaithForge: numericId,
           },
           headers: { Authorization: `Bearer ${token}` },
         },

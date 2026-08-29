@@ -119,3 +119,34 @@ export const UpdateKidSkeleton: React.FC = () => {
     </div>
   );
 };
+
+/**
+ * Skeleton placeholder for list views with Cell cards (kids, users, attendance).
+ *
+ * @param {object} props - Component props.
+ * @param {number} [props.count=6] - Number of skeleton cell rows to render.
+ * @returns {JSX.Element}
+ */
+export const CellListSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) => {
+  return (
+    <div className="flex flex-col gap-2 mt-1 animate-pulse">
+      {Array.from({ length: count }).map((_, i) => (
+        <div
+          key={i}
+          className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-white shadow-xs"
+        >
+          <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
+          <div className="flex-1 min-w-0 flex flex-col gap-2">
+            <div
+              className="h-4 bg-gray-200 rounded-md"
+              style={{ width: `${Math.floor(45 + (i % 3) * 20)}%` }}
+            />
+            <div className="h-3 w-28 bg-gray-100 rounded-md" />
+          </div>
+          <div className="w-4 h-4 rounded bg-gray-100 shrink-0" />
+        </div>
+      ))}
+    </div>
+  );
+};
+

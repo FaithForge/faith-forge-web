@@ -10,11 +10,23 @@ const modalStack: ModalEntry[] = [];
 let isListening = false;
 let isInternalBack = false;
 
+/**
+ * Returns true if any modal or drawer using useModalBackClose is currently open.
+ */
+export const isAnyModalOpen = (): boolean => modalStack.length > 0;
+
+/**
+ * Returns true if the current popstate is triggered by an internal programmatic history.back().
+ */
+export const isInternalModalBack = (): boolean => isInternalBack;
+
 const handleGlobalPopState = () => {
   // If popstate was triggered by our own programmatic history.back() when a modal was closed via UI,
-  // ignore it and reset the flag so we don't close any parent modal.
+  // ignore it and reset the flag asynchronously so all concurrent popstate listeners can check it.
   if (isInternalBack) {
-    isInternalBack = false;
+    setTimeout(() => {
+      isInternalBack = false;
+    }, 0);
     return;
   }
 

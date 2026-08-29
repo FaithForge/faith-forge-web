@@ -109,11 +109,11 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
-      className={clsx('relative w-full', className)}
+      className={clsx('relative w-full flex-1 flex flex-col min-h-0', className)}
     >
       {/* Pull Indicator Area */}
       <div
-        className="flex items-center justify-center overflow-hidden transition-all pointer-events-none"
+        className="flex items-center justify-center overflow-hidden transition-all pointer-events-none shrink-0"
         style={{
           height: isRefreshing ? 48 : pullDistance,
           transition: isPullingRef.current ? 'none' : 'height 0.25s cubic-bezier(0.2, 0.8, 0.2, 1)',
@@ -145,6 +145,7 @@ const PullToRefresh: React.FC<PullToRefreshProps> = ({
 
       {/* List Content */}
       <div
+        className="flex-1 flex flex-col min-h-0"
         style={{
           transform: isRefreshing ? 'translateY(0)' : `translateY(0px)`,
           transition: isPullingRef.current ? 'none' : 'transform 0.25s ease-out',

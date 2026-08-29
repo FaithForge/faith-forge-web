@@ -99,6 +99,25 @@ const UpdateKidView: React.FC = () => {
 
   const birthdayValue = watch('birthday');
 
+  /**
+   * Calculates detailed age components (years, months, days) from a birthday string.
+   *
+   * @param {string} birthdayDateString - ISO date string of birth.
+   * @returns {{ years: number; totalMonths: number; months: number; days: number } | null} Age breakdown or null if invalid.
+   */
+  function getAge(birthdayDateString: string) {
+    if (!birthdayDateString) return null;
+    const birthDate = dayjs(birthdayDateString);
+    const now = dayjs();
+    const years = now.diff(birthDate, 'year');
+    const totalMonths = now.diff(birthDate, 'month');
+    const months = totalMonths % 12;
+    const days = now.diff(birthDate, 'day');
+    return { years, totalMonths, months, days };
+  }
+
+  const ageData = birthdayValue ? getAge(birthdayValue) : null;
+
   const isUnderThreeMonths = useMemo(() => {
     return isKidUnderMinAge(birthdayValue);
   }, [birthdayValue]);
@@ -269,12 +288,17 @@ const UpdateKidView: React.FC = () => {
                 maxDate={dayjs().format('YYYY-MM-DD')}
                 onChange={(dateStr) => setValue('birthday', dateStr)}
               />
+              {ageData && !isUnderThreeMonths && (
+                <p className="text-xs text-primary font-bold mt-2 bg-primary/10 inline-block px-2 py-1 rounded-md">
+                  (Tiene: {ageData.years} años y {ageData.months} meses)
+                </p>
+              )}
               {isUnderThreeMonths && (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-3.5 rounded-xl flex items-start gap-2.5 text-xs leading-relaxed mt-2 animate-in fade-in">
                   <AlertTriangle size={18} className="text-red-600 shrink-0 mt-0.5" />
                   <div>
                     <span className="font-bold block text-red-900 text-xs mb-0.5">{KID_AGE_COPY.minAgeTitle}</span>
-                    {KID_AGE_COPY.minAgeAlertMessage()}
+                    {KID_AGE_COPY.minAgeAlertMessage(ageData ? `${ageData.months} meses / ${ageData.days} días` : undefined)}
                   </div>
                 </div>
               )}

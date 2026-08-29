@@ -14,7 +14,7 @@ let isUpdating = false;
  * If a new build is detected, purges the local cache and reloads the application.
  */
 export const checkAppVersion = async (): Promise<boolean> => {
-  if (isUpdating || typeof window === 'undefined') return false;
+  if (isUpdating || typeof window === 'undefined' || import.meta.env.DEV) return false;
 
   try {
     const currentBuild = typeof __APP_BUILD_TIME__ !== 'undefined' ? __APP_BUILD_TIME__ : 0;
@@ -51,7 +51,7 @@ export const checkAppVersion = async (): Promise<boolean> => {
  * Runs on app start, every 5 minutes, and whenever the user returns to the tab.
  */
 export const setupRemoteVersionWatcher = (): void => {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined' || import.meta.env.DEV) return;
 
   // 1. Initial check after 3 seconds
   setTimeout(() => {

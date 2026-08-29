@@ -7,12 +7,13 @@ import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb } from 'lucide-react';
 import dayjs from 'dayjs';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import PullToRefresh from '@/components/ui/PullToRefresh';
+import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 
@@ -69,16 +70,26 @@ const RegistrationDashboard = () => {
 
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
 
-    const delay = isSearchChanged ? 400 : 0;
+    const delay = isSearchChanged && searchText ? 400 : 0;
 
     timeoutRef.current = setTimeout(() => {
-      dispatch(GetKids({ findText: searchText.trim() }));
+      dispatch(GetKids({ findText: searchText }));
     }, delay);
 
     return () => {
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
   }, [searchText, isConfigured, shouldBlockKids, dispatch, currentMeeting?.id, needsRefresh]);
+
+  /**
+   * Clears the search text and immediately fetches the full kid list without debounce delay.
+   */
+  const handleClearSearch = () => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    prevSearchTextRef.current = '';
+    setSearchText('');
+    dispatch(GetKids({ findText: '' }));
+  };
 
   const handleRefreshKids = async () => {
     if (!isConfigured || shouldBlockKids) return;
@@ -123,7 +134,7 @@ const RegistrationDashboard = () => {
   }, [handleLoadMore, currentPage, totalPages, loading, loadingMore, isConfigured, shouldBlockKids]);
 
   return (
-    <div className="p-3 flex flex-col gap-3">
+    <div className="p-3 flex flex-col gap-3 min-h-full flex-1">
       {/* Search Bar */}
       <div className="sticky top-0 z-20 bg-background py-2 -mx-3 px-3">
         <Input 
@@ -131,7 +142,7 @@ const RegistrationDashboard = () => {
           placeholder={shouldBlockKids ? "Búsqueda no disponible" : "Buscar niño por nombre o código"}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
-          onClear={() => setSearchText('')}
+          onClear={handleClearSearch}
           wrapperClassName="mb-0"
           className={`border-0 shadow-sm text-base focus:ring-0 transition-colors ${
             shouldBlockKids || !isConfigured ? 'bg-gray-100 opacity-70 cursor-not-allowed text-gray-500' : 'bg-white'
@@ -189,13 +200,78 @@ const RegistrationDashboard = () => {
 
       {/* Lista de Niños */}
       {!shouldBlockKids && (
-        <PullToRefresh onRefresh={handleRefreshKids} disabled={loading}>
-          <div className="flex flex-col gap-2 mt-1">
-            {loading && isConfigured && <div className="flex justify-center p-4"><Loader2 className="animate-spin text-primary" size={24} /></div>}
+        <PullToRefresh onRefresh={handleRefreshKids} disabled={loading} className="flex-1 flex flex-col min-h-0">
+          <div className="flex flex-col gap-2 mt-1 flex-1 min-h-0">
+            {loading && isConfigured && <CellListSkeleton count={7} />}
             
             {!loading && kids.length === 0 && isConfigured && (
-              <div className="text-center p-8 text-gray-500">
-                {searchText ? "No se encontraron niños." : "Busca un niño por nombre o documento."}
+              <div className="flex flex-col items-center justify-center py-8 px-5 mt-2 text-center bg-white rounded-2xl border-2 border-dashed border-gray-200 shadow-xs animate-in fade-in duration-200">
+                <div className="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-3 shadow-xs border border-amber-100">
+                  <SearchX size={28} />
+                </div>
+                <h3 className="text-base font-bold text-gray-800 mb-1">
+                  {searchText ? 'No se encontraron niños' : 'Directorio de niños'}
+                </h3>
+                <p className="text-xs text-gray-500 max-w-sm leading-relaxed">
+                  {searchText ? (
+                    <>
+                      No encontramos resultados para <span className="font-semibold text-gray-800">"{searchText}"</span>.
+                    </>
+                  ) : (
+                    'Busca un niño para registrar su asistencia en el servicio actual.'
+                  )}
+                </p>
+
+                {/* Consejos de Búsqueda */}
+                <div className="mt-3.5 p-3 bg-gray-50/90 rounded-xl border border-gray-200/80 text-left max-w-sm w-full">
+                  <span className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 mb-1.5">
+                    <Lightbulb size={13} className="text-amber-500 shrink-0" />
+                    Consejos para encontrar al niño:
+                  </span>
+                  <ul className="text-[11px] text-gray-600 space-y-1.5 list-disc list-inside">
+                    <li>
+                      Puedes <strong>abreviar</strong> nombre y apellido (ej:{' '}
+                      <span className="font-semibold text-gray-800">Ju Marti</span> o{' '}
+                      <span className="font-semibold text-gray-800">Mat Gom</span>).
+                    </li>
+                    <li>
+                      Busca <strong>solo por su primer nombre</strong> (ej:{' '}
+                      <span className="font-medium text-gray-800">Mateo</span>).
+                    </li>
+                    <li>
+                      Busca <strong>solo por apellido</strong> anteponiendo un espacio (ej:{' '}
+                      <span className="font-semibold text-gray-800">" Pérez"</span>).
+                    </li>
+                    <li>
+                      O escribe directamente su <strong>código numérico</strong>.
+                    </li>
+                  </ul>
+                </div>
+
+                <p className="text-xs text-gray-500 max-w-sm mt-3 leading-relaxed">
+                  Si tras probar estas opciones el niño aún no aparece, procede a crearlo en el sistema:
+                </p>
+
+                <div className="flex items-center gap-2 mt-3.5 flex-wrap justify-center">
+                  {searchText && (
+                    <button
+                      type="button"
+                      onClick={handleClearSearch}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-xl transition-all"
+                    >
+                      <RotateCcw size={14} />
+                      <span>Limpiar búsqueda</span>
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => navigate(APP_ROUTES.kidRegistration.new)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 active:scale-95 rounded-xl transition-all shadow-xs"
+                  >
+                    <Plus size={14} />
+                    <span>Crear niño</span>
+                  </button>
+                </div>
               </div>
             )}
 

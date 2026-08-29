@@ -193,11 +193,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
 
       {/* Drawer de Búsqueda de Indicativo */}
-      <Drawer.Root handleOnly open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content
-            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85vh]"
+            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85dvh]"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             {/* Header del Drawer */}

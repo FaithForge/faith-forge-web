@@ -196,30 +196,30 @@ const DatePickerWheel = ({
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       
-      <Drawer.Root handleOnly open={open} onOpenChange={setOpen} nested>
-        <Drawer.Trigger asChild>
-          <div className="relative w-full cursor-pointer">
-            <input 
-              type="text"
-              readOnly
-              placeholder="Seleccionar fecha"
-              value={value ? dayjs(value).format('DD / MM / YYYY') : ''}
-              className={clsx(
-                "w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm text-left text-text-main"
-              )}
-              onFocus={(e) => {
-                e.target.blur();
-                setOpen(true);
-              }}
-              onClick={() => setOpen(true)}
-            />
-            <Calendar size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-          </div>
-        </Drawer.Trigger>
+      {/* Trigger */}
+      <div className="relative w-full cursor-pointer">
+        <input 
+          type="text"
+          readOnly
+          placeholder="Seleccionar fecha"
+          value={value ? dayjs(value).format('DD / MM / YYYY') : ''}
+          className={clsx(
+            "w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm text-left text-text-main"
+          )}
+          onFocus={(e) => {
+            e.target.blur();
+            setOpen(true);
+          }}
+          onClick={() => setOpen(true)}
+        />
+        <Calendar size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+      </div>
+
+      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content 
-            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85vh]"
+            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85dvh]"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             {/* Header */}
