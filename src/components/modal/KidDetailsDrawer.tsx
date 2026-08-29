@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Drawer } from 'vaul';
+import AppDrawer from '@/components/ui/AppDrawer';
 import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, FileText } from 'lucide-react';
 import { FaWhatsapp, FaChild, FaChildDress } from 'react-icons/fa6';
 import dayjs from 'dayjs';
@@ -184,29 +184,12 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
 
   return (
     <>
-      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={onOpenChange}>
-        <Drawer.Portal>
-          <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[300]" />
-          <Drawer.Content 
-            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[301] outline-none mt-20 max-h-[calc(100dvh-3rem)]"
-            onCloseAutoFocus={(e) => e.preventDefault()}
-          >
-            {/* Header */}
-            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
-              <div className="w-8 shrink-0" />
-              <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
-                <span className="truncate">Detalle del Niño</span>
-              </h3>
-              <button
-                type="button"
-                onClick={() => onOpenChange(false)}
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <div className="overflow-y-auto p-4 flex flex-col gap-4 pb-12">
+      <AppDrawer
+        open={open}
+        onOpenChange={onOpenChange}
+        title="Detalle del Niño"
+        bodyClassName="p-4 flex flex-col gap-4 pb-12"
+      >
               {/* Birthday Banner */}
               {isBirthdayToday && (
                 <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white p-3.5 rounded-2xl flex items-center justify-center gap-2.5 text-sm font-black shadow-md animate-pulse tracking-wide">
@@ -418,10 +401,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
                   </div>
                 </div>
               )}
-            </div>
-          </Drawer.Content>
-        </Drawer.Portal>
-      </Drawer.Root>
+      </AppDrawer>
 
       {/* Modal de Foto Grande (Zoom) */}
       <ModalOverlay open={showPhotoModal} onClose={() => setShowPhotoModal(false)}>

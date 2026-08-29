@@ -33,39 +33,44 @@ const UserManagementView: React.FC = () => {
     (state) => state.userSlice
   );
 
-  const hasInitializedRef = useRef(false);
-  const prevSearchTextRef = useRef<string>('');
+  const prevSearchTextRef = useRef<string | null>(null);
 
   // Search logic with debounce and automatic refresh on mutations
   useEffect(() => {
-    const isSearchChanged = searchText !== prevSearchTextRef.current;
-
-    // If we already have users in Redux and no data changes (needsRefresh === false),
-    // on mount without search change: KEEP the list intact without re-fetching from API
-    if (!hasInitializedRef.current && users.length > 0 && !needsRefresh && !isSearchChanged) {
-      hasInitializedRef.current = true;
-      prevSearchTextRef.current = searchText;
-      return;
-    }
-
-    // If already initialized and search and data did not change:
-    if (hasInitializedRef.current && !needsRefresh && !isSearchChanged) {
-      return;
-    }
-
-    hasInitializedRef.current = true;
+    const isFirstMount = prevSearchTextRef.current === null;
+    const isSearchChanged = !isFirstMount && searchText !== prevSearchTextRef.current;
     prevSearchTextRef.current = searchText;
 
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    // If we already have loaded users in Redux and don't need a refresh on mount, keep the list
+    if (isFirstMount && users.length > 0 && !needsRefresh) {
+      return;
+    }
 
-    const delay = isSearchChanged && searchText ? 400 : 0;
+    // If search text did not change and no mutation occurred and we already have users, do nothing
+    if (!isFirstMount && !isSearchChanged && !needsRefresh && users.length > 0) {
+      return;
+    }
 
-    timeoutRef.current = setTimeout(() => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    const delay = isSearchChanged && searchText.trim().length > 0 ? 400 : 0;
+
+    if (delay === 0) {
       dispatch(GetUsers({ findText: searchText }));
-    }, delay);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        dispatch(GetUsers({ findText: searchText }));
+      }, delay);
+    }
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
   }, [searchText, dispatch, needsRefresh, users.length]);
 
@@ -73,7 +78,10 @@ const UserManagementView: React.FC = () => {
    * Clears search input and immediately fetches full user list without debounce delay.
    */
   const handleClearSearch = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     prevSearchTextRef.current = '';
     setSearchText('');
     dispatch(GetUsers({ findText: '' }));

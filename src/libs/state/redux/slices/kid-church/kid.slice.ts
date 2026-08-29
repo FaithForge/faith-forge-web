@@ -12,6 +12,7 @@ import {
   CreateKidRegistration,
   RemoveKidRegistration,
 } from '../../thunks/kid-church/kid-registration.thunk';
+import { DeleteKidGuardianRelation } from '../../thunks/kid-church/kid-guardian.thunk';
 
 const initialState: IKids = {
   data: [],
@@ -137,6 +138,14 @@ const kidSlice = createSlice({
       state.needsRefresh = true;
     });
     builder.addCase(RemoveKidRegistration.fulfilled, (state) => {
+      state.needsRefresh = true;
+    });
+    builder.addCase(DeleteKidGuardianRelation.fulfilled, (state, action) => {
+      if (state.current?.relations) {
+        state.current.relations = state.current.relations.filter(
+          (rel: any) => (rel?.guardian?.id || rel?.guardianId || rel?.id) !== action.meta.arg.guardianId,
+        );
+      }
       state.needsRefresh = true;
     });
   },

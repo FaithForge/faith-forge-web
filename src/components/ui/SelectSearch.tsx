@@ -81,7 +81,7 @@ const SelectSearch = ({
 
       {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
 
-      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root repositionInputs={false} open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content 
@@ -89,21 +89,22 @@ const SelectSearch = ({
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             {/* Header */}
-            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 flex items-center justify-between px-4 py-3.5 sticky top-0">
+            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 px-4 py-3.5 sticky top-0 flex items-center justify-between select-none cursor-grab active:cursor-grabbing touch-pan-y shrink-0">
               <div className="w-8 shrink-0" />
-              <h3 className="font-bold text-gray-800 text-base flex-1 text-center truncate px-2 uppercase tracking-wide">
+              <Drawer.Title className="font-bold text-gray-800 text-base flex-1 text-center truncate px-2 uppercase tracking-wide">
                 {label}
-              </h3>
+              </Drawer.Title>
               <button 
                 type="button"
+                data-vaul-no-drag=""
                 onClick={() => setOpen(false)} 
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
+                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0 cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
 
-            <div className={clsx(
+            <div data-vaul-no-drag="" className={clsx(
               "px-4 pb-3 pt-2 bg-white flex flex-col",
               isSearchable ? "gap-3" : "hidden"
             )}>

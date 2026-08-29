@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKid, DeleteKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
+import { DeleteKidGuardianRelation } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { CreateKidRegistration, ReprintKidRegistration, RemoveKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
 import dayjs from 'dayjs';
@@ -54,6 +55,7 @@ const KidCheckInView = () => {
   const [showDeleteKidModal, setShowDeleteKidModal] = useState(false);
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
+  const [guardianRelationToDelete, setGuardianRelationToDelete] = useState<any | null>(null);
   const [imageError, setImageError] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState('Registrando...');
@@ -92,6 +94,7 @@ const KidCheckInView = () => {
 
     return {
       id: g?.id || rel?.id,
+      guardianId: g?.id || rel?.guardianId || rel?.id,
       fullName,
       firstName,
       lastName,
@@ -332,6 +335,42 @@ const KidCheckInView = () => {
 
   const handleUpdateGuardian = (guardianData: any) => {
     setSelectedGuardianToUpdate(guardianData);
+  };
+
+  /**
+   * Confirms and deletes the relation between the child and the selected guardian.
+   * Calls DeleteKidGuardianRelation endpoint and refreshes kid details.
+   *
+   * @returns {Promise<void>} Resolves when relation deletion process completes.
+   */
+  const handleConfirmDeleteGuardianRelation = async (): Promise<void> => {
+    if (!guardianRelationToDelete || !kid?.id) return;
+    const targetGuardianId = guardianRelationToDelete.guardianId || guardianRelationToDelete.id;
+    const guardianName = guardianRelationToDelete.fullName;
+
+    try {
+      const actionResult = await dispatch(
+        DeleteKidGuardianRelation({
+          kidId: kid.id,
+          guardianId: targetGuardianId,
+        })
+      );
+
+      if (DeleteKidGuardianRelation.fulfilled.match(actionResult)) {
+        toast.success(`Relación con ${guardianName || 'el acudiente'} eliminada con éxito`);
+        if (selectedGuardian === targetGuardianId) {
+          setSelectedGuardian('');
+        }
+        await dispatch(GetKid({ id: kid.id }));
+      } else {
+        const errorPayload: any = actionResult.payload;
+        toast.error(errorPayload?.message || errorPayload?.error || 'Error al eliminar la relación con el acudiente');
+      }
+    } catch {
+      toast.error('Error de conexión al eliminar la relación con el acudiente');
+    } finally {
+      setGuardianRelationToDelete(null);
+    }
   };
 
   const specialGroup = kidGroupSlice.data?.find((g: any) => g.name === 'Yo Soy Iglekids' || g.type === KidGroupType.SPECIAL) || kidGroupSlice.data?.[0];
@@ -645,17 +684,18 @@ const KidCheckInView = () => {
                   <div className="grid grid-cols-12 gap-x-2 gap-y-3 text-xs items-center">
                     <div className="col-span-4 font-bold text-gray-500 uppercase">Nombre</div>
                     <div className="col-span-3 font-bold text-gray-500 uppercase">Relación</div>
-                    <div className="col-span-4 font-bold text-gray-500 uppercase">Teléfono</div>
-                    <div className="col-span-1"></div>
+                    <div className={clsx(isAdmin ? 'col-span-3' : 'col-span-4', 'font-bold text-gray-500 uppercase')}>Teléfono</div>
+                    <div className={clsx(isAdmin ? 'col-span-2' : 'col-span-1')}></div>
 
                     {relationsList.map((rel: any) => (
                       <React.Fragment key={rel.id}>
                         <div className="col-span-12 border-t border-gray-50 my-0.5"></div>
                         <div className="col-span-4 text-gray-800 font-medium leading-tight truncate" title={rel.fullName}>{rel.fullName}</div>
                         <div className="col-span-3 text-gray-600">{rel.relation}</div>
-                        <div className="col-span-4 text-gray-600">{rel.displayPhone}</div>
-                        <div className="col-span-1 flex justify-end">
+                        <div className={clsx(isAdmin ? 'col-span-3' : 'col-span-4', 'text-gray-600')}>{rel.displayPhone}</div>
+                        <div className={clsx(isAdmin ? 'col-span-2' : 'col-span-1', 'flex justify-end items-center gap-1.5')}>
                           <button 
+                            type="button"
                             onClick={() => handleUpdateGuardian({
                               id: rel.id,
                               firstName: rel.firstName,
@@ -668,9 +708,20 @@ const KidCheckInView = () => {
                               kidId: kid?.id
                             })}
                             className="text-primary p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors"
+                            title="Editar acudiente"
                           >
                             <Pencil size={14}/>
                           </button>
+                          {isAdmin && (
+                            <button
+                              type="button"
+                              onClick={() => setGuardianRelationToDelete(rel)}
+                              className="text-red-600 p-2 bg-red-50 hover:bg-red-100 rounded-full transition-colors"
+                              title="Eliminar relación con acudiente"
+                            >
+                              <Trash2 size={14}/>
+                            </button>
+                          )}
                         </div>
                       </React.Fragment>
                     ))}
@@ -731,26 +782,44 @@ const KidCheckInView = () => {
                               </p>
                               <p className="text-[11px] text-gray-500 truncate">Tel: {rel.displayPhone}</p>
                             </div>
-                            <button 
-                              type="button"
-                              onClick={(e) => {
-                                e.preventDefault(); 
-                                handleUpdateGuardian({
-                                  id: rel.id,
-                                  firstName: rel.firstName,
-                                  lastName: rel.lastName,
-                                  fullName: rel.fullName,
-                                  gender: rel.gender,
-                                  dialCodePhone: rel.dialCodePhone,
-                                  phone: rel.rawPhone,
-                                  relation: rel.rawRelation,
-                                  kidId: kid?.id
-                                });
-                              }}
-                              className="text-primary p-1.5 bg-white rounded-full hover:bg-primary/10 shadow-sm border border-gray-200 transition-colors shrink-0"
-                            >
-                              <Pencil size={13}/>
-                            </button>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <button 
+                                type="button"
+                                onClick={(e) => {
+                                  e.preventDefault(); 
+                                  e.stopPropagation();
+                                  handleUpdateGuardian({
+                                    id: rel.id,
+                                    firstName: rel.firstName,
+                                    lastName: rel.lastName,
+                                    fullName: rel.fullName,
+                                    gender: rel.gender,
+                                    dialCodePhone: rel.dialCodePhone,
+                                    phone: rel.rawPhone,
+                                    relation: rel.rawRelation,
+                                    kidId: kid?.id
+                                  });
+                                }}
+                                className="text-primary p-1.5 bg-white rounded-full hover:bg-primary/10 shadow-sm border border-gray-200 transition-colors shrink-0"
+                                title="Editar acudiente"
+                              >
+                                <Pencil size={13}/>
+                              </button>
+                              {isAdmin && (
+                                <button
+                                  type="button"
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    setGuardianRelationToDelete(rel);
+                                  }}
+                                  className="text-red-600 p-1.5 bg-white rounded-full hover:bg-red-50 shadow-sm border border-gray-200 hover:border-red-200 transition-colors shrink-0"
+                                  title="Eliminar relación con acudiente"
+                                >
+                                  <Trash2 size={13}/>
+                                </button>
+                              )}
+                            </div>
                           </label>
                         ))
                       )}
@@ -863,6 +932,21 @@ const KidCheckInView = () => {
         cancelText="Cancelar"
         type="info"
         onConfirm={() => setIsKidVolunteer(!isKidVolunteer)}
+      />
+
+      <ConfirmModal
+        open={!!guardianRelationToDelete}
+        onOpenChange={(open) => {
+          if (!open) {
+            setGuardianRelationToDelete(null);
+          }
+        }}
+        title="¿Eliminar relación de acudiente?"
+        description={`¿Estás seguro de que deseas desvincular a ${guardianRelationToDelete?.fullName || 'este acudiente'} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}
+        confirmText="Sí, eliminar"
+        cancelText="Cancelar"
+        type="danger"
+        onConfirm={handleConfirmDeleteGuardianRelation}
       />
 
       {/* Modal / Lightbox de Foto en Tamaño Grande */}

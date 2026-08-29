@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Drawer } from 'vaul';
+import AppDrawer from '@/components/ui/AppDrawer';
 import { X, Search, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -172,29 +172,16 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
   };
 
   return (
-    <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={(o) => !o && onClose()}>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[300]" />
-        <Drawer.Content 
-          className="bg-surface flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[301] max-h-[90dvh] outline-none"
-          onCloseAutoFocus={(e) => e.preventDefault()}
-        >
-          {/* Header */}
-          <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 flex items-center justify-between px-4 py-3.5 shrink-0 sticky top-0">
-            <div className="w-8 shrink-0" />
-            <Drawer.Title className="font-bold text-gray-800 text-base flex-1 text-center truncate px-2">
-              Asignar Nuevo Acudiente
-            </Drawer.Title>
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="p-5 overflow-y-auto overscroll-contain flex-1 min-h-0 flex flex-col gap-4 pb-12">
+    <AppDrawer
+      open={open}
+      onOpenChange={(o) => !o && onClose()}
+      onClose={onClose}
+      title="Asignar Nuevo Acudiente"
+      maxHeight="max-h-[90dvh]"
+      contentClassName="bg-surface"
+      bodyClassName="p-5 flex flex-col gap-4 pb-12"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* Banner if already exists in database */}
             {existingGuardian && (
               <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl flex items-center justify-between text-xs font-semibold">
@@ -320,9 +307,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               Asignar Acudiente
             </Button>
           </form>
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+    </AppDrawer>
   );
 };
 

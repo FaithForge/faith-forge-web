@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Drawer } from 'vaul';
+import AppDrawer from '@/components/ui/AppDrawer';
 import { FileText, MapPin, CalendarClock, Download, X, Loader2, Users, UserPlus, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
@@ -253,30 +253,13 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
   };
 
   return (
-    <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={onOpenChange}>
-      <Drawer.Portal>
-        <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[300]" />
-        <Drawer.Content 
-          className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[301] outline-none mt-20 max-h-[calc(100dvh-3rem)]"
-          onCloseAutoFocus={(e) => e.preventDefault()}
-        >
-          {/* Top Bar */}
-          <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
-            <div className="w-8 shrink-0" />
-            <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
-              <FileText size={18} className="text-primary shrink-0" />
-              <span className="truncate">Reporte de Asistencia Iglekids</span>
-            </h3>
-            <button
-              type="button"
-              onClick={() => onOpenChange(false)}
-              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
-            >
-              <X size={18} />
-            </button>
-          </div>
-
-          <div className="overflow-y-auto p-4 flex flex-col gap-4 pb-12">
+    <AppDrawer
+      open={open}
+      onOpenChange={onOpenChange}
+      icon={<FileText size={18} className="text-primary shrink-0" />}
+      title="Reporte de Asistencia Iglekids"
+      bodyClassName="p-4 flex flex-col gap-4 pb-12"
+    >
             {/* Filter Form Card */}
             <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3.5">
               {/* Sede */}
@@ -437,10 +420,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                 </Button>
               </div>
             )}
-          </div>
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+    </AppDrawer>
   );
 };
 

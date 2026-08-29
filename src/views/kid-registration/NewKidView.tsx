@@ -69,8 +69,35 @@ const NewKidView = () => {
   const kidGuardianSlice = useAppSelector((state) => state.kidGuardianSlice);
   const kidSlice = useAppSelector((state) => state.kidSlice);
 
-  const { register: registerKid, handleSubmit: handleKidSubmit, control: kidControl, watch: watchKid, resetField: resetKidField, setValue: setKidValue, formState: { errors: kidErrors } } = useForm();
-  const { register: registerGuardian, handleSubmit: handleGuardianSubmit, control: guardianControl, watch: watchGuardian, setValue: setGuardianValue, getValues: getGuardianValues, formState: { errors: guardianErrors } } = useForm({
+  const { 
+    register: registerKid, 
+    handleSubmit: handleKidSubmit, 
+    control: kidControl, 
+    watch: watchKid, 
+    resetField: resetKidField, 
+    setValue: setKidValue, 
+    formState: { errors: kidErrors, isDirty: isKidDirty } 
+  } = useForm({
+    defaultValues: {
+      firstName: '',
+      lastName: '',
+      birthday: '',
+      gender: '',
+      healthSecurityEntity: '',
+      medicalConditionId: '',
+      kidGroup: '',
+      observations: '',
+    }
+  });
+  const { 
+    register: registerGuardian, 
+    handleSubmit: handleGuardianSubmit, 
+    control: guardianControl, 
+    watch: watchGuardian, 
+    setValue: setGuardianValue, 
+    getValues: getGuardianValues, 
+    formState: { errors: guardianErrors, isDirty: isGuardianDirty } 
+  } = useForm({
     defaultValues: {
       nationalIdType: UserIdType.CC,
       nationalId: '',
@@ -83,10 +110,36 @@ const NewKidView = () => {
     }
   });
 
-  // Register navigation guard on mount: blocks BottomNav navigation when unsaved data exists
+  // Calculate if the user has actually entered any data
+  const watchedKid = watchKid();
+  const watchedGuardian = watchGuardian();
+  const hasKidData = Boolean(
+    watchedKid?.firstName?.trim() ||
+    watchedKid?.lastName?.trim() ||
+    watchedKid?.birthday ||
+    watchedKid?.gender ||
+    watchedKid?.healthSecurityEntity ||
+    photoFile
+  );
+  const hasGuardianData = step >= 2 && Boolean(
+    watchedGuardian?.nationalId?.trim() ||
+    watchedGuardian?.firstName?.trim() ||
+    watchedGuardian?.lastName?.trim() ||
+    watchedGuardian?.phone?.trim()
+  );
+  const hasActualData = hasKidData || hasGuardianData;
+
+  const hasActualDataRef = React.useRef(hasActualData);
+  hasActualDataRef.current = hasActualData;
+
+  // Register navigation guard on mount: only blocks when actual unsaved data exists and leaving form
   useEffect(() => {
     const unregister = registerGuard((to) => {
-      if (!isUploadingRef.current && stepRef.current <= 2) {
+      // If staying on the same page or navigating home, allow immediately without modal
+      if (to === APP_ROUTES.kidRegistration.new || to === APP_ROUTES.kidRegistration.root) {
+        return true;
+      }
+      if (!isUploadingRef.current && stepRef.current <= 2 && hasActualDataRef.current) {
         setShowCancelModal(true);
         return false;
       }
@@ -95,8 +148,8 @@ const NewKidView = () => {
     return unregister;
   }, [registerGuard]);
 
-  // Intercept mobile back swipe / popstate when form is in progress
-  const isBackGuardActive = !isUploading && step <= 2;
+  // Intercept mobile back swipe / popstate only when actual data exists in the form
+  const isBackGuardActive = !isUploading && step <= 2 && hasActualData;
   const { allowNavigation } = useBackSwipeGuard({
     enabled: isBackGuardActive,
     onBlockBack: () => setShowCancelModal(true),

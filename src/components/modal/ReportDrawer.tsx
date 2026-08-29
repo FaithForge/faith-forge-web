@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Drawer } from 'vaul';
+import React, { useState, useEffect } from 'react';
+import AppDrawer from '@/components/ui/AppDrawer';
 import { FileText, X, Share2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
@@ -184,34 +184,18 @@ ${state.observationGeneral}`;
 
   return (
     <>
-      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={(o) => !o && handleRequestClose()}>
-        <Drawer.Portal>
-          <Drawer.Overlay onClick={handleRequestClose} className="fixed inset-0 bg-black/50 z-[300] cursor-pointer" />
-          <Drawer.Content 
-            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[301] outline-none mt-20 max-h-[calc(100dvh-3rem)]"
-            onCloseAutoFocus={(e) => e.preventDefault()}
-            onPointerDownOutside={(e) => {
-              e.preventDefault();
-              handleRequestClose();
-            }}
-          >
-            {/* Header */}
-            <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-20 flex items-center justify-between px-4 py-3.5 sticky top-0">
-              <div className="w-8 shrink-0" />
-              <h3 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
-                <FileText size={18} className="text-primary shrink-0" />
-                <span className="truncate">Reporte Regikids</span>
-              </h3>
-              <button 
-                type="button"
-                onClick={handleRequestClose} 
-                className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
-              >
-                <X size={18} />
-              </button>
-            </div>
-          
-          <div className="overflow-y-auto p-4 flex flex-col gap-4 pb-8 z-10">
+      <AppDrawer
+        open={open}
+        onOpenChange={(o) => !o && handleRequestClose()}
+        onClose={handleRequestClose}
+        icon={<FileText size={18} className="text-primary shrink-0" />}
+        title="Reporte Regikids"
+        bodyClassName="p-4 flex flex-col gap-4 pb-8 z-10"
+        onPointerDownOutside={(e) => {
+          e.preventDefault();
+          handleRequestClose();
+        }}
+      >
             {isFinished ? (
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                 <h2 className="text-xl font-bold text-gray-800 mb-2">¡Reporte generado!</h2>
@@ -306,10 +290,7 @@ ${state.observationGeneral}`;
               </>
             )}
             <div className="pb-10" />
-          </div>
-        </Drawer.Content>
-      </Drawer.Portal>
-    </Drawer.Root>
+      </AppDrawer>
 
     {/* Confirmation when cancelling report */}
     <ConfirmModal

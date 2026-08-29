@@ -215,7 +215,7 @@ const DatePickerWheel = ({
         <Calendar size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
       </div>
 
-      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root repositionInputs={false} open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content 
@@ -223,13 +223,13 @@ const DatePickerWheel = ({
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             {/* Header */}
-            <div className="w-full bg-white rounded-t-[24px] rounded-b-3xl shadow-xs z-10 flex items-center justify-between px-4 py-3.5 sticky top-0">
-              <button type="button" onClick={() => setOpen(false)} className="text-gray-500 font-medium py-1 px-2 hover:bg-gray-100 rounded-lg transition-colors text-sm">Cancelar</button>
-              <h3 className="font-bold text-gray-800 text-base">Seleccionar Fecha</h3>
-              <button type="button" onClick={handleConfirm} className="text-primary font-bold py-1 px-2 hover:bg-primary/10 rounded-lg transition-colors text-sm">Confirmar</button>
+            <div className="w-full bg-white rounded-t-[24px] rounded-b-3xl shadow-xs z-10 px-4 py-3.5 sticky top-0 flex items-center justify-between select-none cursor-grab active:cursor-grabbing touch-pan-y shrink-0">
+              <button type="button" data-vaul-no-drag="" onClick={() => setOpen(false)} className="text-gray-500 font-medium py-1 px-2 hover:bg-gray-100 rounded-lg transition-colors text-sm cursor-pointer">Cancelar</button>
+              <Drawer.Title className="font-bold text-gray-800 text-base">Seleccionar Fecha</Drawer.Title>
+              <button type="button" data-vaul-no-drag="" onClick={handleConfirm} className="text-primary font-bold py-1 px-2 hover:bg-primary/10 rounded-lg transition-colors text-sm cursor-pointer">Confirmar</button>
             </div>
             
-            <div className="flex px-4 py-6 bg-white mt-2">
+            <div data-vaul-no-drag="" className="flex px-4 py-6 bg-white mt-2">
               <WheelColumn title="Día" options={days} value={day} onChange={setDay} />
               <WheelColumn title="Mes" options={months} value={month} onChange={setMonth} />
               <WheelColumn title="Año" options={years} value={year} onChange={setYear} />

@@ -43,6 +43,26 @@ const KidChurchDashboard: React.FC = () => {
     }
   }, [dispatch, currentMeeting?.id]);
 
+  // Listen for BottomNav tab click to reset search, filters and refresh classroom registrations
+  useEffect(() => {
+    const handleReset = () => {
+      setSearchText('');
+      setSelectedKidGroupId('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const mainEl = document.querySelector('main');
+      if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (currentMeeting?.id) {
+        dispatch(GetKidGroupRegistered({ date: new Date() }));
+      }
+    };
+
+    window.addEventListener('reset-kid-church-dashboard', handleReset);
+    return () => {
+      window.removeEventListener('reset-kid-church-dashboard', handleReset);
+    };
+  }, [dispatch, currentMeeting?.id]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {

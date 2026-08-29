@@ -193,7 +193,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
 
       {/* Drawer de Búsqueda de Indicativo */}
-      <Drawer.Root handleOnly repositionInputs={false} open={open} onOpenChange={setOpen} nested>
+      <Drawer.Root repositionInputs={false} open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content
@@ -203,22 +203,23 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
             {/* Header del Drawer */}
             <div className="w-full bg-white rounded-t-[24px] border-b border-gray-100 shadow-xs z-10 flex flex-col sticky top-0">
               {/* Title Row */}
-              <div className="px-4 py-3.5 w-full flex items-center justify-between">
+              <div className="px-4 py-3.5 w-full flex items-center justify-between select-none cursor-grab active:cursor-grabbing touch-pan-y shrink-0">
                 <div className="w-8 shrink-0" />
-                <h3 className="font-bold text-gray-800 text-base uppercase tracking-wide flex-1 text-center truncate px-2">
+                <Drawer.Title className="font-bold text-gray-800 text-base uppercase tracking-wide flex-1 text-center truncate px-2">
                   Seleccionar Indicativo
-                </h3>
+                </Drawer.Title>
                 <button
                   type="button"
+                  data-vaul-no-drag=""
                   onClick={() => setOpen(false)}
-                  className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0"
+                  className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 active:scale-95 transition-all shrink-0 cursor-pointer"
                 >
                   <X size={18} />
                 </button>
               </div>
 
               {/* Barra de Búsqueda */}
-              <div className="px-4 pb-3 pt-1">
+              <div data-vaul-no-drag="" className="px-4 pb-3 pt-1">
                 <div className="relative flex items-center">
                   <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <Search size={18} className="text-gray-400" />

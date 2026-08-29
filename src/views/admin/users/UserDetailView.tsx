@@ -9,7 +9,8 @@ import {
   ShieldCheck, 
   Eye, 
   X,
-  UserCheck
+  UserCheck,
+  KeyRound
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'sonner';
@@ -21,6 +22,7 @@ import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
 import AssignUserRoleModal from '@/components/modal/AssignUserRoleModal';
+import UserAccountModal from '@/components/modal/UserAccountModal';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetUser, UnassignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';
 import { APP_ROUTES } from '@/config/routes';
@@ -45,6 +47,7 @@ const UserDetailView: React.FC = () => {
   const { current: currentUserInSlice, data: usersList, loading } = useAppSelector((state) => state.userSlice);
 
   const [showAssignRoleModal, setShowAssignRoleModal] = useState(false);
+  const [showAccountModal, setShowAccountModal] = useState(false);
   const [roleToDelete, setRoleToDelete] = useState<UserRole | null>(null);
   const [showDeleteRoleModal, setShowDeleteRoleModal] = useState(false);
   const [isDeletingRole, setIsDeletingRole] = useState(false);
@@ -213,10 +216,24 @@ const UserDetailView: React.FC = () => {
                       {assignedRoles.length === 1 ? 'rol' : 'roles'}
                     </span>
 
-                    {user.username && (
-                      <span className="px-2.5 py-0.5 text-xs font-bold font-mono bg-primary/10 text-primary rounded-full border border-primary/20">
-                        @{user.username}
-                      </span>
+                    {user.username ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowAccountModal(true)}
+                        className="px-2.5 py-0.5 text-xs font-bold font-mono bg-primary/10 hover:bg-primary/20 text-primary rounded-full border border-primary/20 flex items-center gap-1 transition-colors active:scale-95 cursor-pointer"
+                        title="Gestionar credenciales de acceso"
+                      >
+                        <KeyRound size={11} /> {user.username}
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowAccountModal(true)}
+                        className="px-2.5 py-0.5 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-800 rounded-full border border-amber-200 flex items-center gap-1 transition-colors active:scale-95 cursor-pointer"
+                        title="Crear cuenta de acceso"
+                      >
+                        <KeyRound size={11} /> Sin cuenta de acceso
+                      </button>
                     )}
                   </div>
                 </div>
@@ -326,6 +343,79 @@ const UserDetailView: React.FC = () => {
               </div>
             </div>
 
+            {/* Tarjeta: Cuenta y Credenciales de Acceso */}
+            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+              <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3.5">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <KeyRound size={16} />
+                  </div>
+                  <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                    Cuenta y Credenciales de Acceso
+                  </h3>
+                </div>
+
+                <Button
+                  type="button"
+                  variant={user.username ? 'default' : 'primary'}
+                  onClick={() => setShowAccountModal(true)}
+                  className="py-1.5 px-3 text-xs font-bold flex items-center gap-1.5 shadow-2xs border border-gray-200"
+                >
+                  <KeyRound size={13} className={user.username ? 'text-gray-600' : 'text-white'} />{' '}
+                  {user.username ? 'Actualizar Credenciales' : 'Crear Cuenta'}
+                </Button>
+              </div>
+
+              {user.username ? (
+                <div className="flex flex-col gap-y-2.5 text-sm">
+                  <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <span className="font-semibold text-gray-500 text-xs">Nombre de Usuario</span>
+                    <span className="font-mono font-bold text-primary text-xs sm:text-sm">
+                      {user.username}
+                    </span>
+                  </div>
+
+                  <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <span className="font-semibold text-gray-500 text-xs">Estado de Acceso</span>
+                    <span className="inline-flex items-center gap-1.5 font-bold text-emerald-700 text-xs">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      Credenciales activas
+                    </span>
+                  </div>
+
+                  {user.email && (
+                    <div className="flex justify-between items-center py-1">
+                      <span className="font-semibold text-gray-500 text-xs">Correo de Inicio de Sesión</span>
+                      <span className="font-medium text-gray-800 text-xs sm:text-sm">{user.email}</span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="p-4 bg-amber-50/70 border border-amber-200/80 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 mt-0.5">
+                      <KeyRound size={16} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-amber-900">Usuario sin cuenta de acceso</p>
+                      <p className="text-[11px] text-amber-700 mt-0.5 leading-snug">
+                        Esta persona no tiene usuario ni contraseña asignados para iniciar sesión en la plataforma.
+                      </p>
+                    </div>
+                  </div>
+
+                  <Button
+                    type="button"
+                    variant="primary"
+                    onClick={() => setShowAccountModal(true)}
+                    className="py-1.5 px-3 text-xs font-bold shrink-0 self-end sm:self-center"
+                  >
+                    Crear Cuenta Ahora
+                  </Button>
+                </div>
+              )}
+            </div>
+
             {/* Tarjeta: Roles Asignados */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
@@ -417,6 +507,18 @@ const UserDetailView: React.FC = () => {
         open={showAssignRoleModal}
         onClose={() => setShowAssignRoleModal(false)}
         user={user}
+      />
+
+      {/* User Account / Credentials Modal */}
+      <UserAccountModal
+        open={showAccountModal}
+        onClose={() => setShowAccountModal(false)}
+        user={user}
+        onSuccess={() => {
+          if (id) {
+            dispatch(GetUser({ id }));
+          }
+        }}
       />
 
       {/* Confirmation Modal for Role Deletion */}

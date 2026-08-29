@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { IAssignUserRelationRole, ICreateUser, ICreateUserAccount, IUpdateUser } from '@/libs/models';
+import { IAssignUserRelationRole, ICreateUser, ICreateUserAccount, IUpdateUser, IUpdateUserAccount } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { parseEntitySearchParams } from '@/libs/utils/text';
 import { createAsyncThunk } from '@reduxjs/toolkit';
@@ -58,6 +58,33 @@ export const CreateUserAccount = createAsyncThunk(
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Error al crear cuenta de usuario');
+    }
+  },
+);
+
+export const UpdateUserAccount = createAsyncThunk(
+  'user/UpdateUserAccount',
+  async (payload: IUpdateUserAccount, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.User,
+          method: HttpRequestMethod.PUT,
+          url: `/user/account`,
+          options: {
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al actualizar credenciales de usuario');
     }
   },
 );

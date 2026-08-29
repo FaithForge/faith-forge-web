@@ -122,3 +122,40 @@ export const UploadQRCodeImage = createAsyncThunk(
     return response.key;
   },
 );
+
+export interface IDeleteKidGuardianRelation {
+  kidId: string;
+  guardianId: string;
+}
+
+/**
+ * Deletes the relationship between a kid and a guardian in KidRegistrationController.
+ *
+ * @param {IDeleteKidGuardianRelation} payload - The kid ID and guardian ID to dissociate.
+ * @returns {Promise<any>} The server response data.
+ */
+export const DeleteKidGuardianRelation = createAsyncThunk(
+  'kid-church/DeleteKidGuardianRelation',
+  async (payload: IDeleteKidGuardianRelation, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.DELETE,
+          url: `/kid/${payload.kidId}/guardian/${payload.guardianId}`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Internal Error');
+    }
+  },
+);

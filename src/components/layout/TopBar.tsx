@@ -90,9 +90,9 @@ const TopBar = () => {
   const roleTriggerContent = (
     <div className={clsx(
       "flex items-center gap-2 outline-none rounded-xl py-0.5 px-1 transition-colors",
-      hasMultipleRoles ? "hover:bg-black/10 cursor-pointer active:scale-98" : "cursor-default"
+      hasMultipleRoles ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
     )}>
-      <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full flex items-center justify-center bg-white/20 p-0.5 shadow-xs shrink-0">
+      <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full flex items-center justify-center bg-white p-0.5 shadow-xs shrink-0">
          <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain drop-shadow-xs" />
       </div>
       <div className="text-left">
@@ -118,7 +118,7 @@ const TopBar = () => {
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content 
-                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[200px] z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[200px] z-[250] pointer-events-auto animate-in fade-in duration-150"
                 sideOffset={8}
                 align="start"
               >

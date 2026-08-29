@@ -3,11 +3,13 @@ import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import {
   AssignUserRole,
   CreateUser,
+  CreateUserAccount,
   GetMoreUsers,
   GetUser,
   GetUsers,
   UnassignUserRole,
   UpdateUser,
+  UpdateUserAccount,
 } from '../../thunks/user/user.thunk';
 
 const initialState: IUsers = {
@@ -86,6 +88,48 @@ const userSlice = createSlice({
     });
     builder.addCase(CreateUser.fulfilled, (state) => {
       state.needsRefresh = true;
+    });
+    builder.addCase(CreateUserAccount.fulfilled, (state, action) => {
+      state.needsRefresh = true;
+      const { userId, username, email } = (action.meta as any)?.arg || {};
+      if (state.current && (!userId || state.current.id === userId)) {
+        state.current = {
+          ...state.current,
+          username,
+          ...(email ? { email } : {}),
+        };
+      }
+      if (userId && state.data) {
+        const index = state.data.findIndex((u) => u.id === userId);
+        if (index !== -1) {
+          state.data[index] = {
+            ...state.data[index],
+            username,
+            ...(email ? { email } : {}),
+          };
+        }
+      }
+    });
+    builder.addCase(UpdateUserAccount.fulfilled, (state, action) => {
+      state.needsRefresh = true;
+      const { userId, username, email } = (action.meta as any)?.arg || {};
+      if (state.current && (!userId || state.current.id === userId)) {
+        state.current = {
+          ...state.current,
+          username,
+          ...(email ? { email } : {}),
+        };
+      }
+      if (userId && state.data) {
+        const index = state.data.findIndex((u) => u.id === userId);
+        if (index !== -1) {
+          state.data[index] = {
+            ...state.data[index],
+            username,
+            ...(email ? { email } : {}),
+          };
+        }
+      }
     });
     builder.addCase(UpdateUser.fulfilled, (state, action) => {
       const updatedId = (action.meta as any)?.arg?.id || state.current?.id;

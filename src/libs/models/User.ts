@@ -222,6 +222,14 @@ export interface ICreateUserAccount {
   email?: string;
 }
 
+/** Interface for user account update/reset credentials payload (PUT /user/account) */
+export interface IUpdateUserAccount {
+  userId: string;
+  username: string;
+  password?: string;
+  email?: string;
+}
+
 /** Interface for assigning a role to a user payload (POST /user/assign-role) */
 export interface IAssignUserRelationRole {
   userId: string;
@@ -264,4 +272,16 @@ export function generateSuggestedUsername(firstName: string, lastName: string): 
 
   const rawUsername = `${firstInitial}${primaryLastName}${secondLastInitial}`;
   return rawUsername.replace(/[^a-z0-9]/g, '');
+}
+
+/**
+ * Genera una contraseña temporal sugerida por defecto.
+ * Combina el prefijo institucional, el año en curso y dígitos aleatorios para cumplir con estándares de seguridad.
+ *
+ * @returns {string} Contraseña temporal sugerida (ej: 'Igle2026*742').
+ */
+export function generateTemporaryPassword(): string {
+  const currentYear = new Date().getFullYear();
+  const randomSuffix = Math.floor(100 + Math.random() * 900);
+  return `Igle${currentYear}*${randomSuffix}`;
 }

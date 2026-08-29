@@ -68,24 +68,61 @@ const RegistrationDashboard = () => {
     prevMeetingIdRef.current = currentMeeting?.id;
     prevSearchTextRef.current = searchText;
 
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
 
-    const delay = isSearchChanged && searchText ? 400 : 0;
+    const delay = isSearchChanged && searchText.trim().length > 0 ? 400 : 0;
 
-    timeoutRef.current = setTimeout(() => {
+    if (delay === 0) {
       dispatch(GetKids({ findText: searchText }));
-    }, delay);
+    } else {
+      timeoutRef.current = setTimeout(() => {
+        dispatch(GetKids({ findText: searchText }));
+      }, delay);
+    }
 
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
     };
   }, [searchText, isConfigured, shouldBlockKids, dispatch, currentMeeting?.id, needsRefresh]);
+
+  // Listen for BottomNav "Inicio" tap to reset view, clear search and refresh list
+  useEffect(() => {
+    const handleReset = () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+      prevSearchTextRef.current = '';
+      setSearchText('');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      const mainEl = document.querySelector('main');
+      if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+
+      if (isConfigured && !shouldBlockKids) {
+        dispatch(GetKids({ findText: '' }));
+      }
+    };
+
+    window.addEventListener('reset-registration-dashboard', handleReset);
+    return () => {
+      window.removeEventListener('reset-registration-dashboard', handleReset);
+    };
+  }, [dispatch, isConfigured, shouldBlockKids]);
 
   /**
    * Clears the search text and immediately fetches the full kid list without debounce delay.
    */
   const handleClearSearch = () => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
     prevSearchTextRef.current = '';
     setSearchText('');
     dispatch(GetKids({ findText: '' }));

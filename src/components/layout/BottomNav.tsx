@@ -7,13 +7,15 @@ import ReportDrawer from '@/components/modal/ReportDrawer';
 import KidChurchReportDrawer from '@/components/modal/KidChurchReportDrawer';
 import { APP_ROUTES } from '@/config/routes';
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
-import { useAppSelector } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { toast } from 'sonner';
 
 const BottomNav = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const { requestNavigation } = useNavigationGuard();
   
   const [openSettings, setOpenSettings] = useState(false);
@@ -82,6 +84,34 @@ const BottomNav = () => {
             }
             if (item.action === 'settings') { setOpenSettings(true); return; }
             if (item.action === 'report') { setOpenReport(true); return; }
+
+            const isRegikidsHomeClick = item.label === 'Inicio' || item.path === APP_ROUTES.kidRegistration.root;
+            const isKidChurchHomeClick = item.label === 'Niños Registrados' || item.path === APP_ROUTES.kidChurch.root;
+
+            // If already on the active tab:
+            if (pathname === item.path) {
+              if (isRegikidsHomeClick) {
+                dispatch(markKidsNeedsRefresh());
+                window.dispatchEvent(new CustomEvent('reset-registration-dashboard'));
+              } else if (isKidChurchHomeClick) {
+                window.dispatchEvent(new CustomEvent('reset-kid-church-dashboard'));
+              }
+              return;
+            }
+
+            if (isRegikidsHomeClick) {
+              dispatch(markKidsNeedsRefresh());
+              window.dispatchEvent(new CustomEvent('reset-registration-dashboard'));
+              navigate(item.path);
+              return;
+            }
+
+            if (isKidChurchHomeClick) {
+              window.dispatchEvent(new CustomEvent('reset-kid-church-dashboard'));
+              navigate(item.path);
+              return;
+            }
+
             // Check navigation guard before navigating
             if (requestNavigation(item.path)) {
               navigate(item.path);

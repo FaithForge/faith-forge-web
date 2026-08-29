@@ -74,8 +74,8 @@ const STATE_CONFIG: Record<
     textClass: 'text-emerald-600',
   },
   [ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY]: {
-    label: 'Activo sin pantalla',
-    shortLabel: 'Sin pantalla',
+    label: 'No visible',
+    shortLabel: 'No visible',
     icon: EyeOff,
     activeClass: 'bg-amber-500 text-white border-amber-500 shadow-xs',
     badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200/80',
@@ -90,6 +90,30 @@ const STATE_CONFIG: Record<
     textClass: 'text-rose-600',
   },
 };
+
+const STATE_CATEGORIES = [
+  {
+    state: ChurchMeetingStateEnum.ACTIVE,
+    label: 'Activos',
+    icon: CheckCircle2,
+    iconBg: 'bg-emerald-100 text-emerald-700',
+    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+  },
+  {
+    state: ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
+    label: 'No visibles',
+    icon: EyeOff,
+    iconBg: 'bg-amber-100 text-amber-700',
+    badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80',
+  },
+  {
+    state: ChurchMeetingStateEnum.DISABLE,
+    label: 'Inactivos',
+    icon: XCircle,
+    iconBg: 'bg-rose-100 text-rose-700',
+    badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/80',
+  },
+];
 
 /**
  * Normalizes and formats any time string (ISO, HH:mm:ss or HH:mm) to "HH:mm".
@@ -241,6 +265,7 @@ const ChurchMeetingsView: React.FC = () => {
     useAppSelector((state) => state.adminChurchMeetingSlice);
 
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
+  const [selectedStateFilter, setSelectedStateFilter] = useState<'ALL' | ChurchMeetingStateEnum>('ALL');
   /** Local registry of pending changes: meetingId -> new state */
   const [pendingChanges, setPendingChanges] = useState<Record<string, ChurchMeetingStateEnum>>({});
 
@@ -328,6 +353,21 @@ const ChurchMeetingsView: React.FC = () => {
 
   const dirtyCount = Object.keys(pendingChanges).length;
 
+  const stateCounts = useMemo(() => {
+    let active = 0;
+    let noVisible = 0;
+    let inactive = 0;
+
+    meetings.forEach((m) => {
+      const state = pendingChanges[m.id] ?? m.state ?? ChurchMeetingStateEnum.ACTIVE;
+      if (state === ChurchMeetingStateEnum.ACTIVE) active++;
+      else if (state === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY) noVisible++;
+      else if (state === ChurchMeetingStateEnum.DISABLE) inactive++;
+    });
+
+    return { active, noVisible, inactive, total: meetings.length };
+  }, [meetings, pendingChanges]);
+
   // Group meetings by day of the week, ordered Sunday to Saturday
   const meetingsByDay = useMemo(() => {
     const grouped: Record<string, IChurchMeeting[]> = {};
@@ -369,7 +409,7 @@ const ChurchMeetingsView: React.FC = () => {
             Disponibilidad por Sede
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Controla qué servicios están activos para registro, activos sin pantalla o inhabilitados.
+            Controla qué servicios están activos para registro, no visibles o inactivos.
           </p>
         </div>
 
@@ -432,39 +472,149 @@ const ChurchMeetingsView: React.FC = () => {
                   )}
                 </div>
 
-                {/* Grouped by Days */}
-                {Object.entries(meetingsByDay).map(([day, dayMeetings]) => (
-                  <div key={day} className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2 px-1">
-                      <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                        <CalendarDays size={13} />
+                {/* State Filter Pills */}
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStateFilter('ALL')}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border cursor-pointer',
+                      selectedStateFilter === 'ALL'
+                        ? 'bg-primary text-white border-primary shadow-2xs'
+                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                    )}
+                  >
+                    Todos ({stateCounts.total})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
+                      selectedStateFilter === ChurchMeetingStateEnum.ACTIVE
+                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                        : 'bg-white text-emerald-700 border-gray-200 hover:bg-emerald-50'
+                    )}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                    Activos ({stateCounts.active})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
+                      selectedStateFilter === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY
+                        ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                        : 'bg-white text-amber-700 border-gray-200 hover:bg-amber-50'
+                    )}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-500" />
+                    No visibles ({stateCounts.noVisible})
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.DISABLE)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
+                      selectedStateFilter === ChurchMeetingStateEnum.DISABLE
+                        ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                        : 'bg-white text-rose-700 border-gray-200 hover:bg-rose-50'
+                    )}
+                  >
+                    <span className="w-2 h-2 rounded-full bg-rose-500" />
+                    Inactivos ({stateCounts.inactive})
+                  </button>
+                </div>
+
+                {/* Grouped by Days & Categorized by State */}
+                {Object.entries(meetingsByDay).map(([day, dayMeetings]) => {
+                  const filteredDayMeetings = dayMeetings.filter((meeting) => {
+                    if (selectedStateFilter === 'ALL') return true;
+                    const effectiveState =
+                      pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                    return effectiveState === selectedStateFilter;
+                  });
+
+                  if (filteredDayMeetings.length === 0) return null;
+
+                  return (
+                    <div key={day} className="flex flex-col gap-4">
+                      {/* Day Header */}
+                      <div className="flex items-center gap-2 px-1">
+                        <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center">
+                          <CalendarDays size={13} />
+                        </div>
+                        <h3 className="text-xs font-extrabold text-gray-700 uppercase tracking-wider">
+                          {DAY_LABEL[day as Days] ?? day} ({filteredDayMeetings.length})
+                        </h3>
                       </div>
-                      <h3 className="text-xs font-extrabold text-gray-700 uppercase tracking-wider">
-                        {DAY_LABEL[day as Days] ?? day} ({dayMeetings.length})
-                      </h3>
-                    </div>
 
-                    <div className="flex flex-col gap-3">
-                      {dayMeetings.map((meeting) => {
-                        const effectiveState =
-                          pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                        const isModified = pendingChanges[meeting.id] !== undefined;
+                      {/* Categorized Subsections */}
+                      <div className="flex flex-col gap-5">
+                        {STATE_CATEGORIES.map((cat) => {
+                          if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
+                            return null;
+                          }
 
-                        return (
-                          <MeetingCard
-                            key={meeting.id}
-                            meeting={meeting}
-                            currentState={effectiveState}
-                            isModified={isModified}
-                            onStateChange={(newState) =>
-                              handleStateChange(meeting.id, meeting.state, newState)
-                            }
-                          />
-                        );
-                      })}
+                          // Filter items belonging to this category in original DB order
+                          const catMeetings = dayMeetings.filter((meeting) => {
+                            const effectiveState =
+                              pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                            return effectiveState === cat.state;
+                          });
+
+                          if (catMeetings.length === 0) return null;
+
+                          const CatIcon = cat.icon;
+
+                          return (
+                            <div key={cat.state} className="flex flex-col gap-2.5">
+                              {/* Category Header */}
+                              <div className="flex items-center justify-between px-1">
+                                <div className="flex items-center gap-2">
+                                  <div className={clsx('w-5 h-5 rounded-md flex items-center justify-center', cat.iconBg)}>
+                                    <CatIcon size={13} />
+                                  </div>
+                                  <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                                    {cat.label}
+                                  </h4>
+                                </div>
+                                <span className={clsx('px-2 py-0.5 text-[11px] font-bold rounded-full border', cat.badgeClass)}>
+                                  {catMeetings.length}
+                                </span>
+                              </div>
+
+                              {/* Cards in original DB order */}
+                              <div className="flex flex-col gap-3">
+                                {catMeetings.map((meeting) => {
+                                  const effectiveState =
+                                    pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                                  const isModified = pendingChanges[meeting.id] !== undefined;
+
+                                  return (
+                                    <MeetingCard
+                                      key={meeting.id}
+                                      meeting={meeting}
+                                      currentState={effectiveState}
+                                      isModified={isModified}
+                                      onStateChange={(newState) =>
+                                        handleStateChange(meeting.id, meeting.state, newState)
+                                      }
+                                    />
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </>
             )}
           </div>
