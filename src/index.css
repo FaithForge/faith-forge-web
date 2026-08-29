@@ -13,6 +13,7 @@
   :root {
     /* Default (Primary fallback) */
     --color-primary: #15803d; /* Green 700 */
+    --color-primary-rgb: 21, 128, 61;
     --color-primary-foreground: #ffffff;
     --color-background: #f3f4f6; /* Gray 100 */
     --color-surface: #ffffff;
@@ -20,15 +21,42 @@
     --color-text-muted: #6b7280; /* Gray 500 */
   }
 
-  .theme-SUPER_ADMIN { --color-primary: #334155; /* slate-700: Dark modern charcoal gray */ }
-  .theme-ADMIN { --color-primary: #475569; /* slate-600: Medium-dark slate gray */ }
-  .theme-KID_REGISTER_ADMIN { --color-primary: #166534; /* bg-green-800 */ }
-  .theme-KID_GROUP_ADMIN { --color-primary: #db2777; /* bg-pink-600 */ }
-  .theme-KID_REGISTER_SUPERVISOR { --color-primary: #15803d; /* bg-green-700 */ }
-  .theme-KID_GROUP_SUPERVISOR { --color-primary: #9333ea; /* bg-purple-600 */ }
-  .theme-KID_REGISTER_USER { --color-primary: #16a34a; /* bg-green-600 */ }
-  .theme-KID_GROUP_USER { --color-primary: #fbbf24; /* bg-amber-400 */ }
-  .theme-USER { --color-primary: #fbbf24; /* bg-amber-400 */ }
+  .theme-SUPER_ADMIN {
+    --color-primary: #334155; /* slate-700 */
+    --color-primary-rgb: 51, 65, 85;
+  }
+  .theme-ADMIN {
+    --color-primary: #475569; /* slate-600 */
+    --color-primary-rgb: 71, 85, 105;
+  }
+  .theme-KID_REGISTER_ADMIN {
+    --color-primary: #166534; /* bg-green-800 */
+    --color-primary-rgb: 22, 101, 52;
+  }
+  .theme-KID_GROUP_ADMIN {
+    --color-primary: #db2777; /* bg-pink-600 */
+    --color-primary-rgb: 219, 39, 119;
+  }
+  .theme-KID_REGISTER_SUPERVISOR {
+    --color-primary: #15803d; /* bg-green-700 */
+    --color-primary-rgb: 21, 128, 61;
+  }
+  .theme-KID_GROUP_SUPERVISOR {
+    --color-primary: #9333ea; /* bg-purple-600 */
+    --color-primary-rgb: 147, 51, 234;
+  }
+  .theme-KID_REGISTER_USER {
+    --color-primary: #16a34a; /* bg-green-600 */
+    --color-primary-rgb: 22, 163, 74;
+  }
+  .theme-KID_GROUP_USER {
+    --color-primary: #fbbf24; /* bg-amber-400 */
+    --color-primary-rgb: 251, 191, 36;
+  }
+  .theme-USER {
+    --color-primary: #fbbf24; /* bg-amber-400 */
+    --color-primary-rgb: 251, 191, 36;
+  }
 
   html,
   body,
@@ -60,4 +88,31 @@
     user-select: text !important;
     -webkit-touch-callout: default !important;
   }
+}
+
+@layer utilities {
+  /* Backwards-compatible primary alpha utilities for older iOS / Safari devices without color-mix */
+  .bg-primary\/2 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.02) !important; }
+  .bg-primary\/5 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.05) !important; }
+  .bg-primary\/10 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.10) !important; }
+  .bg-primary\/15 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.15) !important; }
+  .bg-primary\/20 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.20) !important; }
+  .bg-primary\/30 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.30) !important; }
+  .bg-primary\/40 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.40) !important; }
+  .bg-primary\/50 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.50) !important; }
+  .bg-primary\/80 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.80) !important; }
+  .bg-primary\/90 { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.90) !important; }
+
+  .border-primary\/10 { border-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.10) !important; }
+  .border-primary\/20 { border-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.20) !important; }
+  .border-primary\/30 { border-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.30) !important; }
+  .border-primary\/40 { border-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.40) !important; }
+  .border-primary\/60 { border-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.60) !important; }
+
+  .ring-primary\/20 { --tw-ring-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.20) !important; }
+  .ring-primary\/30 { --tw-ring-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.30) !important; }
+
+  .hover\:bg-primary\/10:hover { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.10) !important; }
+  .hover\:bg-primary\/20:hover { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.20) !important; }
+  .hover\:bg-primary\/90:hover { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.90) !important; }
 }
