@@ -15,6 +15,13 @@ import { toast } from 'sonner';
 // Global map to store scroll positions across route transitions
 const routeScrollPositions = new Map<string, number>();
 
+// Routes that maintain scroll position (only primary list directories)
+const PRESERVED_SCROLL_ROUTES = new Set<string>([
+  APP_ROUTES.kidRegistration.root,
+  APP_ROUTES.kidChurch.root,
+  APP_ROUTES.admin.users,
+]);
+
 const MainLayout = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -95,37 +102,62 @@ const MainLayout = () => {
     }
   }, [pathname, currentRole, navigate, isAdminRole]);
 
-  // Restore scroll position when returning to a previous route, or scroll to top for new views
+  // Restore scroll position when returning to a previous route, or scroll to top for singular views
   useEffect(() => {
     if (!mainRef.current) return;
 
-    const savedPosition = routeScrollPositions.get(pathname);
-    if (savedPosition !== undefined && savedPosition > 0) {
-      mainRef.current.scrollTo({ top: savedPosition, behavior: 'instant' });
-      // Retry in animation frames and slight delay in case list elements take a frame to render
-      const frame1 = requestAnimationFrame(() => {
-        if (mainRef.current && routeScrollPositions.has(pathname)) {
-          mainRef.current.scrollTo({ top: savedPosition, behavior: 'instant' });
-        }
-      });
-      const timer = setTimeout(() => {
-        if (mainRef.current && routeScrollPositions.has(pathname)) {
-          mainRef.current.scrollTo({ top: savedPosition, behavior: 'instant' });
-        }
-      }, 50);
-      return () => {
-        cancelAnimationFrame(frame1);
-        clearTimeout(timer);
-      };
-    } else {
-      mainRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    if (PRESERVED_SCROLL_ROUTES.has(pathname)) {
+      const savedPosition = routeScrollPositions.get(pathname);
+      if (savedPosition !== undefined && savedPosition > 0) {
+        mainRef.current.scrollTo({ top: savedPosition, behavior: 'instant' });
+        // Retry in animation frames and slight delay in case list elements take a frame to render
+        const frame1 = requestAnimationFrame(() => {
+          if (mainRef.current && routeScrollPositions.has(pathname)) {
+            mainRef.current.scrollTo({ top: savedPosition, behavior: 'instant' });
+          }
+        });
+        const timer = setTimeout(() => {
+          if (mainRef.current && routeScrollPositions.has(pathname)) {
+            mainRef.current.scrollTo({ top: savedPosition, behavior: 'instant' });
+          }
+        }, 50);
+        return () => {
+          cancelAnimationFrame(frame1);
+          clearTimeout(timer);
+        };
+      }
     }
 
+    // For singular views (forms, QR generator, scanners, detail views): ALWAYS force top position
+    mainRef.current.scrollTo({ top: 0, behavior: 'instant' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
+
+    // Defensive re-enforcement across animation frames to prevent any autofocus/layout shift from misaligning the scroll
+    const frame = requestAnimationFrame(() => {
+      if (!PRESERVED_SCROLL_ROUTES.has(pathname)) {
+        if (mainRef.current) mainRef.current.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
+    });
+
+    const resetTimer = setTimeout(() => {
+      if (!PRESERVED_SCROLL_ROUTES.has(pathname)) {
+        if (mainRef.current) mainRef.current.scrollTop = 0;
+        window.scrollTo(0, 0);
+      }
+    }, 60);
+
     prevPathnameRef.current = pathname;
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(resetTimer);
+    };
   }, [pathname]);
 
   const handleScroll = (e: React.UIEvent<HTMLElement>) => {
-    routeScrollPositions.set(pathname, e.currentTarget.scrollTop);
+    if (PRESERVED_SCROLL_ROUTES.has(pathname)) {
+      routeScrollPositions.set(pathname, e.currentTarget.scrollTop);
+    }
   };
 
   return (

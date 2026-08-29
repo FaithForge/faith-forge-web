@@ -145,7 +145,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
   const isLoading = guardianLoading || isGeneratingUrl;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="flex-1 flex flex-col bg-gray-50 pb-8">
       <PageHeader title="Generar Código QR" onBack={() => navigate(-1)} />
 
       <div className="p-4 max-w-md mx-auto flex flex-col gap-4 animate-in fade-in duration-300">
@@ -169,7 +169,6 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
                   "block w-full pl-3.5 py-2.5 rounded-xl border-2 border-gray-200 bg-white text-text-main focus:border-primary outline-none text-base font-semibold shadow-sm transition-colors",
                   nationalIdQuery ? "pr-10" : "pr-3"
                 )}
-                autoFocus
               />
               {nationalIdQuery && (
                 <button

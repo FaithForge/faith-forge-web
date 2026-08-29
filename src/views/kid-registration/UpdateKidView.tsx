@@ -248,6 +248,7 @@ const UpdateKidView: React.FC = () => {
                 id="profilePhoto"
                 type="file"
                 accept="image/*"
+                capture="environment"
                 className="hidden"
                 onChange={handlePhotoCapture}
               />

@@ -236,36 +236,72 @@ const ScannerView = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="flex-1 flex flex-col bg-gray-50 pb-6">
       <PageHeader title="Registro por QR" onBack={handleCancelClick} />
 
       <StepProgress currentStep={step} steps={SCAN_STEPS} />
 
-      <div className="p-4">
+      <div className="p-4 max-w-xl mx-auto w-full">
         
         {step === 1 && (
-          <div className="animate-in fade-in slide-in-from-right-4 duration-300 flex flex-col items-center">
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 w-full mb-6">
-              <h2 className="text-lg font-bold text-gray-800 text-center mb-2">Escanear Código</h2>
-              <p className="text-sm text-gray-500 text-center mb-4">Apunta la cámara al código QR del acudiente para buscar a los niños asociados.</p>
+          <div className="animate-in fade-in slide-in-from-right-4 duration-300 w-full flex flex-col items-center">
+            
+            {/* Tarjeta del Escáner */}
+            <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-sm border border-gray-100 w-full mb-4">
               
-              <div className="rounded-xl overflow-hidden bg-black aspect-square relative border-4 border-gray-100 shadow-inner">
-                {/* QR Scanner component */}
-                <Scanner 
-                  onScan={handleScan}
-                  // paused={false}
-                  components={{ finder: true }}
-                />
+              {/* Contenedor adaptativo: vertical en portrait, horizontal en landscape */}
+              <div className="flex flex-col landscape:flex-row landscape:items-center landscape:gap-6">
+                
+                {/* Textos informativos */}
+                <div className="text-center mb-4 landscape:mb-0 landscape:order-2 landscape:flex-1 landscape:text-left">
+                  <h2 className="text-lg font-bold text-gray-800 mb-1">Escanear Código</h2>
+                  <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-0 landscape:mb-4">
+                    Apunta la cámara al código QR del acudiente para buscar a los niños asociados.
+                  </p>
+
+                  {/* Botón integrado en landscape */}
+                  <div className="hidden landscape:block pt-2">
+                    <Button 
+                      onClick={() => navigate(APP_ROUTES.kidRegistration.generateQR)}
+                      block
+                      variant="default"
+                      className="py-3 font-bold shadow-sm"
+                    >
+                      Generar QR Acudiente
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Visor de la Cámara: Ancho completo en portrait, proporcional en landscape */}
+                <div className="w-full landscape:w-auto landscape:shrink-0 flex justify-center landscape:order-1">
+                  <div className="rounded-xl overflow-hidden bg-black aspect-square w-full landscape:w-[280px] landscape:max-h-[50vh] relative border-4 border-gray-100 shadow-inner">
+                    <Scanner 
+                      onScan={handleScan}
+                      components={{ finder: true }}
+                      styles={{
+                        container: { width: '100%', height: '100%' },
+                        video: { objectFit: 'cover' }
+                      }}
+                    />
+                  </div>
+                </div>
+
               </div>
+
             </div>
 
-            <Button 
-              onClick={() => navigate(APP_ROUTES.kidRegistration.generateQR)}
-              block
-              variant="default"
-            >
-              Generar QR Acudiente
-            </Button>
+            {/* Botón en portrait a ancho completo debajo de la tarjeta */}
+            <div className="w-full landscape:hidden">
+              <Button 
+                onClick={() => navigate(APP_ROUTES.kidRegistration.generateQR)}
+                block
+                variant="default"
+                className="py-3 font-bold shadow-sm"
+              >
+                Generar QR Acudiente
+              </Button>
+            </div>
+
           </div>
         )}
 
