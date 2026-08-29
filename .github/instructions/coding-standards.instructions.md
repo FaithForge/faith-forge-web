@@ -12,6 +12,7 @@ applyTo: '**/*.{ts,tsx,js,jsx,mjs,cjs}'
 - Keep functions and components small enough to understand without scrolling far.
 - Avoid introducing new dependencies when the repo already has a suitable utility.
 - Keep object and array shapes aligned with existing models in `src/libs/models`.
+- **Preserve API Contracts**: NEVER change, rename, remove, or alter API/microservice query parameters, payload structures, or endpoint contract arguments unless the user explicitly asks for it.
 
 ## Practical Examples
 

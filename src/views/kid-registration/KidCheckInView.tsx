@@ -17,6 +17,7 @@ import TagKidGroup from '@/components/ui/TagKidGroup';
 import PageHeader from '@/components/ui/PageHeader';
 import UpdateGuardianModal from '@/components/modal/UpdateGuardianModal';
 import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
+import DeleteKidModal from '@/components/modal/DeleteKidModal';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
@@ -314,11 +315,15 @@ const KidCheckInView = () => {
     }
   };
 
-  const handleDeleteKid = async () => {
+  const handleDeleteKid = async (targetKidId?: string) => {
     if (!kid?.id) return;
     try {
-      await dispatch(DeleteKid({ id: kid.id })).unwrap();
-      toast.success('Niño eliminado correctamente');
+      await dispatch(DeleteKid({ id: kid.id, targetKidId })).unwrap();
+      toast.success(
+        targetKidId
+          ? 'Niño eliminado e información transferida correctamente'
+          : 'Niño eliminado correctamente'
+      );
       navigate(APP_ROUTES.kidRegistration.root, { replace: true });
     } catch {
       toast.error('Error al eliminar el niño');
@@ -831,14 +836,10 @@ const KidCheckInView = () => {
         kidId={id || ''}
       />
 
-      <ConfirmModal
+      <DeleteKidModal
         open={showDeleteKidModal}
-        onOpenChange={setShowDeleteKidModal}
-        title="¿Eliminar niño?"
-        description="¿Está seguro que desea eliminar al niño? Esta acción no se puede deshacer."
-        confirmText="Eliminar"
-        cancelText="Cancelar"
-        type="danger"
+        onClose={() => setShowDeleteKidModal(false)}
+        kid={kid}
         onConfirm={handleDeleteKid}
       />
 

@@ -20,7 +20,7 @@ export const GetKid = createAsyncThunk(
         url: `/kid/${payload.id}`,
         options: {
           params: {
-            churchMeetingId: churchMeeting.current?.id,
+            registrationChurchMeetingId: churchMeeting.current?.id,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -147,7 +147,7 @@ export const UpdateKid = createAsyncThunk(
 
 export const DeleteKid = createAsyncThunk(
   'kid-church/DeleteKid',
-  async (payload: { id: string }, { getState }) => {
+  async (payload: { id: string; targetKidId?: string }, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -156,6 +156,7 @@ export const DeleteKid = createAsyncThunk(
         method: HttpRequestMethod.DELETE,
         url: `/kid/${payload.id}`,
         options: {
+          params: payload.targetKidId ? { targetKidId: payload.targetKidId } : undefined,
           headers: { Authorization: `Bearer ${token}` },
         },
       })

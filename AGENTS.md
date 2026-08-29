@@ -43,6 +43,7 @@
 - Match the surrounding file style instead of reformatting unrelated code.
 - When adding new behavior, check whether an existing utility, component, or slice already covers it.
 - If a change depends on a repository convention, encode that convention in a file-specific instruction rather than repeating it in chat.
+- **NEVER modify API/Service contract parameters**: NEVER rename, remove, add, or alter query parameters, path params, or request payload fields in API calls, services, or thunks (e.g. `registrationChurchMeetingId`) unless the user explicitly requests it. Backend contracts must remain strictly untouched.
 
 ## File-Specific Guidance
 
