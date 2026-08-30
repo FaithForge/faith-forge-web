@@ -448,14 +448,14 @@ const KidCheckInView = () => {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-28 sm:pb-32">
       <PageHeader
         title="Detalle y Registro"
         onBack={() => navigate(APP_ROUTES.kidRegistration.root)}
         rightAction={rightMenuAction}
       />
 
-      <div className="p-4 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div className="p-4 pb-16 animate-in fade-in slide-in-from-right-4 duration-300">
         {(!kid || kid.id !== id || (loading && !kid.relations)) && <KidCheckInSkeleton />}
 
         {kid && kid.id === id && (!loading || !!kid.relations) && (
@@ -728,9 +728,9 @@ const KidCheckInView = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 mb-8">
                   <Button onClick={handleReprint} block variant="primary">
-                    <Printer size={18} className="mr-2 inline" /> Reimprimir registro
+                    <Printer size={18} className="mr-2 shrink-0" /> Reimprimir registro
                   </Button>
                   
                   <Button onClick={handleDelete} block variant="danger">
@@ -875,11 +875,12 @@ const KidCheckInView = () => {
                   onClick={handleCheckIn} 
                   block 
                   variant="primary"
+                  className="mb-8"
                   loading={isProcessing}
                   loadingText={processingStep}
                   disabled={shouldBlockKids || loading || isProcessing || relationsList.length === 0 || (isOverage && !isAdmin)}
                 >
-                  <QrCode size={20} className="mr-2 inline" /> Registrar e Imprimir Etiqueta
+                  <Printer size={20} className="mr-2 shrink-0" /> Registrar e Imprimir Etiqueta
                 </Button>
               </>
             )}

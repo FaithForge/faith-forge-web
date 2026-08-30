@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, Info, AlertTriangle, ArrowLeftRight } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, Info, AlertTriangle, ArrowLeftRight, Printer } from 'lucide-react';
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { APP_ROUTES } from "@/config/routes";
 import clsx from 'clsx';
@@ -507,7 +507,7 @@ const ScannerView = () => {
               loadingText={processingStep}
               disabled={isProcessing}
             >
-              <Check size={20} className="mr-2 inline" /> Registrar Niños
+              <Printer size={20} className="mr-2 shrink-0" /> Registrar Niños
             </Button>
           </form>
         )}

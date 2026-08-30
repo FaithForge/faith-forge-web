@@ -210,7 +210,7 @@ const UpdateKidView: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20">
+    <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-28 sm:pb-32">
       <PageHeader
         title="Actualizar Datos del Niño"
         onBack={() => navigate(APP_ROUTES.kidRegistration.checkIn(id || ''))}
@@ -219,7 +219,7 @@ const UpdateKidView: React.FC = () => {
       {kidLoading && !kid ? (
         <UpdateKidSkeleton />
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 flex flex-col gap-4 max-w-lg mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-16 flex flex-col gap-4 max-w-lg mx-auto">
           {/* Foto de Perfil */}
           <div className="flex flex-col items-center justify-center my-3">
             <label htmlFor="profilePhoto" className="relative cursor-pointer group block">
@@ -423,6 +423,7 @@ const UpdateKidView: React.FC = () => {
             type="submit"
             block
             variant="primary"
+            className="mb-8"
             disabled={isUnderThreeMonths}
             loading={isSubmitting}
             loadingText="Guardando cambios..."

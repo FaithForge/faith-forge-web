@@ -96,6 +96,7 @@ const NewKidView = () => {
     watch: watchGuardian, 
     setValue: setGuardianValue, 
     getValues: getGuardianValues, 
+    clearErrors: clearGuardianErrors,
     formState: { errors: guardianErrors, isDirty: isGuardianDirty } 
   } = useForm({
     defaultValues: {
@@ -191,9 +192,10 @@ const NewKidView = () => {
       setGuardianValue('lastName', kidGuardianSlice.current.lastName);
       setGuardianValue('phone', kidGuardianSlice.current.phone);
       setGuardianValue('gender', kidGuardianSlice.current.gender);
-      setGuardianValue('relation', kidGuardianSlice.current.relation);
+      setGuardianValue('relation', kidGuardianSlice.current.relation || '');
+      clearGuardianErrors(['nationalId', 'firstName', 'lastName', 'phone', 'gender']);
     }
-  }, [kidGuardianSlice.current, setGuardianValue, step]);
+  }, [kidGuardianSlice.current, setGuardianValue, clearGuardianErrors, step]);
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -289,7 +291,14 @@ const NewKidView = () => {
     }
   };
 
-  const onGuardianSubmit = async (values: any) => {
+  /**
+   * Submits guardian information and links it to the newly created child.
+   * If the guardian was found in the database, uses existing data and validates only relationship.
+   *
+   * @param {any} values - Form field values for the guardian.
+   * @returns {Promise<void>} Resolves when the guardian is saved and navigates to check-in.
+   */
+  const onGuardianSubmit = async (values: any): Promise<void> => {
     if (shouldBlockKids) {
       toast.error(meetingErrorMsg || 'El servicio actual está fuera del horario de registro.');
       navigate(APP_ROUTES.kidRegistration.root);
@@ -300,18 +309,23 @@ const NewKidView = () => {
        toast.error("No se encontró el ID del niño.");
        return;
     }
+
+    if (!values.relation) {
+       toast.error("Por favor seleccione la relación con el niño");
+       return;
+    }
     
     setIsUploading(true);
     try {
        const guardianPayload = {
          kidId: kidSlice.current.id,
-         nationalIdType: values.nationalIdType,
-         nationalId: values.nationalId?.trim(),
-         firstName: values.firstName?.trim(),
-         lastName: values.lastName?.trim(),
-         dialCodePhone: values.dialCodePhone || '+57',
-         phone: values.phone?.trim(),
-         gender: values.gender,
+         nationalIdType: kidGuardianSlice.current?.nationalIdType || values.nationalIdType,
+         nationalId: (kidGuardianSlice.current?.nationalId || values.nationalId)?.trim(),
+         firstName: (kidGuardianSlice.current?.firstName || values.firstName)?.trim(),
+         lastName: (kidGuardianSlice.current?.lastName || values.lastName)?.trim(),
+         dialCodePhone: kidGuardianSlice.current?.dialCodePhone || values.dialCodePhone || '+57',
+         phone: (kidGuardianSlice.current?.phone || values.phone)?.trim(),
+         gender: kidGuardianSlice.current?.gender || values.gender,
          relation: values.relation,
        };
        
@@ -386,11 +400,11 @@ const NewKidView = () => {
   }, [kidGroupSlice.data]);
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-full bg-background flex flex-col flex-1 pb-28 sm:pb-32">
       <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
       <StepProgress currentStep={step} steps={NEW_KID_STEPS} />
 
-      <div className="p-4">
+      <div className="p-4 pb-16">
         {step === 1 && (
           <form onSubmit={handleKidSubmit(onKidSubmit)} className="animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Foto de Perfil */}
@@ -627,6 +641,7 @@ const NewKidView = () => {
               type="submit"
               block
               variant="primary"
+              className="mb-8"
               disabled={isUploading || isUnderThreeMonths}
             >
               {isUploading ? 'Guardando...' : <>Guardar Niño y Continuar <ChevronRight size={18} className="ml-2 inline" /></>}
@@ -687,12 +702,12 @@ const NewKidView = () => {
               {/* Documento y Búsqueda */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Número de Documento <span className="text-red-500">*</span>
+                  Número de Documento {!kidGuardianSlice.current && <span className="text-red-500">*</span>}
                 </label>
                 <div className="relative flex items-center">
                   <input
                     type="text"
-                    {...registerGuardian('nationalId', { required: 'Requerido' })}
+                    {...registerGuardian('nationalId', { required: !kidGuardianSlice.current ? 'Requerido' : false })}
                     onBlur={checkNationalId}
                     disabled={!!kidGuardianSlice.current}
                     placeholder="Escribir número de documento..."
@@ -735,22 +750,22 @@ const NewKidView = () => {
               {/* Nombre */}
               <Input
                 label="Nombre"
-                required
+                required={!kidGuardianSlice.current}
                 placeholder="Nombres del acudiente"
                 disabled={!!kidGuardianSlice.current}
-                {...registerGuardian('firstName', { required: 'Requerido' })}
+                {...registerGuardian('firstName', { required: !kidGuardianSlice.current ? 'Requerido' : false })}
                 error={guardianErrors.firstName?.message as string}
               />
 
               {/* Apellidos */}
               <Input
                 label="Apellidos"
-                required
+                required={!kidGuardianSlice.current}
                 placeholder="Apellidos del acudiente"
                 disabled={!!kidGuardianSlice.current}
                 {...registerGuardian('lastName', { 
-                  required: 'Los apellidos son requeridos',
-                  validate: validateTwoLastNames
+                  required: !kidGuardianSlice.current ? 'Los apellidos son requeridos' : false,
+                  validate: (val) => (!kidGuardianSlice.current ? validateTwoLastNames(val) : true)
                 })}
                 error={guardianErrors.lastName?.message as string}
               />
@@ -759,11 +774,11 @@ const NewKidView = () => {
               <Controller
                 name="phone"
                 control={guardianControl}
-                rules={{ required: 'Requerido' }}
+                rules={{ required: !kidGuardianSlice.current ? 'Requerido' : false }}
                 render={({ field }) => (
                   <PhoneInput
                     label="Teléfono"
-                    required
+                    required={!kidGuardianSlice.current}
                     dialCode={watchGuardian('dialCodePhone') || '+57'}
                     phone={field.value}
                     disabled={!!kidGuardianSlice.current}
@@ -778,11 +793,11 @@ const NewKidView = () => {
               <Controller
                 name="gender"
                 control={guardianControl}
-                rules={{ required: 'Requerido' }}
+                rules={{ required: !kidGuardianSlice.current ? 'Requerido' : false }}
                 render={({ field }) => (
                   <SelectSearch
                     label="Género"
-                    required
+                    required={!kidGuardianSlice.current}
                     value={field.value}
                     disabled={!!kidGuardianSlice.current}
                     onChange={(val) => {
@@ -821,6 +836,7 @@ const NewKidView = () => {
               type="submit"
               block
               variant="primary"
+              className="mb-8"
               disabled={isUploading}
             >
               {isUploading ? 'Guardando...' : <>Guardar Acudiente <Check size={18} className="ml-2 inline" /></>}

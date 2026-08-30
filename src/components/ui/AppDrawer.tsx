@@ -108,7 +108,11 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
 
             {title && (
               <Drawer.Title className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
-                {icon && <span className="shrink-0">{icon}</span>}
+                {icon && (
+                  <span className="shrink-0 inline-flex items-center justify-center -translate-y-[1.5px]">
+                    {icon}
+                  </span>
+                )}
                 <span className="truncate">{title}</span>
               </Drawer.Title>
             )}

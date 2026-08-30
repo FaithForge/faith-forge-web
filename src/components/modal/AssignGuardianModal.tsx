@@ -113,30 +113,40 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     .filter((r) => !gender || r.gender === gender)
     .map((r) => ({ id: r.value, name: r.label }));
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  /**
+   * Handles assigning an existing guardian or registering and assigning a new guardian.
+   * If the guardian already exists in the database, skips field validations except relationship.
+   *
+   * @param {React.FormEvent} e - Form submit event.
+   * @returns {Promise<void>} Resolves when submission process completes.
+   */
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
 
-    if (!nationalId.trim()) {
-      toast.error('Por favor ingrese el número de documento');
-      return;
+    if (!existingGuardian) {
+      if (!nationalId.trim()) {
+        toast.error('Por favor ingrese el número de documento');
+        return;
+      }
+      if (!firstName.trim()) {
+        toast.error('Por favor ingrese el nombre del acudiente');
+        return;
+      }
+      const lastNameValidation = validateTwoLastNames(lastName);
+      if (lastNameValidation !== true) {
+        toast.error(typeof lastNameValidation === 'string' ? lastNameValidation : 'Se deben colocar ambos apellidos');
+        return;
+      }
+      if (!phone.trim() || phone.trim().length < 7) {
+        toast.error('Por favor ingrese un número de teléfono válido (mínimo 7 dígitos)');
+        return;
+      }
+      if (!gender) {
+        toast.error('Por favor seleccione el género del acudiente');
+        return;
+      }
     }
-    if (!firstName.trim()) {
-      toast.error('Por favor ingrese el nombre del acudiente');
-      return;
-    }
-    const lastNameValidation = validateTwoLastNames(lastName);
-    if (lastNameValidation !== true) {
-      toast.error(typeof lastNameValidation === 'string' ? lastNameValidation : 'Se deben colocar ambos apellidos');
-      return;
-    }
-    if (!phone.trim() || phone.trim().length < 7) {
-      toast.error('Por favor ingrese un número de teléfono válido (mínimo 7 dígitos)');
-      return;
-    }
-    if (!gender) {
-      toast.error('Por favor seleccione el género del acudiente');
-      return;
-    }
+
     if (!relation) {
       toast.error('Por favor seleccione el parentesco / relación con el niño');
       return;
@@ -146,13 +156,13 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     try {
       const payload = {
         kidId,
-        nationalIdType,
-        nationalId: nationalId.trim(),
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        dialCodePhone,
-        phone: phone.trim(),
-        gender,
+        nationalIdType: existingGuardian?.nationalIdType || nationalIdType,
+        nationalId: (existingGuardian?.nationalId || nationalId).trim(),
+        firstName: (existingGuardian?.firstName || firstName).trim(),
+        lastName: (existingGuardian?.lastName || lastName).trim(),
+        dialCodePhone: existingGuardian?.dialCodePhone || dialCodePhone,
+        phone: (existingGuardian?.phone || phone).trim(),
+        gender: existingGuardian?.gender || gender,
         relation,
       };
 
@@ -202,7 +212,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Tipo de Documento */}
             <SelectSearch
               label="Tipo de Documento"
-              required
+              required={!existingGuardian}
               value={nationalIdType}
               onChange={(val) => setNationalIdType(val)}
               options={idTypeOptions}
@@ -213,7 +223,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Document and Search Button */}
             <div>
               <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                Número de Documento <span className="text-red-500">*</span>
+                Número de Documento {!existingGuardian && <span className="text-red-500">*</span>}
               </label>
               <div className="relative flex items-center">
                 <input
@@ -243,7 +253,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Nombre */}
             <Input
               label="Nombre"
-              required
+              required={!existingGuardian}
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               disabled={!!existingGuardian}
@@ -253,7 +263,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Apellidos */}
             <Input
               label="Apellidos"
-              required
+              required={!existingGuardian}
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               disabled={!!existingGuardian}
@@ -263,7 +273,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Phone */}
             <PhoneInput
               label="Teléfono"
-              required
+              required={!existingGuardian}
               dialCode={dialCodePhone}
               phone={phone}
               disabled={!!existingGuardian}
@@ -274,7 +284,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Gender */}
             <SelectSearch
               label="Género"
-              required
+              required={!existingGuardian}
               value={gender}
               onChange={(val) => {
                 setGender(val);
