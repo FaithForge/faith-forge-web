@@ -1,5 +1,5 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { IAttendanceReportData } from '@/libs/models';
+import { IAttendanceReportData, IAttendanceReportAttendee, IAttendanceReportSummary } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import dayjs from 'dayjs';
 
@@ -198,9 +198,93 @@ export const getAttendanceReportDetail = async (
       },
     });
 
-    const data = response.data?.data || response.data;
-    if (data && data.attendees) {
-      return data as IAttendanceReportData;
+    const rawData = response.data?.data || response.data;
+    if (rawData && (rawData.summary || rawData.attendees || rawData.statistics)) {
+      const attendees: IAttendanceReportAttendee[] = Array.isArray(rawData.attendees) ? rawData.attendees : [];
+
+      let summary: IAttendanceReportSummary = rawData.summary;
+      if (!summary) {
+        const totalKids = rawData.totalKids ?? attendees.length;
+        const totalNewKids = rawData.totalNewKids ?? attendees.filter((a) => a.kid?.isFirstTime).length;
+        const mCount = attendees.filter((a) => a.kid?.gender === 'M').length;
+        const fCount = attendees.filter((a) => a.kid?.gender === 'F').length;
+        const totalGen = mCount + fCount || 1;
+
+        const groupMap = new Map<string, { groupId: string; groupName: string; count: number }>();
+        if (rawData.statistics?.byKidGroup) {
+          rawData.statistics.byKidGroup.forEach((g: any) => {
+            const name = g.groupName || g.name;
+            groupMap.set(name, { groupId: g.groupId || name, groupName: name, count: g.count });
+          });
+        } else {
+          attendees.forEach((a) => {
+            const gId = a.group?.id || 'unknown';
+            const gName = a.group?.name || 'Salón';
+            const existing = groupMap.get(gId);
+            if (existing) {
+              existing.count++;
+            } else {
+              groupMap.set(gId, { groupId: gId, groupName: gName, count: 1 });
+            }
+          });
+        }
+
+        const byKidGroup = Array.from(groupMap.values()).map((g) => ({
+          ...g,
+          percentage: totalKids > 0 ? Math.round((g.count / totalKids) * 100) : 0,
+        }));
+
+        summary = {
+          totalKids,
+          totalNewKids,
+          totalReturningKids: Math.max(0, totalKids - totalNewKids),
+          totalWithMedicalAlerts: attendees.filter((a) => a.medicalCondition?.hasCondition).length,
+          byGender: [
+            { gender: 'M', label: 'Masculino', count: mCount, percentage: Math.round((mCount / totalGen) * 100) },
+            { gender: 'F', label: 'Femenino', count: fCount, percentage: Math.round((fCount / totalGen) * 100) },
+          ],
+          byKidGroup,
+          checkInTimeSlots: rawData.summary?.checkInTimeSlots || [],
+        };
+      }
+
+      return {
+        metadata: {
+          church: {
+            id: rawData.metadata?.church?.id || 'default-church',
+            name: rawData.metadata?.church?.name || params.churchName || 'Iglekids',
+          },
+          campus: {
+            id: rawData.metadata?.campus?.id || 'default-campus',
+            name: rawData.metadata?.campus?.name || params.campusName || 'Sede Principal',
+          },
+          meeting: {
+            id: rawData.metadata?.meeting?.id || params.churchMeetingId,
+            name: rawData.metadata?.meeting?.name || params.meetingName || 'Servicio General',
+            day: rawData.metadata?.meeting?.day || params.meetingDay || 'DOMINGO',
+            initialHour: rawData.metadata?.meeting?.initialHour,
+            finalHour: rawData.metadata?.meeting?.finalHour,
+          },
+          reportDate: rawData.metadata?.reportDate || params.date,
+          dayName: rawData.metadata?.dayName || params.meetingDay || 'DOMINGO',
+          generatedAt: rawData.metadata?.generatedAt || new Date().toISOString(),
+        },
+        summary,
+        attendees,
+        medicalAlerts: Array.isArray(rawData.medicalAlerts)
+          ? rawData.medicalAlerts
+          : attendees
+              .filter((a) => a.medicalCondition?.hasCondition)
+              .map((a) => ({
+                kidId: a.kid.id,
+                kidFullName: `${a.kid.firstName} ${a.kid.lastName}`,
+                groupName: a.group.name,
+                conditionName: a.medicalCondition?.name || 'Condición Médica',
+                description: a.medicalCondition?.description || '',
+                guardianName: `${a.guardian.fullName} (${a.guardian.relation})`,
+                guardianPhone: a.guardian.phone,
+              })),
+      };
     }
   } catch (error: any) {
     // If backend endpoint is not yet implemented, provide graceful preview fallback

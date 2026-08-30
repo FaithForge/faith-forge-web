@@ -7,11 +7,10 @@ import Button from '@/components/ui/Button';
 import DateCalendarPicker from '@/components/ui/DateCalendarPicker';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
-import { ChurchMeetingStateEnum } from '@/libs/models';
-import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { microserviceApiRequest } from '@/libs/utils/http';
+import { ChurchMeetingStateEnum, IAttendanceReportData } from '@/libs/models';
 import { getAttendanceReportDetail } from '@/services/kidChurchReportService';
 import { generateIglekidsAttendancePdf } from '@/services/pdf/iglekidsAttendancePdf';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 const DAYS_TO_NUM: Record<string, number> = {
   SUNDAY: 0,
@@ -69,18 +68,7 @@ interface KidChurchReportDrawerProps {
   onOpenChange: (open: boolean) => void;
 }
 
-type ReportStatistics = {
-  byKidGroup: Array<{ name: string; count: number }>;
-  byGender?: Array<{ name: string; count: number }>;
-};
-
-type ReportData = {
-  totalKids: number;
-  totalNewKids: number;
-  statistics: ReportStatistics;
-};
-
-import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+type ReportData = IAttendanceReportData;
 
 /**
  * Bottom sheet drawer for Iglekids service attendance and statistics reporting.
@@ -104,7 +92,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
 
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
-  const [report, setReport] = useState<ReportData | null>(null);
+  const [report, setReport] = useState<IAttendanceReportData | null>(null);
 
   const availableMeetings = useMemo(() => {
     const byCampus = (meetings as any).meetingsByCampus?.[selectedCampusId];
@@ -229,6 +217,12 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
     }
   };
 
+  /**
+   * Fetches attendance report details from /report/kid-church-meeting/attendance-detail
+   * and saves them in local state for both on-screen display and subsequent PDF export.
+   *
+   * @returns {Promise<void>}
+   */
   const handleGenerateReport = async () => {
     if (!selectedCampusId || !selectedMeetingId || !selectedDate) {
       toast.error('Por favor selecciona sede, servicio y fecha.');
@@ -239,23 +233,22 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
     setReport(null);
 
     try {
-      const response = await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.GET,
-        url: `/report/kid-church-meeting`,
-        options: {
-          params: { churchMeetingId: selectedMeetingId, date: selectedDate },
-          headers: { Authorization: `Bearer ${token}` },
-        },
+      const campusObj = campuses.data.find((c) => c.id === selectedCampusId);
+      const detailReport = await getAttendanceReportDetail({
+        churchMeetingId: selectedMeetingId,
+        date: selectedDate,
+        token,
+        campusName: campusObj?.name,
+        meetingName: selectedMeetingObj?.name,
+        meetingDay: selectedMeetingObj?.day ? getTranslatedDay(selectedMeetingObj.day) : undefined,
       });
 
-      const reportData = response.data;
-      if (!reportData || (typeof reportData === 'object' && Object.keys(reportData).length === 0)) {
+      if (!detailReport || (!detailReport.summary && (!detailReport.attendees || detailReport.attendees.length === 0))) {
         toast.info('No se encontraron registros de asistencia para los criterios seleccionados.');
         return;
       }
 
-      setReport(reportData as ReportData);
+      setReport(detailReport);
       toast.success('Reporte generado exitosamente');
     } catch (err: any) {
       console.error('Error generating report', err);
@@ -265,23 +258,20 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
     }
   };
 
-  const handleDownloadPdf = async () => {
-    if (!selectedMeetingId || !selectedDate) return;
+  /**
+   * Generates and downloads the official Iglekids PDF report using the currently stored report state without refetching from the API.
+   *
+   * @returns {void}
+   */
+  const handleDownloadPdf = () => {
+    if (!report) {
+      toast.error('No hay información de reporte para generar el PDF.');
+      return;
+    }
 
     setIsDownloading(true);
     try {
-      const campusObj = campuses.data.find((c) => c.id === selectedCampusId);
-      const detailReport = await getAttendanceReportDetail({
-        churchMeetingId: selectedMeetingId,
-        date: selectedDate,
-        token,
-        campusName: campusObj?.name,
-        meetingName: selectedMeetingObj?.name,
-        meetingDay: selectedMeetingObj?.day ? getTranslatedDay(selectedMeetingObj.day) : undefined,
-        fallbackSummary: report || undefined,
-      });
-
-      generateIglekidsAttendancePdf(detailReport);
+      generateIglekidsAttendancePdf(report);
       toast.success('Reporte PDF generado y descargado correctamente');
     } catch (err) {
       console.error('Error generating report PDF', err);
@@ -391,39 +381,48 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-primary/10 border border-primary/20 p-3.5 rounded-xl text-center">
                       <span className="text-xs font-semibold text-primary block mb-1">Total Registrados</span>
-                      <span className="text-2xl font-black text-primary">{report.totalKids ?? 0}</span>
+                      <span className="text-2xl font-black text-primary">
+                        {report.summary?.totalKids ?? (report as any).totalKids ?? report.attendees?.length ?? 0}
+                      </span>
                     </div>
 
                     <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-center">
                       <span className="text-xs font-semibold text-amber-800 block mb-1 flex items-center justify-center gap-1">
                         <Sparkles size={13} /> Nuevos
                       </span>
-                      <span className="text-2xl font-black text-amber-900">{report.totalNewKids ?? 0}</span>
+                      <span className="text-2xl font-black text-amber-900">
+                        {report.summary?.totalNewKids ?? (report as any).totalNewKids ?? 0}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 {/* Classrooms Breakdown */}
-                {report.statistics?.byKidGroup && report.statistics.byKidGroup.length > 0 && (
+                {((report.summary?.byKidGroup && report.summary.byKidGroup.length > 0) ||
+                  ((report as any).statistics?.byKidGroup && (report as any).statistics.byKidGroup.length > 0)) && (
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">
                       Totales por Salones
                     </h3>
                     <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
-                      {report.statistics.byKidGroup.map((group) => (
-                        <div key={group.name} className="flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50">
-                          <span className="text-sm font-semibold text-gray-700">{group.name}</span>
-                          <span className="text-sm font-black text-primary px-2.5 py-0.5 bg-primary/10 rounded-full">
-                            {group.count}
-                          </span>
-                        </div>
-                      ))}
+                      {(report.summary?.byKidGroup || (report as any).statistics?.byKidGroup || []).map((group: any) => {
+                        const groupName = group.groupName || group.name || 'Salón';
+                        return (
+                          <div key={group.groupId || groupName} className="flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50">
+                            <span className="text-sm font-semibold text-gray-700">{groupName}</span>
+                            <span className="text-sm font-black text-primary px-2.5 py-0.5 bg-primary/10 rounded-full">
+                              {group.count}
+                            </span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
                 {/* Gender Breakdown */}
-                {report.statistics?.byGender && report.statistics.byGender.length > 0 && (
+                {((report.summary?.byGender && report.summary.byGender.length > 0) ||
+                  ((report as any).statistics?.byGender && (report as any).statistics.byGender.length > 0)) && (
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">
                       Totales por Género
@@ -432,14 +431,18 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                       <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center">
                         <span className="text-xs font-semibold text-blue-700 block">Masculino</span>
                         <span className="text-xl font-black text-blue-900 mt-1 block">
-                          {report.statistics.byGender.find((g) => g.name === 'M')?.count ?? 0}
+                          {(report.summary?.byGender || (report as any).statistics?.byGender || []).find(
+                            (g: any) => g.gender === 'M' || g.name === 'M' || (g.label && g.label.toLowerCase().includes('masc'))
+                          )?.count ?? 0}
                         </span>
                       </div>
 
                       <div className="bg-pink-50 border border-pink-200 p-3 rounded-xl text-center">
                         <span className="text-xs font-semibold text-pink-700 block">Femenino</span>
                         <span className="text-xl font-black text-pink-900 mt-1 block">
-                          {report.statistics.byGender.find((g) => g.name === 'F')?.count ?? 0}
+                          {(report.summary?.byGender || (report as any).statistics?.byGender || []).find(
+                            (g: any) => g.gender === 'F' || g.name === 'F' || (g.label && g.label.toLowerCase().includes('fem'))
+                          )?.count ?? 0}
                         </span>
                       </div>
                     </div>
