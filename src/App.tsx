@@ -1,6 +1,8 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { Toaster, toast } from 'sonner';
+import { Analytics } from '@vercel/analytics/react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import NetworkStatusBanner from '@/components/common/NetworkStatusBanner';
 import MainLayout from '@/components/layout/MainLayout';
 import ScrollToTop from '@/components/layout/ScrollToTop';
@@ -39,6 +41,12 @@ const IndexRedirect = () => {
   return <Navigate to={dashboardUrl} replace />;
 };
 
+/**
+ * Root component configuring routing, global notifications, layout providers,
+ * and Vercel Analytics / Speed Insights monitoring.
+ *
+ * @returns {JSX.Element} Application tree with providers and routes.
+ */
 function App() {
   const dispatch = useAppDispatch();
 
@@ -56,6 +64,8 @@ function App() {
     <>
       <NetworkStatusBanner />
       <Toaster position="top-center" richColors swipeDirections={['top', 'left', 'right']} />
+      <Analytics />
+      <SpeedInsights />
       <BrowserRouter>
         <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
