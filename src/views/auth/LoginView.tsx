@@ -119,7 +119,7 @@ const LoginView = () => {
   const onSubmit: SubmitHandler<IFormLoginInput> = async (data) => {
     setIsLoading(true);
     try {
-      const cleanUsername = data.username.trim();
+      const cleanUsername = data.username.trim().toLowerCase().replace(/\s+/g, '');
       const resultAction = await dispatch(UserLogin({ username: cleanUsername, password: data.password }));
       if (UserLogin.fulfilled.match(resultAction)) {
         const payload = resultAction.payload;
