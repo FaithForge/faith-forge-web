@@ -5,7 +5,7 @@ import { RootState } from '../../store';
 
 export const GetKidMedicalConditions = createAsyncThunk(
   'kid-church/GetKidMedicalConditions',
-  async (_, { getState }) => {
+  async (payload: { force?: boolean } | void, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -20,5 +20,13 @@ export const GetKidMedicalConditions = createAsyncThunk(
     ).data;
 
     return response;
+  },
+  {
+    condition: (payload, { getState }) => {
+      if (payload && typeof payload === 'object' && payload.force) return true;
+      const state = getState() as RootState;
+      const hasConditions = (state.kidMedicalConditionSlice.data?.length ?? 0) > 0;
+      return !hasConditions;
+    },
   },
 );

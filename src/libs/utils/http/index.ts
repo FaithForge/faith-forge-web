@@ -2,15 +2,65 @@
 import { HttpRequestMethod, MicroserviceEnum, API_BASE_URL } from '@/libs/common-types/global';
 import axios, { AxiosResponse } from 'axios';
 
-interface ApiRequestOptions {
+export interface ApiRequestOptions {
   params?: any;
   data?: any;
   headers?: any;
   responseType?: any;
+  cache?: boolean;
+  forceRefresh?: boolean;
 }
 
 /**
+ * Endpoints that return static catalog or master data which rarely change
+ * during active sessions and should be cached in memory to prevent unnecessary 304 roundtrips.
+ */
+const CATALOG_ENDPOINTS = [
+  '/church-campus',
+  '/church-meeting',
+  '/church-printers',
+  '/kid-groups',
+  '/kid-medical-conditions',
+  '/kid-guardian',
+  '/user/search-by-national-id',
+];
+
+// In-memory cache for catalog GET requests
+const memoryHttpCache = new Map<string, AxiosResponse<any, any>>();
+
+/**
+ * Clears the entire in-memory HTTP cache (e.g. on logout or app reset).
+ */
+export const clearHttpCache = (): void => {
+  memoryHttpCache.clear();
+};
+
+/**
+ * Invalidates cached items matching a URL pattern (e.g. after mutating church-meeting states).
+ *
+ * @param {string} pattern - Substring pattern to purge from cache.
+ */
+export const invalidateHttpCachePattern = (pattern: string): void => {
+  for (const key of memoryHttpCache.keys()) {
+    if (key.includes(pattern)) {
+      memoryHttpCache.delete(key);
+    }
+  }
+};
+
+/**
+ * Checks if a given URL is a catalog endpoint that should be cached in memory.
+ *
+ * @param {string} url - The endpoint path.
+ * @returns {boolean} True if cacheable.
+ */
+const isCatalogEndpoint = (url: string): boolean => {
+  return CATALOG_ENDPOINTS.some((ep) => url.startsWith(ep));
+};
+
+/**
  * Executes an API request using the specified method, URL, and options.
+ * Caches catalog GET requests in memory to eliminate redundant 304 network roundtrips.
  * Dispatches an 'auth:unauthorized' event globally on HTTP 401.
  *
  * @param {string} baseURL - The base URL of the API.
@@ -26,24 +76,61 @@ const executeApiRequest = async (
   url: string,
   options: ApiRequestOptions = {},
 ): Promise<AxiosResponse<any, any>> => {
-  const { params = {}, data = {}, headers = {}, responseType } = options;
-  const instance = axios.create({ baseURL });
+  const { params = {}, data = {}, headers = {}, responseType, cache, forceRefresh } = options;
+
+  // 1. In-memory cache evaluation for GET requests
+  const shouldCache =
+    method === HttpRequestMethod.GET &&
+    !forceRefresh &&
+    (cache === true || (cache !== false && isCatalogEndpoint(url)));
+
+  const cacheKey = shouldCache
+    ? `${baseURL}${url}?${JSON.stringify(params)}`
+    : null;
+
+  if (cacheKey && memoryHttpCache.has(cacheKey)) {
+    return memoryHttpCache.get(cacheKey)!;
+  }
+
+  // 2. Cache invalidation on mutation requests
+  if (method !== HttpRequestMethod.GET) {
+    if (url.includes('church-meeting')) invalidateHttpCachePattern('church-meeting');
+    if (url.includes('church-campus')) invalidateHttpCachePattern('church-campus');
+    if (url.includes('kid-group')) invalidateHttpCachePattern('kid-group');
+    if (url.includes('kid-medical-condition')) invalidateHttpCachePattern('kid-medical-condition');
+    if (url.includes('kid-guardian')) invalidateHttpCachePattern('kid-guardian');
+  }
+
+  const instance = axios.create({ baseURL, timeout: 20000 });
 
   try {
+    let response: AxiosResponse<any, any>;
     switch (method) {
       case HttpRequestMethod.GET:
-        return await instance.get(url, { params, headers, responseType });
+        response = await instance.get(url, { params, headers, responseType });
+        break;
       case HttpRequestMethod.POST:
-        return await instance.post(url, data, { headers, responseType });
+        response = await instance.post(url, data, { headers, responseType });
+        break;
       case HttpRequestMethod.PATCH:
-        return await instance.patch(url, data, { headers, responseType });
+        response = await instance.patch(url, data, { headers, responseType });
+        break;
       case HttpRequestMethod.PUT:
-        return await instance.put(url, data, { headers, responseType });
+        response = await instance.put(url, data, { headers, responseType });
+        break;
       case HttpRequestMethod.DELETE:
-        return await instance.delete(url, { data, params, headers, responseType });
+        response = await instance.delete(url, { data, params, headers, responseType });
+        break;
       default:
         throw new Error(`Invalid HTTP verb: ${method}`);
     }
+
+    // Save successful GET response in memory cache
+    if (cacheKey && response && response.status >= 200 && response.status < 300) {
+      memoryHttpCache.set(cacheKey, response);
+    }
+
+    return response;
   } catch (error: any) {
     if (error?.response?.status === 401) {
       if (typeof window !== 'undefined') {

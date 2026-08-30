@@ -54,15 +54,6 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       setSelectedMeetingId(meetings.current?.id || '');
       setSelectedPrinterId(printers.current?.id || '');
       setSelectedMode(printerModeSlice?.mode || 'NETWORK');
-
-      if (activeCampusId) {
-        dispatch(
-          GetChurchMeetings({
-            churchCampusId: activeCampusId,
-            state: ChurchMeetingStateEnum.ACTIVE,
-          })
-        );
-      }
     }
   }, [open]);
 
@@ -149,21 +140,44 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     ? !!meetings.current && !!isBluetoothConnected
     : !!meetings.current && !!printers.current;
 
+  const availableMeetings =
+    (meetings as any).meetingsByCampus?.[selectedCampusId] || meetings.data || [];
+  const availablePrinters =
+    (printers as any).printersByCampus?.[selectedCampusId] || printers.data || [];
+
+  // Auto-select printer if there is only one available in the list
+  useEffect(() => {
+    if (availablePrinters.length === 1 && selectedPrinterId !== availablePrinters[0].id) {
+      setSelectedPrinterId(availablePrinters[0].id);
+    }
+  }, [availablePrinters, selectedPrinterId]);
+
   // Handle Campus Change
   const handleCampusChange = (campusId: string) => {
     setSelectedCampusId(campusId);
     setSelectedMeetingId('');
-    setSelectedPrinterId('');
+    const campusPrinters = (printers as any).printersByCampus?.[campusId] || [];
+    if (campusPrinters.length === 1) {
+      setSelectedPrinterId(campusPrinters[0].id);
+    } else {
+      setSelectedPrinterId('');
+    }
   };
 
   // Handle Meeting Change
   const handleMeetingChange = (meetingId: string) => {
     setSelectedMeetingId(meetingId);
-    setSelectedPrinterId('');
+    if (availablePrinters.length === 1) {
+      setSelectedPrinterId(availablePrinters[0].id);
+    } else {
+      setSelectedPrinterId('');
+    }
   };
 
-  const isMeetingDisabled = !selectedCampusId || meetings.loading;
-  const isPrinterDisabled = !selectedCampusId || !selectedMeetingId || printers.loading;
+  const isMeetingLoading = meetings.loading && availableMeetings.length === 0;
+  const isMeetingDisabled = !selectedCampusId || isMeetingLoading;
+  const isPrinterLoading = printers.loading && availablePrinters.length === 0;
+  const isPrinterDisabled = !selectedCampusId || !selectedMeetingId || isPrinterLoading;
 
   const isSaveDisabled =
     !selectedCampusId ||
@@ -232,12 +246,12 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                   disabled={isMeetingDisabled}
                 >
                   <option value="" disabled>Seleccione servicio...</option>
-                  {meetings.data.map((meeting) => (
+                  {availableMeetings.map((meeting: any) => (
                     <option key={meeting.id} value={meeting.id}>{meeting.name}</option>
                   ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                  {meetings.loading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
+                  {isMeetingLoading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
                 </div>
               </div>
             </div>
@@ -288,13 +302,15 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                       onChange={(e) => setSelectedPrinterId(e.target.value)}
                       disabled={isPrinterDisabled}
                     >
-                      <option value="" disabled>Seleccione impresora de red...</option>
-                      {printers.data.map((printer) => (
+                      {availablePrinters.length !== 1 && (
+                        <option value="" disabled>Seleccione impresora de red...</option>
+                      )}
+                      {availablePrinters.map((printer: any) => (
                         <option key={printer.id} value={printer.id}>{printer.name}</option>
                       ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                      {printers.loading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
+                      {isPrinterLoading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
                     </div>
                   </div>
                 )}
@@ -316,7 +332,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                             </p>
                             {isBluetoothConnected && (
                               <span className="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-primary/10 text-primary shrink-0">
-                                {bluetoothPrinter.isNiimbot() ? 'Niimbot' : 'ESC/POS'}
+                                {bluetoothPrinter.getStatus().driverType}
                               </span>
                             )}
                           </div>

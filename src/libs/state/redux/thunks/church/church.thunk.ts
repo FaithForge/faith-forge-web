@@ -7,7 +7,7 @@ import { RootState } from '../../store';
 
 export const GetChurchCampuses = createAsyncThunk(
   'church/GetChurchCampuses',
-  async (_, { getState }) => {
+  async (payload: { force?: boolean } | void, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -23,12 +23,20 @@ export const GetChurchCampuses = createAsyncThunk(
     ).data;
     return response;
   },
+  {
+    condition: (payload, { getState }) => {
+      if (payload && typeof payload === 'object' && payload.force) return true;
+      const state = getState() as RootState;
+      const hasCampuses = (state.churchCampusSlice.data?.length ?? 0) > 0;
+      return !hasCampuses;
+    },
+  },
 );
 
 export const GetChurchMeetings = createAsyncThunk(
   'church/GetChurchMeetings',
   async (
-    payload: { churchCampusId: string; state?: string; states?: string[] },
+    payload: { churchCampusId: string; state?: string; states?: string[]; force?: boolean },
     { getState },
   ) => {
     const { churchCampusId, state: stateMeeting, states: statesList } = payload;
@@ -58,6 +66,16 @@ export const GetChurchMeetings = createAsyncThunk(
     ).data;
     return response;
   },
+  {
+    condition: (payload, { getState }) => {
+      if (payload.force) return true;
+      const state = getState() as RootState;
+      const meetingSlice = state.churchMeetingSlice as any;
+      const campusMeetings = meetingSlice.meetingsByCampus?.[payload.churchCampusId];
+      const hasMeetingsForCampus = campusMeetings && campusMeetings.length > 0;
+      return !hasMeetingsForCampus;
+    },
+  },
 );
 
 /**
@@ -86,6 +104,7 @@ export const GetAllChurchMeetingsAdmin = createAsyncThunk(
         url: `/church-meeting?${searchParams.toString()}`,
         options: {
           headers: { Authorization: `Bearer ${token}` },
+          forceRefresh: true,
         },
       })
     ).data;
@@ -127,7 +146,8 @@ export const BulkUpdateChurchMeetingStates = createAsyncThunk(
 
 export const GetChurchPrinters = createAsyncThunk(
   'church/GetChurchPrinters',
-  async (churchCampusId: string, { getState }) => {
+  async (payload: string | { churchCampusId: string; force?: boolean }, { getState }) => {
+    const churchCampusId = typeof payload === 'string' ? payload : payload.churchCampusId;
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -142,5 +162,17 @@ export const GetChurchPrinters = createAsyncThunk(
       })
     ).data;
     return response;
+  },
+  {
+    condition: (payload, { getState }) => {
+      const churchCampusId = typeof payload === 'string' ? payload : payload.churchCampusId;
+      const force = typeof payload === 'object' && payload.force;
+      if (force) return true;
+      const state = getState() as RootState;
+      const printerSlice = state.churchPrinterSlice as any;
+      const campusPrinters = printerSlice.printersByCampus?.[churchCampusId];
+      const hasPrintersForCampus = campusPrinters && campusPrinters.length > 0;
+      return !hasPrintersForCampus;
+    },
   },
 );

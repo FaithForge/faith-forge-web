@@ -1,6 +1,7 @@
 /**
  * @fileoverview Universal Web Bluetooth Low Energy (BLE) Printer Service for Iglekids.
- * Integrates @mmote/niimbluelib for Niimbot label printers (B1, B21, D11, etc.) and native BLE for ESC/POS.
+ * Provides native BLE connectivity for ESC/POS thermal printers and an extensible
+ * driver architecture (IBluetoothPrinterDriver) for future Bluetooth printer models.
  */
 
 import {
@@ -9,20 +10,13 @@ import {
   buildTestPrintTicket,
   KidTicketData,
 } from './escposBuilder';
-import {
-  niimbotClient,
-  renderKidTicketToCanvas,
-  renderTestTicketToCanvas,
-  printCanvasToNiimbot,
-} from './niimbotDriver';
 
 // Well-known BLE thermal and label printer service UUIDs
 const KNOWN_PRINTER_SERVICES = [
-  'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Niimbot Primary Service
-  '0000fee7-0000-1000-8000-00805f9b34fb', // Niimbot / Tencent
   '000018f0-0000-1000-8000-00805f9b34fb', // Standard thermal printer service
   '0000ffe0-0000-1000-8000-00805f9b34fb', // HM-10 / Generic BLE Serial
   '49535343-fe7d-4ae5-8fa9-9fafd205e455', // ISSC Transparent UART
+  '0000fee7-0000-1000-8000-00805f9b34fb', // BLE Serial alternative
   '0000ff00-0000-1000-8000-00805f9b34fb',
 ];
 
@@ -31,27 +25,74 @@ export interface BluetoothPrinterStatus {
   connected: boolean;
   deviceName: string | null;
   deviceId: string | null;
-  isNiimbot: boolean;
+  driverType: 'ESC/POS' | string;
   error: string | null;
 }
 
-type StatusListener = (status: BluetoothPrinterStatus) => void;
+export type StatusListener = (status: BluetoothPrinterStatus) => void;
 
+/**
+ * Extensible interface for custom Bluetooth printer drivers.
+ * Implement this interface when integrating proprietary or specialized printer protocols.
+ */
+export interface IBluetoothPrinterDriver {
+  readonly name: string;
+  printTicket(printer: BluetoothPrinterService, data: KidTicketData, copies?: number, printGuardianVoucher?: boolean): Promise<boolean>;
+  printTest(printer: BluetoothPrinterService, deviceName: string): Promise<boolean>;
+}
+
+/**
+ * Default ESC/POS thermal printer driver using ESC/POS byte streams.
+ */
+class DefaultEscPosDriver implements IBluetoothPrinterDriver {
+  public readonly name = 'ESC/POS';
+
+  public async printTicket(
+    printer: BluetoothPrinterService,
+    data: KidTicketData,
+    copies = 1,
+    printGuardianVoucher = true,
+  ): Promise<boolean> {
+    const kidTicketBuffer = buildKidRegistrationTicket(data);
+    for (let i = 0; i < Math.max(1, copies); i++) {
+      await printer.printRaw(kidTicketBuffer);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    if (printGuardianVoucher && data.securityCode) {
+      const voucherBuffer = buildGuardianVoucherTicket(data);
+      await printer.printRaw(voucherBuffer);
+    }
+
+    return true;
+  }
+
+  public async printTest(printer: BluetoothPrinterService, deviceName: string): Promise<boolean> {
+    const testBuffer = buildTestPrintTicket(deviceName);
+    return await printer.printRaw(testBuffer);
+  }
+}
+
+/**
+ * Service managing Bluetooth BLE connections and label printing.
+ */
 class BluetoothPrinterService {
+  /* eslint-disable @typescript-eslint/no-explicit-any */
   private device: any | null = null;
   private server: any | null = null;
   private characteristic: any | null = null;
-  private isNiimbotDevice = false;
   private connectedDeviceName: string | null = null;
   private listeners: Set<StatusListener> = new Set();
   private lastError: string | null = null;
+  private activeDriver: IBluetoothPrinterDriver = new DefaultEscPosDriver();
 
-  constructor() {
-    niimbotClient.on('disconnect', () => {
-      if (this.isNiimbotDevice) {
-        this.handleDisconnected();
-      }
-    });
+  /**
+   * Registers a custom printer driver for specialized hardware.
+   * @param {IBluetoothPrinterDriver} driver - The driver implementation.
+   */
+  public setDriver(driver: IBluetoothPrinterDriver): void {
+    this.activeDriver = driver;
+    this.notifyListeners();
   }
 
   /**
@@ -67,9 +108,6 @@ class BluetoothPrinterService {
    * @returns {boolean} Connection status.
    */
   public isConnected(): boolean {
-    if (this.isNiimbotDevice) {
-      return niimbotClient.isConnected();
-    }
     return !!(this.server && this.server.connected && this.characteristic);
   }
 
@@ -78,15 +116,7 @@ class BluetoothPrinterService {
    * @returns {string | null} Name or null.
    */
   public getDeviceName(): string | null {
-    return this.connectedDeviceName || this.device?.name || (this.isNiimbotDevice ? 'Niimbot B1' : null);
-  }
-
-  /**
-   * Checks if current device is a Niimbot printer.
-   * @returns {boolean} True if Niimbot protocol is used.
-   */
-  public isNiimbot(): boolean {
-    return this.isNiimbotDevice;
+    return this.connectedDeviceName || this.device?.name || null;
   }
 
   /**
@@ -99,14 +129,14 @@ class BluetoothPrinterService {
       connected: this.isConnected(),
       deviceName: this.getDeviceName(),
       deviceId: this.device?.id || null,
-      isNiimbot: this.isNiimbotDevice,
+      driverType: this.activeDriver.name,
       error: this.lastError,
     };
   }
 
   /**
    * Subscribes to connection status changes.
-   * @param {StatusListener} listener Callback function.
+   * @param {StatusListener} listener - Callback function.
    * @returns {() => void} Unsubscribe function.
    */
   public onStatusChange(listener: StatusListener): () => void {
@@ -141,7 +171,7 @@ class BluetoothPrinterService {
   public async requestAndConnect(): Promise<string> {
     if (!this.isSupported()) {
       throw new Error(
-        'Web Bluetooth no está habilitado en este navegador. En Vivaldi/Chromium (Linux), abre vivaldi://flags/#enable-web-bluetooth y actívalo (Enabled), o pruébalo desde Chrome en Android.',
+        'Web Bluetooth no está habilitado en este navegador. En Chrome/Chromium, verifica que Web Bluetooth esté habilitado, o pruébalo desde Chrome en Android.',
       );
     }
 
@@ -150,54 +180,31 @@ class BluetoothPrinterService {
     try {
       this.lastError = null;
 
-      // Try connecting via NiimbotClient first (exact filters as niim.blue)
-      try {
-        const connInfo = await this.withTimeout(
-          niimbotClient.connect(),
-          15000,
-          'Tiempo de espera agotado al seleccionar impresora.',
-        );
-        this.isNiimbotDevice = true;
-        this.connectedDeviceName = connInfo.deviceName || 'Niimbot B1';
-        try {
-          await niimbotClient.fetchPrinterInfo();
-        } catch {
-          // Info fetch optional
-        }
-        this.notifyListeners();
-        return this.connectedDeviceName;
-      } catch (niimErr: any) {
-        if (niimErr.name === 'NotFoundError' || niimErr.message?.includes('User cancelled')) {
-          throw niimErr;
-        }
+      const nav = navigator as any;
+      const device = await nav.bluetooth.requestDevice({
+        acceptAllDevices: true,
+        optionalServices: KNOWN_PRINTER_SERVICES,
+      });
 
-        // Generic BLE printer fallback
-        const nav = navigator as any;
-        const device = await nav.bluetooth.requestDevice({
-          acceptAllDevices: true,
-          optionalServices: KNOWN_PRINTER_SERVICES,
-        });
-
-        if (!device) {
-          throw new Error('No se seleccionó ningún dispositivo Bluetooth.');
-        }
-
-        this.device = device;
-        this.device.addEventListener(
-          'gattserverdisconnected',
-          this.handleDisconnected.bind(this),
-        );
-
-        await this.withTimeout(
-          this.connectToGenericDevice(),
-          8000,
-          'Tiempo de espera agotado al conectar con la impresora.',
-        );
-
-        this.connectedDeviceName = this.device.name || 'Impresora Bluetooth';
-        this.notifyListeners();
-        return this.connectedDeviceName || 'Impresora Bluetooth';
+      if (!device) {
+        throw new Error('No se seleccionó ningún dispositivo Bluetooth.');
       }
+
+      this.device = device;
+      this.device.addEventListener(
+        'gattserverdisconnected',
+        this.handleDisconnected.bind(this),
+      );
+
+      await this.withTimeout(
+        this.connectToDevice(),
+        10000,
+        'Tiempo de espera agotado al conectar con la impresora.',
+      );
+
+      this.connectedDeviceName = this.device.name || 'Impresora Bluetooth';
+      this.notifyListeners();
+      return this.connectedDeviceName || 'Impresora Bluetooth';
     } catch (err: any) {
       this.handleDisconnected();
       this.lastError = err.message || 'Error al conectar con la impresora';
@@ -206,7 +213,7 @@ class BluetoothPrinterService {
     }
   }
 
-  private async connectToGenericDevice(): Promise<void> {
+  private async connectToDevice(): Promise<void> {
     if (!this.device || !this.device.gatt) {
       throw new Error('Dispositivo Bluetooth no válido.');
     }
@@ -226,7 +233,7 @@ class BluetoothPrinterService {
         }
         if (writeChar) break;
       } catch {
-        // Continue
+        // Continue searching in next service
       }
     }
 
@@ -237,35 +244,27 @@ class BluetoothPrinterService {
     }
 
     this.characteristic = writeChar;
-    this.isNiimbotDevice = false;
     this.lastError = null;
   }
 
   private handleDisconnected(): void {
-    if (this.isNiimbotDevice) {
-      try {
-        niimbotClient.disconnect();
-      } catch {
-        // Ignore
-      }
-    }
     if (this.device?.gatt?.connected) {
       try {
         this.device.gatt.disconnect();
       } catch {
-        // Ignore
+        // Ignore disconnection cleanup errors
       }
     }
     this.characteristic = null;
     this.server = null;
     this.device = null;
-    this.isNiimbotDevice = false;
     this.connectedDeviceName = null;
     this.notifyListeners();
   }
 
   /**
    * Disconnects the active Bluetooth device.
+   * @returns {Promise<void>}
    */
   public async disconnect(): Promise<void> {
     this.handleDisconnected();
@@ -273,8 +272,8 @@ class BluetoothPrinterService {
 
   /**
    * Sends raw binary buffer to printer in chunks (for standard ESC/POS).
-   * @param {Uint8Array} data Binary ESC/POS bytes.
-   * @param {number} [chunkSize=100] Bytes per chunk.
+   * @param {Uint8Array} data - Binary ESC/POS bytes.
+   * @param {number} [chunkSize=100] - Bytes per chunk.
    * @returns {Promise<boolean>} Success status.
    */
   public async printRaw(data: Uint8Array, chunkSize = 100): Promise<boolean> {
@@ -303,10 +302,10 @@ class BluetoothPrinterService {
 
   /**
    * Prints full registration label and guardian voucher for a child.
-   * Automatically adapts to Niimbot (@mmote/niimbluelib) or standard POS (ESC/POS).
-   * @param {KidTicketData} data Child ticket data.
-   * @param {number} [copies=1] Number of kid label copies.
-   * @param {boolean} [printGuardianVoucher=true] Whether to print guardian voucher.
+   * Delegates formatting and transmission to the active printer driver.
+   * @param {KidTicketData} data - Child ticket data.
+   * @param {number} [copies=1] - Number of kid label copies.
+   * @param {boolean} [printGuardianVoucher=true] - Whether to print guardian voucher.
    * @returns {Promise<boolean>} Success status.
    */
   public async printKidTicket(
@@ -318,28 +317,11 @@ class BluetoothPrinterService {
       throw new Error('Impresora Bluetooth no conectada.');
     }
 
-    if (this.isNiimbotDevice) {
-      const canvas = await renderKidTicketToCanvas(data);
-      await printCanvasToNiimbot(canvas, Math.max(1, copies));
-      return true;
-    }
-
-    const kidTicketBuffer = buildKidRegistrationTicket(data);
-    for (let i = 0; i < Math.max(1, copies); i++) {
-      await this.printRaw(kidTicketBuffer);
-      await new Promise((resolve) => setTimeout(resolve, 500));
-    }
-
-    if (printGuardianVoucher && data.securityCode) {
-      const voucherBuffer = buildGuardianVoucherTicket(data);
-      await this.printRaw(voucherBuffer);
-    }
-
-    return true;
+    return await this.activeDriver.printTicket(this, data, copies, printGuardianVoucher);
   }
 
   /**
-   * Prints diagnostic test page on connected device (Niimbot or ESC/POS).
+   * Prints diagnostic test page on connected device.
    * @returns {Promise<boolean>} Success status.
    */
   public async printTestTicket(): Promise<boolean> {
@@ -347,16 +329,8 @@ class BluetoothPrinterService {
       throw new Error('Impresora Bluetooth no conectada.');
     }
 
-    const deviceName = this.getDeviceName() || (this.isNiimbotDevice ? 'Niimbot B1' : 'Impresora Térmica');
-
-    if (this.isNiimbotDevice) {
-      const testCanvas = await renderTestTicketToCanvas(deviceName);
-      await printCanvasToNiimbot(testCanvas, 1);
-      return true;
-    }
-
-    const testBuffer = buildTestPrintTicket(deviceName);
-    return await this.printRaw(testBuffer);
+    const deviceName = this.getDeviceName() || 'Impresora Térmica';
+    return await this.activeDriver.printTest(this, deviceName);
   }
 
   private async withTimeout<T>(promise: Promise<T>, ms: number, errorMsg: string): Promise<T> {

@@ -1,4 +1,3 @@
-
 import { createSlice } from '@reduxjs/toolkit';
 import { GetKidGroups } from '../../thunks/kid-church/kid-group.thunk';
 import { IKidGroups } from '@/libs/models';
@@ -13,24 +12,43 @@ const initialState: IKidGroups = {
 const kidGroupSlice = createSlice({
   name: 'kidGroup',
   initialState: initialState,
-  reducers: {},
+  reducers: {
+    resetKidGroupState: (state) => {
+      state.data = [];
+      state.current = undefined;
+      state.error = undefined;
+      state.loading = false;
+    },
+  },
   extraReducers(builder) {
     builder.addCase(GetKidGroups.pending, (state) => {
       state.error = undefined;
       state.loading = true;
     });
     builder.addCase(GetKidGroups.fulfilled, (state, action) => {
-      state.data = action.payload;
+      const incoming = action.payload || [];
+      if (!state.data || state.data.length === 0) {
+        state.data = incoming;
+      } else {
+        // Merge without losing existing groups
+        incoming.forEach((newGroup: any) => {
+          const index = state.data.findIndex((g: any) => g.id === newGroup.id);
+          if (index >= 0) {
+            state.data[index] = newGroup;
+          } else {
+            state.data.push(newGroup);
+          }
+        });
+      }
       state.error = undefined;
       state.loading = false;
     });
     builder.addCase(GetKidGroups.rejected, (state, action) => {
-      state.data = [];
       state.error = action.error.message;
       state.loading = false;
     });
   },
 });
 
-// export const {} = kidGroupSlice.actions;
+export const { resetKidGroupState } = kidGroupSlice.actions;
 export default kidGroupSlice.reducer;

@@ -56,6 +56,8 @@ const persistConfig = {
     'churchMeetingSlice',
     'churchPrinterSlice',
     'printerModeSlice',
+    'kidGroupSlice',
+    'kidMedicalConditionSlice',
   ],
 };
 

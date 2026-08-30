@@ -7,7 +7,7 @@ import { RootState } from '../../store';
 
 export const GetKidGroups = createAsyncThunk(
   'kid-church/GetKidGroups',
-  async (payload: { type?: KidGroupType }, { getState }) => {
+  async (payload: { type?: KidGroupType; force?: boolean } = {}, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
@@ -16,7 +16,7 @@ export const GetKidGroups = createAsyncThunk(
         method: HttpRequestMethod.GET,
         url: `/kid-groups`,
         options: {
-          params: payload
+          params: payload?.type
             ? {
                 type: payload.type,
               }
@@ -27,6 +27,25 @@ export const GetKidGroups = createAsyncThunk(
     ).data;
 
     return response;
+  },
+  {
+    condition: (payload, { getState }) => {
+      if (payload?.force) return true;
+      const state = getState() as RootState;
+      const groups = state.kidGroupSlice.data;
+      if (!groups || groups.length === 0) return true;
+
+      if (payload?.type === KidGroupType.SPECIAL) {
+        const hasSpecial = groups.some(
+          (g: any) => g.name === 'Yo Soy Iglekids' || g.type === KidGroupType.SPECIAL,
+        );
+        return !hasSpecial;
+      }
+
+      // If all/general groups are requested, skip if multiple groups already in memory
+      const hasGeneral = groups.length > 1;
+      return !hasGeneral;
+    },
   },
 );
 

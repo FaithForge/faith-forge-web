@@ -58,37 +58,54 @@ export default defineConfig({
             src: '/icons/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'any'
+            purpose: 'any',
           },
           {
             src: '/icons/maskable-icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
-            purpose: 'maskable'
+            purpose: 'maskable',
           },
           {
             src: '/icons/maskable-icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
-            purpose: 'maskable'
-          }
-        ]
-      }
-    })
+            purpose: 'maskable',
+          },
+        ],
+      },
+    }),
   ],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
-      '@stoprocent/noble': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
-      'serialport': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
-      '@serialport/bindings-cpp': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
-      'events': path.resolve(__dirname, './src/libs/utils/printer/emptyModule.ts'),
+    },
+  },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          'vendor-redux': ['@reduxjs/toolkit', 'react-redux', 'redux-persist'],
+          'vendor-ui': [
+            'lucide-react',
+            'framer-motion',
+            'vaul',
+            '@radix-ui/react-dialog',
+            '@radix-ui/react-dropdown-menu',
+            '@radix-ui/react-slot',
+            'sonner',
+          ],
+          'vendor-utils': ['axios', 'dayjs', 'luxon', 'lodash', 'qrcode'],
+        },
+      },
     },
   },
   define: {

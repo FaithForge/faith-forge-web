@@ -6,6 +6,7 @@ import {
 } from '@/libs/utils/auth';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { UserLogin } from '../../thunks/user/auth.thunk';
+import { clearHttpCache } from '@/libs/utils/http';
 
 const initialState: IAuth = {
   user: undefined,
@@ -45,6 +46,7 @@ const AuthSlice = createSlice({
       }
     },
     logout: (state) => {
+      clearHttpCache();
       state.user = undefined;
       state.token = '';
       state.currentRole = undefined;
