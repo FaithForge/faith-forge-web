@@ -10,24 +10,33 @@ import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { getAttendanceReportDetail } from '@/services/kidChurchReportService';
+import { generateIglekidsAttendancePdf } from '@/services/pdf/iglekidsAttendancePdf';
 
 const DAYS_TO_NUM: Record<string, number> = {
   SUNDAY: 0,
   DOMINGO: 0,
+  '0': 0,
   MONDAY: 1,
   LUNES: 1,
+  '1': 1,
   TUESDAY: 2,
   MARTES: 2,
+  '2': 2,
   WEDNESDAY: 3,
   MIERCOLES: 3,
   MIÉRCOLES: 3,
+  '3': 3,
   THURSDAY: 4,
   JUEVES: 4,
+  '4': 4,
   FRIDAY: 5,
   VIERNES: 5,
+  '5': 5,
   SATURDAY: 6,
   SABADO: 6,
   SÁBADO: 6,
+  '6': 6,
 };
 
 const DAY_TRANSLATIONS: Record<string, string> = {
@@ -97,13 +106,26 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
   const [isDownloading, setIsDownloading] = useState(false);
   const [report, setReport] = useState<ReportData | null>(null);
 
-  const selectedMeetingObj = useMemo(
-    () => meetings.data.find((m) => m.id === selectedMeetingId),
-    [meetings.data, selectedMeetingId]
-  );
+  const availableMeetings = useMemo(() => {
+    const byCampus = (meetings as any).meetingsByCampus?.[selectedCampusId];
+    if (byCampus && byCampus.length > 0) {
+      return byCampus;
+    }
+    return meetings.data.filter((m) => !m.churchId || m.churchId === selectedCampusId);
+  }, [meetings, selectedCampusId]);
+
+  const selectedMeetingObj = useMemo(() => {
+    return (
+      availableMeetings.find((m: any) => m.id === selectedMeetingId) ||
+      (meetings.current?.id === selectedMeetingId ? meetings.current : undefined)
+    );
+  }, [availableMeetings, meetings.current, selectedMeetingId]);
 
   const allowedDaysOfWeek = useMemo(() => {
-    if (!selectedMeetingObj?.day) return undefined;
+    if (selectedMeetingObj?.day === undefined || selectedMeetingObj?.day === null) return undefined;
+    if (typeof selectedMeetingObj.day === 'number') {
+      return [selectedMeetingObj.day];
+    }
     const dayKey = String(selectedMeetingObj.day).toUpperCase().trim();
     const dayNum = DAYS_TO_NUM[dayKey];
     return dayNum !== undefined ? [dayNum] : undefined;
@@ -130,9 +152,9 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
       }
       
       const initialMeeting = meetings.data.find((m) => m.id === initialMeetingId) || meetings.current;
-      if (initialMeeting?.day) {
+      if (initialMeeting?.day !== undefined && initialMeeting?.day !== null) {
         const dayKey = String(initialMeeting.day).toUpperCase().trim();
-        const targetDayNum = DAYS_TO_NUM[dayKey];
+        const targetDayNum = typeof initialMeeting.day === 'number' ? initialMeeting.day : DAYS_TO_NUM[dayKey];
         if (targetDayNum !== undefined) {
           let d = dayjs(todayStr);
           while (d.day() !== targetDayNum) {
@@ -145,6 +167,22 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
       setSelectedDate(todayStr);
     }
   }, [open]);
+
+  // Auto-select valid meeting when availableMeetings are loaded or campus changes
+  useEffect(() => {
+    if (!open || !selectedCampusId) return;
+    if (availableMeetings.length > 0) {
+      const exists = availableMeetings.some((m: any) => m.id === selectedMeetingId);
+      if (!exists) {
+        const preferred =
+          (meetings.current && availableMeetings.find((m: any) => m.id === meetings.current?.id)) ||
+          availableMeetings[0];
+        if (preferred) {
+          handleMeetingChange(preferred.id);
+        }
+      }
+    }
+  }, [open, selectedCampusId, availableMeetings, selectedMeetingId, meetings.current]);
 
   // Load meetings when campus changes
   useEffect(() => {
@@ -162,16 +200,25 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
     setSelectedCampusId(campusId);
     setSelectedMeetingId('');
     setReport(null);
+
+    const campusMeetings = (meetings as any).meetingsByCampus?.[campusId];
+    if (campusMeetings && campusMeetings.length > 0) {
+      handleMeetingChange(campusMeetings[0].id);
+    }
   };
 
   const handleMeetingChange = (meetingId: string) => {
     setSelectedMeetingId(meetingId);
     setReport(null);
 
-    const targetMeeting = meetings.data.find((m) => m.id === meetingId);
-    if (targetMeeting?.day) {
+    const targetMeeting =
+      availableMeetings.find((m: any) => m.id === meetingId) ||
+      meetings.data.find((m) => m.id === meetingId) ||
+      (meetings.current?.id === meetingId ? meetings.current : undefined);
+
+    if (targetMeeting?.day !== undefined && targetMeeting?.day !== null) {
       const dayKey = String(targetMeeting.day).toUpperCase().trim();
-      const targetDayNum = DAYS_TO_NUM[dayKey];
+      const targetDayNum = typeof targetMeeting.day === 'number' ? targetMeeting.day : DAYS_TO_NUM[dayKey];
       if (targetDayNum !== undefined) {
         let d = dayjs(todayStr);
         while (d.day() !== targetDayNum) {
@@ -223,30 +270,22 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
 
     setIsDownloading(true);
     try {
-      const response = await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.GET,
-        url: `/report/kid-church-meeting/download`,
-        options: {
-          params: { churchMeetingId: selectedMeetingId, date: selectedDate },
-          headers: { Authorization: `Bearer ${token}` },
-          responseType: 'arraybuffer',
-        },
+      const campusObj = campuses.data.find((c) => c.id === selectedCampusId);
+      const detailReport = await getAttendanceReportDetail({
+        churchMeetingId: selectedMeetingId,
+        date: selectedDate,
+        token,
+        campusName: campusObj?.name,
+        meetingName: selectedMeetingObj?.name,
+        meetingDay: selectedMeetingObj?.day ? getTranslatedDay(selectedMeetingObj.day) : undefined,
+        fallbackSummary: report || undefined,
       });
 
-      const blob = new Blob([response.data], { type: 'application/pdf' });
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      const meetingNameSanitized = (selectedMeetingObj?.name || 'servicio').replace(/\s+/g, '-');
-      link.download = `${selectedDate}-${meetingNameSanitized}.pdf`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-
-      toast.success('Reporte PDF descargado correctamente');
+      generateIglekidsAttendancePdf(detailReport);
+      toast.success('Reporte PDF generado y descargado correctamente');
     } catch (err) {
-      console.error('Error downloading report PDF', err);
-      toast.error('Error al descargar el archivo PDF.');
+      console.error('Error generating report PDF', err);
+      toast.error('Error al generar el archivo PDF.');
     } finally {
       setIsDownloading(false);
     }
@@ -294,15 +333,15 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                     className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3.5 focus:border-primary focus:ring-0 transition-colors outline-none text-sm shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400"
                     value={selectedMeetingId}
                     onChange={(e) => handleMeetingChange(e.target.value)}
-                    disabled={!selectedCampusId || meetings.loading}
+                    disabled={!selectedCampusId || (meetings.loading && availableMeetings.length === 0)}
                   >
                     <option value="" disabled>Seleccione servicio...</option>
-                    {meetings.data.map((meeting) => (
+                    {availableMeetings.map((meeting: any) => (
                       <option key={meeting.id} value={meeting.id}>{meeting.name}</option>
                     ))}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
-                    {meetings.loading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
+                    {meetings.loading && availableMeetings.length === 0 ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
                   </div>
                 </div>
               </div>
@@ -315,6 +354,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   minDate={minDateStr}
                   maxDate={todayStr}
                   allowedDaysOfWeek={allowedDaysOfWeek}
+                  disabled={!selectedMeetingId}
                   onChange={(date) => {
                     setSelectedDate(date);
                     setReport(null);
@@ -322,7 +362,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   helpText={
                     selectedMeetingObj?.day
                       ? `Solo se habilitan los días correspondientes a este servicio (${getTranslatedDay(selectedMeetingObj.day)}).`
-                      : 'Selecciona la fecha exacta del servicio a consultar.'
+                      : 'Selecciona primero un servicio para habilitar las fechas correspondientes.'
                   }
                 />
               </div>

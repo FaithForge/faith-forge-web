@@ -6,8 +6,13 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from '@/libs/state/redux/store';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import dayjs from 'dayjs';
+import 'dayjs/locale/es';
 import { setupChunkLoadErrorAutoRecover } from '@/libs/utils/appCache';
 import { setupRemoteVersionWatcher } from '@/libs/utils/versionCheck';
+
+// Initialize dayjs Spanish locale globally for the application
+dayjs.locale('es');
 
 // Automatically recover when dynamic chunks fail after new deployments
 setupChunkLoadErrorAutoRecover();

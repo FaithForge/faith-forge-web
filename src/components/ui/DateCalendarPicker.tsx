@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import dayjs from 'dayjs';
+import 'dayjs/locale/es';
 import { Calendar, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
 import clsx from 'clsx';
 import ModalOverlay from '@/components/ui/ModalOverlay';
@@ -12,6 +13,7 @@ type DateCalendarPickerProps = {
   allowedDaysOfWeek?: number[]; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
   label: string;
   helpText?: string;
+  disabled?: boolean;
 };
 
 type CalendarCell = {
@@ -26,7 +28,7 @@ type CalendarCell = {
  * Modern custom calendar date picker aligned with the app design system.
  * Supports day-of-week restrictions (e.g. enabling only Sundays for Sunday services).
  *
- * @param {DateCalendarPickerProps} props - Value, date limits, allowed days of week, label and change callback.
+ * @param {DateCalendarPickerProps} props - Value, date limits, allowed days of week, label, change callback and disabled state.
  * @returns {JSX.Element}
  */
 const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
@@ -37,6 +39,7 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
   allowedDaysOfWeek,
   label,
   helpText,
+  disabled = false,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draftValue, setDraftValue] = useState(value);
@@ -96,11 +99,13 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
 
   const monthTitle = useMemo(() => {
     const titleFormatter = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
-    return titleFormatter.format(viewMonth.toDate());
+    const raw = titleFormatter.format(viewMonth.toDate());
+    return raw.charAt(0).toUpperCase() + raw.slice(1);
   }, [viewMonth]);
 
   const openPicker = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+    if (disabled) return;
     setDraftValue(value);
     setViewMonth(dayjs(value || maxDate || undefined).startOf('month'));
     setIsOpen(true);
@@ -137,7 +142,15 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
     setViewMonth(d.startOf('month'));
   };
 
-  const formattedDisplay = value ? dayjs(value).format('DD [de] MMMM [de] YYYY') : 'Seleccionar fecha...';
+  const formattedDisplay = useMemo(() => {
+    if (!value) return 'Seleccionar fecha...';
+    const d = dayjs(value).locale('es');
+    const day = d.format('DD');
+    const rawMonth = d.format('MMMM');
+    const month = rawMonth.charAt(0).toUpperCase() + rawMonth.slice(1);
+    const year = d.format('YYYY');
+    return `${day} de ${month} de ${year}`;
+  }, [value]);
 
   return (
     <div className="flex flex-col gap-1.5" onClick={(e) => e.stopPropagation()}>
@@ -149,11 +162,17 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
       {/* Styled Input Trigger */}
       <button
         type="button"
+        disabled={disabled}
         onClick={openPicker}
-        className="flex items-center justify-between w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3.5 focus:border-primary transition-colors outline-none text-sm shadow-sm font-medium hover:border-primary/50 text-left active:scale-[0.99]"
+        className={clsx(
+          'flex items-center justify-between w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3.5 focus:border-primary transition-colors outline-none text-sm shadow-sm font-medium text-left',
+          disabled
+            ? 'opacity-50 cursor-not-allowed bg-gray-50'
+            : 'hover:border-primary/50 active:scale-[0.99]'
+        )}
       >
-        <span className={clsx('capitalize', value ? 'text-gray-800 font-semibold' : 'text-gray-400 font-normal')}>
-          {formattedDisplay}
+        <span className={clsx(value && !disabled ? 'text-gray-800 font-semibold' : 'text-gray-400 font-normal')}>
+          {disabled ? 'Selecciona un servicio primero...' : formattedDisplay}
         </span>
         <Calendar size={17} className="text-gray-400 shrink-0 ml-2" />
       </button>
@@ -202,7 +221,7 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
                 <ChevronLeft size={18} />
               </button>
 
-              <div className="text-sm font-bold capitalize text-gray-900 tracking-wide">
+              <div className="text-sm font-bold text-gray-900 tracking-wide">
                 {monthTitle}
               </div>
 
