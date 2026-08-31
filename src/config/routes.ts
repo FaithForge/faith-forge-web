@@ -12,6 +12,10 @@ export const APP_ROUTES = {
     updateUserDynamic: '/admin/users/edit/:id',
     updateUser: (id: string | number) => `/admin/users/edit/${id}`,
     userRoles: '/admin/users/roles',
+    ministries: '/admin/ministries',
+    ministryDetailDynamic: '/admin/ministries/:id',
+    ministryDetail: (id: string | number) => `/admin/ministries/${id}`,
+    volunteers: '/admin/volunteers',
   },
   kidChurch: {
     root: '/kid-church',

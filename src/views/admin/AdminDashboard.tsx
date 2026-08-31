@@ -11,7 +11,8 @@ import {
   Sparkles,
   Database,
   Trash2,
-  Loader2
+  Loader2,
+  Layers,
 } from 'lucide-react';
 import { APP_ROUTES } from '@/config/routes';
 import clsx from 'clsx';
@@ -62,6 +63,31 @@ const ADMIN_CATEGORIES: AdminCategory[] = [
         route: APP_ROUTES.admin.createUser,
         iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
         iconColor: 'text-emerald-600',
+      },
+    ],
+  },
+  {
+    title: 'Gestión de Ministerios y Servidores',
+    description: 'Configuración de ministerios, áreas de servicio, grupos y asignación de servidores.',
+    icon: Layers,
+    items: [
+      {
+        id: 'ministry-management',
+        title: 'Ministerios y Áreas de Servicio',
+        description: 'Administra ministerios, áreas, grupos y sus configuraciones por sede.',
+        icon: Layers,
+        route: APP_ROUTES.admin.ministries,
+        iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+        iconColor: 'text-indigo-600',
+      },
+      {
+        id: 'volunteer-directory',
+        title: 'Directorio de Servidores',
+        description: 'Consulta los servidores registrados, sus roles asignados y sedes activas.',
+        icon: Users,
+        route: APP_ROUTES.admin.volunteers,
+        iconBg: 'bg-violet-50 text-violet-600 border border-violet-100',
+        iconColor: 'text-violet-600',
       },
     ],
   },

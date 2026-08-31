@@ -27,6 +27,13 @@ const UserManagementView = lazy(() => import('@/views/admin/users/UserManagement
 const UserDetailView = lazy(() => import('@/views/admin/users/UserDetailView'));
 const UpdateUserView = lazy(() => import('@/views/admin/users/UpdateUserView'));
 const ChurchMeetingsView = lazy(() => import('@/views/admin/ChurchMeetingsView'));
+const MinistriesManagementView = lazy(
+  () => import('@/views/admin/ministries/MinistriesManagementView'),
+);
+const MinistryDetailView = lazy(() => import('@/views/admin/ministries/MinistryDetailView'));
+const VolunteerDirectoryView = lazy(
+  () => import('@/views/admin/volunteers/VolunteerDirectoryView'),
+);
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 
 const IndexRedirect = () => {
@@ -84,6 +91,18 @@ function App() {
                   element={<Navigate to={APP_ROUTES.admin.users} replace />}
                 />
                 <Route path={APP_ROUTES.admin.churchMeetings} element={<ChurchMeetingsView />} />
+                <Route
+                  path={APP_ROUTES.admin.ministries}
+                  element={<MinistriesManagementView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.ministryDetailDynamic}
+                  element={<MinistryDetailView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.volunteers}
+                  element={<VolunteerDirectoryView />}
+                />
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
                 <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />
                 <Route path={APP_ROUTES.kidRegistration.new} element={<NewKidView />} />
