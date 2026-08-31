@@ -72,7 +72,7 @@ const MinistryDetailView: React.FC = () => {
     if (ministryId) {
       dispatch(GetMinistryAreas({ ministryId, force: false }));
       dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));
-      dispatch(GetServiceAreaGroups());
+      dispatch(GetServiceAreaGroups({}));
     }
   }, [dispatch, ministryId]);
 

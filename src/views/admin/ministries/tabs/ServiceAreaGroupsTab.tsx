@@ -72,7 +72,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
   // Load service area groups for selected campus
   useEffect(() => {
     if (selectedCampusId) {
-      dispatch(GetServiceAreaGroups());
+      dispatch(GetServiceAreaGroups({}));
     }
   }, [dispatch, selectedCampusId]);
 
@@ -175,7 +175,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       }
 
       // Always refresh from the API after bulk generation
-      await dispatch(GetServiceAreaGroups());
+      await dispatch(GetServiceAreaGroups({}));
 
       if (createdCount > 0) {
         toast.success(
