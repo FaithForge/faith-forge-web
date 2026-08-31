@@ -72,7 +72,7 @@ const MinistryDetailView: React.FC = () => {
     if (ministryId) {
       dispatch(GetMinistryAreas({ ministryId, force: false }));
       dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));
-      dispatch(GetServiceAreaGroups({}));
+      // Service area groups will be loaded by the child tab when areas are available
     }
   }, [dispatch, ministryId]);
 

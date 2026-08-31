@@ -71,10 +71,12 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
   // Load service area groups for selected campus
   useEffect(() => {
-    if (selectedCampusId) {
-      dispatch(GetServiceAreaGroups({}));
+    if (selectedCampusId && areas.length > 0) {
+      // Backend requires at least one filter (ministryAreaId or groupConfigId)
+      // Pass the first area ID to fetch all groups for this ministry
+      dispatch(GetServiceAreaGroups({ ministryAreaId: areas[0].id }));
     }
-  }, [dispatch, selectedCampusId]);
+  }, [dispatch, selectedCampusId, areas]);
 
   const campusOptions = useMemo(() => {
     return campuses.map((c) => ({
@@ -175,7 +177,9 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       }
 
       // Always refresh from the API after bulk generation
-      await dispatch(GetServiceAreaGroups({}));
+      if (areas.length > 0) {
+        await dispatch(GetServiceAreaGroups({ ministryAreaId: areas[0].id }));
+      }
 
       if (createdCount > 0) {
         toast.success(
