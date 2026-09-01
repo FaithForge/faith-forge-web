@@ -2,15 +2,17 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IMinistryArea } from '@/libs/models';
+import { IKidGroup, IMinistryArea } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   CreateMinistryArea,
   UpdateMinistryArea,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
+import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
-import { Layers } from 'lucide-react';
+import { Layers, Sparkles, Check } from 'lucide-react';
+import clsx from 'clsx';
 
 interface MinistryAreaModalProps {
   open: boolean;
@@ -22,6 +24,7 @@ interface MinistryAreaModalProps {
 
 /**
  * Drawer modal to create or edit a Service Area inside a Ministry.
+ * Allows associating Iglekids classrooms (kid groups) with the area.
  *
  * @param {MinistryAreaModalProps} props - Component properties.
  * @returns {JSX.Element} The rendered modal drawer.
@@ -37,13 +40,22 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
 
   const dispatch = useAppDispatch();
   const { loadingAction } = useAppSelector((state) => state.ministrySlice);
+  const availableKidGroups = useAppSelector((state) => state.kidGroupSlice.data);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [active, setActive] = useState(true);
+  const [selectedKidGroupIds, setSelectedKidGroupIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState('');
 
   const isEditing = Boolean(areaToEdit);
+
+  // Load classrooms master catalog if empty
+  useEffect(() => {
+    if (open && (!availableKidGroups || availableKidGroups.length === 0)) {
+      dispatch(GetKidGroups({ force: false }));
+    }
+  }, [open, availableKidGroups, dispatch]);
 
   useEffect(() => {
     if (open) {
@@ -51,14 +63,56 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
         setName(areaToEdit.name);
         setDescription(areaToEdit.description || '');
         setActive(areaToEdit.active);
+
+        // Pre-populate already assigned classrooms strictly matching valid availableKidGroups
+        const validGroupIds = new Set((availableKidGroups || []).map((g) => g.id));
+        const resolvedIds: string[] = [];
+
+        // 1. Check direct kidGroupId
+        if (areaToEdit.kidGroupId && (validGroupIds.size === 0 || validGroupIds.has(areaToEdit.kidGroupId))) {
+          resolvedIds.push(areaToEdit.kidGroupId);
+        }
+
+        // 2. Check kidGroups relations array (kg.kidGroupId is the classroom ID)
+        if (Array.isArray(areaToEdit.kidGroups)) {
+          areaToEdit.kidGroups.forEach((kg: any) => {
+            const id =
+              kg.kidGroupId && (validGroupIds.size === 0 || validGroupIds.has(kg.kidGroupId))
+                ? kg.kidGroupId
+                : validGroupIds.has(kg.id)
+                  ? kg.id
+                  : null;
+            if (id && !resolvedIds.includes(id)) {
+              resolvedIds.push(id);
+            }
+          });
+        }
+
+        // 3. Check kidGroupIds array
+        if (Array.isArray(areaToEdit.kidGroupIds)) {
+          areaToEdit.kidGroupIds.forEach((id) => {
+            if ((validGroupIds.size === 0 || validGroupIds.has(id)) && !resolvedIds.includes(id)) {
+              resolvedIds.push(id);
+            }
+          });
+        }
+
+        setSelectedKidGroupIds(resolvedIds);
       } else {
         setName('');
         setDescription('');
         setActive(true);
+        setSelectedKidGroupIds([]);
       }
       setNameError('');
     }
-  }, [open, areaToEdit]);
+  }, [open, areaToEdit, availableKidGroups]);
+
+  const toggleKidGroupSelection = (groupId: string) => {
+    setSelectedKidGroupIds((prev) =>
+      prev.includes(groupId) ? prev.filter((id) => id !== groupId) : [...prev, groupId],
+    );
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +122,9 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
     }
 
     try {
+      const primaryKidGroupId = selectedKidGroupIds[0] || undefined;
+      const kidGroupIdsPayload = selectedKidGroupIds.length > 0 ? selectedKidGroupIds : undefined;
+
       if (isEditing && areaToEdit) {
         await dispatch(
           UpdateMinistryArea({
@@ -76,19 +133,27 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             name: name.trim(),
             description: description.trim() || undefined,
             active,
+            kidGroupId: primaryKidGroupId,
+            kidGroupIds: kidGroupIdsPayload,
           }),
         ).unwrap();
-        toast.success('Área de servicio actualizada correctamente');
       } else {
         await dispatch(
           CreateMinistryArea({
             ministryId,
             name: name.trim(),
             description: description.trim() || undefined,
+            kidGroupId: primaryKidGroupId,
+            kidGroupIds: kidGroupIdsPayload,
           }),
         ).unwrap();
-        toast.success('Área de servicio creada con éxito');
       }
+
+      toast.success(
+        isEditing
+          ? 'Área de servicio actualizada correctamente'
+          : 'Área de servicio creada con éxito',
+      );
       onOpenChange(false);
       onSuccess?.();
     } catch (err) {
@@ -115,7 +180,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
               setName(e.target.value);
               if (nameError) setNameError('');
             }}
-            placeholder="Ej. Regikids, SaludKids, Alabanza Kids..."
+            placeholder="Ej. Regikids, SaludKids, Alabanza Kids, Zaqueos..."
             error={nameError}
             autoFocus
           />
@@ -133,6 +198,46 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
           />
         </div>
+
+        {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) */}
+        {availableKidGroups && availableKidGroups.length > 0 && (
+          <div className="flex flex-col gap-1.5 p-3 bg-slate-50 border border-gray-100 rounded-xl">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                <Sparkles size={13} className="text-primary" />
+                Salones de Iglekids Asociados (Opcional)
+              </label>
+              <span className="text-[10px] text-gray-500 font-medium">
+                {selectedKidGroupIds.length} seleccionado(s)
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 mb-1">
+              Asocia el o los salones correspondientes para vincular supervisores y asistencia.
+            </p>
+
+            <div className="flex flex-wrap gap-1.5 pt-1">
+              {availableKidGroups.map((group: IKidGroup) => {
+                const isSelected = selectedKidGroupIds.includes(group.id);
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => toggleKidGroupSelection(group.id)}
+                    className={clsx(
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all cursor-pointer select-none',
+                      isSelected
+                        ? 'bg-primary text-white shadow-2xs'
+                        : 'bg-white text-gray-700 border border-gray-200 hover:bg-slate-100',
+                    )}
+                  >
+                    {isSelected && <Check size={12} className="stroke-[3]" />}
+                    <span>{group.name}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {isEditing && (
           <div className="flex items-center justify-between p-3 bg-slate-50 border border-gray-100 rounded-xl">

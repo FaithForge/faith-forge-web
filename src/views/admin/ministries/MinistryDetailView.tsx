@@ -97,7 +97,7 @@ const MinistryDetailView: React.FC = () => {
   }, [currentMinistry, campuses.data]);
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-24">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-24">
       <PageHeader
         title={currentMinistry ? currentMinistry.name : 'Detalle del Ministerio'}
         onBack={() => navigate(APP_ROUTES.admin.ministries)}

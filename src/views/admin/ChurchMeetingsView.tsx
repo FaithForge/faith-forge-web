@@ -395,7 +395,7 @@ const ChurchMeetingsView: React.FC = () => {
   const selectedCampusName = campuses.data.find((c) => c.id === selectedCampusId)?.name ?? '';
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-28">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
       <PageHeader title="Estado de Servicios" onBack={() => navigate(APP_ROUTES.admin.root)} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">

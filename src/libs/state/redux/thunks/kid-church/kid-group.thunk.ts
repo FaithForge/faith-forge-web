@@ -51,27 +51,37 @@ export const GetKidGroups = createAsyncThunk(
 
 export const GetKidGroupRegistered = createAsyncThunk(
   'kid-church/GetKidGroupRegistered',
-  async (payload: { date: Date; kidGroupId?: string }, { getState }) => {
+  async (payload: { date: Date; kidGroupId?: string }, { getState, rejectWithValue }) => {
     const { date, kidGroupId } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const churchMeetingSlice = state.churchMeetingSlice;
-    const response = (
-      await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.GET,
-        url: `/kid-group/registered`,
-        options: {
-          params: {
-            kidGroupId,
-            churchMeetingId: churchMeetingSlice.current?.id,
-            date: DateTime.fromJSDate(date).toISODate(),
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      })
-    ).data;
 
-    return response;
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.KidChurch,
+          method: HttpRequestMethod.GET,
+          url: `/kid-group/registered`,
+          options: {
+            params: {
+              kidGroupId,
+              churchMeetingId: churchMeetingSlice.current?.id,
+              date: DateTime.fromJSDate(date).toISODate(),
+            },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err: any) {
+      const status = err?.response?.status;
+      const message =
+        status === 403
+          ? 'No tienes permiso para supervisar este salón'
+          : err?.response?.data?.message || err?.message || 'Error al obtener los niños registrados';
+      return rejectWithValue({ status, message });
+    }
   },
 );

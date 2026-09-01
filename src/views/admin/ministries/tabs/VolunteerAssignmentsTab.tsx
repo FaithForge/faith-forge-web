@@ -1,25 +1,21 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Crown,
   Layers,
   Users,
   ShieldCheck,
-  Award,
   Plus,
   Trash2,
   MapPin,
   Inbox,
   User as UserIcon,
-  Search,
-  Phone,
-  CheckCircle2,
   AlertCircle,
-  Loader2,
-  ChevronRight,
+  ChevronDown,
+  ChevronsDown,
+  ChevronsUp,
   Sparkles,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
 import SelectSearch from '@/components/ui/SelectSearch';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
@@ -27,16 +23,13 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import {
   DeleteVolunteerAssignment,
-  GetMoreVolunteers,
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { GetServiceAreaGroups } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import {
   IServiceAreaGroup,
-  IVolunteer,
   IVolunteerAssignment,
-  UserState,
   VolunteerRole,
 } from '@/libs/models';
 import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
@@ -49,7 +42,7 @@ interface VolunteerAssignmentsTabProps {
   churchCampusId?: string;
 }
 
-type SubTabType = 'leadership' | 'teams' | 'directory';
+type SubTabType = 'leadership' | 'teams';
 
 const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
   [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: 'Coord. General',
@@ -58,15 +51,6 @@ const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
   [VolunteerRole.SUPERVISOR]: 'Supervisor',
   [VolunteerRole.VOLUNTEER]: 'Servidor',
 };
-
-const DIRECTORY_ROLE_FILTERS: { label: string; value: VolunteerRole | 'ALL' }[] = [
-  { label: 'Todos los roles', value: 'ALL' },
-  { label: 'Coordinadores Generales', value: VolunteerRole.MINISTRY_GENERAL_COORDINATOR },
-  { label: 'Coordinadores de Área', value: VolunteerRole.AREA_GENERAL_COORDINATOR },
-  { label: 'Coordinadores de Grupo', value: VolunteerRole.GROUP_COORDINATOR },
-  { label: 'Supervisores', value: VolunteerRole.SUPERVISOR },
-  { label: 'Servidores', value: VolunteerRole.VOLUNTEER },
-];
 
 /**
  * Scalable Tab component managing volunteer assignments, team rosters,
@@ -86,7 +70,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     (state) => state.ministrySlice,
   );
   const {
-    volunteers: { data: volunteersList, currentPage, totalPages, loading: loadingVolunteers, loadingMore },
+    volunteers: { data: volunteersList },
     assignments,
     assignmentsByPartition,
     loadingByPartition,
@@ -94,6 +78,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
   // Sub-tab navigation
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('teams');
+
+  // Collapsible areas state (closed by default)
+  const [expandedAreaIds, setExpandedAreaIds] = useState<Set<string>>(new Set());
 
   // Campus selection
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
@@ -108,13 +95,6 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
   const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
-
-  // Directory Search & Filter state
-  const [directorySearch, setDirectorySearch] = useState('');
-  const [debouncedDirSearch, setDebouncedDirSearch] = useState('');
-  const [directoryRoleFilter, setDirectoryRoleFilter] = useState<VolunteerRole | 'ALL'>('ALL');
-
-  const searchTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   const areas = areasByMinistry[ministryId] || [];
   const groups = groupsByMinistry[ministryId] || [];
@@ -132,18 +112,18 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
   const loadingGroupCoords = loadingByPartition[groupCoordsKey] ?? false;
   const loadingCampusTeams = loadingByPartition[campusTeamsKey] ?? false;
 
-  // Debounce directory search
-  useEffect(() => {
-    if (searchTimerRef.current) {
-      clearTimeout(searchTimerRef.current);
-    }
-    searchTimerRef.current = setTimeout(() => {
-      setDebouncedDirSearch(directorySearch.trim());
-    }, 400);
-    return () => {
-      if (searchTimerRef.current) clearTimeout(searchTimerRef.current);
-    };
-  }, [directorySearch]);
+  // Toggle single area collapsed/expanded
+  const toggleAreaExpanded = useCallback((areaId: string) => {
+    setExpandedAreaIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(areaId)) {
+        next.delete(areaId);
+      } else {
+        next.add(areaId);
+      }
+      return next;
+    });
+  }, []);
 
   // Initial metadata and partitioned hierarchy queries
   useEffect(() => {
@@ -182,24 +162,10 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     );
   }, [dispatch, ministryId, campuses.length, ministryCoordsKey, areaCoordsKey, groupCoordsKey]);
 
-  // Load volunteers directory on search, filter, or subtab change
+  // Background preload volunteers list for name & photo resolution
   useEffect(() => {
-    if (activeSubTab === 'directory') {
-      dispatch(
-        GetVolunteers({
-          ministryId,
-          search: debouncedDirSearch || undefined,
-          role: directoryRoleFilter !== 'ALL' ? directoryRoleFilter : undefined,
-          page: 1,
-          limit: 20,
-          force: true,
-        }),
-      );
-    } else {
-      // Background preload for name resolution
-      dispatch(GetVolunteers({ ministryId, limit: 100, force: false }));
-    }
-  }, [dispatch, ministryId, debouncedDirSearch, directoryRoleFilter, activeSubTab]);
+    dispatch(GetVolunteers({ ministryId, limit: 100, force: false }));
+  }, [dispatch, ministryId]);
 
   // Set default campus
   useEffect(() => {
@@ -320,6 +286,18 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
     return map;
   }, [areas, currentCampusTeams, ministryId]);
+
+  const isAllAreasExpanded = useMemo(() => {
+    return teamsByArea.length > 0 && expandedAreaIds.size >= teamsByArea.length;
+  }, [teamsByArea.length, expandedAreaIds.size]);
+
+  const handleToggleAllAreas = useCallback(() => {
+    if (isAllAreasExpanded) {
+      setExpandedAreaIds(new Set());
+    } else {
+      setExpandedAreaIds(new Set(teamsByArea.map(({ area }) => area.id)));
+    }
+  }, [isAllAreasExpanded, teamsByArea]);
 
   // Executive KPIs
   const totalCoordinators = useMemo(() => {
@@ -452,31 +430,54 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     }
   };
 
-  const handleLoadMoreVolunteers = () => {
-    if (currentPage < totalPages && !loadingMore) {
-      dispatch(
-        GetMoreVolunteers({
-          ministryId,
-          search: debouncedDirSearch || undefined,
-          role: directoryRoleFilter !== 'ALL' ? directoryRoleFilter : undefined,
-          page: currentPage + 1,
-          limit: 20,
-        }),
-      );
-    }
-  };
+  /**
+   * Resolves the full name of a volunteer from an assignment.
+   *
+   * @param {IVolunteerAssignment} asg - The volunteer assignment.
+   * @returns {string} The full name or fallback.
+   */
+  const getVolunteerName = useCallback(
+    (asg: IVolunteerAssignment): string => {
+      const vId = asg.volunteerId || asg.ministryVolunteerId;
+      const vol =
+        asg.volunteer ||
+        asg.ministryVolunteer ||
+        volunteersList.find(
+          (v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+        );
+      const user = asg.volunteer?.user || vol?.user;
+      return user && (user.firstName || user.lastName)
+        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+        : '';
+    },
+    [volunteersList],
+  );
+
+  /**
+   * Sorts a list of volunteer assignments alphabetically A-Z by volunteer name.
+   *
+   * @param {IVolunteerAssignment[]} list - The assignments to sort.
+   * @returns {IVolunteerAssignment[]} Sorted copy of assignments.
+   */
+  const sortAssignmentsByName = useCallback(
+    (list: IVolunteerAssignment[]): IVolunteerAssignment[] => {
+      return [...list].sort((a, b) => {
+        const nameA = getVolunteerName(a);
+        const nameB = getVolunteerName(b);
+        return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+      });
+    },
+    [getVolunteerName],
+  );
 
   const renderPersonItem = (asg: IVolunteerAssignment, roleLabel?: string) => {
+    const name = getVolunteerName(asg) || 'Servidor asignado';
     const vId = asg.volunteerId || asg.ministryVolunteerId;
     const vol =
       asg.volunteer ||
       asg.ministryVolunteer ||
       volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
     const user = asg.volunteer?.user || vol?.user;
-    const name =
-      user && (user.firstName || user.lastName)
-        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-        : 'Servidor asignado';
     const nationalId = user?.nationalId;
     const photoUrl = user?.photoUrl;
 
@@ -567,12 +568,12 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
       {/* SUB-TAB SELECTOR & GLOBAL ACTION */}
       <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-xs flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
-        <div className="grid grid-cols-3 gap-1 bg-slate-100 p-1 rounded-xl">
+        <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto sm:min-w-[320px]">
           <button
             type="button"
             onClick={() => setActiveSubTab('teams')}
             className={clsx(
-              'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer select-none',
+              'flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer select-none',
               activeSubTab === 'teams'
                 ? 'bg-white text-gray-900 shadow-2xs'
                 : 'text-gray-600 hover:text-gray-900',
@@ -586,7 +587,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
             type="button"
             onClick={() => setActiveSubTab('leadership')}
             className={clsx(
-              'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer select-none',
+              'flex items-center justify-center gap-1.5 py-1.5 px-3 rounded-lg text-xs font-bold transition-all cursor-pointer select-none',
               activeSubTab === 'leadership'
                 ? 'bg-white text-gray-900 shadow-2xs'
                 : 'text-gray-600 hover:text-gray-900',
@@ -594,20 +595,6 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
           >
             <Crown size={14} className={activeSubTab === 'leadership' ? 'text-amber-500' : 'text-gray-400'} />
             <span className="truncate">Liderazgo ({totalCoordinators})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveSubTab('directory')}
-            className={clsx(
-              'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer select-none',
-              activeSubTab === 'directory'
-                ? 'bg-white text-gray-900 shadow-2xs'
-                : 'text-gray-600 hover:text-gray-900',
-            )}
-          >
-            <Users size={14} className={activeSubTab === 'directory' ? 'text-primary' : 'text-gray-400'} />
-            <span className="truncate">Directorio</span>
           </button>
         </div>
 
@@ -665,116 +652,173 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
               </div>
             </div>
           ) : (
-            <div className="flex flex-col gap-4">
-              {teamsByArea.map(({ area, teams }) => (
-                <div
-                  key={area.id}
-                  className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex flex-col gap-3"
+            <div className="flex flex-col gap-3">
+              {/* Expand / Collapse all control */}
+              <div className="flex items-center justify-between px-1">
+                <p className="text-xs font-medium text-gray-500">
+                  {teamsByArea.length} {teamsByArea.length === 1 ? 'área' : 'áreas'} • Haz clic para desplegar
+                </p>
+                <button
+                  type="button"
+                  onClick={handleToggleAllAreas}
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer select-none py-1 px-2 rounded-lg hover:bg-primary/5"
                 >
-                  <div className="flex items-center justify-between pb-2 border-b border-gray-100">
-                    <div className="flex items-center gap-2">
-                      <div className="w-6 h-6 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center">
-                        <Layers size={13} />
-                      </div>
-                      <h3 className="text-xs font-bold text-gray-900 uppercase tracking-wide">
-                        {area.name}
-                      </h3>
-                    </div>
-                    <span className="text-[11px] font-semibold text-gray-500">
-                      {teams.length} {teams.length === 1 ? 'equipo' : 'equipos'}
-                    </span>
-                  </div>
+                  {isAllAreasExpanded ? (
+                    <>
+                      <ChevronsUp size={14} className="text-primary shrink-0" />
+                      <span>Colapsar todas</span>
+                    </>
+                  ) : (
+                    <>
+                      <ChevronsDown size={14} className="text-primary shrink-0" />
+                      <span>Expandir todas</span>
+                    </>
+                  )}
+                </button>
+              </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {teams.map((team) => {
-                      const group =
-                        groups.find((g) => g.id === team.ministryGroupConfigId) ||
-                        team.ministryGroupConfig;
-                      const teamAssignments = campusTeamAssignments.filter(
-                        (a) => a.serviceAreaGroupId === team.id,
-                      );
-                      const supervisors = teamAssignments.filter(
-                        (a) => a.role === VolunteerRole.SUPERVISOR,
-                      );
-                      const volunteersCount = teamAssignments.filter(
-                        (a) => a.role === VolunteerRole.VOLUNTEER,
-                      ).length;
+              {teamsByArea.map(({ area, teams }) => {
+                const areaTeamIds = new Set(teams.map((t) => t.id));
+                const areaTotalMembers = campusTeamAssignments.filter(
+                  (a) => a.serviceAreaGroupId && areaTeamIds.has(a.serviceAreaGroupId),
+                ).length;
+                const isExpanded = expandedAreaIds.has(area.id);
 
-                      const supervisor = supervisors[0];
-                      const supervisorVol =
-                        supervisor?.volunteer ||
-                        supervisor?.ministryVolunteer ||
-                        volunteersList.find(
-                          (v) =>
-                            v.id === (supervisor?.volunteerId || supervisor?.ministryVolunteerId) ||
-                            (v.userId && v.userId === supervisor?.volunteer?.userId),
-                        );
-                      const supervisorUser = supervisor?.volunteer?.user || supervisorVol?.user;
-                      const supervisorName =
-                        supervisorUser && (supervisorUser.firstName || supervisorUser.lastName)
-                          ? `${supervisorUser.firstName ?? ''} ${supervisorUser.lastName ?? ''}`.trim()
-                          : null;
-
-                      return (
-                        <div
-                          key={team.id}
-                          className="p-3.5 rounded-xl border border-gray-200/80 bg-slate-50/40 hover:bg-slate-50 transition-all flex flex-col justify-between gap-3"
-                        >
-                          <div>
-                            <div className="flex items-center justify-between gap-2">
-                              <span className="text-xs font-extrabold text-primary">
-                                {group?.name ?? 'Grupo desconocido'}
-                              </span>
-                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 shrink-0">
-                                {teamAssignments.length} miembros
-                              </span>
-                            </div>
-
-                            {/* Supervisor Status */}
-                            <div className="mt-2 text-xs">
-                              {supervisorName ? (
-                                <div className="flex items-center gap-1.5 text-gray-700 font-medium truncate">
-                                  <ShieldCheck size={13} className="text-indigo-600 shrink-0" />
-                                  <span className="truncate">Sup: {supervisorName}</span>
-                                </div>
-                              ) : (
-                                <div className="flex items-center gap-1.5 text-amber-700 font-semibold">
-                                  <AlertCircle size={13} className="shrink-0" />
-                                  <span>Sin supervisor asignado</span>
-                                </div>
-                              )}
-                            </div>
-
-                            <p className="text-[11px] text-gray-500 mt-1">
-                              👥 {volunteersCount}{' '}
-                              {volunteersCount === 1 ? 'servidor activo' : 'servidores activos'}
-                            </p>
-                          </div>
-
-                          <div className="flex items-center gap-2 pt-2 border-t border-gray-200/60">
-                            <Button
-                              onClick={() => handleOpenRosterDrawer(team)}
-                              size="sm"
-                              variant="default"
-                              className="flex-1 text-xs py-1.5 gap-1"
-                            >
-                              <Users size={13} /> Ver Plantilla ({teamAssignments.length})
-                            </Button>
-                            <Button
-                              onClick={() => handleOpenAssignDrawer(VolunteerRole.VOLUNTEER, team.id)}
-                              size="sm"
-                              className="text-xs py-1.5 px-2.5 gap-1"
-                              title="Agregar servidor"
-                            >
-                              <Plus size={13} />
-                            </Button>
-                          </div>
+                return (
+                  <div
+                    key={area.id}
+                    className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden transition-all"
+                  >
+                    {/* Collapsible Area Header (closed by default) */}
+                    <button
+                      type="button"
+                      onClick={() => toggleAreaExpanded(area.id)}
+                      className="w-full p-3.5 sm:p-4 flex items-center justify-between gap-3 text-left hover:bg-slate-50/70 transition-colors cursor-pointer select-none"
+                      aria-expanded={isExpanded}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 border border-teal-200 flex items-center justify-center shrink-0">
+                          <Layers size={14} />
                         </div>
-                      );
-                    })}
+                        <div className="min-w-0">
+                          <h3 className="text-xs sm:text-sm font-bold text-gray-900 uppercase tracking-wide truncate">
+                            {area.name}
+                          </h3>
+                          <p className="text-[11px] text-gray-500 font-medium">
+                            {teams.length} {teams.length === 1 ? 'equipo' : 'equipos'} • {areaTotalMembers}{' '}
+                            {areaTotalMembers === 1 ? 'miembro' : 'miembros'}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[11px] font-semibold text-gray-400 hidden sm:inline">
+                          {isExpanded ? 'Ocultar' : 'Ver equipos'}
+                        </span>
+                        <div
+                          className={clsx(
+                            'w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 bg-slate-100 transition-transform duration-200',
+                            isExpanded && 'rotate-180 text-gray-700 bg-slate-200/80',
+                          )}
+                        >
+                          <ChevronDown size={16} />
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Area Teams Content (shown when expanded) */}
+                    {isExpanded && (
+                      <div className="p-3.5 sm:p-4 pt-0 border-t border-gray-100">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+                          {teams.map((team) => {
+                            const group =
+                              groups.find((g) => g.id === team.ministryGroupConfigId) ||
+                              team.ministryGroupConfig;
+                            const teamAssignments = campusTeamAssignments.filter(
+                              (a) => a.serviceAreaGroupId === team.id,
+                            );
+                            const supervisors = sortAssignmentsByName(
+                              teamAssignments.filter((a) => a.role === VolunteerRole.SUPERVISOR),
+                            );
+                            const volunteersCount = teamAssignments.filter(
+                              (a) => a.role === VolunteerRole.VOLUNTEER,
+                            ).length;
+
+                            return (
+                              <div
+                                key={team.id}
+                                className="p-3.5 rounded-xl border border-gray-200/80 bg-slate-50/40 hover:bg-slate-50 transition-all flex flex-col justify-between gap-3"
+                              >
+                                <div>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <span className="text-xs font-extrabold text-primary">
+                                      {group?.name ?? 'Grupo desconocido'}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 shrink-0">
+                                      {teamAssignments.length} miembros
+                                    </span>
+                                  </div>
+
+                                  {/* Supervisor Status - Shows ALL assigned supervisors sorted alphabetically */}
+                                  <div className="mt-2 text-xs">
+                                    {supervisors.length > 0 ? (
+                                      <div className="flex flex-col gap-1">
+                                        {supervisors.map((sup) => {
+                                          const supervisorName =
+                                            getVolunteerName(sup) || 'Supervisor asignado';
+
+                                          return (
+                                            <div
+                                              key={sup.id}
+                                              className="flex items-center gap-1.5 text-gray-700 font-medium truncate"
+                                            >
+                                              <ShieldCheck size={13} className="text-indigo-600 shrink-0" />
+                                              <span className="truncate">Sup: {supervisorName}</span>
+                                            </div>
+                                          );
+                                        })}
+                                      </div>
+                                    ) : (
+                                      <div className="flex items-center gap-1.5 text-amber-700 font-semibold">
+                                        <AlertCircle size={13} className="shrink-0" />
+                                        <span>Sin supervisor asignado</span>
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <p className="text-[11px] text-gray-500 mt-1">
+                                    👥 {volunteersCount}{' '}
+                                    {volunteersCount === 1 ? 'servidor activo' : 'servidores activos'}
+                                  </p>
+                                </div>
+
+                                <div className="flex items-center gap-2 pt-2 border-t border-gray-200/60">
+                                  <Button
+                                    onClick={() => handleOpenRosterDrawer(team)}
+                                    size="sm"
+                                    variant="default"
+                                    className="flex-1 text-xs py-1.5 gap-1"
+                                  >
+                                    <Users size={13} /> Ver Plantilla ({teamAssignments.length})
+                                  </Button>
+                                  <Button
+                                    onClick={() => handleOpenAssignDrawer(VolunteerRole.VOLUNTEER, team.id)}
+                                    size="sm"
+                                    className="text-xs py-1.5 px-2.5 gap-1"
+                                    title="Agregar servidor"
+                                  >
+                                    <Plus size={13} />
+                                  </Button>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
@@ -818,7 +862,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
               </div>
             ) : (
               <div className="flex flex-col gap-2">
-                {ministryCoordinators.map((c) => renderPersonItem(c, 'Coordinador General'))}
+                {sortAssignmentsByName(ministryCoordinators).map((c) =>
+                  renderPersonItem(c, 'Coordinador General'),
+                )}
               </div>
             )}
           </div>
@@ -872,7 +918,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                           Sin coordinador de área asignado.
                         </p>
                       ) : (
-                        assigned.map((a) => renderPersonItem(a, 'Coord. Área'))
+                        sortAssignmentsByName(assigned).map((a) =>
+                          renderPersonItem(a, 'Coord. Área'),
+                        )
                       )}
                     </div>
                   );
@@ -932,7 +980,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                           Sin coordinador de grupo asignado.
                         </p>
                       ) : (
-                        assigned.map((g) => renderPersonItem(g, 'Coord. Grupo'))
+                        sortAssignmentsByName(assigned).map((g) =>
+                          renderPersonItem(g, 'Coord. Grupo'),
+                        )
                       )}
                     </div>
                   );
@@ -940,147 +990,6 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
               </div>
             )}
           </div>
-        </div>
-      )}
-
-      {/* ========================================================================= */}
-      {/* SUB-VIEW 3: DIRECTORIO PAGINADO DEL MINISTERIO */}
-      {/* ========================================================================= */}
-      {activeSubTab === 'directory' && (
-        <div className="flex flex-col gap-3">
-          {/* Search & Filter header */}
-          <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex flex-col gap-3">
-            <Input
-              placeholder="Buscar voluntario por nombre, documento o teléfono..."
-              value={directorySearch}
-              onChange={(e) => setDirectorySearch(e.target.value)}
-              icon="search"
-              className="text-xs"
-            />
-
-            {/* Role Filter Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              {DIRECTORY_ROLE_FILTERS.map((f) => (
-                <button
-                  key={f.value}
-                  type="button"
-                  onClick={() => setDirectoryRoleFilter(f.value)}
-                  className={clsx(
-                    'text-xs font-semibold px-3 py-1 rounded-full shrink-0 transition-all cursor-pointer',
-                    directoryRoleFilter === f.value
-                      ? 'bg-primary text-white shadow-2xs'
-                      : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
-                  )}
-                >
-                  {f.label}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Directory List */}
-          {loadingVolunteers && volunteersList.length === 0 ? (
-            <CellListSkeleton count={5} />
-          ) : volunteersList.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-2 shadow-xs">
-              <Inbox size={24} className="text-gray-400" />
-              <p className="text-xs text-gray-500">
-                No se encontraron voluntarios con los filtros seleccionados.
-              </p>
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2.5">
-              {volunteersList.map((vol) => {
-                const user = vol.user;
-                const name =
-                  user && (user.firstName || user.lastName)
-                    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-                    : 'Voluntario';
-                const nationalId = user?.nationalId;
-                const phone = user?.phone;
-                const photoUrl = user?.photoUrl;
-                const isActive = user?.state === UserState.ACTIVE;
-
-                return (
-                  <div
-                    key={vol.id}
-                    className="bg-white rounded-2xl p-3.5 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-gray-300 transition-all"
-                  >
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 border border-gray-200 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
-                        {photoUrl ? (
-                          <img src={photoUrl} alt={name} className="w-full h-full object-cover" />
-                        ) : (
-                          <UserIcon size={18} />
-                        )}
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-xs sm:text-sm font-bold text-gray-900 truncate">
-                            {name}
-                          </p>
-                          <span
-                            className={clsx(
-                              'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                              isActive
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                                : 'bg-gray-100 text-gray-600 border border-gray-200',
-                            )}
-                          >
-                            {isActive ? (
-                              <>
-                                <CheckCircle2 size={10} /> Activo
-                              </>
-                            ) : (
-                              'Inactivo'
-                            )}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2 text-[11px] text-gray-500 mt-0.5 flex-wrap">
-                          {nationalId && <span>Doc: {nationalId}</span>}
-                          {phone && (
-                            <span className="inline-flex items-center gap-0.5">
-                              <Phone size={10} className="text-gray-400" /> {phone}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      onClick={() => handleOpenAssignDrawer(undefined, undefined)}
-                      size="sm"
-                      variant="default"
-                      className="text-xs py-1.5 px-3 gap-1 shrink-0"
-                    >
-                      <Plus size={13} /> Asignar Rol
-                    </Button>
-                  </div>
-                );
-              })}
-
-              {/* Pagination / Load More */}
-              {currentPage < totalPages && (
-                <div className="flex justify-center pt-2 pb-4">
-                  <Button
-                    onClick={handleLoadMoreVolunteers}
-                    disabled={loadingMore}
-                    variant="default"
-                    size="sm"
-                    className="text-xs gap-1.5"
-                  >
-                    {loadingMore ? (
-                      <>
-                        <Loader2 className="animate-spin" size={14} /> Cargando más...
-                      </>
-                    ) : (
-                      <>Cargar más voluntarios ({currentPage} de {totalPages})</>
-                    )}
-                  </Button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       )}
 

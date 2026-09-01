@@ -25,7 +25,7 @@ const kidGroupRegisteredSlice = createSlice({
     });
     builder.addCase(GetKidGroupRegistered.rejected, (state, action) => {
       state.data = [];
-      state.error = action.error.message;
+      state.error = (action.payload as any)?.message || action.error.message;
       state.loading = false;
     });
   },

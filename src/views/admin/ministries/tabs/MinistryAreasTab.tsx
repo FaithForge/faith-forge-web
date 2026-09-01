@@ -4,6 +4,7 @@ import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetMinistryAreas } from '@/libs/state/redux/thunks/church/ministry.thunk';
+import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { IMinistryArea } from '@/libs/models';
 import MinistryAreaModal from '../components/MinistryAreaModal';
 import clsx from 'clsx';
@@ -21,6 +22,7 @@ interface MinistryAreasTabProps {
 export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }) => {
   const dispatch = useAppDispatch();
   const { areasByMinistry, loadingAreas } = useAppSelector((state) => state.ministrySlice);
+  const kidGroups = useAppSelector((state) => state.kidGroupSlice.data);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [areaToEdit, setAreaToEdit] = useState<IMinistryArea | null>(null);
@@ -29,7 +31,10 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
 
   useEffect(() => {
     dispatch(GetMinistryAreas({ ministryId, force: false }));
-  }, [dispatch, ministryId]);
+    if (!kidGroups || kidGroups.length === 0) {
+      dispatch(GetKidGroups({ force: false }));
+    }
+  }, [dispatch, ministryId, kidGroups]);
 
   const handleOpenCreate = () => {
     setAreaToEdit(null);
@@ -39,6 +44,31 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
   const handleOpenEdit = (area: IMinistryArea) => {
     setAreaToEdit(area);
     setModalOpen(true);
+  };
+
+  const getAssignedClassroomNames = (area: IMinistryArea): string[] => {
+    const ids: string[] = [];
+    if (area.kidGroupId) ids.push(area.kidGroupId);
+    if (Array.isArray(area.kidGroupIds)) {
+      area.kidGroupIds.forEach((id) => {
+        if (!ids.includes(id)) ids.push(id);
+      });
+    }
+    if (Array.isArray(area.kidGroups)) {
+      area.kidGroups.forEach((kg: any) => {
+        const id = kg.kidGroupId || kg.id;
+        if (id && !ids.includes(id)) ids.push(id);
+      });
+    }
+
+    if (ids.length === 0) return [];
+
+    return ids
+      .map((id) => {
+        const group = (kidGroups || []).find((g) => g.id === id);
+        return group ? group.name : null;
+      })
+      .filter(Boolean) as string[];
   };
 
   return (
@@ -76,55 +106,73 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
         </div>
       ) : (
         <div className="flex flex-col gap-2.5">
-          {areas.map((area) => (
-            <div
-              key={area.id}
-              className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-gray-300 transition-all"
-            >
-              <div className="flex items-start gap-3 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
-                  <Layers size={18} />
-                </div>
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <h3 className="text-sm font-bold text-gray-900 truncate">{area.name}</h3>
-                    <span
-                      className={clsx(
-                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                        area.active
-                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                          : 'bg-gray-100 text-gray-600 border border-gray-200',
-                      )}
-                    >
-                      {area.active ? (
-                        <>
-                          <CheckCircle2 size={10} /> Activa
-                        </>
-                      ) : (
-                        <>
-                          <XCircle size={10} /> Inactiva
-                        </>
-                      )}
-                    </span>
-                  </div>
-                  {area.description && (
-                    <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{area.description}</p>
-                  )}
-                </div>
-              </div>
+          {areas.map((area) => {
+            const classroomNames = getAssignedClassroomNames(area);
+            const hasClassroom =
+              classroomNames.length > 0 ||
+              Boolean(area.kidGroupId) ||
+              (Array.isArray(area.kidGroups) && area.kidGroups.length > 0);
 
-              <div className="flex items-center gap-1 shrink-0">
-                <button
-                  type="button"
-                  onClick={() => handleOpenEdit(area)}
-                  className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-slate-100 transition-colors"
-                  title="Editar Área"
-                >
-                  <Edit2 size={15} />
-                </button>
+            return (
+              <div
+                key={area.id}
+                className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-gray-300 transition-all"
+              >
+                <div className="flex items-start gap-3 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
+                    <Layers size={18} />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h3 className="text-sm font-bold text-gray-900 truncate">{area.name}</h3>
+                      <span
+                        className={clsx(
+                          'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
+                          area.active
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                            : 'bg-gray-100 text-gray-600 border border-gray-200',
+                        )}
+                      >
+                        {area.active ? (
+                          <>
+                            <CheckCircle2 size={10} /> Activa
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={10} /> Inactiva
+                          </>
+                        )}
+                      </span>
+
+                      {/* Classroom Assignment Bullet Badge (Only rendered when assigned) */}
+                      {hasClassroom && (
+                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0" />
+                          {classroomNames.length > 0
+                            ? `Salón: ${classroomNames.join(', ')}`
+                            : 'Salón asignado'}
+                        </span>
+                      )}
+                    </div>
+                    {area.description && (
+                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{area.description}</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(area)}
+                    className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-slate-100 transition-colors cursor-pointer"
+                    title="Editar Área"
+                  >
+                    <Edit2 size={15} />
+                  </button>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

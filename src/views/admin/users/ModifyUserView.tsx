@@ -312,7 +312,7 @@ const ModifyUserView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-28">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
       <PageHeader title="Modificar Usuario" onBack={handleBack} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">

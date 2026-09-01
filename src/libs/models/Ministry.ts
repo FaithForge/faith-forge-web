@@ -13,12 +13,22 @@ export interface IMinistry {
   churchCampus?: IChurchCampus;
 }
 
+export interface IMinistryAreaKidGroupRelation {
+  id: string;
+  ministryAreaId: string;
+  kidGroupId: string;
+  active: boolean;
+}
+
 export interface IMinistryArea {
   id: string;
   ministryId: string;
   name: string;
   description?: string;
   active: boolean;
+  kidGroupId?: string;
+  kidGroupIds?: string[];
+  kidGroups?: IMinistryAreaKidGroupRelation[];
 }
 
 export interface IMinistryGroupConfig {

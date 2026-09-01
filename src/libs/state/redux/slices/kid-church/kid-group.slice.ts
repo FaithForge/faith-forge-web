@@ -27,18 +27,23 @@ const kidGroupSlice = createSlice({
     });
     builder.addCase(GetKidGroups.fulfilled, (state, action) => {
       const incoming = action.payload || [];
-      if (!state.data || state.data.length === 0) {
-        state.data = incoming;
+      if (action.meta.arg?.type) {
+        // Merge only when specifically requesting a sub-type (e.g. SPECIAL)
+        if (!state.data || state.data.length === 0) {
+          state.data = incoming;
+        } else {
+          incoming.forEach((newGroup: any) => {
+            const index = state.data.findIndex((g: any) => g.id === newGroup.id);
+            if (index >= 0) {
+              state.data[index] = newGroup;
+            } else {
+              state.data.push(newGroup);
+            }
+          });
+        }
       } else {
-        // Merge without losing existing groups
-        incoming.forEach((newGroup: any) => {
-          const index = state.data.findIndex((g: any) => g.id === newGroup.id);
-          if (index >= 0) {
-            state.data[index] = newGroup;
-          } else {
-            state.data.push(newGroup);
-          }
-        });
+        // Direct assignment to reflect current user RBAC permissions returned by backend
+        state.data = incoming;
       }
       state.error = undefined;
       state.loading = false;

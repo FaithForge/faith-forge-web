@@ -153,7 +153,7 @@ const AdminDashboard: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-16">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 flex flex-col gap-6">
         {/* Page Header */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">

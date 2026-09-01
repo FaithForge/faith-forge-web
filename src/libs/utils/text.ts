@@ -125,3 +125,24 @@ export const parseEntitySearchParams = (rawText?: string): EntitySearchParams =>
   };
 };
 
+/**
+ * Formats a phone number with its international dial code (defaults to +57 if not provided).
+ * Prevents duplicating the dial code if the number already begins with '+'.
+ *
+ * @param {string} [phone] - The phone number.
+ * @param {string} [dialCode] - The country dial code (e.g. "+57", "57").
+ * @returns {string} The formatted phone string with dial code, or empty string if no phone provided.
+ */
+export const formatPhoneWithDialCode = (phone?: string, dialCode?: string): string => {
+  if (!phone || !phone.trim()) {
+    return '';
+  }
+  const cleanPhone = phone.trim();
+  if (cleanPhone.startsWith('+')) {
+    return cleanPhone;
+  }
+  const rawCode = (dialCode?.trim() || '+57');
+  const formattedCode = rawCode.startsWith('+') ? rawCode : `+${rawCode}`;
+  return `${formattedCode} ${cleanPhone}`;
+};
+

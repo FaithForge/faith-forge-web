@@ -176,7 +176,13 @@ export const GetMinistryAreas = createAsyncThunk(
 export const CreateMinistryArea = createAsyncThunk(
   'church/CreateMinistryArea',
   async (
-    payload: { ministryId: string; name: string; description?: string },
+    payload: {
+      ministryId: string;
+      name: string;
+      description?: string;
+      kidGroupId?: string;
+      kidGroupIds?: string[];
+    },
     { getState, dispatch, rejectWithValue },
   ) => {
     const state = getState() as RootState;
@@ -215,12 +221,22 @@ export const CreateMinistryArea = createAsyncThunk(
  * @param {string} [payload.description] - Area description.
  * @param {boolean} [payload.active] - Active status flag.
  * @param {string} [payload.ministryId] - Optional ministryId to trigger fresh query.
+ * @param {string} [payload.kidGroupId] - Optional classroom ID to associate.
+ * @param {string[]} [payload.kidGroupIds] - Optional classrooms IDs array to associate.
  * @returns {Promise<IMinistryArea>} The updated ministry area.
  */
 export const UpdateMinistryArea = createAsyncThunk(
   'church/UpdateMinistryArea',
   async (
-    payload: { id: string; name?: string; description?: string; active?: boolean; ministryId?: string },
+    payload: {
+      id: string;
+      name?: string;
+      description?: string;
+      active?: boolean;
+      ministryId?: string;
+      kidGroupId?: string;
+      kidGroupIds?: string[];
+    },
     { getState, dispatch, rejectWithValue },
   ) => {
     const { id, ministryId, ...data } = payload;
@@ -491,6 +507,77 @@ export const UpdateServiceAreaGroup = createAsyncThunk(
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Error al actualizar el equipo de servicio');
+    }
+  },
+);
+
+/**
+ * Associates kid groups (classrooms) with a specific ministry area via POST /ministry-area/:id/kid-groups.
+ *
+ * @param {Object} payload - Association payload.
+ * @param {string} payload.ministryAreaId - The ministry area identifier.
+ * @param {string[]} payload.kidGroupIds - Array of kid group IDs to associate.
+ * @returns {Promise<any>} The server response.
+ */
+export const AssignKidGroupsToMinistryArea = createAsyncThunk(
+  'church/AssignKidGroupsToMinistryArea',
+  async (
+    payload: { ministryAreaId: string; kidGroupIds: string[] },
+    { getState, rejectWithValue },
+  ) => {
+    const { ministryAreaId, kidGroupIds } = payload;
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.POST,
+          url: `/ministry-area/${ministryAreaId}/kid-groups`,
+          options: {
+            data: { kidGroupIds },
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al asociar los salones al área');
+    }
+  },
+);
+
+/**
+ * Fetches kid groups associated with a specific ministry area via GET /ministry-area/:id/kid-groups.
+ *
+ * @param {string} ministryAreaId - The ministry area identifier.
+ * @returns {Promise<{ ministryAreaId: string; data: any[] }>} The associated kid groups.
+ */
+export const GetMinistryAreaKidGroups = createAsyncThunk(
+  'church/GetMinistryAreaKidGroups',
+  async (ministryAreaId: string, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: `/ministry-area/${ministryAreaId}/kid-groups`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return { ministryAreaId, data: response };
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al obtener los salones del área');
     }
   },
 );

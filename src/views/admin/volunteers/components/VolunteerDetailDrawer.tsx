@@ -15,6 +15,7 @@ import {
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import { toast } from 'sonner';
 import {
   User as UserIcon,
@@ -153,7 +154,12 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
               {user?.phone && (
                 <div className="flex items-center gap-1.5">
                   <Phone size={12} className="text-gray-400" />
-                  <span>{user.phone}</span>
+                  <span>
+                    {formatPhoneWithDialCode(
+                      user.phone,
+                      user.dialCodePhone || (user as any).dialCode,
+                    )}
+                  </span>
                 </div>
               )}
               {user?.email && (

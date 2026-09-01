@@ -10,6 +10,7 @@ import {
   FileText,
   MapPin,
   Filter,
+  SlidersHorizontal,
   RotateCcw,
   Loader2,
   X,
@@ -18,6 +19,7 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import AppDrawer from '@/components/ui/AppDrawer';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -30,6 +32,7 @@ import {
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { GetVolunteersPayload, IVolunteer, VolunteerRole } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
+import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
 import VolunteerDetailDrawer from './components/VolunteerDetailDrawer';
 import clsx from 'clsx';
@@ -70,7 +73,7 @@ const VolunteerDirectoryView: React.FC = () => {
 
   const churchId = import.meta.env.VITE_CHURCH_ID;
 
-  const { ministries } = useAppSelector((state) => state.ministrySlice);
+  const { ministries, areasByMinistry } = useAppSelector((state) => state.ministrySlice);
   const campuses = useAppSelector((state) => state.churchCampusSlice.data);
   const {
     volunteers: { data: volunteers, currentPage, totalPages, loading, loadingMore },
@@ -89,6 +92,14 @@ const VolunteerDirectoryView: React.FC = () => {
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState<IVolunteer | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+
+  const activeCategoryFilterCount =
+    (selectedMinistryFilter !== 'ALL' ? 1 : 0) +
+    (selectedCampusFilter !== 'ALL' ? 1 : 0) +
+    (selectedRoleFilter !== 'ALL' ? 1 : 0) +
+    (selectedStatusFilter !== 'ALL' ? 1 : 0);
 
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
@@ -214,7 +225,7 @@ const VolunteerDirectoryView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-20">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
       <PageHeader
         title="Directorio de Servidores"
         onBack={() => navigate(APP_ROUTES.admin.root)}
@@ -260,152 +271,215 @@ const VolunteerDirectoryView: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar */}
-        <Input
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          placeholder="Buscar por nombre o número de documento..."
-          icon="search"
-          onClear={() => setSearchText('')}
-        />
-
-        {/* Filter Category Pills */}
-        <div className="flex flex-col gap-2.5">
-          {/* Ministry Filter Pills */}
-          <div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-              Ministerio
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              <button
-                type="button"
-                onClick={() => setSelectedMinistryFilter('ALL')}
+        {/* Search Bar + Filter Modal Trigger */}
+        <div className="flex items-center gap-2">
+          <div className="flex-1 min-w-0">
+            <Input
+              value={searchText}
+              onChange={(e) => setSearchText(e.target.value)}
+              placeholder="Buscar por nombre o número de documento..."
+              icon="search"
+              onClear={() => setSearchText('')}
+              wrapperClassName="mb-0"
+            />
+          </div>
+          <button
+            type="button"
+            onClick={() => setFilterDrawerOpen(true)}
+            className={clsx(
+              'h-11 px-3.5 rounded-xl border flex items-center justify-center gap-1.5 font-bold text-xs transition-all active:scale-95 shrink-0 cursor-pointer shadow-2xs',
+              activeCategoryFilterCount > 0
+                ? 'bg-primary text-white border-primary shadow-xs'
+                : 'bg-white text-gray-700 border-gray-200 hover:bg-slate-50',
+            )}
+            title="Abrir filtros"
+          >
+            <SlidersHorizontal size={16} />
+            <span className="hidden sm:inline">Filtros</span>
+            {activeCategoryFilterCount > 0 && (
+              <span
                 className={clsx(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
-                  selectedMinistryFilter === 'ALL'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
+                  'w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black',
+                  activeCategoryFilterCount > 0
+                    ? 'bg-white text-primary'
+                    : 'bg-primary text-white',
                 )}
               >
-                Todos los Ministerios
-              </button>
-              {ministries.map((m) => {
-                const isSelected = selectedMinistryFilter === m.id;
-                return (
-                  <button
-                    key={m.id}
-                    type="button"
-                    onClick={() => setSelectedMinistryFilter(m.id)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
-                      isSelected
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
-                    )}
-                  >
-                    {m.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Campus Filter Pills */}
-          <div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-              Sede
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              <button
-                type="button"
-                onClick={() => setSelectedCampusFilter('ALL')}
-                className={clsx(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1',
-                  selectedCampusFilter === 'ALL'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
-                )}
-              >
-                <MapPin size={12} />
-                Todas las Sedes
-              </button>
-              {campuses.map((c) => {
-                const isSelected = selectedCampusFilter === c.id;
-                return (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => setSelectedCampusFilter(c.id)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1',
-                      isSelected
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
-                    )}
-                  >
-                    <MapPin size={12} />
-                    {c.name}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Role Filter Pills */}
-          <div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-              Rol de Servicio
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              {ROLE_FILTERS.map((rf) => {
-                const isSelected = selectedRoleFilter === rf.value;
-                return (
-                  <button
-                    key={rf.value}
-                    type="button"
-                    onClick={() => setSelectedRoleFilter(rf.value)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1',
-                      isSelected
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
-                    )}
-                  >
-                    <Shield size={12} />
-                    {rf.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Status Filter Pills */}
-          <div>
-            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
-              Estado
-            </span>
-            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-              {STATUS_FILTERS.map((sf) => {
-                const isSelected = selectedStatusFilter === sf.value;
-                return (
-                  <button
-                    key={sf.value}
-                    type="button"
-                    onClick={() => setSelectedStatusFilter(sf.value)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
-                      isSelected
-                        ? 'bg-primary text-white shadow-xs'
-                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
-                    )}
-                  >
-                    {sf.label}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+                {activeCategoryFilterCount}
+              </span>
+            )}
+          </button>
         </div>
+
+        {/* Filter Modal Drawer */}
+        <AppDrawer
+          open={filterDrawerOpen}
+          onOpenChange={setFilterDrawerOpen}
+          title="Filtros de Servidores"
+          icon={<SlidersHorizontal className="text-primary" size={20} />}
+        >
+          <div className="flex flex-col gap-4 p-4 max-h-[75vh] overflow-y-auto">
+            {/* Ministry Filter */}
+            <div className="flex flex-col gap-1.5">
+              <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Ministerio
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMinistryFilter('ALL')}
+                  className={clsx(
+                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                    selectedMinistryFilter === 'ALL'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
+                  )}
+                >
+                  Todos los Ministerios
+                </button>
+                {ministries.map((m) => {
+                  const isSelected = selectedMinistryFilter === m.id;
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => setSelectedMinistryFilter(m.id)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                        isSelected
+                          ? 'bg-primary text-white shadow-xs'
+                          : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
+                      )}
+                    >
+                      {m.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Campus Filter */}
+            <div className="flex flex-col gap-1.5 pt-3 border-t border-gray-100">
+              <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Sede
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSelectedCampusFilter('ALL')}
+                  className={clsx(
+                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
+                    selectedCampusFilter === 'ALL'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
+                  )}
+                >
+                  <MapPin size={12} />
+                  Todas las Sedes
+                </button>
+                {campuses.map((c) => {
+                  const isSelected = selectedCampusFilter === c.id;
+                  return (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => setSelectedCampusFilter(c.id)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
+                        isSelected
+                          ? 'bg-primary text-white shadow-xs'
+                          : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
+                      )}
+                    >
+                      <MapPin size={12} />
+                      {c.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Role Filter */}
+            <div className="flex flex-col gap-1.5 pt-3 border-t border-gray-100">
+              <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Rol de Servicio
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {ROLE_FILTERS.map((rf) => {
+                  const isSelected = selectedRoleFilter === rf.value;
+                  return (
+                    <button
+                      key={rf.value}
+                      type="button"
+                      onClick={() => setSelectedRoleFilter(rf.value)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer',
+                        isSelected
+                          ? 'bg-primary text-white shadow-xs'
+                          : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
+                      )}
+                    >
+                      <Shield size={12} />
+                      {rf.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex flex-col gap-1.5 pt-3 border-t border-gray-100">
+              <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
+                Estado
+              </span>
+              <div className="flex flex-wrap gap-1.5">
+                {STATUS_FILTERS.map((sf) => {
+                  const isSelected = selectedStatusFilter === sf.value;
+                  return (
+                    <button
+                      key={sf.value}
+                      type="button"
+                      onClick={() => setSelectedStatusFilter(sf.value)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer',
+                        isSelected
+                          ? 'bg-primary text-white shadow-xs'
+                          : 'bg-slate-100 text-gray-600 hover:bg-slate-200',
+                      )}
+                    >
+                      {sf.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Drawer Bottom Actions */}
+            <div className="pt-3 border-t border-gray-100 flex items-center gap-2">
+              <Button
+                type="button"
+                variant="default"
+                className="flex-1 text-xs"
+                onClick={() => {
+                  setSelectedMinistryFilter('ALL');
+                  setSelectedCampusFilter('ALL');
+                  setSelectedRoleFilter('ALL');
+                  setSelectedStatusFilter('ALL');
+                }}
+                disabled={activeCategoryFilterCount === 0}
+              >
+                Limpiar Filtros
+              </Button>
+              <Button
+                type="button"
+                className="flex-1 text-xs"
+                onClick={() => setFilterDrawerOpen(false)}
+              >
+                Ver Resultados
+              </Button>
+            </div>
+          </div>
+        </AppDrawer>
 
         {/* Active Filters Summary */}
         {hasActiveFilters && (
@@ -571,7 +645,12 @@ const VolunteerDirectoryView: React.FC = () => {
                           {user?.phone && (
                             <span className="flex items-center gap-1">
                               <Phone size={11} className="text-gray-400" />
-                              <span>{user.phone}</span>
+                              <span>
+                                {formatPhoneWithDialCode(
+                                  user.phone,
+                                  user.dialCodePhone || (user as any).dialCode,
+                                )}
+                              </span>
                             </span>
                           )}
                         </div>
@@ -603,6 +682,21 @@ const VolunteerDirectoryView: React.FC = () => {
                                 campuses.find((c) => c.id === campusId)?.name;
                               const roleLabel = ROLE_LABEL_SHORT[a.role] || a.role;
 
+                              const targetAreaId = a.ministryAreaId || a.serviceAreaGroup?.ministryAreaId;
+                              const fallbackArea = targetAreaId
+                                ? Object.values(areasByMinistry)
+                                    .flat()
+                                    .find((ar) => ar.id === targetAreaId)?.name
+                                : undefined;
+                              const areaName =
+                                a.ministryArea?.name ||
+                                a.serviceAreaGroup?.ministryArea?.name ||
+                                fallbackArea;
+
+                              const ministryAreaDisplay = areaName
+                                ? `${ministryName} (${areaName}):`
+                                : `${ministryName}:`;
+
                               return (
                                 <span
                                   key={a.id}
@@ -616,7 +710,7 @@ const VolunteerDirectoryView: React.FC = () => {
                                     </>
                                   )}
                                   <span className="text-primary font-extrabold">
-                                    {ministryName}:
+                                    {ministryAreaDisplay}
                                   </span>{' '}
                                   {roleLabel}
                                 </span>

@@ -309,7 +309,7 @@ const UpdateUserView: React.FC = () => {
 
   if (isLoadingUser) {
     return (
-      <div className="min-h-screen bg-slate-50/60 pb-20">
+      <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
         <PageHeader title="Editar Usuario" onBack={handleBack} />
         <div className="flex justify-center items-center py-24">
           <Loader2 className="animate-spin text-primary" size={32} />
@@ -319,7 +319,7 @@ const UpdateUserView: React.FC = () => {
   }
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-28">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
       <PageHeader title="Editar Usuario" onBack={handleBack} />
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">

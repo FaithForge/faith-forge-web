@@ -123,7 +123,7 @@ const UserDetailView: React.FC = () => {
   const roleToDeleteMeta = roleToDelete ? ALL_SYSTEM_ROLES_METADATA[roleToDelete] : null;
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-20">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
       <PageHeader
         title="Perfil de Usuario"
         onBack={() => navigate(APP_ROUTES.admin.users)}

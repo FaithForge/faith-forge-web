@@ -9,6 +9,7 @@ import {
   VolunteerRole,
 } from '@/libs/models';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import {
   ShieldCheck,
   Award,
@@ -70,15 +71,34 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
     return assignments.filter((a) => a.serviceAreaGroupId === team.id);
   }, [assignments, team]);
 
-  // Supervisors
-  const supervisors = useMemo(() => {
-    return teamAssignments.filter((a) => a.role === VolunteerRole.SUPERVISOR);
-  }, [teamAssignments]);
+  const getPersonName = React.useCallback(
+    (asg: IVolunteerAssignment): string => {
+      const vId = asg.volunteerId || asg.ministryVolunteerId;
+      const vol =
+        asg.volunteer ||
+        asg.ministryVolunteer ||
+        volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
+      const user = asg.volunteer?.user || vol?.user;
+      return user && (user.firstName || user.lastName)
+        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+        : '';
+    },
+    [volunteersList],
+  );
 
-  // Volunteers / Teachers
+  // Supervisors (sorted alphabetically)
+  const supervisors = useMemo(() => {
+    return teamAssignments
+      .filter((a) => a.role === VolunteerRole.SUPERVISOR)
+      .sort((a, b) => getPersonName(a).localeCompare(getPersonName(b), 'es', { sensitivity: 'base' }));
+  }, [teamAssignments, getPersonName]);
+
+  // Volunteers / Teachers (sorted alphabetically)
   const volunteers = useMemo(() => {
-    return teamAssignments.filter((a) => a.role === VolunteerRole.VOLUNTEER);
-  }, [teamAssignments]);
+    return teamAssignments
+      .filter((a) => a.role === VolunteerRole.VOLUNTEER)
+      .sort((a, b) => getPersonName(a).localeCompare(getPersonName(b), 'es', { sensitivity: 'base' }));
+  }, [teamAssignments, getPersonName]);
 
   // Filter volunteers by local search
   const filteredVolunteers = useMemo(() => {
@@ -86,6 +106,7 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
     const query = searchText.toLowerCase().trim();
 
     return volunteers.filter((asg) => {
+      const fullName = getPersonName(asg).toLowerCase();
       const vId = asg.volunteerId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
@@ -93,7 +114,6 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
         volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
       const user = asg.volunteer?.user || vol?.user;
 
-      const fullName = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.toLowerCase();
       const nationalId = user?.nationalId?.toLowerCase() || '';
       const phone = user?.phone?.toLowerCase() || '';
 
@@ -101,7 +121,7 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
         fullName.includes(query) || nationalId.includes(query) || phone.includes(query)
       );
     });
-  }, [volunteers, searchText, volunteersList]);
+  }, [volunteers, searchText, getPersonName, volunteersList]);
 
   const renderPersonRow = (asg: IVolunteerAssignment, roleLabel: string) => {
     const vId = asg.volunteerId || asg.ministryVolunteerId;
@@ -138,7 +158,11 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
               {nationalId && <span>• Doc: {nationalId}</span>}
               {phone && (
                 <span className="inline-flex items-center gap-0.5">
-                  <Phone size={10} className="text-gray-400" /> {phone}
+                  <Phone size={10} className="text-gray-400" />{' '}
+                  {formatPhoneWithDialCode(
+                    phone,
+                    user?.dialCodePhone || (user as any)?.dialCode,
+                  )}
                 </span>
               )}
             </div>

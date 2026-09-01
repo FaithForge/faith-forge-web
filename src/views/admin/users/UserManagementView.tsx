@@ -146,7 +146,7 @@ const UserManagementView: React.FC = () => {
   );
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-20 flex flex-col flex-1">
+    <div className="min-h-full bg-slate-50 pb-20 flex flex-col flex-1">
       <PageHeader
         title="Gestión de Usuarios"
         onBack={() => navigate(APP_ROUTES.admin.root)}

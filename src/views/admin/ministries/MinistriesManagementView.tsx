@@ -100,7 +100,7 @@ const MinistriesManagementView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-full bg-slate-50/60 pb-20">
+    <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
       <PageHeader
         title="Gestión de Ministerios"
         onBack={() => navigate(APP_ROUTES.admin.root)}
