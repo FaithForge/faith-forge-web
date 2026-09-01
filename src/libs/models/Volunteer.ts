@@ -1,4 +1,4 @@
-import { IChurchMeeting } from './Church';
+import { IChurchCampus, IChurchMeeting } from './Church';
 import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup } from './Ministry';
 import { IUser } from './User';
 
@@ -86,5 +86,82 @@ export interface GetVolunteerAttendancePayload {
   attendanceDate?: string;
   from?: string;
   to?: string;
+}
+
+export enum VolunteerApplicationStatus {
+  PENDING = 'PENDING',
+  APPROVED = 'APPROVED',
+  REJECTED = 'REJECTED',
+}
+
+export interface IVolunteerApplication {
+  id: string;
+  userId: string;
+  churchCampusId: string;
+  ministryAreaId: string;
+  ministryGroupConfigId: string;
+  requestedRole: VolunteerRole;
+  status: VolunteerApplicationStatus;
+  reviewedByUserId?: string;
+  reviewedAt?: string | Date;
+  rejectionReason?: string;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  churchCampus?: IChurchCampus;
+  ministryArea?: IMinistryArea;
+  ministryGroupConfig?: IMinistryGroupConfig;
+  user?: Partial<IUser>;
+  reviewedByUser?: Partial<IUser>;
+}
+
+export interface ICheckVolunteerUserResponse {
+  exists: boolean;
+  userId?: string;
+  maskedFirstName?: string;
+  maskedLastName?: string;
+  maskedPhone?: string;
+  maskedEmail?: string;
+}
+
+export interface CreateVolunteerApplicationPayload {
+  userId?: string;
+  firstName?: string;
+  lastName?: string;
+  nationalIdType?: string;
+  nationalId?: string;
+  birthday?: string;
+  gender?: string;
+  dialCodePhone?: string;
+  phone?: string;
+  email?: string;
+  churchCampusId: string;
+  ministryAreaId: string;
+  ministryGroupConfigId: string;
+  requestedRole: VolunteerRole;
+}
+
+export interface GetVolunteerApplicationsPayload {
+  page?: number;
+  limit?: number;
+  order?: 'ASC' | 'DESC';
+  status?: VolunteerApplicationStatus | 'ALL';
+  churchCampusId?: string;
+  ministryAreaId?: string;
+  ministryGroupConfigId?: string;
+  search?: string;
+  force?: boolean;
+}
+
+export interface RejectVolunteerApplicationPayload {
+  id: string;
+  reason?: string;
+}
+
+export interface IPublicVolunteerCatalog {
+  campuses: IChurchCampus[];
+  ministryAreas: IMinistryArea[];
+  ministryGroupConfigs: IMinistryGroupConfig[];
+  serviceAreaGroups?: IServiceAreaGroup[];
+  availableRoles: VolunteerRole[];
 }
 

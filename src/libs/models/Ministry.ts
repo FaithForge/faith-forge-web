@@ -23,20 +23,24 @@ export interface IMinistryAreaKidGroupRelation {
 export interface IMinistryArea {
   id: string;
   ministryId: string;
+  churchCampusId?: string;
   name: string;
   description?: string;
   active: boolean;
   kidGroupId?: string;
   kidGroupIds?: string[];
   kidGroups?: IMinistryAreaKidGroupRelation[];
+  ministry?: IMinistry;
 }
 
 export interface IMinistryGroupConfig {
   id: string;
   ministryId: string;
+  churchCampusId?: string;
   name: string;
   position: number;
   active: boolean;
+  ministry?: IMinistry;
 }
 
 export interface IServiceAreaGroup {

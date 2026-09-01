@@ -34,6 +34,9 @@ const MinistryDetailView = lazy(() => import('@/views/admin/ministries/MinistryD
 const VolunteerDirectoryView = lazy(
   () => import('@/views/admin/volunteers/VolunteerDirectoryView'),
 );
+const VolunteerRequestPublicView = lazy(
+  () => import('@/views/public/VolunteerRequestPublicView'),
+);
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 
 const IndexRedirect = () => {
@@ -78,6 +81,10 @@ function App() {
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path={APP_ROUTES.auth.login} element={<LoginView />} />
+            <Route
+              path={APP_ROUTES.public.volunteerRequest}
+              element={<VolunteerRequestPublicView />}
+            />
             <Route element={<PrivateRoute />}>
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<IndexRedirect />} />

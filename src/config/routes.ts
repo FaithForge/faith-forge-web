@@ -2,6 +2,9 @@ export const APP_ROUTES = {
   auth: {
     login: '/login',
   },
+  public: {
+    volunteerRequest: '/volunteer-request',
+  },
   admin: {
     root: '/admin',
     churchMeetings: '/admin/church-meetings',

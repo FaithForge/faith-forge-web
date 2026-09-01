@@ -35,6 +35,7 @@ import { APP_ROUTES } from '@/config/routes';
 import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
 import VolunteerDetailDrawer from './components/VolunteerDetailDrawer';
+import { VolunteerApplicationsTab } from './components/VolunteerApplicationsTab';
 import clsx from 'clsx';
 
 const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
@@ -94,6 +95,7 @@ const VolunteerDirectoryView: React.FC = () => {
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
   const [filterDrawerOpen, setFilterDrawerOpen] = useState(false);
+  const [activeMainTab, setActiveMainTab] = useState<'DIRECTORY' | 'APPLICATIONS'>('DIRECTORY');
 
   const activeCategoryFilterCount =
     (selectedMinistryFilter !== 'ALL' ? 1 : 0) +
@@ -271,8 +273,42 @@ const VolunteerDirectoryView: React.FC = () => {
           </div>
         </div>
 
-        {/* Search Bar + Filter Modal Trigger */}
-        <div className="flex items-center gap-2">
+        {/* Main Tabs Navigation */}
+        <div className="flex bg-gray-200/70 p-1 rounded-2xl gap-1">
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('DIRECTORY')}
+            className={clsx(
+              'flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer',
+              activeMainTab === 'DIRECTORY'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-500 hover:text-gray-800'
+            )}
+          >
+            <UserIcon size={15} />
+            <span>Directorio de Servidores</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('APPLICATIONS')}
+            className={clsx(
+              'flex-1 py-2 px-3 rounded-xl text-xs sm:text-sm font-bold transition-all text-center flex items-center justify-center gap-1.5 cursor-pointer',
+              activeMainTab === 'APPLICATIONS'
+                ? 'bg-white text-gray-900 shadow-xs'
+                : 'text-gray-500 hover:text-gray-800'
+            )}
+          >
+            <Sparkles size={15} className={activeMainTab === 'APPLICATIONS' ? 'text-emerald-600' : ''} />
+            <span>Registros de Servidores</span>
+          </button>
+        </div>
+
+        {activeMainTab === 'APPLICATIONS' ? (
+          <VolunteerApplicationsTab />
+        ) : (
+          <>
+            {/* Search Bar + Filter Modal Trigger */}
+            <div className="flex items-center gap-2">
           <div className="flex-1 min-w-0">
             <Input
               value={searchText}
@@ -747,6 +783,8 @@ const VolunteerDirectoryView: React.FC = () => {
             )}
           </div>
         </PullToRefresh>
+          </>
+        )}
       </div>
 
       <RegisterVolunteerModal open={registerModalOpen} onOpenChange={setRegisterModalOpen} />
