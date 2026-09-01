@@ -85,6 +85,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
   useModalBackClose(open, () => onOpenChange(false));
 
   const dispatch = useAppDispatch();
+  const campuses = useAppSelector((state) => state.churchCampusSlice.data);
   const { currentVolunteerAssignments, loadingCurrentAssignments } = useAppSelector(
     (state) => state.volunteerSlice,
   );
@@ -192,9 +193,23 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
                 const RoleIcon = roleConfig.icon;
 
                 // Scope description
+                const campus =
+                  asg.serviceAreaGroup?.churchCampus?.name ||
+                  asg.ministry?.churchCampus?.name ||
+                  campuses.find(
+                    (c) =>
+                      c.id ===
+                      (asg.serviceAreaGroup?.churchCampusId ||
+                        asg.churchCampusId ||
+                        asg.ministry?.churchCampusId),
+                  )?.name ||
+                  '';
                 let scopeText = '';
+                if (campus) {
+                  scopeText = `Sede: ${campus} • `;
+                }
                 if (asg.ministry) {
-                  scopeText = asg.ministry.name;
+                  scopeText += asg.ministry.name;
                 }
                 if (asg.ministryArea) {
                   scopeText += ` • Área: ${asg.ministryArea.name}`;
@@ -206,8 +221,8 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
                   const sag = asg.serviceAreaGroup;
                   const areaName = sag.ministryArea?.name ?? '';
                   const groupName = sag.ministryGroupConfig?.name ?? '';
-                  const campusName = sag.churchCampus?.name ?? '';
-                  scopeText = `${areaName} × ${groupName} (${campusName})`;
+                  const campusName = sag.churchCampus?.name ?? campus;
+                  scopeText = `${areaName} × ${groupName}${campusName ? ` (${campusName})` : ''}`;
                 }
 
                 return (

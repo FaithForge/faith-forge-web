@@ -1,15 +1,19 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
-  Users,
   Plus,
-  Search,
   ChevronRight,
   Sparkles,
   Inbox,
   User as UserIcon,
   Phone,
   FileText,
+  MapPin,
+  Filter,
+  RotateCcw,
+  Loader2,
+  X,
+  Shield,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
@@ -17,12 +21,14 @@ import Input from '@/components/ui/Input';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import {
-  GetVolunteers,
+  GetMoreVolunteers,
   GetVolunteerAssignments,
+  GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { IVolunteer, VolunteerRole } from '@/libs/models';
+import { GetVolunteersPayload, IVolunteer, VolunteerRole } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
 import VolunteerDetailDrawer from './components/VolunteerDetailDrawer';
@@ -36,10 +42,25 @@ const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
   [VolunteerRole.VOLUNTEER]: 'Servidor',
 };
 
+const ROLE_FILTERS: { label: string; value: VolunteerRole | 'ALL' }[] = [
+  { label: 'Todos los roles', value: 'ALL' },
+  { label: 'Coordinadores Generales', value: VolunteerRole.MINISTRY_GENERAL_COORDINATOR },
+  { label: 'Coordinadores de Área', value: VolunteerRole.AREA_GENERAL_COORDINATOR },
+  { label: 'Coordinadores de Grupo', value: VolunteerRole.GROUP_COORDINATOR },
+  { label: 'Supervisores', value: VolunteerRole.SUPERVISOR },
+  { label: 'Servidores', value: VolunteerRole.VOLUNTEER },
+];
+
+const STATUS_FILTERS: { label: string; value: 'ALL' | 'ACTIVE' | 'INACTIVE' }[] = [
+  { label: 'Todos los estados', value: 'ALL' },
+  { label: 'Activos', value: 'ACTIVE' },
+  { label: 'Inactivos', value: 'INACTIVE' },
+];
+
 /**
  * Global Volunteers Directory View at /admin/volunteers.
  * Allows administrators to query volunteers across all ministries and campuses,
- * check their cross-ministry roles, and inspect details in a bottom sheet.
+ * check their cross-ministry roles, filter by category pills, and inspect details.
  *
  * @returns {JSX.Element} Rendered volunteer directory.
  */
@@ -50,87 +71,142 @@ const VolunteerDirectoryView: React.FC = () => {
   const churchId = import.meta.env.VITE_CHURCH_ID;
 
   const { ministries } = useAppSelector((state) => state.ministrySlice);
-  const { volunteers, assignments, loadingVolunteers } = useAppSelector(
-    (state) => state.volunteerSlice,
-  );
+  const campuses = useAppSelector((state) => state.churchCampusSlice.data);
+  const {
+    volunteers: { data: volunteers, currentPage, totalPages, loading, loadingMore },
+    assignments,
+  } = useAppSelector((state) => state.volunteerSlice);
 
   const [searchText, setSearchText] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [selectedMinistryFilter, setSelectedMinistryFilter] = useState<string>('ALL');
+  const [selectedCampusFilter, setSelectedCampusFilter] = useState<string>('ALL');
+  const [selectedRoleFilter, setSelectedRoleFilter] = useState<VolunteerRole | 'ALL'>('ALL');
+  const [selectedStatusFilter, setSelectedStatusFilter] = useState<'ALL' | 'ACTIVE' | 'INACTIVE'>(
+    'ALL',
+  );
+
   const [registerModalOpen, setRegisterModalOpen] = useState(false);
   const [selectedVolunteer, setSelectedVolunteer] = useState<IVolunteer | null>(null);
   const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
 
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
+
+  // Debounce search input by 400ms
   useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchText.trim());
+    }, 400);
+    return () => clearTimeout(handler);
+  }, [searchText]);
+
+  // Initial metadata fetch (ministries, campuses, assignments)
+  useEffect(() => {
+    if (campuses.length === 0) {
+      dispatch(GetChurchCampuses());
+    }
     dispatch(GetMinistries({ churchId }));
-    dispatch(GetVolunteers({ force: false }));
     dispatch(GetVolunteerAssignments({ force: false }));
-  }, [dispatch, churchId]);
+  }, [dispatch, churchId, campuses.length]);
+
+  // Build filter query payload helper
+  const getFilterPayload = useCallback(
+    (pageNumber = 1): GetVolunteersPayload => {
+      return {
+        page: pageNumber,
+        limit: 20,
+        order: 'DESC',
+        search: debouncedSearch || undefined,
+        ministryId: selectedMinistryFilter !== 'ALL' ? selectedMinistryFilter : undefined,
+        churchCampusId: selectedCampusFilter !== 'ALL' ? selectedCampusFilter : undefined,
+        role: selectedRoleFilter !== 'ALL' ? selectedRoleFilter : undefined,
+        active:
+          selectedStatusFilter === 'ACTIVE'
+            ? true
+            : selectedStatusFilter === 'INACTIVE'
+              ? false
+              : undefined,
+      };
+    },
+    [
+      debouncedSearch,
+      selectedMinistryFilter,
+      selectedCampusFilter,
+      selectedRoleFilter,
+      selectedStatusFilter,
+    ],
+  );
+
+  // Fetch page 1 when any filter or debounced search changes
+  useEffect(() => {
+    dispatch(GetVolunteers(getFilterPayload(1)));
+  }, [dispatch, getFilterPayload]);
 
   const handleRefresh = async () => {
     await Promise.all([
-      dispatch(GetVolunteers({ force: true })),
+      dispatch(GetVolunteers({ ...getFilterPayload(1), force: true })),
       dispatch(GetVolunteerAssignments({ force: true })),
     ]);
   };
 
-  // Group assignments by volunteerId and userId
+  // Infinite Scroll: Load more volunteers when sentinel enters viewport
+  const handleLoadMore = useCallback(() => {
+    if (loading || loadingMore || currentPage >= totalPages) return;
+    dispatch(GetMoreVolunteers(getFilterPayload(currentPage + 1)));
+  }, [loading, loadingMore, currentPage, totalPages, dispatch, getFilterPayload]);
+
+  useEffect(() => {
+    const target = loadMoreRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && currentPage < totalPages && !loading && !loadingMore) {
+          handleLoadMore();
+        }
+      },
+      { rootMargin: '250px' },
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [handleLoadMore, currentPage, totalPages, loading, loadingMore]);
+
+  // Reset all filters to default
+  const handleResetFilters = () => {
+    setSearchText('');
+    setDebouncedSearch('');
+    setSelectedMinistryFilter('ALL');
+    setSelectedCampusFilter('ALL');
+    setSelectedRoleFilter('ALL');
+    setSelectedStatusFilter('ALL');
+  };
+
+  const hasActiveFilters = Boolean(
+    debouncedSearch ||
+      selectedMinistryFilter !== 'ALL' ||
+      selectedCampusFilter !== 'ALL' ||
+      selectedRoleFilter !== 'ALL' ||
+      selectedStatusFilter !== 'ALL',
+  );
+
+  // Group assignments by volunteerId and userId for badge display
   const assignmentsByVolunteerId = useMemo(() => {
     const map: Record<string, typeof assignments> = {};
     assignments.forEach((asg) => {
       const vId = asg.volunteerId || asg.ministryVolunteerId;
       if (vId) {
-        if (!map[vId]) {
-          map[vId] = [];
-        }
+        if (!map[vId]) map[vId] = [];
         map[vId].push(asg);
       }
       const uId = asg.volunteer?.userId || asg.ministryVolunteer?.userId;
       if (uId) {
-        if (!map[uId]) {
-          map[uId] = [];
-        }
+        if (!map[uId]) map[uId] = [];
         map[uId].push(asg);
       }
     });
     return map;
   }, [assignments]);
-
-  // Filter volunteers based on searchText and selectedMinistryFilter
-  const filteredVolunteers = useMemo(() => {
-    return volunteers.filter((vol) => {
-      const user = vol.user;
-      const fullName = `${user?.firstName ?? ''} ${user?.lastName ?? ''}`.toLowerCase();
-      const nationalId = user?.nationalId?.toLowerCase() ?? '';
-      const phone = user?.phone?.toLowerCase() ?? '';
-
-      // Text search
-      const query = searchText.trim().toLowerCase();
-      const matchesSearch =
-        !query ||
-        fullName.includes(query) ||
-        nationalId.includes(query) ||
-        phone.includes(query);
-
-      if (!matchesSearch) return false;
-
-      // Ministry filter
-      if (selectedMinistryFilter !== 'ALL') {
-        const userAssignments = assignmentsByVolunteerId[vol.id] || [];
-        const hasAssignmentInMinistry = userAssignments.some((a) => {
-          return (
-            a.ministryId === selectedMinistryFilter ||
-            a.ministry?.id === selectedMinistryFilter ||
-            a.ministryArea?.ministryId === selectedMinistryFilter ||
-            a.ministryGroupConfig?.ministryId === selectedMinistryFilter ||
-            a.serviceAreaGroup?.ministryArea?.ministryId === selectedMinistryFilter
-          );
-        });
-        return hasAssignmentInMinistry;
-      }
-
-      return true;
-    });
-  }, [volunteers, searchText, selectedMinistryFilter, assignmentsByVolunteerId]);
 
   const handleOpenDetail = (vol: IVolunteer) => {
     setSelectedVolunteer(vol);
@@ -171,8 +247,8 @@ const VolunteerDirectoryView: React.FC = () => {
 
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">
-              Total: {volunteers.length}{' '}
-              {volunteers.length === 1 ? 'servidor registrado' : 'servidores registrados'}
+              Total cargados: {volunteers.length}{' '}
+              {volunteers.length === 1 ? 'servidor' : 'servidores'}
             </span>
             <Button
               onClick={() => setRegisterModalOpen(true)}
@@ -193,63 +269,256 @@ const VolunteerDirectoryView: React.FC = () => {
           onClear={() => setSearchText('')}
         />
 
-        {/* Ministry Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setSelectedMinistryFilter('ALL')}
-            className={clsx(
-              'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
-              selectedMinistryFilter === 'ALL'
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
-            )}
-          >
-            Todos los Ministerios
-          </button>
-          {ministries.map((m) => {
-            const isSelected = selectedMinistryFilter === m.id;
-            return (
+        {/* Filter Category Pills */}
+        <div className="flex flex-col gap-2.5">
+          {/* Ministry Filter Pills */}
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              Ministerio
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
               <button
-                key={m.id}
                 type="button"
-                onClick={() => setSelectedMinistryFilter(m.id)}
+                onClick={() => setSelectedMinistryFilter('ALL')}
                 className={clsx(
                   'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
-                  isSelected
+                  selectedMinistryFilter === 'ALL'
                     ? 'bg-primary text-white shadow-xs'
                     : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
                 )}
               >
-                {m.name}
+                Todos los Ministerios
               </button>
-            );
-          })}
+              {ministries.map((m) => {
+                const isSelected = selectedMinistryFilter === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => setSelectedMinistryFilter(m.id)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
+                      isSelected
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
+                    )}
+                  >
+                    {m.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Campus Filter Pills */}
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              Sede
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              <button
+                type="button"
+                onClick={() => setSelectedCampusFilter('ALL')}
+                className={clsx(
+                  'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1',
+                  selectedCampusFilter === 'ALL'
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
+                )}
+              >
+                <MapPin size={12} />
+                Todas las Sedes
+              </button>
+              {campuses.map((c) => {
+                const isSelected = selectedCampusFilter === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => setSelectedCampusFilter(c.id)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1',
+                      isSelected
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
+                    )}
+                  >
+                    <MapPin size={12} />
+                    {c.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Role Filter Pills */}
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              Rol de Servicio
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {ROLE_FILTERS.map((rf) => {
+                const isSelected = selectedRoleFilter === rf.value;
+                return (
+                  <button
+                    key={rf.value}
+                    type="button"
+                    onClick={() => setSelectedRoleFilter(rf.value)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all flex items-center gap-1',
+                      isSelected
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
+                    )}
+                  >
+                    <Shield size={12} />
+                    {rf.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Status Filter Pills */}
+          <div>
+            <span className="text-[11px] font-bold text-gray-400 uppercase tracking-wider block mb-1">
+              Estado
+            </span>
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
+              {STATUS_FILTERS.map((sf) => {
+                const isSelected = selectedStatusFilter === sf.value;
+                return (
+                  <button
+                    key={sf.value}
+                    type="button"
+                    onClick={() => setSelectedStatusFilter(sf.value)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all',
+                      isSelected
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-white text-gray-600 border border-gray-200 hover:bg-slate-50',
+                    )}
+                  >
+                    {sf.label}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
+
+        {/* Active Filters Summary */}
+        {hasActiveFilters && (
+          <div className="flex items-center justify-between gap-2 p-3 bg-slate-100/90 rounded-2xl border border-gray-200/90 flex-wrap">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-[11px] font-bold text-gray-500 flex items-center gap-1">
+                <Filter size={12} /> Filtros:
+              </span>
+              {debouncedSearch && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                  Texto: "{debouncedSearch}"
+                  <button
+                    type="button"
+                    onClick={() => setSearchText('')}
+                    className="hover:text-rose-500 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              )}
+              {selectedMinistryFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                  {ministries.find((m) => m.id === selectedMinistryFilter)?.name || 'Ministerio'}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedMinistryFilter('ALL')}
+                    className="hover:text-rose-500 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              )}
+              {selectedCampusFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                  {campuses.find((c) => c.id === selectedCampusFilter)?.name || 'Sede'}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCampusFilter('ALL')}
+                    className="hover:text-rose-500 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              )}
+              {selectedRoleFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                  {ROLE_LABEL_SHORT[selectedRoleFilter] || selectedRoleFilter}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedRoleFilter('ALL')}
+                    className="hover:text-rose-500 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              )}
+              {selectedStatusFilter !== 'ALL' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white border border-gray-200 text-gray-700 shadow-2xs">
+                  {selectedStatusFilter === 'ACTIVE' ? 'Activos' : 'Inactivos'}
+                  <button
+                    type="button"
+                    onClick={() => setSelectedStatusFilter('ALL')}
+                    className="hover:text-rose-500 cursor-pointer"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={handleResetFilters}
+              className="inline-flex items-center gap-1 text-xs font-bold text-primary hover:text-primary/80 shrink-0 cursor-pointer"
+            >
+              <RotateCcw size={12} />
+              <span>Limpiar filtros</span>
+            </button>
+          </div>
+        )}
 
         {/* Volunteers List */}
         <PullToRefresh onRefresh={handleRefresh}>
           <div className="flex flex-col gap-3">
-            {loadingVolunteers && volunteers.length === 0 ? (
+            {loading && volunteers.length === 0 ? (
               <CellListSkeleton count={5} />
-            ) : filteredVolunteers.length === 0 ? (
+            ) : volunteers.length === 0 ? (
               <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
                 <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
                   <Inbox size={24} />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-gray-800">
-                    {searchText
-                      ? 'No se encontraron servidores'
-                      : 'Sin servidores registrados en esta selección'}
+                    {hasActiveFilters
+                      ? 'No se encontraron servidores con los filtros aplicados'
+                      : 'Sin servidores registrados'}
                   </h3>
                   <p className="text-xs text-gray-500 mt-0.5">
-                    {searchText
-                      ? 'Prueba con otro nombre o documento.'
+                    {hasActiveFilters
+                      ? 'Prueba modificando o limpiando los criterios de búsqueda.'
                       : 'Registra usuarios existentes para asignarles responsabilidades.'}
                   </p>
                 </div>
-                {!searchText && (
+                {hasActiveFilters ? (
+                  <Button
+                    onClick={handleResetFilters}
+                    size="sm"
+                    variant="secondary"
+                    className="mt-2 text-xs gap-1.5"
+                  >
+                    <RotateCcw size={14} /> Limpiar filtros
+                  </Button>
+                ) : (
                   <Button
                     onClick={() => setRegisterModalOpen(true)}
                     size="sm"
@@ -260,7 +529,7 @@ const VolunteerDirectoryView: React.FC = () => {
                 )}
               </div>
             ) : (
-              filteredVolunteers.map((volunteer) => {
+              volunteers.map((volunteer) => {
                 const user = volunteer.user;
                 const name =
                   user && (user.firstName || user.lastName)
@@ -280,7 +549,11 @@ const VolunteerDirectoryView: React.FC = () => {
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-11 h-11 rounded-full bg-slate-100 border border-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden mt-0.5">
                         {user?.photoUrl ? (
-                          <img src={user.photoUrl} alt={name} className="w-full h-full object-cover" />
+                          <img
+                            src={user.photoUrl}
+                            alt={name}
+                            className="w-full h-full object-cover"
+                          />
                         ) : (
                           <UserIcon size={18} />
                         )}
@@ -311,23 +584,40 @@ const VolunteerDirectoryView: React.FC = () => {
                             </span>
                           ) : (
                             userAssignments.map((a) => {
-                              const ministryName =
-                                a.ministry?.name ||
+                              const matchedMinistry =
+                                a.ministry ||
                                 ministries.find(
                                   (m) =>
                                     m.id ===
                                     (a.ministryId ||
                                       a.ministryArea?.ministryId ||
                                       a.serviceAreaGroup?.ministryArea?.ministryId),
-                                )?.name ||
-                                'Ministerio';
+                                );
+                              const ministryName = matchedMinistry?.name || 'Ministerio';
+                              const campusId =
+                                a.serviceAreaGroup?.churchCampusId ||
+                                a.churchCampusId ||
+                                matchedMinistry?.churchCampusId;
+                              const campusName =
+                                a.serviceAreaGroup?.churchCampus?.name ||
+                                campuses.find((c) => c.id === campusId)?.name;
                               const roleLabel = ROLE_LABEL_SHORT[a.role] || a.role;
+
                               return (
                                 <span
                                   key={a.id}
                                   className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 text-slate-700 border border-slate-200/80"
                                 >
-                                  <span className="text-primary font-extrabold">{ministryName}:</span>{' '}
+                                  {campusName && (
+                                    <>
+                                      <MapPin size={9} className="text-indigo-600 shrink-0" />
+                                      <span className="text-indigo-900 font-semibold">{campusName}</span>
+                                      <span className="text-gray-300">•</span>
+                                    </>
+                                  )}
+                                  <span className="text-primary font-extrabold">
+                                    {ministryName}:
+                                  </span>{' '}
                                   {roleLabel}
                                 </span>
                               );
@@ -344,14 +634,28 @@ const VolunteerDirectoryView: React.FC = () => {
                 );
               })
             )}
+
+            {/* Infinite Scroll Sentinel & Load More Spinner */}
+            {!loading && volunteers.length > 0 && (
+              <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
+                {loadingMore && (
+                  <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
+                    <Loader2 size={18} className="animate-spin text-primary" />
+                    <span>Cargando más servidores...</span>
+                  </div>
+                )}
+                {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
+                  <p className="text-xs font-medium text-gray-400 py-3">
+                    Hemos llegado al final de la lista
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         </PullToRefresh>
       </div>
 
-      <RegisterVolunteerModal
-        open={registerModalOpen}
-        onOpenChange={setRegisterModalOpen}
-      />
+      <RegisterVolunteerModal open={registerModalOpen} onOpenChange={setRegisterModalOpen} />
 
       <VolunteerDetailDrawer
         open={detailDrawerOpen}

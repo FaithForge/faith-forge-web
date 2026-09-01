@@ -133,6 +133,7 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
         onOpenChange={setModalOpen}
         ministryId={ministryId}
         areaToEdit={areaToEdit}
+        onSuccess={() => dispatch(GetMinistryAreas({ ministryId, force: true }))}
       />
     </div>
   );

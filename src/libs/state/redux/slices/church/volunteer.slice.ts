@@ -1,8 +1,9 @@
-import { IVolunteer, IVolunteerAssignment } from '@/libs/models';
+import { IVolunteer, IVolunteerAssignment, PaginationResponse } from '@/libs/models';
 import {
   CreateVolunteer,
   CreateVolunteerAssignment,
   DeleteVolunteerAssignment,
+  GetMoreVolunteers,
   GetVolunteerAssignments,
   GetVolunteers,
   GetVolunteerWithAssignments,
@@ -10,12 +11,21 @@ import {
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
+export interface VolunteersState {
+  data: IVolunteer[];
+  currentPage: number;
+  totalPages: number;
+  loading: boolean;
+  loadingMore: boolean;
+  error: string | null;
+}
+
 export interface VolunteerSliceState {
-  volunteers: IVolunteer[];
-  loadingVolunteers: boolean;
-  errorVolunteers: string | null;
+  volunteers: VolunteersState;
 
   assignments: IVolunteerAssignment[];
+  assignmentsByPartition: Record<string, IVolunteerAssignment[]>;
+  loadingByPartition: Record<string, boolean>;
   loadingAssignments: boolean;
   errorAssignments: string | null;
 
@@ -28,11 +38,18 @@ export interface VolunteerSliceState {
 }
 
 const initialState: VolunteerSliceState = {
-  volunteers: [],
-  loadingVolunteers: false,
-  errorVolunteers: null,
+  volunteers: {
+    data: [],
+    currentPage: 1,
+    totalPages: 0,
+    loading: false,
+    loadingMore: false,
+    error: null,
+  },
 
   assignments: [],
+  assignmentsByPartition: {},
+  loadingByPartition: {},
   loadingAssignments: false,
   errorAssignments: null,
 
@@ -52,8 +69,12 @@ export const volunteerSlice = createSlice({
       state.currentVolunteerAssignments = [];
       state.errorCurrentAssignments = null;
     },
+    clearPartitionAssignments: (state, action: PayloadAction<string>) => {
+      delete state.assignmentsByPartition[action.payload];
+      delete state.loadingByPartition[action.payload];
+    },
     resetVolunteerErrors: (state) => {
-      state.errorVolunteers = null;
+      state.volunteers.error = null;
       state.errorAssignments = null;
       state.errorCurrentAssignments = null;
       state.errorAction = null;
@@ -65,16 +86,40 @@ export const volunteerSlice = createSlice({
     // -------------------------------------------------------------------------
     builder
       .addCase(GetVolunteers.pending, (state) => {
-        state.loadingVolunteers = true;
-        state.errorVolunteers = null;
+        state.volunteers.loading = true;
+        state.volunteers.error = null;
       })
-      .addCase(GetVolunteers.fulfilled, (state, action: PayloadAction<IVolunteer[]>) => {
-        state.loadingVolunteers = false;
-        state.volunteers = action.payload;
-      })
+      .addCase(
+        GetVolunteers.fulfilled,
+        (state, action: PayloadAction<PaginationResponse<IVolunteer>>) => {
+          state.volunteers.loading = false;
+          state.volunteers.data = action.payload.data;
+          state.volunteers.currentPage = action.payload.currentPage;
+          state.volunteers.totalPages = action.payload.totalPages;
+        },
+      )
       .addCase(GetVolunteers.rejected, (state, action) => {
-        state.loadingVolunteers = false;
-        state.errorVolunteers = (action.payload as string) || 'Error al obtener voluntarios';
+        state.volunteers.loading = false;
+        state.volunteers.error = (action.payload as string) || 'Error al obtener voluntarios';
+      });
+
+    builder
+      .addCase(GetMoreVolunteers.pending, (state) => {
+        state.volunteers.loadingMore = true;
+      })
+      .addCase(
+        GetMoreVolunteers.fulfilled,
+        (state, action: PayloadAction<PaginationResponse<IVolunteer>>) => {
+          state.volunteers.loadingMore = false;
+          const existingIds = new Set(state.volunteers.data.map((v) => v.id));
+          const newVolunteers = action.payload.data.filter((v) => !existingIds.has(v.id));
+          state.volunteers.data.push(...newVolunteers);
+          state.volunteers.currentPage = action.payload.currentPage;
+          state.volunteers.totalPages = action.payload.totalPages;
+        },
+      )
+      .addCase(GetMoreVolunteers.rejected, (state) => {
+        state.volunteers.loadingMore = false;
       });
 
     builder
@@ -84,13 +129,13 @@ export const volunteerSlice = createSlice({
       })
       .addCase(CreateVolunteer.fulfilled, (state, action: PayloadAction<IVolunteer>) => {
         state.loadingAction = false;
-        const index = state.volunteers.findIndex(
+        const index = state.volunteers.data.findIndex(
           (v) => v.id === action.payload.id || (v.userId && v.userId === action.payload.userId),
         );
         if (index !== -1) {
-          state.volunteers[index] = action.payload;
+          state.volunteers.data[index] = action.payload;
         } else {
-          state.volunteers.push(action.payload);
+          state.volunteers.data.unshift(action.payload);
         }
       })
       .addCase(CreateVolunteer.rejected, (state, action) => {
@@ -102,18 +147,40 @@ export const volunteerSlice = createSlice({
     // Volunteer Assignments
     // -------------------------------------------------------------------------
     builder
-      .addCase(GetVolunteerAssignments.pending, (state) => {
+      .addCase(GetVolunteerAssignments.pending, (state, action) => {
+        const partitionKey = (action.meta as any)?.arg?.partitionKey;
+        if (partitionKey) {
+          state.loadingByPartition[partitionKey] = true;
+        }
         state.loadingAssignments = true;
         state.errorAssignments = null;
       })
-      .addCase(
-        GetVolunteerAssignments.fulfilled,
-        (state, action: PayloadAction<IVolunteerAssignment[]>) => {
+      .addCase(GetVolunteerAssignments.fulfilled, (state, action) => {
+        const partitionKey = action.meta?.arg?.partitionKey || action.payload?.partitionKey;
+        if (partitionKey) {
+          state.loadingByPartition[partitionKey] = false;
+        }
           state.loadingAssignments = false;
-          state.assignments = action.payload;
+
+          const items: IVolunteerAssignment[] = Array.isArray(action.payload)
+            ? action.payload
+            : action.payload?.data || [];
+
+          if (partitionKey) {
+            state.assignmentsByPartition[partitionKey] = items;
+          }
+
+          // Merge into unified assignments state ensuring no duplicates
+          const incomingIds = new Set(items.map((i) => i.id));
+          const remaining = state.assignments.filter((a) => !incomingIds.has(a.id));
+          state.assignments = [...remaining, ...items];
         },
       )
       .addCase(GetVolunteerAssignments.rejected, (state, action) => {
+        const partitionKey = (action.meta as any)?.arg?.partitionKey;
+        if (partitionKey) {
+          state.loadingByPartition[partitionKey] = false;
+        }
         state.loadingAssignments = false;
         state.errorAssignments =
           (action.payload as string) || 'Error al obtener asignaciones de voluntarios';
@@ -130,6 +197,14 @@ export const volunteerSlice = createSlice({
           state.loadingAction = false;
           state.assignments.push(action.payload);
           state.currentVolunteerAssignments.push(action.payload);
+
+          // Update any relevant partitions
+          Object.keys(state.assignmentsByPartition).forEach((key) => {
+            const list = state.assignmentsByPartition[key];
+            if (list && !list.some((a) => a.id === action.payload.id)) {
+              state.assignmentsByPartition[key] = [...list, action.payload];
+            }
+          });
         },
       )
       .addCase(CreateVolunteerAssignment.rejected, (state, action) => {
@@ -156,6 +231,14 @@ export const volunteerSlice = createSlice({
           if (cIdx !== -1) {
             state.currentVolunteerAssignments[cIdx] = action.payload;
           }
+          Object.keys(state.assignmentsByPartition).forEach((key) => {
+            const pIdx = state.assignmentsByPartition[key].findIndex(
+              (a) => a.id === action.payload.id,
+            );
+            if (pIdx !== -1) {
+              state.assignmentsByPartition[key][pIdx] = action.payload;
+            }
+          });
         },
       )
       .addCase(UpdateVolunteerAssignment.rejected, (state, action) => {
@@ -174,6 +257,11 @@ export const volunteerSlice = createSlice({
         state.currentVolunteerAssignments = state.currentVolunteerAssignments.filter(
           (a) => a.id !== action.payload,
         );
+        Object.keys(state.assignmentsByPartition).forEach((key) => {
+          state.assignmentsByPartition[key] = state.assignmentsByPartition[key].filter(
+            (a) => a.id !== action.payload,
+          );
+        });
       })
       .addCase(DeleteVolunteerAssignment.rejected, (state, action) => {
         state.loadingAction = false;
@@ -206,5 +294,10 @@ export const volunteerSlice = createSlice({
   },
 });
 
-export const { clearCurrentVolunteerAssignments, resetVolunteerErrors } = volunteerSlice.actions;
+export const {
+  clearCurrentVolunteerAssignments,
+  clearPartitionAssignments,
+  resetVolunteerErrors,
+} = volunteerSlice.actions;
 export default volunteerSlice.reducer;
+

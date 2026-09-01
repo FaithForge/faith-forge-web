@@ -145,6 +145,7 @@ export const MinistryGroupsTab: React.FC<MinistryGroupsTabProps> = ({ ministryId
         ministryId={ministryId}
         groupToEdit={groupToEdit}
         defaultPosition={nextDefaultPosition}
+        onSuccess={() => dispatch(GetMinistryGroupConfigs({ ministryId, force: true }))}
       />
     </div>
   );

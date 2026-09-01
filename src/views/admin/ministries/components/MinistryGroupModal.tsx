@@ -74,6 +74,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
         await dispatch(
           UpdateMinistryGroupConfig({
             id: groupToEdit.id,
+            ministryId,
             name: name.trim(),
             position: Number(position) || 1,
             active,

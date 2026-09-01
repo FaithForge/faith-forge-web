@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useMemo } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -40,11 +40,14 @@ interface AssignVolunteerDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ministryId: string;
+  churchCampusId?: string;
   areas: IMinistryArea[];
   groups: IMinistryGroupConfig[];
   campuses: IChurchCampus[];
   serviceAreaGroups: IServiceAreaGroup[];
   existingAssignments?: IVolunteerAssignment[];
+  defaultRole?: VolunteerRole;
+  defaultServiceAreaGroupId?: string;
   onSuccess?: () => void;
 }
 
@@ -103,17 +106,20 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   open,
   onOpenChange,
   ministryId,
+  churchCampusId,
   areas,
   groups,
   campuses,
   serviceAreaGroups,
   existingAssignments = [],
+  defaultRole,
+  defaultServiceAreaGroupId,
   onSuccess,
 }) => {
   useModalBackClose(open, () => onOpenChange(false));
 
   const dispatch = useAppDispatch();
-  const volunteersState = useAppSelector((state) => state.volunteerSlice.volunteers);
+  const volunteersState = useAppSelector((state) => state.volunteerSlice.volunteers.data);
 
   // Step 1: User selection
   const [searchText, setSearchText] = useState('');
@@ -123,15 +129,51 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Step 2: Role selection
-  const [selectedRole, setSelectedRole] = useState<VolunteerRole>(VolunteerRole.VOLUNTEER);
+  const [selectedRole, setSelectedRole] = useState<VolunteerRole>(
+    defaultRole || VolunteerRole.VOLUNTEER,
+  );
 
   // Step 3: Scope selection
   const [selectedAreaId, setSelectedAreaId] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('');
-  const [selectedCampusId, setSelectedCampusId] = useState('');
-  const [selectedServiceAreaGroupId, setSelectedServiceAreaGroupId] = useState('');
+  const [selectedCampusId, setSelectedCampusId] = useState(churchCampusId || '');
+  const [selectedTeamAreaId, setSelectedTeamAreaId] = useState('');
+  const [selectedTeamGroupId, setSelectedTeamGroupId] = useState('');
 
   const [submitting, setSubmitting] = useState(false);
+
+  // Filter service area groups based on selected campus
+  const availableTeams = useMemo<IServiceAreaGroup[]>(() => {
+    return serviceAreaGroups.filter((sag: IServiceAreaGroup) => {
+      return sag.churchCampusId === selectedCampusId && sag.active;
+    });
+  }, [serviceAreaGroups, selectedCampusId]);
+
+  // Areas that actually have teams configured in this campus
+  const availableAreasForCampus = useMemo<IMinistryArea[]>(() => {
+    const areaIdSet = new Set(availableTeams.map((t: IServiceAreaGroup) => t.ministryAreaId));
+    return areas.filter((a: IMinistryArea) => a.active && areaIdSet.has(a.id));
+  }, [availableTeams, areas]);
+
+  // Groups available for the selected area in this campus
+  const availableGroupsForArea = useMemo<IMinistryGroupConfig[]>(() => {
+    const matchingTeams = availableTeams.filter(
+      (t: IServiceAreaGroup) => t.ministryAreaId === selectedTeamAreaId,
+    );
+    const groupIdSet = new Set(matchingTeams.map((t: IServiceAreaGroup) => t.ministryGroupConfigId));
+    return groups
+      .filter((g: IMinistryGroupConfig) => g.active && groupIdSet.has(g.id))
+      .sort((a, b) => a.position - b.position);
+  }, [availableTeams, selectedTeamAreaId, groups]);
+
+  // Matched ServiceAreaGroup team
+  const matchedTeam = useMemo<IServiceAreaGroup | undefined>(() => {
+    return availableTeams.find(
+      (t: IServiceAreaGroup) =>
+        t.ministryAreaId === selectedTeamAreaId &&
+        t.ministryGroupConfigId === selectedTeamGroupId,
+    );
+  }, [availableTeams, selectedTeamAreaId, selectedTeamGroupId]);
 
   // Reset state on open
   useEffect(() => {
@@ -139,15 +181,92 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       setSearchText('');
       setSearchResults([]);
       setSelectedUser(null);
-      setSelectedRole(VolunteerRole.VOLUNTEER);
+      setSelectedRole(defaultRole || VolunteerRole.VOLUNTEER);
 
       const activeAreas = areas.filter((a) => a.active);
       const activeGroups = groups.filter((g) => g.active);
       setSelectedAreaId(activeAreas[0]?.id || '');
       setSelectedGroupId(activeGroups[0]?.id || '');
-      setSelectedCampusId(campuses[0]?.id || '');
+
+      if (defaultServiceAreaGroupId) {
+        const foundTeam = serviceAreaGroups.find((s) => s.id === defaultServiceAreaGroupId);
+        if (foundTeam) {
+          setSelectedCampusId(foundTeam.churchCampusId);
+          setSelectedTeamAreaId(foundTeam.ministryAreaId);
+          setSelectedTeamGroupId(foundTeam.ministryGroupConfigId);
+        } else {
+          const campId = churchCampusId || campuses[0]?.id || '';
+          setSelectedCampusId(campId);
+        }
+      } else {
+        const campId = churchCampusId || campuses[0]?.id || '';
+        setSelectedCampusId(campId);
+
+        const campusTeams = serviceAreaGroups.filter(
+          (t) => t.churchCampusId === campId && t.active,
+        );
+        if (campusTeams.length > 0) {
+          setSelectedTeamAreaId(campusTeams[0].ministryAreaId);
+          setSelectedTeamGroupId(campusTeams[0].ministryGroupConfigId);
+        } else {
+          setSelectedTeamAreaId(activeAreas[0]?.id || '');
+          setSelectedTeamGroupId(activeGroups[0]?.id || '');
+        }
+      }
     }
-  }, [open, areas, groups, campuses]);
+  }, [
+    open,
+    areas,
+    groups,
+    campuses,
+    churchCampusId,
+    defaultRole,
+    defaultServiceAreaGroupId,
+    serviceAreaGroups,
+  ]);
+
+  const handleCampusChange = (newCampusId: string) => {
+    setSelectedCampusId(newCampusId);
+    const campusTeams = serviceAreaGroups.filter(
+      (t) => t.churchCampusId === newCampusId && t.active,
+    );
+    if (campusTeams.length > 0) {
+      const areaExists = campusTeams.some((t) => t.ministryAreaId === selectedTeamAreaId);
+      const targetAreaId = areaExists ? selectedTeamAreaId : campusTeams[0].ministryAreaId;
+      setSelectedTeamAreaId(targetAreaId);
+
+      const areaTeams = campusTeams.filter((t) => t.ministryAreaId === targetAreaId);
+      const groupExists = areaTeams.some((t) => t.ministryGroupConfigId === selectedTeamGroupId);
+      const targetGroupId = groupExists
+        ? selectedTeamGroupId
+        : areaTeams[0]?.ministryGroupConfigId || '';
+      setSelectedTeamGroupId(targetGroupId);
+    } else {
+      setSelectedTeamAreaId('');
+      setSelectedTeamGroupId('');
+    }
+  };
+
+  const handleTeamAreaChange = (newAreaId: string) => {
+    setSelectedTeamAreaId(newAreaId);
+    const matchingTeams = availableTeams.filter(
+      (t: IServiceAreaGroup) => t.ministryAreaId === newAreaId,
+    );
+    if (matchingTeams.length > 0) {
+      const groupExists = matchingTeams.some(
+        (t: IServiceAreaGroup) => t.ministryGroupConfigId === selectedTeamGroupId,
+      );
+      if (!groupExists) {
+        setSelectedTeamGroupId(matchingTeams[0].ministryGroupConfigId);
+      }
+    } else {
+      setSelectedTeamGroupId('');
+    }
+  };
+
+  const handleTeamGroupChange = (newGroupId: string) => {
+    setSelectedTeamGroupId(newGroupId);
+  };
 
   // Debounced user search
   useEffect(() => {
@@ -181,20 +300,6 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     };
   }, [searchText, dispatch]);
 
-  // Filter service area groups based on selected campus
-  const availableTeams = serviceAreaGroups.filter((sag) => {
-    return sag.churchCampusId === selectedCampusId && sag.active;
-  });
-
-  // Set default team when campus changes
-  useEffect(() => {
-    if (availableTeams.length > 0) {
-      setSelectedServiceAreaGroupId(availableTeams[0].id);
-    } else {
-      setSelectedServiceAreaGroupId('');
-    }
-  }, [selectedCampusId, serviceAreaGroups]);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -213,11 +318,11 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       selectedRole === VolunteerRole.VOLUNTEER ||
       selectedRole === VolunteerRole.SUPERVISOR
     ) {
-      if (!selectedServiceAreaGroupId) {
-        toast.error('Debes seleccionar un equipo de servicio');
+      if (!matchedTeam) {
+        toast.error('Debes seleccionar un área y un grupo válidos para esta sede');
         return;
       }
-      targetServiceAreaGroupId = selectedServiceAreaGroupId;
+      targetServiceAreaGroupId = matchedTeam.id;
       targetMinistryAreaId = undefined;
       targetMinistryGroupConfigId = undefined;
       targetMinistryId = undefined;
@@ -279,13 +384,19 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
           if (isConflict) {
             const freshList = await dispatch(GetVolunteers({ force: true })).unwrap();
-            volunteer = (freshList as IVolunteer[]).find((v) => v.userId === selectedUser.id);
+            const list: IVolunteer[] = Array.isArray(freshList) ? freshList : freshList?.data || [];
+            volunteer = list.find((v) => v.userId === selectedUser.id);
           }
 
           if (!volunteer) {
             throw createErr;
           }
         }
+      }
+
+      if (!volunteer) {
+        toast.error('No se pudo obtener el registro del servidor');
+        return;
       }
 
       await dispatch(
@@ -521,7 +632,8 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                 </label>
                 <Select
                   value={selectedCampusId}
-                  onChange={(e) => setSelectedCampusId(e.target.value)}
+                  onChange={(e) => handleCampusChange(e.target.value)}
+                  disabled={Boolean(churchCampusId)}
                 >
                   {campuses.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -531,31 +643,46 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                 </Select>
               </div>
 
-              <div>
-                <label className="text-xs font-semibold text-gray-700 block mb-1">
-                  Equipo (Área × Grupo) <span className="text-rose-500">*</span>
-                </label>
-                {availableTeams.length === 0 ? (
-                  <p className="text-xs text-amber-600 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-                    No hay combinaciones de equipos creadas en esta sede. Créalas primero en la pestaña "Equipos por Sede".
-                  </p>
-                ) : (
-                  <Select
-                    value={selectedServiceAreaGroupId}
-                    onChange={(e) => setSelectedServiceAreaGroupId(e.target.value)}
-                  >
-                    {availableTeams.map((team) => {
-                      const area = areas.find((a) => a.id === team.ministryAreaId) || team.ministryArea;
-                      const group = groups.find((g) => g.id === team.ministryGroupConfigId) || team.ministryGroupConfig;
-                      return (
-                        <option key={team.id} value={team.id}>
-                          {area?.name ?? 'Área'} × {group?.name ?? 'Grupo'}
+              {availableTeams.length === 0 ? (
+                <p className="text-xs text-amber-600 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
+                  No hay combinaciones de equipos creadas en esta sede. Créalas primero en la pestaña &quot;Equipos&quot;.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">
+                      Área de Servicio <span className="text-rose-500">*</span>
+                    </label>
+                    <Select
+                      value={selectedTeamAreaId}
+                      onChange={(e) => handleTeamAreaChange(e.target.value)}
+                    >
+                      {availableAreasForCampus.map((a: IMinistryArea) => (
+                        <option key={a.id} value={a.id}>
+                          {a.name}
                         </option>
-                      );
-                    })}
-                  </Select>
-                )}
-              </div>
+                      ))}
+                    </Select>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-700 block mb-1">
+                      Grupo <span className="text-rose-500">*</span>
+                    </label>
+                    <Select
+                      value={selectedTeamGroupId}
+                      onChange={(e) => handleTeamGroupChange(e.target.value)}
+                      disabled={availableGroupsForArea.length === 0}
+                    >
+                      {availableGroupsForArea.map((g: IMinistryGroupConfig) => (
+                        <option key={g.id} value={g.id}>
+                          {g.name}
+                        </option>
+                      ))}
+                    </Select>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -577,7 +704,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
             loading={submitting}
             loadingText="Asignando..."
             disabled={
-              !selectedUser || (isTeamScope && availableTeams.length === 0)
+              !selectedUser || (isTeamScope && !matchedTeam)
             }
           >
             Confirmar Asignación

@@ -8,9 +8,11 @@ import {
   Edit2,
   CheckCircle2,
   XCircle,
+  MapPin,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import {
   GetMinistries,
   GetMinistryAreas,
@@ -53,12 +55,20 @@ const MinistryDetailView: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const ministryId = id || '';
+  const campuses = useAppSelector((state) => state.churchCampusSlice);
   const { ministries, loadingMinistries } = useAppSelector((state) => state.ministrySlice);
 
   const [activeTab, setActiveTab] = useState<TabKey>('areas');
   const [editModalOpen, setEditModalOpen] = useState(false);
 
   const churchId = import.meta.env.VITE_CHURCH_ID;
+
+  // Load campuses if not yet available
+  useEffect(() => {
+    if (campuses.data.length === 0) {
+      dispatch(GetChurchCampuses());
+    }
+  }, [dispatch, campuses.data.length]);
 
   // Load ministries if not yet loaded in Redux
   useEffect(() => {
@@ -79,6 +89,12 @@ const MinistryDetailView: React.FC = () => {
   const currentMinistry = useMemo(() => {
     return ministries.find((m) => m.id === ministryId);
   }, [ministries, ministryId]);
+
+  const campusName = useMemo(() => {
+    if (!currentMinistry) return '';
+    if (currentMinistry.churchCampus?.name) return currentMinistry.churchCampus.name;
+    return campuses.data.find((c) => c.id === currentMinistry.churchCampusId)?.name || '';
+  }, [currentMinistry, campuses.data]);
 
   return (
     <div className="min-h-full bg-slate-50/60 pb-24">
@@ -104,10 +120,16 @@ const MinistryDetailView: React.FC = () => {
         {currentMinistry && (
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3">
             <div className="min-w-0">
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate">
                   {currentMinistry.name}
                 </h1>
+                {campusName && (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                    <MapPin size={11} className="text-indigo-600" />
+                    <span>{campusName}</span>
+                  </span>
+                )}
                 <span
                   className={clsx(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
@@ -167,10 +189,16 @@ const MinistryDetailView: React.FC = () => {
           {activeTab === 'teams' && (
             <ServiceAreaGroupsTab
               ministryId={ministryId}
+              churchCampusId={currentMinistry?.churchCampusId}
               onNavigateToTab={(tab) => setActiveTab(tab as TabKey)}
             />
           )}
-          {activeTab === 'roles' && <VolunteerAssignmentsTab ministryId={ministryId} />}
+          {activeTab === 'roles' && (
+            <VolunteerAssignmentsTab
+              ministryId={ministryId}
+              churchCampusId={currentMinistry?.churchCampusId}
+            />
+          )}
         </div>
       </div>
 
@@ -179,6 +207,7 @@ const MinistryDetailView: React.FC = () => {
           open={editModalOpen}
           onOpenChange={setEditModalOpen}
           ministryToEdit={currentMinistry}
+          churchCampusId={currentMinistry.churchCampusId}
         />
       )}
     </div>

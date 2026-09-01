@@ -3,10 +3,14 @@ import { ReduxDefaultState } from './Redux';
 
 export interface IMinistry {
   id: string;
+  churchCampusId: string;
   churchId: string;
   name: string;
   description?: string;
   active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  churchCampus?: IChurchCampus;
 }
 
 export interface IMinistryArea {

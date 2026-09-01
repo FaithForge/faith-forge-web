@@ -155,11 +155,16 @@ export const ministrySlice = createSlice({
       })
       .addCase(CreateMinistryArea.fulfilled, (state, action) => {
         state.loadingAction = false;
-        const { ministryId } = action.payload;
-        if (!state.areasByMinistry[ministryId]) {
-          state.areasByMinistry[ministryId] = [];
+        if (action.payload && action.payload.id && action.payload.ministryId) {
+          const { ministryId } = action.payload;
+          if (!state.areasByMinistry[ministryId]) {
+            state.areasByMinistry[ministryId] = [];
+          }
+          const exists = state.areasByMinistry[ministryId].some((a) => a.id === action.payload.id);
+          if (!exists) {
+            state.areasByMinistry[ministryId].push(action.payload);
+          }
         }
-        state.areasByMinistry[ministryId].push(action.payload);
       })
       .addCase(CreateMinistryArea.rejected, (state, action) => {
         state.loadingAction = false;
@@ -173,12 +178,14 @@ export const ministrySlice = createSlice({
       })
       .addCase(UpdateMinistryArea.fulfilled, (state, action) => {
         state.loadingAction = false;
-        const { ministryId, id } = action.payload;
-        const list = state.areasByMinistry[ministryId];
-        if (list) {
-          const index = list.findIndex((a) => a.id === id);
-          if (index !== -1) {
-            list[index] = action.payload;
+        if (action.payload && action.payload.id && action.payload.ministryId) {
+          const { ministryId, id } = action.payload;
+          const list = state.areasByMinistry[ministryId];
+          if (list) {
+            const index = list.findIndex((a) => a.id === id);
+            if (index !== -1) {
+              list[index] = action.payload;
+            }
           }
         }
       })
@@ -253,7 +260,10 @@ export const ministrySlice = createSlice({
       })
       .addCase(GetServiceAreaGroups.fulfilled, (state, action) => {
         state.loadingServiceAreaGroups = false;
-        state.serviceAreaGroups = action.payload;
+        const incoming = action.payload || [];
+        const incomingMap = new Map(incoming.map((item) => [item.id, item]));
+        const remaining = state.serviceAreaGroups.filter((item) => !incomingMap.has(item.id));
+        state.serviceAreaGroups = [...remaining, ...incoming];
       })
       .addCase(GetServiceAreaGroups.rejected, (state, action) => {
         state.loadingServiceAreaGroups = false;

@@ -10,13 +10,16 @@ import {
   CheckCircle2,
   XCircle,
   Inbox,
+  MapPin,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+import SelectSearch from '@/components/ui/SelectSearch';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { IMinistry } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
@@ -25,7 +28,7 @@ import clsx from 'clsx';
 
 /**
  * Main Ministries Management View at /admin/ministries.
- * Displays all ministries belonging to the church with search filtering and creation drawer.
+ * Displays all ministries belonging to the selected campus with search filtering and creation drawer.
  *
  * @returns {JSX.Element} Rendered view.
  */
@@ -33,20 +36,46 @@ const MinistriesManagementView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
+  const campuses = useAppSelector((state) => state.churchCampusSlice);
   const { ministries, loadingMinistries } = useAppSelector((state) => state.ministrySlice);
 
+  const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [searchText, setSearchText] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [ministryToEdit, setMinistryToEdit] = useState<IMinistry | null>(null);
 
-  const churchId = import.meta.env.VITE_CHURCH_ID;
-
+  // Load campuses on view mount
   useEffect(() => {
-    dispatch(GetMinistries({ churchId }));
-  }, [dispatch, churchId]);
+    if (campuses.data.length === 0) {
+      dispatch(GetChurchCampuses());
+    }
+  }, [dispatch, campuses.data.length]);
+
+  // Auto-select the first available campus if none is selected
+  useEffect(() => {
+    if (!selectedCampusId && campuses.data.length > 0) {
+      setSelectedCampusId(campuses.data[0].id);
+    }
+  }, [campuses.data, selectedCampusId]);
+
+  // Fetch ministries for the selected campus
+  useEffect(() => {
+    if (selectedCampusId) {
+      dispatch(GetMinistries({ churchCampusId: selectedCampusId }));
+    }
+  }, [dispatch, selectedCampusId]);
+
+  const campusOptions = useMemo(() => {
+    return campuses.data.map((c) => ({
+      id: c.id,
+      name: c.name,
+    }));
+  }, [campuses.data]);
 
   const handleRefresh = async () => {
-    await dispatch(GetMinistries({ churchId }));
+    if (selectedCampusId) {
+      await dispatch(GetMinistries({ churchCampusId: selectedCampusId, force: true }));
+    }
   };
 
   const filteredMinistries = useMemo(() => {
@@ -113,6 +142,28 @@ const MinistriesManagementView: React.FC = () => {
               <Plus size={14} /> Nuevo Ministerio
             </Button>
           </div>
+        </div>
+
+        {/* Selector de Sede */}
+        <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex flex-col gap-2">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-indigo-50 text-indigo-700 border border-indigo-200 flex items-center justify-center">
+              <MapPin size={14} />
+            </div>
+            <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+              Sede (Campus)
+            </h2>
+          </div>
+
+          <SelectSearch
+            label=""
+            placeholder="Seleccionar sede..."
+            options={campusOptions}
+            value={selectedCampusId}
+            onChange={(val) => setSelectedCampusId(val)}
+            searchable={campusOptions.length > 4}
+            disabled={campuses.loading}
+          />
         </div>
 
         {/* Search Bar */}
@@ -221,7 +272,12 @@ const MinistriesManagementView: React.FC = () => {
         open={modalOpen}
         onOpenChange={setModalOpen}
         ministryToEdit={ministryToEdit}
-        onSuccess={() => dispatch(GetMinistries({ churchId }))}
+        churchCampusId={selectedCampusId}
+        onSuccess={() => {
+          if (selectedCampusId) {
+            dispatch(GetMinistries({ churchCampusId: selectedCampusId, force: true }));
+          }
+        }}
       />
     </div>
   );

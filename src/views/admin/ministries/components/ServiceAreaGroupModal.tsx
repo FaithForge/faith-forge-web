@@ -16,6 +16,7 @@ interface ServiceAreaGroupModalProps {
   groups: IMinistryGroupConfig[];
   campuses: IChurchCampus[];
   selectedCampusId: string;
+  defaultAreaId?: string;
   onSuccess?: () => void;
 }
 
@@ -32,6 +33,7 @@ export const ServiceAreaGroupModal: React.FC<ServiceAreaGroupModalProps> = ({
   groups,
   campuses,
   selectedCampusId,
+  defaultAreaId,
   onSuccess,
 }) => {
   useModalBackClose(open, () => onOpenChange(false));
@@ -48,10 +50,10 @@ export const ServiceAreaGroupModal: React.FC<ServiceAreaGroupModalProps> = ({
       setChurchCampusId(selectedCampusId || (campuses[0]?.id ?? ''));
       const activeAreas = areas.filter((a) => a.active);
       const activeGroups = groups.filter((g) => g.active);
-      setMinistryAreaId(activeAreas[0]?.id || '');
+      setMinistryAreaId(defaultAreaId || activeAreas[0]?.id || '');
       setMinistryGroupConfigId(activeGroups[0]?.id || '');
     }
-  }, [open, selectedCampusId, campuses, areas, groups]);
+  }, [open, selectedCampusId, campuses, areas, groups, defaultAreaId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

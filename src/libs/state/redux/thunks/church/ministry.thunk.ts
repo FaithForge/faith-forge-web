@@ -6,17 +6,26 @@ import { AxiosError } from 'axios';
 import { RootState } from '../../store';
 
 /**
- * Fetches ministries for a specific church via GET /ministry?churchId=.
+ * Fetches ministries filtered by churchCampusId or churchId via GET /ministry.
  *
- * @param {Object} payload - Search payload with churchId.
- * @param {string} payload.churchId - The church identifier.
+ * @param {Object} [payload] - Search payload.
+ * @param {string} [payload.churchCampusId] - The campus identifier.
+ * @param {string} [payload.churchId] - The church identifier.
+ * @param {boolean} [payload.force] - Force refresh flag.
  * @returns {Promise<IMinistry[]>} List of ministries.
  */
 export const GetMinistries = createAsyncThunk(
   'church/GetMinistries',
-  async (payload: { churchId: string }, { getState, rejectWithValue }) => {
+  async (
+    payload: { churchCampusId?: string; churchId?: string; force?: boolean } = {},
+    { getState, rejectWithValue },
+  ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
+
+    const params: Record<string, string> = {};
+    if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
+    if (payload.churchId) params.churchId = payload.churchId;
 
     try {
       const response = (
@@ -25,7 +34,7 @@ export const GetMinistries = createAsyncThunk(
           method: HttpRequestMethod.GET,
           url: '/ministry',
           options: {
-            params: { churchId: payload.churchId },
+            params,
             headers: { Authorization: `Bearer ${token}` },
           },
         })
@@ -40,9 +49,10 @@ export const GetMinistries = createAsyncThunk(
 );
 
 /**
- * Creates a new ministry via POST /ministry.
+ * Creates a new ministry for a specific campus via POST /ministry.
  *
  * @param {Object} payload - Ministry creation payload.
+ * @param {string} payload.churchCampusId - The campus identifier.
  * @param {string} payload.churchId - The church identifier.
  * @param {string} payload.name - Name of the ministry.
  * @param {string} [payload.description] - Optional description.
@@ -51,7 +61,7 @@ export const GetMinistries = createAsyncThunk(
 export const CreateMinistry = createAsyncThunk(
   'church/CreateMinistry',
   async (
-    payload: { churchId: string; name: string; description?: string },
+    payload: { churchCampusId: string; churchId: string; name: string; description?: string },
     { getState, rejectWithValue },
   ) => {
     const state = getState() as RootState;
@@ -167,7 +177,7 @@ export const CreateMinistryArea = createAsyncThunk(
   'church/CreateMinistryArea',
   async (
     payload: { ministryId: string; name: string; description?: string },
-    { getState, rejectWithValue },
+    { getState, dispatch, rejectWithValue },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -185,7 +195,10 @@ export const CreateMinistryArea = createAsyncThunk(
         })
       ).data;
 
-      return response as IMinistryArea;
+      // Backend returns void on POST /ministry-area. Refresh the areas list from server immediately.
+      await dispatch(GetMinistryAreas({ ministryId: payload.ministryId, force: true }));
+
+      return (response || { ...payload }) as IMinistryArea;
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Error al crear el área de servicio');
@@ -201,15 +214,16 @@ export const CreateMinistryArea = createAsyncThunk(
  * @param {string} [payload.name] - Area name.
  * @param {string} [payload.description] - Area description.
  * @param {boolean} [payload.active] - Active status flag.
+ * @param {string} [payload.ministryId] - Optional ministryId to trigger fresh query.
  * @returns {Promise<IMinistryArea>} The updated ministry area.
  */
 export const UpdateMinistryArea = createAsyncThunk(
   'church/UpdateMinistryArea',
   async (
-    payload: { id: string; name?: string; description?: string; active?: boolean },
-    { getState, rejectWithValue },
+    payload: { id: string; name?: string; description?: string; active?: boolean; ministryId?: string },
+    { getState, dispatch, rejectWithValue },
   ) => {
-    const { id, ...data } = payload;
+    const { id, ministryId, ...data } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
@@ -225,6 +239,10 @@ export const UpdateMinistryArea = createAsyncThunk(
           },
         })
       ).data;
+
+      if (ministryId) {
+        await dispatch(GetMinistryAreas({ ministryId, force: true }));
+      }
 
       return response as IMinistryArea;
     } catch (err) {
@@ -282,7 +300,7 @@ export const CreateMinistryGroupConfig = createAsyncThunk(
   'church/CreateMinistryGroupConfig',
   async (
     payload: { ministryId: string; name: string; position?: number },
-    { getState, rejectWithValue },
+    { getState, dispatch, rejectWithValue },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -299,6 +317,8 @@ export const CreateMinistryGroupConfig = createAsyncThunk(
           },
         })
       ).data;
+
+      await dispatch(GetMinistryGroupConfigs({ ministryId: payload.ministryId, force: true }));
 
       return response as IMinistryGroupConfig;
     } catch (err) {
@@ -321,10 +341,10 @@ export const CreateMinistryGroupConfig = createAsyncThunk(
 export const UpdateMinistryGroupConfig = createAsyncThunk(
   'church/UpdateMinistryGroupConfig',
   async (
-    payload: { id: string; name?: string; position?: number; active?: boolean },
-    { getState, rejectWithValue },
+    payload: { id: string; name?: string; position?: number; active?: boolean; ministryId?: string },
+    { getState, dispatch, rejectWithValue },
   ) => {
-    const { id, ...data } = payload;
+    const { id, ministryId, ...data } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
@@ -340,6 +360,10 @@ export const UpdateMinistryGroupConfig = createAsyncThunk(
           },
         })
       ).data;
+
+      if (ministryId) {
+        await dispatch(GetMinistryGroupConfigs({ ministryId, force: true }));
+      }
 
       return response as IMinistryGroupConfig;
     } catch (err) {

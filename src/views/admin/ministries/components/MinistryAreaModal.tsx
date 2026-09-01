@@ -72,6 +72,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
         await dispatch(
           UpdateMinistryArea({
             id: areaToEdit.id,
+            ministryId,
             name: name.trim(),
             description: description.trim() || undefined,
             active,

@@ -30,7 +30,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
   useModalBackClose(open, () => onOpenChange(false));
 
   const dispatch = useAppDispatch();
-  const existingVolunteers = useAppSelector((state) => state.volunteerSlice.volunteers);
+  const existingVolunteers = useAppSelector((state) => state.volunteerSlice.volunteers.data);
 
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<IUser[]>([]);

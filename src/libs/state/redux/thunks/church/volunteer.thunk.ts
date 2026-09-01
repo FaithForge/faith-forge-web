@@ -1,29 +1,42 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { IVolunteer, IVolunteerAssignment, VolunteerRole } from '@/libs/models';
+import {
+  GetVolunteerAssignmentsPayload,
+  GetVolunteersPayload,
+  IVolunteer,
+  IVolunteerAssignment,
+  PaginationResponse,
+  VolunteerRole,
+} from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
 import { RootState } from '../../store';
 
 /**
- * Fetches volunteers, optionally filtered by ministry, via GET /volunteer
- * and enriches each volunteer with their user profile from User MS.
+ * Fetches the first page of volunteers, filtered by optional ministry, campus, role, search, or status,
+ * via GET /volunteer (backend now includes enriched user profile).
  *
- * @param {Object} [payload] - Search query parameters.
- * @param {string} [payload.ministryId] - Optional ministry identifier.
- * @param {boolean} [payload.force] - Force flag bypassing cache.
- * @returns {Promise<IVolunteer[]>} List of enriched volunteers.
+ * @param {GetVolunteersPayload & { force?: boolean }} [payload] - Query parameters and force flag.
+ * @returns {Promise<PaginationResponse<IVolunteer>>} Paginated list of enriched volunteers.
  */
 export const GetVolunteers = createAsyncThunk(
   'church/GetVolunteers',
-  async (payload: { ministryId?: string; force?: boolean } = {}, { getState, rejectWithValue }) => {
+  async (
+    payload: GetVolunteersPayload & { force?: boolean } = {},
+    { getState, rejectWithValue },
+  ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    const params: Record<string, string> = {};
-    if (payload.ministryId) {
-      params.ministryId = payload.ministryId;
-    }
+    const params: Record<string, string | number | boolean> = {};
+    if (payload.page !== undefined) params.page = payload.page;
+    if (payload.limit !== undefined) params.limit = payload.limit;
+    if (payload.order) params.order = payload.order;
+    if (payload.ministryId) params.ministryId = payload.ministryId;
+    if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
+    if (payload.role) params.role = payload.role;
+    if (payload.search && payload.search.trim()) params.search = payload.search.trim();
+    if (payload.active !== undefined) params.active = payload.active;
 
     try {
       const response = (
@@ -38,40 +51,71 @@ export const GetVolunteers = createAsyncThunk(
         })
       ).data;
 
-      const rawVolunteers = (Array.isArray(response) ? response : []) as IVolunteer[];
+      const isArray = Array.isArray(response);
+      const rawVolunteers: IVolunteer[] = isArray ? response : response?.data || [];
+      const currentPage: number = isArray ? 1 : response?.currentPage || 1;
+      const totalPages: number = isArray ? 1 : response?.totalPages || 1;
 
-      // Enrich volunteers with user data from User MS
-      const enrichedVolunteers = await Promise.all(
-        rawVolunteers.map(async (vol) => {
-          if (vol.user && vol.user.firstName) return vol;
-          const uId = vol.userId;
-          if (!uId) return vol;
-
-          try {
-            const userRes = (
-              await microserviceApiRequest({
-                microservice: MS.User,
-                method: HttpRequestMethod.GET,
-                url: `/user/${uId}`,
-                options: {
-                  headers: { Authorization: `Bearer ${token}` },
-                },
-              })
-            ).data;
-            return {
-              ...vol,
-              user: userRes,
-            };
-          } catch {
-            return vol;
-          }
-        }),
-      );
-
-      return enrichedVolunteers;
+      return {
+        data: rawVolunteers,
+        currentPage,
+        totalPages,
+      } as PaginationResponse<IVolunteer>;
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Error al obtener voluntarios');
+    }
+  },
+);
+
+/**
+ * Fetches the next page of volunteers for infinite scroll.
+ *
+ * @param {GetVolunteersPayload} [payload] - Pagination and category filter payload.
+ * @returns {Promise<PaginationResponse<IVolunteer>>} Next page of volunteers.
+ */
+export const GetMoreVolunteers = createAsyncThunk(
+  'church/GetMoreVolunteers',
+  async (payload: GetVolunteersPayload = {}, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    const params: Record<string, string | number | boolean> = {};
+    if (payload.page !== undefined) params.page = payload.page;
+    if (payload.limit !== undefined) params.limit = payload.limit;
+    if (payload.order) params.order = payload.order;
+    if (payload.ministryId) params.ministryId = payload.ministryId;
+    if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
+    if (payload.role) params.role = payload.role;
+    if (payload.search && payload.search.trim()) params.search = payload.search.trim();
+    if (payload.active !== undefined) params.active = payload.active;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: '/volunteer',
+          options: {
+            params,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      const isArray = Array.isArray(response);
+      const rawVolunteers: IVolunteer[] = isArray ? response : response?.data || [];
+      const currentPage: number = isArray ? 1 : response?.currentPage || 1;
+      const totalPages: number = isArray ? 1 : response?.totalPages || 1;
+
+      return {
+        data: rawVolunteers,
+        currentPage,
+        totalPages,
+      } as PaginationResponse<IVolunteer>;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(error.response?.data ?? 'Error al cargar más voluntarios');
     }
   },
 );
@@ -104,8 +148,9 @@ export const CreateVolunteer = createAsyncThunk(
       ).data;
 
       const created = response as IVolunteer;
+      if (created.user) return created;
 
-      // Enrich with User MS data immediately so state has it right away
+      // Enrich with User MS data immediately if not present
       try {
         const userRes = (
           await microserviceApiRequest({
@@ -131,35 +176,38 @@ export const CreateVolunteer = createAsyncThunk(
   },
 );
 
+
 /**
  * Queries volunteer assignments by scope or role via GET /volunteer-assignment
  * and normalizes volunteer information.
  *
- * @param {Object} [payload] - Search query parameters.
- * @param {string} [payload.serviceAreaGroupId] - Filter by service area group.
- * @param {string} [payload.ministryId] - Filter by ministry.
- * @param {VolunteerRole} [payload.role] - Filter by role.
- * @param {boolean} [payload.force] - Force refresh flag.
- * @returns {Promise<IVolunteerAssignment[]>} List of volunteer assignments.
+ * @param {GetVolunteerAssignmentsPayload & { force?: boolean; partitionKey?: string }} [payload] - Search query parameters.
+ * @returns {Promise<{ data: IVolunteerAssignment[]; totalPages: number; currentPage: number; partitionKey?: string }>} List of volunteer assignments.
  */
 export const GetVolunteerAssignments = createAsyncThunk(
   'church/GetVolunteerAssignments',
   async (
-    payload: {
-      serviceAreaGroupId?: string;
-      ministryId?: string;
-      role?: VolunteerRole;
+    payload: GetVolunteerAssignmentsPayload & {
       force?: boolean;
+      partitionKey?: string;
     } = {},
     { getState, rejectWithValue },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
-    const params: Record<string, string> = {};
-    if (payload.serviceAreaGroupId) params.serviceAreaGroupId = payload.serviceAreaGroupId;
+    const params: Record<string, string | number | boolean> = {};
+    if (payload.page !== undefined) params.page = payload.page;
+    if (payload.limit !== undefined) params.limit = payload.limit;
+    if (payload.order) params.order = payload.order;
     if (payload.ministryId) params.ministryId = payload.ministryId;
+    if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
+    if (payload.ministryAreaId) params.ministryAreaId = payload.ministryAreaId;
+    if (payload.ministryGroupConfigId) params.ministryGroupConfigId = payload.ministryGroupConfigId;
+    if (payload.serviceAreaGroupId) params.serviceAreaGroupId = payload.serviceAreaGroupId;
+    if (payload.volunteerId) params.volunteerId = payload.volunteerId;
     if (payload.role) params.role = payload.role;
+    if (payload.active !== undefined) params.active = payload.active;
 
     try {
       const response = (
@@ -174,42 +222,35 @@ export const GetVolunteerAssignments = createAsyncThunk(
         })
       ).data;
 
+      const isArray = Array.isArray(response);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const rawAssignments = (Array.isArray(response) ? response : []) as any[];
+      const rawAssignments = (isArray ? response : response?.data || []) as any[];
+      const currentPage = isArray ? 1 : response?.currentPage || 1;
+      const totalPages = isArray ? 1 : response?.totalPages || 1;
 
-      const normalizedAssignments = await Promise.all(
-        rawAssignments.map(async (asg) => {
-          const volunteer = asg.volunteer || asg.ministryVolunteer;
-          const volunteerId = asg.volunteerId || asg.ministryVolunteerId;
+      const normalizedAssignments = rawAssignments.map((asg) => {
+        const volunteer = asg.volunteer || asg.ministryVolunteer || {};
+        const volunteerId = asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
+        const user = asg.user || volunteer.user;
 
-          let enrichedVolunteer = volunteer;
-          if (volunteer && !volunteer.user && volunteer.userId) {
-            try {
-              const userRes = (
-                await microserviceApiRequest({
-                  microservice: MS.User,
-                  method: HttpRequestMethod.GET,
-                  url: `/user/${volunteer.userId}`,
-                  options: {
-                    headers: { Authorization: `Bearer ${token}` },
-                  },
-                })
-              ).data;
-              enrichedVolunteer = { ...volunteer, user: userRes };
-            } catch {
-              // ignore
-            }
-          }
+        return {
+          ...asg,
+          volunteerId,
+          volunteer: {
+            ...volunteer,
+            id: volunteer.id || volunteerId,
+            userId: volunteer.userId || user?.id,
+            user,
+          },
+        } as IVolunteerAssignment;
+      });
 
-          return {
-            ...asg,
-            volunteerId,
-            volunteer: enrichedVolunteer,
-          } as IVolunteerAssignment;
-        }),
-      );
-
-      return normalizedAssignments;
+      return {
+        data: normalizedAssignments,
+        totalPages,
+        currentPage,
+        partitionKey: payload.partitionKey,
+      };
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(error.response?.data ?? 'Error al obtener asignaciones de voluntarios');

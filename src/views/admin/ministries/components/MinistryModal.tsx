@@ -7,12 +7,13 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateMinistry, UpdateMinistry } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
-import { Layers, Loader2, Sparkles } from 'lucide-react';
+import { Layers, Loader2, MapPin, Sparkles } from 'lucide-react';
 
 interface MinistryModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   ministryToEdit?: IMinistry | null;
+  churchCampusId?: string;
   onSuccess?: () => void;
 }
 
@@ -26,12 +27,14 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
   open,
   onOpenChange,
   ministryToEdit,
+  churchCampusId,
   onSuccess,
 }) => {
   useModalBackClose(open, () => onOpenChange(false));
 
   const dispatch = useAppDispatch();
   const { loadingAction } = useAppSelector((state) => state.ministrySlice);
+  const campuses = useAppSelector((state) => state.churchCampusSlice.data);
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -39,6 +42,8 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
   const [nameError, setNameError] = useState('');
 
   const isEditing = Boolean(ministryToEdit);
+  const activeCampusId = churchCampusId || ministryToEdit?.churchCampusId;
+  const activeCampus = campuses.find((c) => c.id === activeCampusId);
 
   useEffect(() => {
     if (open) {
@@ -74,8 +79,13 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
         ).unwrap();
         toast.success('Ministerio actualizado correctamente');
       } else {
+        if (!activeCampusId) {
+          toast.error('Debe seleccionar una sede para asociar el ministerio');
+          return;
+        }
         await dispatch(
           CreateMinistry({
+            churchCampusId: activeCampusId,
             churchId: import.meta.env.VITE_CHURCH_ID,
             name: name.trim(),
             description: description.trim() || undefined,
@@ -99,6 +109,15 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       icon={<Layers className="text-primary" size={20} />}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
+        {activeCampus && (
+          <div className="flex items-center gap-1.5 px-3 py-2 bg-indigo-50/70 border border-indigo-100/80 rounded-xl text-xs text-indigo-900 font-medium">
+            <MapPin size={13} className="text-indigo-600 shrink-0" />
+            <span>
+              Sede asociada: <strong className="font-bold text-indigo-950">{activeCampus.name}</strong>
+            </span>
+          </div>
+        )}
+
         <div>
           <label className="text-xs font-semibold text-gray-700 block mb-1">
             Nombre del Ministerio <span className="text-rose-500">*</span>
