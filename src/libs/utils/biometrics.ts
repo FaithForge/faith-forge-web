@@ -204,6 +204,11 @@ export const registerBiometrics = async ({
     const formattedDisplayName =
       formatPersonShortName(user?.firstName, user?.lastName) || username;
 
+    const cleanUsername = (username || user?.username || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '');
+
     const credential = (await navigator.credentials.create({
       publicKey: {
         challenge,
@@ -213,7 +218,7 @@ export const registerBiometrics = async ({
         },
         user: {
           id: userId,
-          name: username,
+          name: cleanUsername,
           displayName: formattedDisplayName,
         },
         pubKeyCredParams: [
@@ -248,7 +253,7 @@ export const registerBiometrics = async ({
     }
 
     const sessionData: BiometricSessionData = {
-      username,
+      username: cleanUsername,
       user,
       token,
       encryptedPassword,
@@ -267,28 +272,55 @@ export const registerBiometrics = async ({
 };
 
 /**
- * Updates the stored biometric session token and user data without touching credentials.
+ * Updates the stored biometric session token, user data, and optionally re-encrypts the password.
  *
  * @param {object} params - The session payload.
  * @param {string} params.token - The new JWT token.
  * @param {any} [params.user] - Updated user info.
- * @returns {void}
+ * @param {string} [params.password] - Plain text password to encrypt and persist with the existing credential.
+ * @returns {Promise<void>} Resolves when storage has been updated.
  */
-export const updateBiometricSessionToken = ({
+export const updateBiometricSessionToken = async ({
   token,
   user,
+  password,
 }: {
   token: string;
   user?: any;
-}): void => {
+  password?: string;
+}): Promise<void> => {
   try {
     const saved = getRegisteredBiometricData();
     if (!saved) return;
+
+    let encryptedPassword = saved.encryptedPassword;
+    let iv = saved.iv;
+    let salt = saved.salt;
+
+    if (password && saved.credentialId) {
+      try {
+        const encResult = await encryptData(password, saved.credentialId);
+        encryptedPassword = encResult.ciphertext;
+        iv = encResult.iv;
+        salt = encResult.salt;
+      } catch (encError) {
+        console.warn('Could not re-encrypt password for biometric session:', encError);
+      }
+    }
+
+    const resolvedUsername = (user?.username || saved.username || '')
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, '');
+
     const updated: BiometricSessionData = {
       ...saved,
       token,
-      username: user?.username || saved.username,
+      username: resolvedUsername,
       user: user || saved.user,
+      encryptedPassword,
+      iv,
+      salt,
     };
     localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(updated));
   } catch (error) {
@@ -323,7 +355,6 @@ export const authenticateWithBiometrics = async (): Promise<BiometricAuthResult 
           {
             id: rawIdBytes,
             type: 'public-key',
-            transports: ['internal'],
           },
         ],
         userVerification: 'required',

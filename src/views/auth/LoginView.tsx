@@ -16,6 +16,7 @@ import {
   authenticateWithBiometrics,
   registerBiometrics,
   updateBiometricSessionToken,
+  clearBiometricSession,
   BiometricSessionData,
 } from '@/libs/utils/biometrics';
 import { formatPersonShortName } from '@/libs/utils/text';
@@ -156,19 +157,25 @@ const LoginView = () => {
       }
 
       if (result.password) {
+        const cleanBioUsername = (result.username || '')
+          .trim()
+          .toLowerCase()
+          .replace(/\s+/g, '');
+
         const loginResult = await dispatch(
-          UserLogin({ username: result.username, password: result.password })
+          UserLogin({ username: cleanBioUsername, password: result.password })
         );
 
         if (UserLogin.fulfilled.match(loginResult)) {
           const payload = loginResult.payload;
-          updateBiometricSessionToken({
+          await updateBiometricSessionToken({
             token: payload.token,
             user: payload.user,
+            password: result.password,
           });
           const name =
             formatPersonShortName(payload.user?.firstName, payload.user?.lastName) ||
-            result.username;
+            cleanBioUsername;
           toast.success(`¡Bienvenido de nuevo, ${name}!`);
           navigate('/', { replace: true });
         } else {
@@ -187,6 +194,20 @@ const LoginView = () => {
     } finally {
       setIsBioLoading(false);
     }
+  };
+
+  /**
+   * Clears the biometric session from device storage and resets the form to manual login mode.
+   *
+   * @returns {void}
+   */
+  const handleForgetBiometricUser = () => {
+    clearBiometricSession();
+    setRegisteredBioData(null);
+    setShowManualLogin(true);
+    setValue('username', '');
+    setValue('password', '');
+    toast.info('Se desvinculó el usuario de este dispositivo');
   };
 
   /**
@@ -219,11 +240,12 @@ const LoginView = () => {
           });
           setShowRegisterBioModal(true);
         } else {
-          // If already registered for this user, update token silently
+          // If already registered for this user, update token and silently re-encrypt password
           if (registeredBioData) {
-            updateBiometricSessionToken({
+            await updateBiometricSessionToken({
               token: payload.token,
               user: payload.user,
+              password: data.password,
             });
           }
           toast.success('¡Bienvenido!');
@@ -363,6 +385,14 @@ const LoginView = () => {
                   <KeyRound size={16} className="text-gray-400 shrink-0" />
                   Iniciar sesión con usuario
                 </Button>
+
+                <button
+                  type="button"
+                  onClick={handleForgetBiometricUser}
+                  className="text-xs text-gray-400 hover:text-red-500 transition-colors pt-1 font-medium cursor-pointer text-center"
+                >
+                  ¿No eres tú? Olvidar huella en este equipo
+                </button>
               </div>
             </div>
           ) : (
@@ -414,7 +444,7 @@ const LoginView = () => {
               </form>
 
               {bioAvailable && registeredBioData && (
-                <div className="text-center pt-2 border-t border-gray-100">
+                <div className="text-center pt-2 border-t border-gray-100 flex flex-col items-center gap-2">
                   <button
                     type="button"
                     onClick={() => setShowManualLogin(false)}
@@ -422,6 +452,14 @@ const LoginView = () => {
                   >
                     <Fingerprint size={16} />
                     Volver a ingreso con huella
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleForgetBiometricUser}
+                    className="text-[11px] text-gray-400 hover:text-red-500 transition-colors font-medium cursor-pointer"
+                  >
+                    Olvidar huella de {displayUsername}
                   </button>
                 </div>
               )}
