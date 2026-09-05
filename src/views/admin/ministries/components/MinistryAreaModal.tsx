@@ -62,8 +62,8 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
     if (open) {
       if (areaToEdit) {
         setName(areaToEdit.name);
-        setDescription(areaToEdit.description || '');
-        setScope(areaToEdit.scope || null);
+        const currentScope = areaToEdit.scope || null;
+        setScope(currentScope);
         setActive(areaToEdit.active);
 
         // Pre-populate already assigned classrooms strictly matching valid availableKidGroups
@@ -99,7 +99,9 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
           });
         }
 
-        setSelectedKidGroupIds(resolvedIds);
+        setSelectedKidGroupIds(
+          currentScope === MinistryAreaScope.KID_GROUP_MANAGEMENT ? resolvedIds : [],
+        );
       } else {
         setName('');
         setDescription('');
@@ -125,8 +127,9 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
     }
 
     try {
-      const primaryKidGroupId = selectedKidGroupIds[0] || undefined;
-      const kidGroupIdsPayload = selectedKidGroupIds.length > 0 ? selectedKidGroupIds : undefined;
+      const isIglekids = scope === MinistryAreaScope.KID_GROUP_MANAGEMENT;
+      const primaryKidGroupId = isIglekids ? (selectedKidGroupIds[0] || undefined) : undefined;
+      const kidGroupIdsPayload = isIglekids && selectedKidGroupIds.length > 0 ? selectedKidGroupIds : undefined;
 
       if (isEditing && areaToEdit) {
         await dispatch(
@@ -241,7 +244,13 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
               return (
                 <div
                   key={option.id ?? 'none'}
-                  onClick={() => setScope(option.id as any)}
+                  onClick={() => {
+                    const newScope = option.id as any;
+                    setScope(newScope);
+                    if (newScope !== MinistryAreaScope.KID_GROUP_MANAGEMENT) {
+                      setSelectedKidGroupIds([]);
+                    }
+                  }}
                   className={clsx(
                     'p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-3 select-none',
                     isSelected
@@ -274,8 +283,8 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
           </div>
         </div>
 
-        {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) */}
-        {availableKidGroups && availableKidGroups.length > 0 && (
+        {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) - Only shown for Iglekids */}
+        {scope === MinistryAreaScope.KID_GROUP_MANAGEMENT && availableKidGroups && availableKidGroups.length > 0 && (
           <div className="flex flex-col gap-1.5 p-3 bg-slate-50 border border-gray-100 rounded-xl">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
