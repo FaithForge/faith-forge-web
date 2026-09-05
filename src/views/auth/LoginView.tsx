@@ -336,7 +336,7 @@ const LoginView = () => {
                   {savedDisplayName}
                 </h2>
                 <span className="text-xs text-gray-500 mt-1 font-medium bg-gray-100/80 px-2.5 py-0.5 rounded-full">
-                  @{displayUsername}
+                  {displayUsername}
                 </span>
               </div>
 
