@@ -172,7 +172,7 @@ const RegistrationDashboard = () => {
   }, [handleLoadMore, currentPage, totalPages, loading, loadingMore, isConfigured, shouldBlockKids]);
 
   return (
-    <div className="p-3 flex flex-col gap-3 min-h-full flex-1">
+    <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-28 sm:pb-32">
       {/* Search Bar */}
       <div className="sticky top-0 z-20 bg-background py-2 -mx-3 px-3">
         <Input 
