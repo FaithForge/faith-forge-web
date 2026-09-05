@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { User, LogOut, Settings, ChevronDown, Check } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Check, Search } from 'lucide-react';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
+import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import SettingsDrawer from '@/components/modal/SettingsDrawer';
 import UserProfileModal from '@/components/modal/UserProfileModal';
 import { UserRole } from '@/libs/utils/auth';
@@ -36,6 +37,7 @@ const TopBar = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [profileOpen, setProfileOpen] = useState(false);
+  const { isSearchAvailable, isScrolledPastSearch, triggerFocusSearch } = useSearchScroll();
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -153,8 +155,25 @@ const TopBar = () => {
         )}
 
       {/* Lado Derecho: Iconos y Avatar de Usuario */}
-      <div className="flex items-center gap-2.5">
-        
+      <div className="flex items-center gap-2">
+        {/* Botón de Búsqueda dinámico (estilo Telegram al hacer scroll) */}
+        {isSearchAvailable && (
+          <button
+            type="button"
+            onClick={triggerFocusSearch}
+            title="Buscar"
+            aria-label="Buscar"
+            className={clsx(
+              "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90",
+              isScrolledPastSearch
+                ? "opacity-100 scale-100 bg-black/15 hover:bg-black/25 text-white cursor-pointer"
+                : "opacity-0 scale-75 pointer-events-none w-0 -mr-2 overflow-hidden"
+            )}
+          >
+            <Search size={18} />
+          </button>
+        )}
+
         {/* Menú de Usuario */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95">

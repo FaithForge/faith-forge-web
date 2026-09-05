@@ -7,7 +7,7 @@ import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb } from 'lucide-react';
+import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb, Sparkles } from 'lucide-react';
 import dayjs from 'dayjs';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -17,6 +17,8 @@ import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 
 const RegistrationDashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +27,9 @@ const RegistrationDashboard = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
 
   const { data: kids, loading, currentPage, totalPages, needsRefresh } = useAppSelector((state) => state.kidSlice);
   
@@ -171,11 +176,25 @@ const RegistrationDashboard = () => {
     };
   }, [handleLoadMore, currentPage, totalPages, loading, loadingMore, isConfigured, shouldBlockKids]);
 
+  // Register search availability and focus handler with SearchScrollContext
+  useEffect(() => {
+    setSearchAvailable(true);
+    registerSearchFocusHandler(() => {
+      searchInputRef.current?.focus();
+    });
+
+    return () => {
+      setSearchAvailable(false);
+      registerSearchFocusHandler(null);
+    };
+  }, [setSearchAvailable, registerSearchFocusHandler]);
+
   return (
     <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-6">
-      {/* Search Bar */}
-      <div className="sticky top-0 z-20 bg-background py-2 -mx-3 px-3">
+      {/* Search Bar (scrolls with content, revealed as lupa in TopBar on scroll) */}
+      <div className="py-1">
         <Input 
+          ref={searchInputRef}
           icon="search" 
           placeholder={shouldBlockKids ? "Búsqueda no disponible" : "Buscar niño por nombre o código"}
           value={searchText}
@@ -380,12 +399,13 @@ const RegistrationDashboard = () => {
                   </div>
                 )}
                 {!loadingMore && currentPage >= totalPages && (
-                  <p className="text-xs font-medium text-gray-400 py-3">
-                    Hemos llegado al final de la lista
-                  </p>
+                  <EndOfListFunnyBadge />
                 )}
               </div>
             )}
+
+            {/* Safe spacer so end indicator sits comfortably above floating BottomNav */}
+            <div className="h-20 sm:h-24 shrink-0 pointer-events-none" aria-hidden="true" />
           </div>
         </PullToRefresh>
       )}

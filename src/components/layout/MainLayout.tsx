@@ -4,6 +4,7 @@ import clsx from 'clsx';
 import BottomNav from './BottomNav';
 import TopBar, { userRolesNavBarConfig } from './TopBar';
 import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
+import { SearchScrollProvider, useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { isTokenExpired } from '@/libs/utils/jwt';
@@ -22,17 +23,27 @@ const PRESERVED_SCROLL_ROUTES = new Set<string>([
   APP_ROUTES.admin.users,
 ]);
 
-const MainLayout = () => {
+/**
+ * Inner shell containing TopBar, scrollable main viewport, and Telegram-style floating BottomNav.
+ *
+ * @returns {JSX.Element} The rendered main layout content.
+ */
+const MainLayoutContent = () => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const mainRef = useRef<HTMLElement>(null);
   const prevPathnameRef = useRef<string>(pathname);
+  const { setIsScrolledPastSearch, registerMainContainer } = useSearchScroll();
 
   const token = useAppSelector((state) => state.authSlice.token);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+
+  useEffect(() => {
+    registerMainContainer(mainRef.current);
+  }, [registerMainContainer]);
 
   // Automatically refresh church campuses and active meetings from BE on mount/focus
   useEffect(() => {
@@ -148,16 +159,21 @@ const MainLayout = () => {
     }, 60);
 
     prevPathnameRef.current = pathname;
+    const currentSaved = routeScrollPositions.get(pathname) || 0;
+    setIsScrolledPastSearch(currentSaved > 55);
+
     return () => {
       cancelAnimationFrame(frame);
       clearTimeout(resetTimer);
     };
-  }, [pathname]);
+  }, [pathname, setIsScrolledPastSearch]);
 
   const handleScroll = (e: React.UIEvent<HTMLElement>) => {
+    const top = e.currentTarget.scrollTop;
     if (PRESERVED_SCROLL_ROUTES.has(pathname)) {
-      routeScrollPositions.set(pathname, e.currentTarget.scrollTop);
+      routeScrollPositions.set(pathname, top);
     }
+    setIsScrolledPastSearch(top > 55);
   };
 
   // Automatically scroll any focused input or textarea into a comfortable upper view on mobile devices
@@ -201,25 +217,40 @@ const MainLayout = () => {
   }, []);
 
   return (
-    <NavigationGuardProvider>
-      <div className="flex flex-col h-screen bg-background text-text-main overflow-hidden relative">
-        {/* TopBar siempre visible en todas las pantallas */}
-        <div className="shrink-0 z-[200] relative pointer-events-auto bg-primary">
-          <TopBar />
-        </div>
-
-        {/* Main scrollable area */}
-        <main
-          ref={mainRef}
-          onScroll={handleScroll}
-          className="flex-1 overflow-y-auto relative flex flex-col bg-slate-50 min-h-0"
-        >
-          <Outlet />
-        </main>
-
-        {/* Fixed bottom navigation */}
-        <BottomNav />
+    <div className="flex flex-col h-screen bg-background text-text-main overflow-hidden relative">
+      {/* TopBar siempre visible en todas las pantallas */}
+      <div className="shrink-0 z-[200] relative pointer-events-auto bg-primary">
+        <TopBar />
       </div>
+
+      {/* Main scrollable area */}
+      <main
+        ref={mainRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto relative flex flex-col bg-slate-50 min-h-0"
+      >
+        <div className={clsx("flex-1 flex flex-col min-h-0", !isAdminRole ? "pb-32 sm:pb-36" : "pb-4")}>
+          <Outlet />
+        </div>
+      </main>
+
+      {/* Fixed bottom navigation */}
+      <BottomNav />
+    </div>
+  );
+};
+
+/**
+ * Root Application Layout wrapping providers for Navigation Guards and dynamic Search Scroll interactions.
+ *
+ * @returns {JSX.Element} Composed application shell with providers.
+ */
+const MainLayout = () => {
+  return (
+    <NavigationGuardProvider>
+      <SearchScrollProvider>
+        <MainLayoutContent />
+      </SearchScrollProvider>
     </NavigationGuardProvider>
   );
 };

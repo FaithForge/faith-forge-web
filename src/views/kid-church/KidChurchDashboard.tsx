@@ -13,6 +13,7 @@ import { GetKidGroups, GetKidGroupRegistered } from '@/libs/state/redux/thunks/k
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
@@ -36,6 +37,24 @@ const KidChurchDashboard: React.FC = () => {
   const [selectedKid, setSelectedKid] = useState<IKid | undefined>(undefined);
   const [openKidDrawer, setOpenKidDrawer] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
+
+  useEffect(() => {
+    const isAvailable = !loadingKidGroups && kidGroups.length > 0;
+    setSearchAvailable(isAvailable);
+    if (isAvailable) {
+      registerSearchFocusHandler(() => {
+        searchInputRef.current?.focus();
+      });
+    }
+
+    return () => {
+      setSearchAvailable(false);
+      registerSearchFocusHandler(null);
+    };
+  }, [loadingKidGroups, kidGroups.length, setSearchAvailable, registerSearchFocusHandler]);
 
   // 1. Initial load: Invoke GET /kid-groups with the user's token (force: true to resolve permissions)
   useEffect(() => {
@@ -204,9 +223,10 @@ const KidChurchDashboard: React.FC = () => {
       {/* When user has authorized classrooms (length > 0) */}
       {!loadingKidGroups && kidGroups.length > 0 && (
         <>
-          {/* Search Input */}
-          <div className="sticky top-0 z-20 bg-background pt-1 pb-1 flex flex-col gap-2 -mx-3 px-3">
+          {/* Search Input (scrolls with content, revealed as lupa in TopBar on scroll) */}
+          <div className="py-1">
             <Input
+              ref={searchInputRef}
               icon="search"
               placeholder={
                 kidGroups.length === 1
@@ -343,6 +363,9 @@ const KidChurchDashboard: React.FC = () => {
                     />
                   );
                 })}
+
+              {/* Safe spacer so last card never collides with floating BottomNav */}
+              <div className="h-12 shrink-0 pointer-events-none" aria-hidden="true" />
             </div>
           </PullToRefresh>
 
@@ -352,12 +375,12 @@ const KidChurchDashboard: React.FC = () => {
             onClick={handleRefresh}
             disabled={isRefreshing}
             className={clsx(
-              'fixed right-5 bottom-20 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center z-40 transition-transform active:scale-90 hover:shadow-2xl cursor-pointer',
+              'fixed right-5 bottom-24 w-13 h-13 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center z-40 transition-transform active:scale-90 hover:shadow-2xl cursor-pointer',
               isRefreshing && 'opacity-70 cursor-not-allowed',
             )}
             title="Actualizar salones"
           >
-            <RefreshCw size={24} className={clsx(isRefreshing && 'animate-spin')} />
+            <RefreshCw size={22} className={clsx(isRefreshing && 'animate-spin')} />
           </button>
         </>
       )}

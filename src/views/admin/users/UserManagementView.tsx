@@ -13,6 +13,8 @@ import { updateCurrentUser } from '@/libs/state/redux/slices/user/users.slice';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
 import { UserState } from '@/libs/models';
+import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 
 /**
  * Unified User Directory and Management View.
@@ -28,6 +30,21 @@ const UserManagementView: React.FC = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
+
+  useEffect(() => {
+    setSearchAvailable(true);
+    registerSearchFocusHandler(() => {
+      searchInputRef.current?.focus();
+    });
+
+    return () => {
+      setSearchAvailable(false);
+      registerSearchFocusHandler(null);
+    };
+  }, [setSearchAvailable, registerSearchFocusHandler]);
 
   const { data: users, loading, currentPage, totalPages, needsRefresh } = useAppSelector(
     (state) => state.userSlice
@@ -154,9 +171,10 @@ const UserManagementView: React.FC = () => {
       />
 
       <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full min-h-0">
-        {/* Search Bar - Sticky */}
-        <div className="sticky top-0 z-20 bg-background py-2 -mx-3 px-3 sm:-mx-4 sm:px-4">
+        {/* Search Bar (scrolls with content, revealed as lupa in TopBar on scroll) */}
+        <div className="py-1">
           <Input
+            ref={searchInputRef}
             icon="search"
             placeholder="Buscar usuario por nombre o documento"
             value={searchText}
@@ -260,9 +278,7 @@ const UserManagementView: React.FC = () => {
                   </div>
                 )}
                 {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
-                  <p className="text-xs font-medium text-gray-400 py-3">
-                    Hemos llegado al final de la lista
-                  </p>
+                  <EndOfListFunnyBadge type="users" />
                 )}
               </div>
             )}
