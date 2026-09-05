@@ -171,12 +171,13 @@ const MainLayout = () => {
           target.isContentEditable)
       ) {
         if (mainRef.current && mainRef.current.contains(target)) {
-          setTimeout(() => {
+          const scrollCenter = () => {
             target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-          }, 150);
-          setTimeout(() => {
-            target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-          }, 350);
+          };
+          requestAnimationFrame(scrollCenter);
+          setTimeout(scrollCenter, 150);
+          setTimeout(scrollCenter, 300);
+          setTimeout(scrollCenter, 500);
         }
       }
     };

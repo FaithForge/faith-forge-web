@@ -42,12 +42,13 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
       props.onFocus?.(e);
       const target = e.currentTarget;
-      setTimeout(() => {
+      const scrollCenter = () => {
         target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      }, 150);
-      setTimeout(() => {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-      }, 350);
+      };
+      requestAnimationFrame(scrollCenter);
+      setTimeout(scrollCenter, 150);
+      setTimeout(scrollCenter, 300);
+      setTimeout(scrollCenter, 500);
     };
 
     return (

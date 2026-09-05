@@ -188,12 +188,13 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           onChange={(e) => onPhoneChange(e.target.value)}
           onFocus={(e) => {
             const target = e.currentTarget;
-            setTimeout(() => {
+            const scrollCenter = () => {
               target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            }, 150);
-            setTimeout(() => {
-              target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
-            }, 350);
+            };
+            requestAnimationFrame(scrollCenter);
+            setTimeout(scrollCenter, 150);
+            setTimeout(scrollCenter, 300);
+            setTimeout(scrollCenter, 500);
           }}
           className="w-full h-full px-3.5 bg-transparent text-text-main placeholder-gray-400 outline-none text-base font-semibold tracking-wide"
         />

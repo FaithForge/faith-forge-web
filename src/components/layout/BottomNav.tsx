@@ -35,8 +35,8 @@ const BottomNav = () => {
     }
   }, [isConfigured, openSettings, isAdminRole]);
 
-  // If admin or virtual keyboard is active on mobile, hide the bottom navigation bar
-  if (isAdminRole || isKeyboardOpen) {
+  // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
+  if (isAdminRole) {
     return null;
   }
 
@@ -72,7 +72,12 @@ const BottomNav = () => {
 
   return (
     <>
-      <nav className="shrink-0 w-full bg-surface border-t border-gray-200 pb-safe pt-2 px-2 flex justify-between items-center z-50">
+      <nav
+        className={clsx(
+          'shrink-0 w-full bg-surface border-t border-gray-200 pb-safe pt-2 px-2 flex justify-between items-center z-50 transition-all duration-150',
+          isKeyboardOpen && 'hidden'
+        )}
+      >
         {navItems.map((item) => {
           const isActive = pathname === item.path && item.action === 'link';
           const isBlocked = shouldBlockKids && (item.label === 'Crear Niño' || item.label === 'Escanear QR');
