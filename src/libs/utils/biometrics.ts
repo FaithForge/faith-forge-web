@@ -287,6 +287,7 @@ export const updateBiometricSessionToken = ({
     const updated: BiometricSessionData = {
       ...saved,
       token,
+      username: user?.username || saved.username,
       user: user || saved.user,
     };
     localStorage.setItem(BIOMETRIC_STORAGE_KEY, JSON.stringify(updated));

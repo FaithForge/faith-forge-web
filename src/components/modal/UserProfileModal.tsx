@@ -69,8 +69,9 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
     }
     setIsRegisteringBio(true);
     try {
+      const targetUsername = user.username || user.email || userName;
       const success = await registerBiometrics({
-        username: user.email || user.username || userName,
+        username: targetUsername,
         password: passwordInput,
         user,
         token,

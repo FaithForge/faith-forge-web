@@ -6,7 +6,7 @@ import { toast } from 'sonner';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { UserLogin } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { setAuthSession } from '@/libs/state/redux/slices/user/auth.slice';
 import {
@@ -28,12 +28,14 @@ interface IFormLoginInput {
 const LoginView = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const persistedUser = useAppSelector((state) => state.authSlice.user);
   const initialBioData = getRegisteredBiometricData();
 
   const [isLoading, setIsLoading] = useState(false);
   const [isBioLoading, setIsBioLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [registeredBioData, setRegisteredBioData] = useState<BiometricSessionData | null>(initialBioData);
+  const [photoError, setPhotoError] = useState(false);
   const [showManualLogin, setShowManualLogin] = useState(!initialBioData);
   const [pendingLoginData, setPendingLoginData] = useState<{
     username: string;
@@ -43,9 +45,10 @@ const LoginView = () => {
   } | null>(null);
   const [showRegisterBioModal, setShowRegisterBioModal] = useState(false);
   
+  const defaultInitialUsername = initialBioData?.user?.username || initialBioData?.username || '';
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<IFormLoginInput>({
     defaultValues: {
-      username: initialBioData?.username || '',
+      username: defaultInitialUsername,
       password: '',
     },
   });
@@ -60,8 +63,9 @@ const LoginView = () => {
       if (available && hasRegisteredBiometrics()) {
         const bioData = getRegisteredBiometricData();
         setRegisteredBioData(bioData);
-        if (bioData?.username) {
-          setValue('username', bioData.username);
+        const resolvedUsername = bioData?.user?.username || bioData?.username;
+        if (resolvedUsername) {
+          setValue('username', resolvedUsername);
         }
       } else {
         setShowManualLogin(true);
@@ -73,6 +77,52 @@ const LoginView = () => {
       isMounted = false;
     };
   }, [setValue]);
+
+  // Synchronize photoUrl from persistedUser to registeredBioData if missing
+  useEffect(() => {
+    if (
+      persistedUser?.photoUrl &&
+      registeredBioData &&
+      !registeredBioData.user?.photoUrl &&
+      (!registeredBioData.username ||
+        persistedUser.username?.toLowerCase() === registeredBioData.username.toLowerCase() ||
+        persistedUser.email?.toLowerCase() === registeredBioData.username.toLowerCase())
+    ) {
+      const updatedData: BiometricSessionData = {
+        ...registeredBioData,
+        user: {
+          ...registeredBioData.user,
+          photoUrl: persistedUser.photoUrl,
+        },
+      };
+      setRegisteredBioData(updatedData);
+      try {
+        localStorage.setItem('iglekids_biometric_session', JSON.stringify(updatedData));
+      } catch (e) {
+        console.warn('Could not sync photo to biometric session:', e);
+      }
+    }
+  }, [persistedUser, registeredBioData]);
+
+  // Normalize any existing registered session where email was saved instead of username
+  useEffect(() => {
+    if (
+      registeredBioData?.user?.username &&
+      registeredBioData.username !== registeredBioData.user.username
+    ) {
+      const normalizedData: BiometricSessionData = {
+        ...registeredBioData,
+        username: registeredBioData.user.username,
+      };
+      setRegisteredBioData(normalizedData);
+      setValue('username', registeredBioData.user.username);
+      try {
+        localStorage.setItem('iglekids_biometric_session', JSON.stringify(normalizedData));
+      } catch (e) {
+        console.warn('Could not normalize biometric username:', e);
+      }
+    }
+  }, [registeredBioData, setValue]);
 
   /**
    * Handles biometric fingerprint / Face ID login.
@@ -148,14 +198,21 @@ const LoginView = () => {
   const onSubmit: SubmitHandler<IFormLoginInput> = async (data) => {
     setIsLoading(true);
     try {
-      const cleanUsername = data.username.trim().toLowerCase().replace(/\s+/g, '');
-      const resultAction = await dispatch(UserLogin({ username: cleanUsername, password: data.password }));
+      const cleanInput = data.username.trim().toLowerCase().replace(/\s+/g, '');
+      const resultAction = await dispatch(UserLogin({ username: cleanInput, password: data.password }));
       if (UserLogin.fulfilled.match(resultAction)) {
         const payload = resultAction.payload;
+        // The authoritative username is payload.user?.username (never email)
+        const authoritativeUsername = payload.user?.username || cleanInput;
+
         // If biometrics is available on device and not yet registered for this user, prompt registration
-        if (bioAvailable && (!registeredBioData || registeredBioData.username !== cleanUsername)) {
+        if (
+          bioAvailable &&
+          (!registeredBioData ||
+            registeredBioData.username.toLowerCase() !== authoritativeUsername.toLowerCase())
+        ) {
           setPendingLoginData({
-            username: cleanUsername,
+            username: authoritativeUsername,
             password: data.password,
             user: payload.user,
             token: payload.token,
@@ -163,7 +220,7 @@ const LoginView = () => {
           setShowRegisterBioModal(true);
         } else {
           // If already registered for this user, update token silently
-          if (registeredBioData && registeredBioData.username === cleanUsername) {
+          if (registeredBioData) {
             updateBiometricSessionToken({
               token: payload.token,
               user: payload.user,
@@ -216,14 +273,26 @@ const LoginView = () => {
 
   const hasBioModeActive = bioAvailable && registeredBioData && !showManualLogin;
 
+  const displayUsername =
+    registeredBioData?.user?.username || registeredBioData?.username || '';
+
+  const userPhotoUrl =
+    registeredBioData?.user?.photoUrl ||
+    registeredBioData?.user?.photo ||
+    (persistedUser?.photoUrl &&
+    (!registeredBioData?.username ||
+      persistedUser.username?.toLowerCase() === registeredBioData.username.toLowerCase() ||
+      persistedUser.email?.toLowerCase() === registeredBioData.username.toLowerCase())
+      ? persistedUser.photoUrl
+      : undefined);
+
   const userInitials = registeredBioData?.user?.firstName || registeredBioData?.user?.lastName
     ? `${registeredBioData.user.firstName?.[0] ?? ''}${registeredBioData.user.lastName?.[0] ?? ''}`.toUpperCase()
-    : registeredBioData?.username?.slice(0, 2).toUpperCase() || 'US';
+    : displayUsername.slice(0, 2).toUpperCase() || 'US';
 
   const savedDisplayName =
     formatPersonShortName(registeredBioData?.user?.firstName, registeredBioData?.user?.lastName) ||
-    registeredBioData?.username ||
-    '';
+    displayUsername;
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-slate-50 px-6 animate-in fade-in duration-500 pb-safe overflow-hidden z-0">
@@ -244,11 +313,20 @@ const LoginView = () => {
             <div className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
               {/* User Avatar Circle */}
               <div className="relative mb-3.5">
-                <div className="w-18 h-18 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-xl shadow-inner">
-                  {userInitials}
+                <div className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-2xl shadow-inner overflow-hidden">
+                  {userPhotoUrl && !photoError ? (
+                    <img
+                      src={userPhotoUrl}
+                      alt={savedDisplayName}
+                      onError={() => setPhotoError(true)}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    userInitials
+                  )}
                 </div>
-                <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1 shadow-xs ring-2 ring-white">
-                  <Fingerprint size={14} />
+                <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1.5 shadow-sm ring-2 ring-white z-10">
+                  <Fingerprint size={16} />
                 </div>
               </div>
 
@@ -258,7 +336,7 @@ const LoginView = () => {
                   {savedDisplayName}
                 </h2>
                 <span className="text-xs text-gray-500 mt-1 font-medium bg-gray-100/80 px-2.5 py-0.5 rounded-full">
-                  @{registeredBioData.username}
+                  @{displayUsername}
                 </span>
               </div>
 
