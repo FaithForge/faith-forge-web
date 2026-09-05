@@ -324,7 +324,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
                   <div>
                     <span className="text-gray-400 block text-[10px] font-medium">Área</span>
                     <span className="font-semibold text-gray-800 truncate block">
-                      {app.ministryArea?.name || 'Área'}
+                      {app.ministryArea?.name || 'No aplica'}
                     </span>
                   </div>
                   <div>

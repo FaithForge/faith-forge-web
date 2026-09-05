@@ -1,6 +1,18 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { CheckCircle2, Sparkles, Shield, User, MapPin, Layers, Users, Calendar, AlertCircle, Search } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import {
+  CheckCircle2,
+  Sparkles,
+  Shield,
+  User,
+  MapPin,
+  Layers,
+  Users,
+  Calendar,
+  AlertCircle,
+  Search,
+  LogIn,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
@@ -13,6 +25,7 @@ import {
   GetPublicVolunteerCatalog,
 } from '@/libs/state/redux/thunks/church/volunteerApplication.thunk';
 import { ICheckVolunteerUserResponse, VolunteerRole } from '@/libs/models';
+import { APP_ROUTES } from '@/config/routes';
 
 const ID_TYPES = [
   { value: 'CC', label: 'Cédula de Ciudadanía (CC)' },
@@ -41,6 +54,7 @@ const ROLE_OPTIONS = [
  */
 const VolunteerRequestPublicView: React.FC = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
   const { catalog, loadingCatalog, submitting } = useAppSelector(
@@ -77,52 +91,83 @@ const VolunteerRequestPublicView: React.FC = () => {
     dispatch(GetPublicVolunteerCatalog());
   }, [dispatch]);
 
-  // 1. Filtrar áreas que pertenecen a la sede seleccionada
+  // 1. Filtrar grupos que pertenecen a la sede seleccionada
+  const filteredGroups = useMemo(() => {
+    if (!churchCampusId || !catalog?.ministryGroupConfigs) return [];
+
+    const sagGroupIds = new Set(
+      (catalog.serviceAreaGroups || [])
+        .filter((sag) => sag.churchCampusId === churchCampusId && sag.active !== false)
+        .map((sag) => sag.ministryGroupConfigId)
+    );
+
+    return catalog.ministryGroupConfigs.filter((g) => {
+      const campusId = g.churchCampusId || g.ministry?.churchCampusId;
+      return campusId === churchCampusId || sagGroupIds.has(g.id);
+    });
+  }, [catalog, churchCampusId]);
+
+  // 2. Filtrar áreas que pertenecen a la sede y opcionalmente al grupo seleccionado
   const filteredAreas = useMemo(() => {
     if (!churchCampusId || !catalog?.ministryAreas) return [];
+
+    // Si hay un grupo seleccionado, priorizar áreas asociadas via ServiceAreaGroup
+    if (ministryGroupConfigId) {
+      const sagForGroup = (catalog.serviceAreaGroups || []).filter(
+        (sag) =>
+          sag.churchCampusId === churchCampusId &&
+          sag.ministryGroupConfigId === ministryGroupConfigId &&
+          sag.active !== false
+      );
+
+      if (sagForGroup && sagForGroup.length > 0) {
+        const allowedAreaIds = new Set(sagForGroup.map((sag) => sag.ministryAreaId));
+        return catalog.ministryAreas.filter((a) => allowedAreaIds.has(a.id));
+      }
+    }
+
+    // Fallback: todas las áreas activas de la sede
     return catalog.ministryAreas.filter((a) => {
       const campusId = a.churchCampusId || a.ministry?.churchCampusId;
       return campusId === churchCampusId;
     });
-  }, [catalog?.ministryAreas, churchCampusId]);
+  }, [catalog, churchCampusId, ministryGroupConfigId]);
 
-  // 2. Filtrar grupos que pertenecen a la sede y al área seleccionada
-  const filteredGroups = useMemo(() => {
-    if (!churchCampusId || !ministryAreaId || !catalog) return [];
-
-    const selectedArea = catalog.ministryAreas?.find((a) => a.id === ministryAreaId);
-
-    // Prioridad 1: ServiceAreaGroups configurados específicamente para esta área y sede
-    const sagForArea = catalog.serviceAreaGroups?.filter(
-      (sag) =>
-        sag.churchCampusId === churchCampusId &&
-        sag.ministryAreaId === ministryAreaId &&
-        sag.active !== false
-    );
-
-    if (sagForArea && sagForArea.length > 0) {
-      const allowedGroupConfigIds = new Set(sagForArea.map((sag) => sag.ministryGroupConfigId));
-      return (catalog.ministryGroupConfigs || []).filter((g) => allowedGroupConfigIds.has(g.id));
-    }
-
-    // Prioridad 2: Grupos que pertenecen al mismo campus y ministerio del área
-    return (catalog.ministryGroupConfigs || []).filter((g) => {
-      const campusId = g.churchCampusId || g.ministry?.churchCampusId;
-      const campusMatches = campusId === churchCampusId;
-      const ministryMatches = selectedArea ? g.ministryId === selectedArea.ministryId : true;
-      return campusMatches && ministryMatches;
-    });
-  }, [catalog, churchCampusId, ministryAreaId]);
-
+  /**
+   * Handles campus selection change and resets dependent fields.
+   *
+   * @param {string} newCampusId - The selected church campus ID.
+   * @returns {void}
+   */
   const handleCampusChange = (newCampusId: string) => {
     setChurchCampusId(newCampusId);
-    setMinistryAreaId('');
     setMinistryGroupConfigId('');
+    setRequestedRole('');
+    setMinistryAreaId('');
   };
 
-  const handleAreaChange = (newAreaId: string) => {
-    setMinistryAreaId(newAreaId);
-    setMinistryGroupConfigId('');
+  /**
+   * Handles service group selection change and resets area if chosen.
+   *
+   * @param {string} newGroupId - The selected ministry group config ID.
+   * @returns {void}
+   */
+  const handleGroupChange = (newGroupId: string) => {
+    setMinistryGroupConfigId(newGroupId);
+    setMinistryAreaId('');
+  };
+
+  /**
+   * Handles volunteer role change, clearing area if group coordinator is chosen.
+   *
+   * @param {VolunteerRole | ''} newRole - The selected volunteer role.
+   * @returns {void}
+   */
+  const handleRoleChange = (newRole: VolunteerRole | '') => {
+    setRequestedRole(newRole);
+    if (newRole === VolunteerRole.GROUP_COORDINATOR) {
+      setMinistryAreaId('');
+    }
   };
 
   const handleDocumentChange = (newDoc: string) => {
@@ -195,16 +240,16 @@ const VolunteerRequestPublicView: React.FC = () => {
       toast.error('Por favor selecciona una sede');
       return;
     }
-    if (!ministryAreaId) {
-      toast.error('Por favor selecciona un área de ministerio');
-      return;
-    }
     if (!ministryGroupConfigId) {
-      toast.error('Por favor selecciona un grupo');
+      toast.error('Por favor selecciona un grupo de servicio');
       return;
     }
     if (!requestedRole) {
       toast.error('Por favor selecciona el rol en el que sirves');
+      return;
+    }
+    if (requestedRole !== VolunteerRole.GROUP_COORDINATOR && !ministryAreaId) {
+      toast.error('Por favor selecciona un área de ministerio');
       return;
     }
 
@@ -234,12 +279,15 @@ const VolunteerRequestPublicView: React.FC = () => {
     }
 
     try {
+      const isGroupCoordinator = requestedRole === VolunteerRole.GROUP_COORDINATOR;
+      const areaIdPayload = isGroupCoordinator ? undefined : ministryAreaId || undefined;
+
       if (existingUser?.userId) {
         await dispatch(
           CreateVolunteerApplication({
             userId: existingUser.userId,
             churchCampusId,
-            ministryAreaId,
+            ministryAreaId: areaIdPayload,
             ministryGroupConfigId,
             requestedRole: requestedRole as VolunteerRole,
           })
@@ -248,7 +296,7 @@ const VolunteerRequestPublicView: React.FC = () => {
         await dispatch(
           CreateVolunteerApplication({
             churchCampusId,
-            ministryAreaId,
+            ministryAreaId: areaIdPayload,
             ministryGroupConfigId,
             requestedRole: requestedRole as VolunteerRole,
             firstName: firstName.trim(),
@@ -343,20 +391,53 @@ const VolunteerRequestPublicView: React.FC = () => {
               <span className="font-semibold text-gray-800">{nationalIdType} {nationalId}</span>
             </div>
             <div className="flex justify-between">
+              <span className="text-gray-400 font-medium">Sede:</span>
+              <span className="font-semibold text-gray-800">
+                {catalog?.campuses?.find((c) => c.id === churchCampusId)?.name || 'Sede'}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400 font-medium">Grupo:</span>
+              <span className="font-semibold text-gray-800">
+                {catalog?.ministryGroupConfigs?.find((g) => g.id === ministryGroupConfigId)?.name || 'Grupo'}
+              </span>
+            </div>
+            <div className="flex justify-between">
               <span className="text-gray-400 font-medium">Rol:</span>
               <span className="font-semibold text-emerald-600">
                 {ROLE_OPTIONS.find((r) => r.value === requestedRole)?.label || requestedRole}
               </span>
             </div>
+            {requestedRole !== VolunteerRole.GROUP_COORDINATOR && ministryAreaId && (
+              <div className="flex justify-between">
+                <span className="text-gray-400 font-medium">Área:</span>
+                <span className="font-semibold text-gray-800">
+                  {catalog?.ministryAreas?.find((a) => a.id === ministryAreaId)?.name}
+                </span>
+              </div>
+            )}
           </div>
 
-          <Button
-            onClick={handleReset}
-            block
-            className="rounded-2xl py-3 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20"
-          >
-            Registrar en otro grupo o servidor
-          </Button>
+          <div className="space-y-2.5 pt-1">
+            <Button
+              onClick={handleReset}
+              block
+              className="rounded-2xl py-3 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 cursor-pointer"
+            >
+              Registrar en otro grupo o servidor
+            </Button>
+
+            <Button
+              type="button"
+              variant="default"
+              onClick={() => navigate(APP_ROUTES.auth.login)}
+              block
+              className="rounded-2xl py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 cursor-pointer border-gray-200"
+            >
+              <LogIn size={16} className="text-gray-500" />
+              Ir a Iniciar Sesión
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -387,7 +468,7 @@ const VolunteerRequestPublicView: React.FC = () => {
           <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 max-w-md mx-auto text-left flex items-start gap-2.5 shadow-xs">
             <AlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-900 leading-relaxed font-medium">
-              <span className="font-bold">Importante:</span> Si sirves en más de un grupo (culto/horario), debes diligenciar este formulario <span className="underline font-bold">una vez por cada grupo</span> en el que participes.
+              <span className="font-bold">Importante:</span> Si sirves en más de un grupo, debes diligenciar este formulario <span className="underline font-bold">una vez por cada grupo</span> en el que participes.
             </p>
           </div>
         </div>
@@ -414,7 +495,7 @@ const VolunteerRequestPublicView: React.FC = () => {
                   value={nationalIdType}
                   onChange={(e) => handleDocumentTypeChange(e.target.value)}
                 >
-                  <option value="" className="text-gray-700 bg-white">Selecciona tipo...</option>
+                  <option value="" className="text-gray-700 bg-white">Seleccionar</option>
                   {ID_TYPES.map((idType) => (
                     <option key={idType.value} value={idType.value} className="text-gray-900 bg-white font-medium">
                       {idType.label}
@@ -597,38 +678,17 @@ const VolunteerRequestPublicView: React.FC = () => {
               </Select>
 
               <Select
-                label="Área de Ministerio"
+                label="Grupo de Servicio"
                 required
-                value={ministryAreaId}
-                onChange={(e) => handleAreaChange(e.target.value)}
+                value={ministryGroupConfigId}
+                onChange={(e) => handleGroupChange(e.target.value)}
                 disabled={loadingCatalog || !churchCampusId}
               >
                 <option value="" className="text-gray-700 bg-white">
                   {!churchCampusId
                     ? 'Primero selecciona una sede...'
-                    : filteredAreas.length === 0
-                    ? 'No hay áreas disponibles para esta sede'
-                    : 'Selecciona el área...'}
-                </option>
-                {filteredAreas.map((a) => (
-                  <option key={a.id} value={a.id} className="text-gray-900 bg-white font-medium">
-                    {a.name}
-                  </option>
-                ))}
-              </Select>
-
-              <Select
-                label="Grupo de Servicio"
-                required
-                value={ministryGroupConfigId}
-                onChange={(e) => setMinistryGroupConfigId(e.target.value)}
-                disabled={loadingCatalog || !ministryAreaId}
-              >
-                <option value="" className="text-gray-700 bg-white">
-                  {!ministryAreaId
-                    ? 'Primero selecciona un área...'
                     : filteredGroups.length === 0
-                    ? 'No hay grupos configurados para esta área'
+                    ? 'No hay grupos configurados para esta sede'
                     : 'Selecciona el grupo...'}
                 </option>
                 {filteredGroups.map((g) => (
@@ -642,15 +702,39 @@ const VolunteerRequestPublicView: React.FC = () => {
                 label="Rol en el que sirves"
                 required
                 value={requestedRole}
-                onChange={(e) => setRequestedRole(e.target.value as VolunteerRole)}
+                onChange={(e) => handleRoleChange(e.target.value as VolunteerRole)}
+                disabled={!ministryGroupConfigId}
               >
-                <option value="" className="text-gray-700 bg-white">Selecciona tu rol...</option>
+                <option value="" className="text-gray-700 bg-white">
+                  {!ministryGroupConfigId ? 'Primero selecciona un grupo...' : 'Selecciona tu rol...'}
+                </option>
                 {ROLE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value} className="text-gray-900 bg-white font-medium">
                     {opt.label}
                   </option>
                 ))}
               </Select>
+
+              {requestedRole && requestedRole !== VolunteerRole.GROUP_COORDINATOR && (
+                <Select
+                  label="Área de Ministerio"
+                  required
+                  value={ministryAreaId}
+                  onChange={(e) => setMinistryAreaId(e.target.value)}
+                  disabled={loadingCatalog || !churchCampusId}
+                >
+                  <option value="" className="text-gray-700 bg-white">
+                    {filteredAreas.length === 0
+                      ? 'No hay áreas disponibles para este grupo y sede'
+                      : 'Selecciona el área...'}
+                  </option>
+                  {filteredAreas.map((a) => (
+                    <option key={a.id} value={a.id} className="text-gray-900 bg-white font-medium">
+                      {a.name}
+                    </option>
+                  ))}
+                </Select>
+              )}
             </div>
           </div>
 

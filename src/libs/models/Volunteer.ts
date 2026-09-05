@@ -98,7 +98,7 @@ export interface IVolunteerApplication {
   id: string;
   userId: string;
   churchCampusId: string;
-  ministryAreaId: string;
+  ministryAreaId?: string;
   ministryGroupConfigId: string;
   requestedRole: VolunteerRole;
   status: VolunteerApplicationStatus;
@@ -135,7 +135,7 @@ export interface CreateVolunteerApplicationPayload {
   phone?: string;
   email?: string;
   churchCampusId: string;
-  ministryAreaId: string;
+  ministryAreaId?: string;
   ministryGroupConfigId: string;
   requestedRole: VolunteerRole;
 }
