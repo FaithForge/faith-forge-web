@@ -1,4 +1,9 @@
 import { DateTime } from 'luxon';
+import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+import 'dayjs/locale/es';
+
+dayjs.extend(utc);
 
 export const MONTH_NUMBER_TO_LETTER: { [key: number]: string } = {
   1: 'Enero',
@@ -13,6 +18,57 @@ export const MONTH_NUMBER_TO_LETTER: { [key: number]: string } = {
   10: 'Octubre',
   11: 'Noviembre',
   12: 'Diciembre',
+};
+
+/**
+ * Safely formats a calendar date string (YYYY-MM-DD or ISO) without timezone conversion shifts.
+ *
+ * @param {string | Date | null | undefined} date - The date to format.
+ * @param {string} [formatStr='D [de] MMMM [de] YYYY'] - Target dayjs format.
+ * @returns {string} Formatted date string in Spanish locale, or empty string if invalid.
+ */
+export const formatDateOnly = (
+  date?: string | Date | null,
+  formatStr: string = 'D [de] MMMM [de] YYYY'
+): string => {
+  if (!date) return '';
+  const dateStr = typeof date === 'string' ? date.substring(0, 10) : dayjs(date).format('YYYY-MM-DD');
+  const parsed = dayjs.utc(dateStr);
+  if (!parsed.isValid()) return '';
+  return parsed.locale('es').format(formatStr);
+};
+
+/**
+ * Converts a date or ISO string to a safe 'YYYY-MM-DD' string for form inputs and date pickers.
+ *
+ * @param {string | Date | null | undefined} date - The date to convert.
+ * @returns {string} Safe 'YYYY-MM-DD' string.
+ */
+export const toDateOnlyInputValue = (date?: string | Date | null): string => {
+  if (!date) return '';
+  if (typeof date === 'string') {
+    if (date.length >= 10 && date.includes('-')) {
+      return date.substring(0, 10);
+    }
+  }
+  const parsed = dayjs.utc(date);
+  return parsed.isValid() ? parsed.format('YYYY-MM-DD') : '';
+};
+
+/**
+ * Safely checks if a date (birthday) matches today's month and day (MM-DD) without timezone shifts.
+ *
+ * @param {string | Date | null | undefined} date - The date to check.
+ * @returns {boolean} True if the date matches today's MM-DD.
+ */
+export const isDateToday = (date?: string | Date | null): boolean => {
+  if (!date) return false;
+  const dateStr = typeof date === 'string' ? date.substring(0, 10) : dayjs(date).format('YYYY-MM-DD');
+  const parts = dateStr.split('-');
+  if (parts.length === 3) {
+    return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
+  }
+  return false;
 };
 
 /**

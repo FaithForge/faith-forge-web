@@ -1,17 +1,23 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { Settings, MapPin, CalendarClock, Printer, X, Loader2, Bluetooth, Check, RefreshCw } from 'lucide-react';
+import { Settings, MapPin, CalendarClock, Printer, X, Loader2, Bluetooth, Check, RefreshCw, LogOut } from 'lucide-react';
 import { toast } from 'sonner';
+import dayjs from 'dayjs';
 import Button from '@/components/ui/Button';
+import Alert from '@/components/ui/Alert';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses, GetChurchMeetings, GetChurchPrinters } from '@/libs/state/redux/thunks/church/church.thunk';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
 import { updateCurrentChurchMeeting } from '@/libs/state/redux/slices/church/churchMeeting.slice';
 import { updateCurrentChurchPrinter } from '@/libs/state/redux/slices/church/churchPrinter.slice';
 import { setPrinterMode, setBluetoothStatus, PrinterModeType } from '@/libs/state/redux/slices/church/printerMode.slice';
+import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { IsAdmin, UserRole } from '@/libs/utils/auth';
+import { APP_ROUTES } from '@/config/routes';
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -21,9 +27,49 @@ interface SettingsDrawerProps {
 // Feature flag for Bluetooth printing (can be disabled when needed)
 export const ENABLE_BLUETOOTH_PRINTING = true;
 
+const DAYS_NUM_MAP: Record<string, number> = {
+  SUNDAY: 0,
+  DOMINGO: 0,
+  '0': 0,
+  MONDAY: 1,
+  LUNES: 1,
+  '1': 1,
+  TUESDAY: 2,
+  MARTES: 2,
+  '2': 2,
+  WEDNESDAY: 3,
+  MIERCOLES: 3,
+  MIÉRCOLES: 3,
+  '3': 3,
+  THURSDAY: 4,
+  JUEVES: 4,
+  '4': 4,
+  FRIDAY: 5,
+  VIERNES: 5,
+  '5': 5,
+  SATURDAY: 6,
+  SABADO: 6,
+  SÁBADO: 6,
+  '6': 6,
+};
+
+/**
+ * Normaliza y obtiene el número de día de la semana (0=Domingo, ..., 6=Sábado) de una reunión.
+ *
+ * @param {any} day - Valor del día (enum string o número).
+ * @returns {number | undefined} Índice del día o undefined si no es válido.
+ */
+const getMeetingDayNum = (day: any): number | undefined => {
+  if (day === undefined || day === null) return undefined;
+  if (typeof day === 'number') return day;
+  const key = String(day).toUpperCase().trim();
+  return DAYS_NUM_MAP[key];
+};
+
 const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   useModalBackClose(open, () => onOpenChange(false));
 
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const campuses = useAppSelector((state) => state.churchCampusSlice);
   const meetings = useAppSelector((state) => state.churchMeetingSlice);
@@ -37,11 +83,30 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const [isBtConnecting, setIsBtConnecting] = useState<boolean>(false);
   const [isBtTesting, setIsBtTesting] = useState<boolean>(false);
 
+  const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+
+  const userRoles = (user?.roles as UserRole[]) || [];
+  const isUserAdmin =
+    IsAdmin(userRoles) ||
+    currentRole === UserRole.SUPER_ADMIN ||
+    currentRole === UserRole.ADMIN;
+
   const isKidChurchRole =
     currentRole === 'KID_GROUP_ADMIN' ||
     currentRole === 'KID_GROUP_SUPERVISOR' ||
     currentRole === 'KID_GROUP_USER';
+
+  // Roles restringidos que exclusivamente deben ver las reuniones del día actual (los administradores ven todos los días)
+  const isDayRestrictedRole =
+    !isUserAdmin &&
+    (currentRole === UserRole.KID_REGISTER_ADMIN ||
+      currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
+      currentRole === UserRole.KID_REGISTER_USER ||
+      currentRole === UserRole.KID_CHURCH_ADMIN ||
+      currentRole === UserRole.KID_GROUP_ADMIN ||
+      currentRole === UserRole.KID_GROUP_SUPERVISOR ||
+      currentRole === UserRole.KID_GROUP_USER);
 
   // Initial load
   useEffect(() => {
@@ -51,7 +116,6 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       }
       const activeCampusId = campuses.current?.id || '';
       setSelectedCampusId(activeCampusId);
-      setSelectedMeetingId(meetings.current?.id || '');
       setSelectedPrinterId(printers.current?.id || '');
       setSelectedMode(printerModeSlice?.mode || 'NETWORK');
     }
@@ -132,6 +196,16 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     onOpenChange(false);
   };
 
+  /** Dispatches logout action and redirects to login page. */
+  const handleLogout = () => {
+    onOpenChange(false);
+    dispatch(logout());
+    navigate(APP_ROUTES.auth.login, { replace: true });
+    toast.success('Se ha cerrado su sesión', {
+      duration: 5000,
+    });
+  };
+
   const isBluetoothMode = selectedMode === 'BLUETOOTH';
   const isBluetoothConnected = printerModeSlice?.bluetoothDevice?.isConnected;
   const isConfigured = isKidChurchRole
@@ -140,10 +214,52 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     ? !!meetings.current && !!isBluetoothConnected
     : !!meetings.current && !!printers.current;
 
-  const availableMeetings =
+  const rawMeetings: any[] =
     (meetings as any).meetingsByCampus?.[selectedCampusId] || meetings.data || [];
+
+  // Filtrado de reuniones: para roles de Registro e Iglekids, mostrar únicamente las del día de hoy
+  const availableMeetings = useMemo(() => {
+    if (!isDayRestrictedRole) {
+      return rawMeetings;
+    }
+    const todayDayNum = dayjs().day();
+    return rawMeetings.filter((m: any) => {
+      const mDay = getMeetingDayNum(m.day);
+      return mDay !== undefined && mDay === todayDayNum;
+    });
+  }, [rawMeetings, isDayRestrictedRole]);
+
   const availablePrinters =
     (printers as any).printersByCampus?.[selectedCampusId] || printers.data || [];
+
+  // Auto-select or align meeting when availableMeetings change
+  useEffect(() => {
+    if (!selectedCampusId || !open) return;
+
+    if (availableMeetings.length === 1) {
+      if (selectedMeetingId !== availableMeetings[0].id) {
+        setSelectedMeetingId(availableMeetings[0].id);
+      }
+    } else if (availableMeetings.length > 1) {
+      const isCurrentValidInList = availableMeetings.some(
+        (m: any) => m.id === selectedMeetingId
+      );
+      if (!isCurrentValidInList) {
+        const preferredMeeting =
+          meetings.current &&
+          availableMeetings.find((m: any) => m.id === meetings.current?.id);
+        if (preferredMeeting) {
+          setSelectedMeetingId(preferredMeeting.id);
+        } else {
+          setSelectedMeetingId(availableMeetings[0].id);
+        }
+      }
+    } else if (availableMeetings.length === 0) {
+      if (selectedMeetingId !== '') {
+        setSelectedMeetingId('');
+      }
+    }
+  }, [availableMeetings, selectedCampusId, selectedMeetingId, meetings.current, open]);
 
   // Auto-select printer if there is only one available in the list
   useEffect(() => {
@@ -174,7 +290,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     }
   };
 
-  const isMeetingLoading = meetings.loading && availableMeetings.length === 0;
+  const isMeetingLoading = meetings.loading && rawMeetings.length === 0;
   const isMeetingDisabled = !selectedCampusId || isMeetingLoading;
   const isPrinterLoading = printers.loading && availablePrinters.length === 0;
   const isPrinterDisabled = !selectedCampusId || !selectedMeetingId || isPrinterLoading;
@@ -184,6 +300,8 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     !selectedMeetingId ||
     (!isKidChurchRole && !isBluetoothMode && !selectedPrinterId) ||
     (!isKidChurchRole && isBluetoothMode && !isBluetoothConnected);
+
+  const hasNoMeetingsToday = Boolean(selectedCampusId) && availableMeetings.length === 0 && !isMeetingLoading;
 
   return (
     <AppDrawer
@@ -234,7 +352,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
             </div>
 
             {/* Servicio */}
-            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isMeetingDisabled ? 'opacity-60' : ''}`}>
+            <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isMeetingDisabled || (selectedCampusId && availableMeetings.length === 0 && !isMeetingLoading) ? 'opacity-70' : ''}`}>
               <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
                 <CalendarClock size={16} className="text-primary" /> Servicio a registrar
               </label>
@@ -243,12 +361,22 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                   className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
                   value={selectedMeetingId}
                   onChange={(e) => handleMeetingChange(e.target.value)}
-                  disabled={isMeetingDisabled}
+                  disabled={isMeetingDisabled || (!!selectedCampusId && availableMeetings.length === 0)}
                 >
-                  <option value="" disabled>Seleccione servicio...</option>
-                  {availableMeetings.map((meeting: any) => (
-                    <option key={meeting.id} value={meeting.id}>{meeting.name}</option>
-                  ))}
+                  {availableMeetings.length === 0 ? (
+                    <option value="" disabled>
+                      {isMeetingLoading ? 'Cargando servicios...' : 'No hay servicios programados para hoy'}
+                    </option>
+                  ) : (
+                    <>
+                      {availableMeetings.length !== 1 && (
+                        <option value="" disabled>Seleccione servicio...</option>
+                      )}
+                      {availableMeetings.map((meeting: any) => (
+                        <option key={meeting.id} value={meeting.id}>{meeting.name}</option>
+                      ))}
+                    </>
+                  )}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                   {isMeetingLoading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}
@@ -388,15 +516,34 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
               </div>
             )}
 
-            <Button 
-              onClick={handleSave}
-              block
-              variant="primary"
-              className="mt-2"
-              disabled={isSaveDisabled}
-            >
-              Finalizar
-            </Button>
+            {/* Si la sede seleccionada no tiene servicios para hoy, mostrar Alerta + Botón de Cerrar Sesión */}
+            {hasNoMeetingsToday ? (
+              <div className="flex flex-col gap-3 mt-1 animate-in fade-in duration-200">
+                <Alert
+                  type="warning"
+                  title="Sin servicios programados hoy"
+                  message="No se encontraron servicios activos para el día de hoy en esta sede. Puedes seleccionar otra sede o cerrar tu sesión."
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="w-full bg-rose-50 text-rose-600 hover:bg-rose-100 hover:text-rose-700 border border-rose-200 flex items-center justify-center gap-2 font-bold py-2.5 rounded-xl transition-all shadow-xs"
+                >
+                  <LogOut size={16} /> Cerrar Sesión
+                </Button>
+              </div>
+            ) : (
+              <Button 
+                onClick={handleSave}
+                block
+                variant="primary"
+                className="mt-2"
+                disabled={isSaveDisabled}
+              >
+                Finalizar
+              </Button>
+            )}
             <div className="pb-safe" />
     </AppDrawer>
   );

@@ -22,6 +22,7 @@ import {
 } from '@/libs/common-types/constants';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image/index';
 import { capitalizeWords } from '@/libs/utils/text';
+import { toDateOnlyInputValue } from '@/libs/utils/date';
 import { validateTwoLastNames } from '@/libs/utils/validator';
 import PageHeader from '@/components/ui/PageHeader';
 import { UpdateKidSkeleton } from '@/components/ui/DetailSkeleton';
@@ -69,7 +70,7 @@ const UpdateKidView: React.FC = () => {
       setValue('firstName', capitalizeWords(kid.firstName || ''));
       setValue('lastName', capitalizeWords(kid.lastName || ''));
       if (kid.birthday) {
-        setValue('birthday', dayjs(kid.birthday).format('YYYY-MM-DD'));
+        setValue('birthday', toDateOnlyInputValue(kid.birthday));
       }
       setValue('gender', kid.gender || 'M');
       setValue('healthSecurityEntity', kid.healthSecurityEntity || '');
@@ -107,7 +108,8 @@ const UpdateKidView: React.FC = () => {
    */
   function getAge(birthdayDateString: string) {
     if (!birthdayDateString) return null;
-    const birthDate = dayjs(birthdayDateString);
+    const dateStr = toDateOnlyInputValue(birthdayDateString);
+    const birthDate = dayjs.utc(dateStr);
     const now = dayjs();
     const years = now.diff(birthDate, 'year');
     const totalMonths = now.diff(birthDate, 'month');

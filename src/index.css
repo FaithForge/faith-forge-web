@@ -88,6 +88,14 @@
     user-select: text !important;
     -webkit-touch-callout: default !important;
   }
+
+  /* Unified placeholder color and font-weight matching selects and pickers across all browsers */
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af !important; /* Tailwind Gray 400 */
+    font-weight: 400 !important;
+    opacity: 1 !important;
+  }
 }
 
 @layer utilities {

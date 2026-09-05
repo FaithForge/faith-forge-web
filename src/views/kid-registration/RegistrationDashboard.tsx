@@ -11,6 +11,7 @@ import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb } from 'lucide-rea
 import dayjs from 'dayjs';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
+import { isDateToday } from '@/libs/utils/date';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
@@ -315,17 +316,7 @@ const RegistrationDashboard = () => {
             {!loading && kids.map((kid) => {
               const isRegistered = !!kid.currentKidRegistration;
               const overage = isKidOverage(kid);
-              const isBday = (() => {
-                if (!kid.birthday) return false;
-                const str = typeof kid.birthday === 'string' ? kid.birthday : new Date(kid.birthday).toISOString();
-                if (str.length >= 10 && str.includes('-')) {
-                  const parts = str.substring(0, 10).split('-');
-                  if (parts.length === 3) {
-                    return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
-                  }
-                }
-                return dayjs(kid.birthday).format('MM-DD') === dayjs().format('MM-DD');
-              })();
+              const isBday = isDateToday(kid.birthday);
 
               let subtitleText = `Código: ${kid.faithForgeId || kid.id}`;
               let showOverageStyle = false;

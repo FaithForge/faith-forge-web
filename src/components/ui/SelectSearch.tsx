@@ -46,8 +46,10 @@ const SelectSearch = ({
     return options.filter(opt => opt.name.toLowerCase().includes(search.toLowerCase()));
   }, [options, search, isSearchable]);
 
-  const selectedOption = options.find(opt => String(opt.id) === String(value) || opt.name === value);
-  const displayText = selectedOption ? selectedOption.name : 'Seleccionar...';
+  const selectedOption = options.find((opt) => {
+    if (value === '' || value === undefined || value === null) return false;
+    return String(opt[valueKey]) === String(value) || String(opt.id) === String(value) || opt.name === value;
+  });
 
   return (
     <div className={twMerge(clsx("w-full", className))}>
@@ -66,7 +68,7 @@ const SelectSearch = ({
           placeholder={placeholder}
           value={selectedOption ? selectedOption.name : ''}
           className={clsx(
-            "w-full rounded-xl border-2 py-2.5 pl-3 pr-10 transition-colors outline-none text-base shadow-sm",
+            "w-full rounded-xl border-2 py-2.5 pl-3 pr-10 transition-colors outline-none text-base shadow-sm font-medium placeholder:text-gray-400 placeholder:font-normal",
             error ? "border-red-500 focus:border-red-500" : "border-gray-200 focus:border-primary",
             disabled ? "cursor-not-allowed bg-gray-100 text-gray-500 border-gray-200 opacity-80" : "cursor-pointer bg-white text-text-main"
           )}

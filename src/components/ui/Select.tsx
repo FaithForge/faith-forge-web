@@ -14,7 +14,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
     return (
       <div className={twMerge(clsx(fullWidth && 'w-full', className))}>
         {label && (
-          <label className="block text-xs font-extrabold text-gray-900 mb-1.5 uppercase tracking-wide">
+          <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
             {label} {required && <span className="text-red-500">*</span>}
           </label>
         )}
@@ -23,7 +23,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             required={required}
             className={twMerge(clsx(
-              'block w-full rounded-xl border-2 border-gray-300 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 outline-none text-base shadow-sm appearance-none transition-colors font-medium',
+              'block w-full rounded-xl border-2 border-gray-200 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 outline-none text-base shadow-sm appearance-none transition-colors font-medium',
               'text-gray-900 [&>option]:text-gray-900 [&>option]:bg-white [&>option]:font-medium',
               error && 'border-red-500 focus:border-red-500',
               className
@@ -32,8 +32,8 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(
           >
             {children}
           </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
-            <ChevronDown size={18} />
+          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
+            <ChevronDown size={20} />
           </div>
         </div>
         {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}

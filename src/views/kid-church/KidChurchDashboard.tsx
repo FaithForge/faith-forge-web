@@ -239,10 +239,23 @@ const KidChurchDashboard: React.FC = () => {
                 )}
               </div>
 
-              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                {kidGroups.map((group: IKidGroup) => {
+              <div className="grid grid-cols-6 gap-2">
+                {kidGroups.map((group: IKidGroup, index: number) => {
                   const isSelected = selectedKidGroupId === group.id;
                   const count = kids.filter((k: IKid) => k.kidGroup?.id === group.id).length;
+                  
+                  // Cálculo de ancho en base a sistema de 6 columnas
+                  let colSpanClass = 'col-span-2'; // 3 salones por fila (33.3% cada uno)
+                  if (kidGroups.length === 2) {
+                    colSpanClass = 'col-span-3'; // 2 salones en 1 fila (50% cada uno)
+                  } else {
+                    const remainder = kidGroups.length % 3;
+                    if (remainder === 1 && index === kidGroups.length - 1) {
+                      colSpanClass = 'col-span-6'; // 1 salón solo en la última fila (100% ampliado)
+                    } else if (remainder === 2 && index >= kidGroups.length - 2) {
+                      colSpanClass = 'col-span-3'; // 2 salones en la última fila (50% cada uno cubriendo todo el ancho)
+                    }
+                  }
 
                   return (
                     <button
@@ -250,7 +263,8 @@ const KidChurchDashboard: React.FC = () => {
                       type="button"
                       onClick={() => setSelectedKidGroupId(isSelected ? '' : group.id)}
                       className={clsx(
-                        'p-2.5 rounded-xl text-center border-2 transition-all flex flex-col items-center justify-center active:scale-95 cursor-pointer',
+                        'py-2.5 px-2 rounded-xl text-center border-2 transition-all flex flex-col items-center justify-center active:scale-95 cursor-pointer min-w-0',
+                        colSpanClass,
                         isSelected
                           ? 'bg-primary/10 border-primary shadow-xs ring-1 ring-primary/30'
                           : 'bg-gray-50 border-gray-100 hover:bg-gray-100 text-gray-700',

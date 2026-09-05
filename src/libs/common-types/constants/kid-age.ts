@@ -1,4 +1,7 @@
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
+
+dayjs.extend(utc);
 
 /**
  * Minimum age allowed for registering a kid in Iglekids (in months).
@@ -45,7 +48,8 @@ export const isKidUnderMinAge = (val: string | Date | number | null | undefined)
   if (typeof val === 'number') {
     return val < KID_MIN_AGE_MONTHS;
   }
-  const birth = dayjs(val);
+  const dateStr = typeof val === 'string' ? val.substring(0, 10) : dayjs(val).format('YYYY-MM-DD');
+  const birth = dayjs.utc(dateStr);
   if (!birth.isValid()) return false;
   return dayjs().diff(birth, 'month') < KID_MIN_AGE_MONTHS;
 };
@@ -64,7 +68,8 @@ export const isKidOverage = (kid: { age?: number | null; birthday?: string | Dat
     return kid.age >= KID_MAX_AGE_YEARS;
   }
   if (kid.birthday) {
-    const birth = dayjs(kid.birthday);
+    const dateStr = typeof kid.birthday === 'string' ? kid.birthday.substring(0, 10) : dayjs(kid.birthday).format('YYYY-MM-DD');
+    const birth = dayjs.utc(dateStr);
     if (birth.isValid()) {
       return dayjs().diff(birth, 'year') >= KID_MAX_AGE_YEARS;
     }

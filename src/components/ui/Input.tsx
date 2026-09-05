@@ -42,7 +42,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={twMerge(clsx(fullWidth && 'w-full', wrapperClassName))}>
         {label && (
-          <label className="block text-xs font-extrabold text-gray-900 mb-1.5 uppercase tracking-wide">
+          <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
             {label} {required && <span className="text-red-500">*</span>}
           </label>
         )}
@@ -61,7 +61,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             autoCapitalize={autoCapitalize}
             spellCheck={spellCheck}
             className={twMerge(clsx(
-              'block w-full rounded-xl border-2 border-gray-300 bg-white text-gray-900 placeholder:text-gray-500 font-medium py-2.5 focus:border-primary focus:ring-0 outline-none text-base shadow-sm transition-colors',
+              'block w-full rounded-xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 placeholder:font-normal font-medium py-2.5 focus:border-primary focus:ring-0 outline-none text-base shadow-sm transition-colors',
               'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed disabled:border-gray-200 disabled:opacity-80',
               icon === 'search' ? 'pl-10' : 'pl-3',
               (showClearButton || showEyeButton) ? 'pr-10' : 'pr-3',

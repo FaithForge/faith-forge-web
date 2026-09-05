@@ -27,6 +27,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetUser, UnassignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatDateOnly, toDateOnlyInputValue } from '@/libs/utils/date';
 import { UserRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
 import { UserGenderCode, UserState, ID_TYPE_CODE_MAPPER } from '@/libs/models';
 
@@ -81,7 +82,7 @@ const UserDetailView: React.FC = () => {
   // Calculate formatted age if birthday exists
   const formattedAge = useMemo(() => {
     if (user?.birthday) {
-      const birth = dayjs(user.birthday);
+      const birth = dayjs.utc(toDateOnlyInputValue(user.birthday));
       if (birth.isValid()) {
         const years = dayjs().diff(birth, 'year');
         return `${years} ${years === 1 ? 'año' : 'años'}`;
@@ -285,7 +286,7 @@ const UserDetailView: React.FC = () => {
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
                     <span className="font-semibold text-gray-500 text-xs">Fecha de Nacimiento</span>
                     <span className="font-bold text-gray-800 text-xs sm:text-sm">
-                      {dayjs(user.birthday).format('D [de] MMMM [de] YYYY')}
+                      {formatDateOnly(user.birthday)}
                       {formattedAge ? ` (${formattedAge})` : ''}
                     </span>
                   </div>

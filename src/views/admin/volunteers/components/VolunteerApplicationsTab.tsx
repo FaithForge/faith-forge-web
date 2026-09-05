@@ -155,7 +155,8 @@ export const VolunteerApplicationsTab: React.FC = () => {
   // Calculate age helper
   const calculateAge = (birthday?: string | Date) => {
     if (!birthday) return null;
-    const birth = dayjs(birthday);
+    const dateStr = typeof birthday === 'string' ? birthday.substring(0, 10) : dayjs(birthday).format('YYYY-MM-DD');
+    const birth = dayjs.utc(dateStr);
     if (!birth.isValid()) return null;
     return dayjs().diff(birth, 'year');
   };

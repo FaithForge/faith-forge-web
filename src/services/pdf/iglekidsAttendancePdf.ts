@@ -1,9 +1,11 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import dayjs from 'dayjs';
+import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/es';
 import { IAttendanceReportData } from '@/libs/models';
 
+dayjs.extend(utc);
 dayjs.locale('es');
 
 /**
@@ -113,7 +115,8 @@ const formatAge = (age: number, birthday?: string): string => {
   }
 
   if (birthday) {
-    const months = dayjs().diff(dayjs(birthday), 'month');
+    const dateStr = typeof birthday === 'string' ? birthday.substring(0, 10) : dayjs(birthday).format('YYYY-MM-DD');
+    const months = dayjs().diff(dayjs.utc(dateStr), 'month');
     if (months < 12) {
       return months === 1 ? '1 mes' : `${Math.max(0, months)} meses`;
     }

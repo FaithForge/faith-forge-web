@@ -39,6 +39,11 @@ export default defineConfig({
     versionPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
+      workbox: {
+        skipWaiting: true,
+        clientsClaim: true,
+        cleanupOutdatedCaches: true,
+      },
       includeAssets: ['favicon.ico', 'logo-iglekids.png', 'icons/*.png'],
       devOptions: {
         enabled: false,

@@ -85,6 +85,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
   const currentPrinter = useAppSelector((state) => state.churchPrinterSlice.current);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
@@ -106,9 +107,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const printerMode = useAppSelector((state) => state.printerModeSlice?.mode || 'NETWORK');
   const bluetoothDevice = useAppSelector((state) => state.printerModeSlice?.bluetoothDevice);
 
-  const isPrinterConfigured = printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
-  const isConfigured = isKidChurchRole ? !!currentMeeting : (!!currentMeeting && isPrinterConfigured);
-  const activeRoles = currentRole ? [currentRole] : [];
+  const userRoles = (user?.roles as any[]) || [];
+  const activeRoles = currentRole ? Array.from(new Set([...userRoles, currentRole])) : userRoles;
   const isAdmin = IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
 
   let isMeetingValid = true;
@@ -153,6 +153,12 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
       }
     }
   }
+
+  const isMeetingDayValid = isAdmin || isMeetingValid;
+  const isPrinterConfigured = printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
+  const isConfigured = isKidChurchRole
+    ? !!currentMeeting && isMeetingDayValid
+    : !!currentMeeting && isMeetingDayValid && isPrinterConfigured;
 
   const shouldBlockKids = !isAdmin && !isMeetingValid && isConfigured;
 

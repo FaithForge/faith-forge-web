@@ -42,6 +42,7 @@
 - **Use custom UI components first**: Before building from scratch, check `src/components/ui/` for existing primitives like `Button`, `ConfirmModal`, `SettingsDrawer`, etc.
 - **Component hierarchy**: Custom UI components → Tailwind utilities.
 - **Mobile First**: Optimize for touch. Use Vaul for bottom sheets with drag gestures. Intercept `popstate` to prevent accidental back navigations. Use full-width forms.
+- **Consistent Form Field Placeholder Colors**: ALL form inputs (`<input>`, `<textarea>`, `<select>`, `Input.tsx`, `Select.tsx`, `SelectSearch.tsx`, `PhoneInput.tsx`, `DatePickerWheel.tsx`, etc.) MUST use the exact same placeholder tone: `placeholder:text-gray-400` (Tailwind Gray 400 / `#9ca3af`). NEVER use darker placeholder tones like `gray-500` or `gray-600` on input fields.
 
 ## Build And Test
 

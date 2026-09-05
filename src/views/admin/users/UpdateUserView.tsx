@@ -32,7 +32,9 @@ import {
   userStateSelect 
 } from '@/libs/models/User';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
+import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { toDateOnlyInputValue } from '@/libs/utils/date';
 import { APP_ROUTES } from '@/config/routes';
 import dayjs from 'dayjs';
 import Input from '@/components/ui/Input';
@@ -112,13 +114,7 @@ const UpdateUserView: React.FC = () => {
         ? UserGenderCode.FEMALE 
         : UserGenderCode.MALE;
 
-    let formattedBirthday = '';
-    if (user.birthday) {
-      const d = dayjs(user.birthday);
-      if (d.isValid()) {
-        formattedBirthday = d.format('YYYY-MM-DD');
-      }
-    }
+    const formattedBirthday = toDateOnlyInputValue(user.birthday);
 
     reset({
       firstName: user.firstName || '',

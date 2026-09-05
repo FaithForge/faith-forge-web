@@ -1,5 +1,5 @@
 import { toast } from 'sonner';
-import { clearAppCacheAndReload } from './appCache';
+import { applyAppVersionUpdate } from './appCache';
 
 interface BuildVersionInfo {
   version: string;
@@ -11,7 +11,9 @@ let isUpdating = false;
 
 /**
  * Silently checks if a newer version of the application has been deployed to the server.
- * If a new build is detected, purges the local cache and reloads the application.
+ * If a new build is detected, immediately purges stale cache and refreshes the application.
+ *
+ * @returns {Promise<boolean>} Resolves to true if an update was triggered, false otherwise.
  */
 export const checkAppVersion = async (): Promise<boolean> => {
   if (isUpdating || typeof window === 'undefined' || import.meta.env.DEV) return false;
@@ -21,7 +23,7 @@ export const checkAppVersion = async (): Promise<boolean> => {
     const response = await fetch(`/version.json?nocache=${Date.now()}`, {
       cache: 'no-store',
       headers: {
-        'Cache-Control': 'no-cache',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
         Pragma: 'no-cache',
       },
     });
@@ -32,10 +34,15 @@ export const checkAppVersion = async (): Promise<boolean> => {
 
     if (data && data.buildTime && currentBuild && data.buildTime > currentBuild) {
       isUpdating = true;
-      toast.info('✨ Nueva versión disponible. Actualizando Iglekids...');
-      setTimeout(async () => {
-        await clearAppCacheAndReload();
-      }, 1200);
+      toast.info('✨ Actualizando Iglekids a la última versión...', {
+        duration: 2000,
+      });
+
+      // Apply update immediately without artificial delays
+      setTimeout(() => {
+        applyAppVersionUpdate();
+      }, 50);
+
       return true;
     }
 
@@ -48,20 +55,20 @@ export const checkAppVersion = async (): Promise<boolean> => {
 
 /**
  * Initializes the remote version check watcher.
- * Runs on app start, every 5 minutes, and whenever the user returns to the tab.
+ * Runs on app start, every 3 minutes, and whenever the user returns to the tab.
  */
 export const setupRemoteVersionWatcher = (): void => {
   if (typeof window === 'undefined' || import.meta.env.DEV) return;
 
-  // 1. Initial check after 3 seconds
+  // 1. Initial check after 2 seconds
   setTimeout(() => {
     checkAppVersion();
-  }, 3000);
+  }, 2000);
 
-  // 2. Periodic background check every 5 minutes
+  // 2. Periodic background check every 3 minutes
   setInterval(() => {
     checkAppVersion();
-  }, 5 * 60 * 1000);
+  }, 3 * 60 * 1000);
 
   // 3. Check when returning to the tab / opening the PWA from background
   window.addEventListener('visibilitychange', () => {

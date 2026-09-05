@@ -64,13 +64,13 @@ const churchMeetingSlice = createSlice({
       state.loading = false;
       state.loadedCampusId = campusId;
 
-      if (!state.current && incoming.length > 0) {
-        state.current = incoming[0];
-      } else if (state.current) {
+      if (state.current) {
         // Refresh current meeting instance only if it belongs to this campus
         const match = incoming.find((m: any) => m.id === state.current?.id);
         if (match) {
           state.current = match;
+        } else {
+          state.current = undefined;
         }
       }
     });

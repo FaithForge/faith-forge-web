@@ -595,12 +595,23 @@ const NewKidView = () => {
               </div>
 
               {staticGroup && (
-                <Select label="Salón Estático" {...registerKid('kidGroup', { required: staticGroup ? 'Requerido' : false })} error={kidErrors.kidGroup?.message as string} required>
-                  <option value="">Seleccione un salón</option>
-                  {staticKidGroups.map((g: any) => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </Select>
+                <Controller
+                  name="kidGroup"
+                  control={kidControl}
+                  rules={{ required: staticGroup ? 'Requerido' : false }}
+                  render={({ field }) => (
+                    <SelectSearch
+                      label="Salón Estático"
+                      required={staticGroup}
+                      options={staticKidGroups}
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={kidErrors.kidGroup?.message as string}
+                      placeholder="Seleccione un salón..."
+                      valueKey="id"
+                    />
+                  )}
+                />
               )}
 
               <Controller
@@ -616,7 +627,7 @@ const NewKidView = () => {
                     value={field.value}
                     onChange={field.onChange}
                     valueKey="id"
-                    placeholder="Buscar condición..."
+                    placeholder="Ninguna / Seleccionar..."
                   />
                 )}
               />

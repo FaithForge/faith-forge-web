@@ -21,6 +21,7 @@ import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
 import DeleteKidModal from '@/components/modal/DeleteKidModal';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatDateOnly, isDateToday, toDateOnlyInputValue } from '@/libs/utils/date';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
@@ -147,15 +148,7 @@ const KidCheckInView = () => {
   const isRegistered = !!kid?.currentKidRegistration;
 
   const isBirthdayToday = useMemo(() => {
-    if (!kid?.birthday) return false;
-    const str = typeof kid.birthday === 'string' ? kid.birthday : new Date(kid.birthday).toISOString();
-    if (str.length >= 10 && str.includes('-')) {
-      const parts = str.substring(0, 10).split('-');
-      if (parts.length === 3) {
-        return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
-      }
-    }
-    return dayjs(kid.birthday).format('MM-DD') === dayjs().format('MM-DD');
+    return isDateToday(kid?.birthday);
   }, [kid?.birthday]);
 
   const isEpsUnknown = useMemo(() => {
@@ -166,7 +159,7 @@ const KidCheckInView = () => {
 
   const formattedAge = useMemo(() => {
     if (kid?.birthday) {
-      const birth = dayjs(kid.birthday);
+      const birth = dayjs(toDateOnlyInputValue(kid.birthday));
       if (birth.isValid()) {
         const now = dayjs();
         const years = now.diff(birth, 'year');
@@ -584,7 +577,7 @@ const KidCheckInView = () => {
                 {kid?.birthday && (
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
                     <span className="font-semibold text-gray-500">Fecha de nacimiento</span>
-                    <span className="font-bold text-gray-800">{dayjs(kid.birthday).format('D [de] MMMM [de] YYYY')}</span>
+                    <span className="font-bold text-gray-800">{formatDateOnly(kid.birthday)}</span>
                   </div>
                 )}
 

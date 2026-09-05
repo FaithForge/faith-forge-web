@@ -14,6 +14,7 @@ import {
   KidGuardianRelationCodeEnum,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatDateOnly, isDateToday } from '@/libs/utils/date';
 import { isKidOverage, KID_AGE_COPY } from '@/libs/common-types/constants';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { UserRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
@@ -82,21 +83,9 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     roleTitle = ALL_SYSTEM_ROLES_METADATA[currentRole as UserRole].name;
   }
 
-  const isBirthdayToday = (() => {
-    if (!kid.birthday) return false;
-    const str = typeof kid.birthday === 'string' ? kid.birthday : new Date(kid.birthday).toISOString();
-    if (str.length >= 10 && str.includes('-')) {
-      const parts = str.substring(0, 10).split('-');
-      if (parts.length === 3) {
-        return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
-      }
-    }
-    return dayjs(kid.birthday).format('MM-DD') === dayjs().format('MM-DD');
-  })();
+  const isBirthdayToday = isDateToday(kid.birthday);
 
-  const birthdayFormatted = kid.birthday
-    ? dayjs(kid.birthday).format('D [de] MMMM [de] YYYY')
-    : null;
+  const birthdayFormatted = formatDateOnly(kid.birthday);
 
   const formattedAge = kid.age != null
     ? `${Math.floor(kid.age)} años${kid.ageInMonths ? ` y ${kid.ageInMonths - Math.floor(kid.age) * 12} meses` : ''}`

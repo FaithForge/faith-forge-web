@@ -5,6 +5,7 @@ import 'dayjs/locale/es';
 import clsx from 'clsx';
 import { Calendar } from 'lucide-react';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { formatDateOnly, toDateOnlyInputValue } from '@/libs/utils/date';
 
 interface DatePickerWheelProps {
   label: string;
@@ -29,6 +30,8 @@ interface WheelColumnProps {
 }
 
 const ITEM_HEIGHT = 44;
+const WHEEL_HEIGHT = 264;
+const CENTER_OFFSET = (WHEEL_HEIGHT - ITEM_HEIGHT) / 2; // 110px
 
 /**
  * Individual scrollable wheel column with real-time active item tracking,
@@ -137,9 +140,12 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, tit
   return (
     <div className="flex-1 flex flex-col items-center relative select-none">
       <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">{title}</div>
-      <div className="relative w-full h-[220px] overflow-hidden flex justify-center">
+      <div className="relative w-full h-[264px] overflow-hidden flex justify-center">
         {/* Selection lens highlight bar */}
-        <div className="absolute top-[88px] left-1 right-1 h-[44px] bg-primary/10 border-y-2 border-primary/30 rounded-xl pointer-events-none z-0 shadow-xs" />
+        <div
+          className="absolute left-1 right-1 bg-primary/10 border-y-2 border-primary/30 rounded-xl pointer-events-none z-0 shadow-xs"
+          style={{ top: CENTER_OFFSET, height: ITEM_HEIGHT }}
+        />
 
         {/* Scrollable list */}
         <div
@@ -150,7 +156,7 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, tit
           className="w-full h-full overflow-y-auto snap-y snap-mandatory scrollbar-hide no-scrollbar relative z-10 cursor-pointer"
           style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
         >
-          <div style={{ height: ITEM_HEIGHT * 2 }} className="shrink-0" />
+          <div style={{ height: CENTER_OFFSET }} className="shrink-0" />
           {options.map((opt, idx) => {
             const isSelected = activeVisualValue === opt.value;
             return (
@@ -169,12 +175,12 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, tit
               </div>
             );
           })}
-          <div style={{ height: ITEM_HEIGHT * 2 }} className="shrink-0" />
+          <div style={{ height: CENTER_OFFSET }} className="shrink-0" />
         </div>
 
         {/* Top & Bottom gradient fade masks */}
-        <div className="absolute top-0 left-0 right-0 h-[72px] bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none z-20" />
-        <div className="absolute bottom-0 left-0 right-0 h-[72px] bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-20" />
+        <div className="absolute top-0 left-0 right-0 h-[96px] bg-gradient-to-b from-white via-white/85 to-transparent pointer-events-none z-20" />
+        <div className="absolute bottom-0 left-0 right-0 h-[96px] bg-gradient-to-t from-white via-white/85 to-transparent pointer-events-none z-20" />
       </div>
     </div>
   );
@@ -201,7 +207,8 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
   const min = dayjs(minDate);
   const max = dayjs(maxDate);
 
-  const initialDate = value ? dayjs(value) : dayjs();
+  const safeDateStr = value ? toDateOnlyInputValue(value) : '';
+  const initialDate = safeDateStr ? dayjs.utc(safeDateStr) : dayjs();
 
   const [day, setDay] = useState(initialDate.date());
   const [month, setMonth] = useState(initialDate.month() + 1); // 1-12
@@ -210,7 +217,8 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
   // Synchronize state when modal opens or value changes
   useEffect(() => {
     if (open) {
-      const target = value ? dayjs(value) : dayjs();
+      const currentSafeStr = value ? toDateOnlyInputValue(value) : '';
+      const target = currentSafeStr ? dayjs.utc(currentSafeStr) : dayjs();
       let y = target.year();
       let m = target.month() + 1;
       let d = target.date();
@@ -286,7 +294,7 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
           type="text"
           readOnly
           placeholder="Seleccionar fecha"
-          value={value ? dayjs(value).format('DD / MM / YYYY') : ''}
+          value={value ? formatDateOnly(value, 'DD / MM / YYYY') : ''}
           className={clsx(
             'w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm text-left text-text-main'
           )}
@@ -303,11 +311,11 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content
-            className="bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[85dvh]"
+            className="bg-gray-50 flex flex-col rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[90dvh]"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
             {/* Header */}
-            <div className="w-full bg-white rounded-t-[24px] shadow-xs z-10 px-4 py-3.5 sticky top-0 flex items-center justify-between select-none cursor-grab active:cursor-grabbing touch-pan-y shrink-0 border-b border-gray-100">
+            <div className="w-full bg-white rounded-t-[28px] shadow-xs z-10 px-4 py-3.5 sticky top-0 flex items-center justify-between select-none cursor-grab active:cursor-grabbing touch-pan-y shrink-0 border-b border-gray-100">
               <button
                 type="button"
                 data-vaul-no-drag=""
@@ -328,8 +336,8 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
             </div>
 
             {/* Live selected date preview */}
-            <div className="bg-white px-4 pt-3 pb-1 flex justify-center">
-              <div className="px-3.5 py-1.5 bg-primary/10 rounded-full border border-primary/20 text-xs font-semibold text-primary capitalize flex items-center gap-1.5 shadow-xs">
+            <div className="bg-white px-4 pt-4 pb-2 flex justify-center">
+              <div className="px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 text-xs font-semibold text-primary capitalize flex items-center gap-1.5 shadow-xs">
                 <Calendar size={13} className="text-primary" />
                 <span>{currentDatePreview}</span>
               </div>
@@ -342,7 +350,7 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
               <WheelColumn title="Año" options={years} value={year} onChange={setYear} />
             </div>
 
-            <div className="pb-safe bg-white" />
+            <div className="pb-8 pb-safe bg-white" />
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>

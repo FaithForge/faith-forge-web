@@ -16,6 +16,7 @@ import { ScanCodeKidRegistration, CreateKidRegistration } from '@/libs/state/red
 import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { cleanScanQRSearch } from '@/libs/state/redux/slices/kid-church/scan-code-kid-registration.slice';
 import { capitalizeWords } from '@/libs/utils/text';
+import { isDateToday } from '@/libs/utils/date';
 import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
@@ -326,18 +327,7 @@ const ScannerView = () => {
                 const isStatic = isKidVolunteer ? false : !!kid.staticGroup;
                 const hasMaxAge = isKidOverage(kid);
                 const isBlockedByAge = hasMaxAge && !isKidVolunteer && !isAdmin;
-
-                const isBday = (() => {
-                  if (!kid.birthday) return false;
-                  const str = typeof kid.birthday === 'string' ? kid.birthday : new Date(kid.birthday).toISOString();
-                  if (str.length >= 10 && str.includes('-')) {
-                    const parts = str.substring(0, 10).split('-');
-                    if (parts.length === 3) {
-                      return `${parts[1]}-${parts[2]}` === dayjs().format('MM-DD');
-                    }
-                  }
-                  return dayjs(kid.birthday).format('MM-DD') === dayjs().format('MM-DD');
-                })();
+                const isBday = isDateToday(kid.birthday);
 
                 return (
                   <div 
