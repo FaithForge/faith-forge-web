@@ -14,17 +14,17 @@ import { toast } from 'sonner';
  */
 const PrivateRoute: React.FC = () => {
   const dispatch = useAppDispatch();
-  const token = useAppSelector((state) => state.authSlice.token);
+  const { token, refreshToken } = useAppSelector((state) => state.authSlice);
   const expired = isTokenExpired(token);
 
   useEffect(() => {
-    if (token && expired) {
+    if (token && expired && !refreshToken) {
       dispatch(logout());
       toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     }
-  }, [token, expired, dispatch]);
+  }, [token, expired, refreshToken, dispatch]);
 
-  if (!token || expired) {
+  if (!token || (expired && !refreshToken)) {
     return <Navigate to={APP_ROUTES.auth.login} replace />;
   }
 

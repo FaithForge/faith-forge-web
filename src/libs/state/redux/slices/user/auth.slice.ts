@@ -11,6 +11,7 @@ import { clearHttpCache } from '@/libs/utils/http';
 const initialState: IAuth = {
   user: undefined,
   token: '',
+  refreshToken: undefined,
   currentRole: undefined,
   error: undefined,
   loading: false,
@@ -23,9 +24,34 @@ const AuthSlice = createSlice({
     changeCurrentRole: (state, action: PayloadAction<UserRole>) => {
       state.currentRole = action.payload;
     },
+    updateTokens: (
+      state,
+      action: PayloadAction<{ token: string; refreshToken?: string }>
+    ) => {
+      state.token = action.payload.token;
+      if (action.payload.refreshToken) {
+        state.refreshToken = action.payload.refreshToken;
+      }
+    },
+    updateUserRoles: (state, action: PayloadAction<UserRole[]>) => {
+      if (state.user) {
+        state.user = {
+          ...state.user,
+          roles: sortUserRolesByPriority(action.payload),
+        };
+        if (!state.currentRole || !action.payload.includes(state.currentRole)) {
+          state.currentRole = getMainUserRole(action.payload);
+        }
+      }
+    },
     setAuthSession: (
       state,
-      action: PayloadAction<{ user: any; token: string; currentRole?: UserRole }>
+      action: PayloadAction<{
+        user: any;
+        token: string;
+        refreshToken?: string;
+        currentRole?: UserRole;
+      }>
     ) => {
       state.user = {
         ...action.payload.user,
@@ -34,6 +60,9 @@ const AuthSlice = createSlice({
       state.currentRole =
         action.payload.currentRole || getMainUserRole(action.payload.user?.roles);
       state.token = action.payload.token;
+      if (action.payload.refreshToken) {
+        state.refreshToken = action.payload.refreshToken;
+      }
       state.error = undefined;
       state.loading = false;
     },
@@ -49,6 +78,7 @@ const AuthSlice = createSlice({
       clearHttpCache();
       state.user = undefined;
       state.token = '';
+      state.refreshToken = undefined;
       state.currentRole = undefined;
       state.error = undefined;
       state.loading = false;
@@ -66,17 +96,26 @@ const AuthSlice = createSlice({
       };
       state.currentRole = getMainUserRole(action.payload.user?.roles);
       state.token = action.payload.token;
+      state.refreshToken = action.payload.refreshToken;
       state.error = undefined;
       state.loading = false;
     });
     builder.addCase(UserLogin.rejected, (state, action) => {
       state.user = undefined;
       state.token = '';
+      state.refreshToken = undefined;
       state.error = action.error.message;
       state.loading = false;
     });
   },
 });
 
-export const { logout, changeCurrentRole, setAuthSession, updateAuthUser } = AuthSlice.actions;
+export const {
+  logout,
+  changeCurrentRole,
+  setAuthSession,
+  updateAuthUser,
+  updateTokens,
+  updateUserRoles,
+} = AuthSlice.actions;
 export default AuthSlice.reducer;

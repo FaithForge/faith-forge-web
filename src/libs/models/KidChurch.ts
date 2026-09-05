@@ -215,6 +215,7 @@ export interface IAuth extends ReduxDefaultStateWithoutData {
   user?: IUser;
   currentRole?: UserRole;
   token: string;
+  refreshToken?: string;
 }
 
 export interface IAccount extends ReduxDefaultStateWithoutData {

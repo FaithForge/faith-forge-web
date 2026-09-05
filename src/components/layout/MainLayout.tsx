@@ -36,7 +36,7 @@ const MainLayoutContent = () => {
   const prevPathnameRef = useRef<string>(pathname);
   const { setIsScrolledPastSearch, registerMainContainer } = useSearchScroll();
 
-  const token = useAppSelector((state) => state.authSlice.token);
+  const { token, refreshToken } = useAppSelector((state) => state.authSlice);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
@@ -63,7 +63,7 @@ const MainLayoutContent = () => {
   // Active session expiration watcher (checks every 15 seconds or when returning to tab)
   useEffect(() => {
     const checkExpiration = () => {
-      if (token && isTokenExpired(token)) {
+      if (token && isTokenExpired(token) && !refreshToken) {
         dispatch(logout());
         toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
         navigate(APP_ROUTES.auth.login, { replace: true });
@@ -80,7 +80,7 @@ const MainLayoutContent = () => {
       window.removeEventListener('visibilitychange', checkExpiration);
       window.removeEventListener('focus', checkExpiration);
     };
-  }, [token, dispatch, navigate]);
+  }, [token, refreshToken, dispatch, navigate]);
 
   // Guard against cross-role route navigation (e.g. phone back button jumping across modules)
   useEffect(() => {

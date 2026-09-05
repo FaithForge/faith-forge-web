@@ -471,28 +471,44 @@ const UserDetailView: React.FC = () => {
                               <span className="font-bold text-xs text-gray-900 truncate">
                                 {meta?.name || role}
                               </span>
-                              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-white border border-gray-200 text-gray-600 uppercase tracking-wider">
-                                {meta?.category || 'Rol'}
+                              <span className={clsx(
+                                "text-[9px] font-bold px-1.5 py-0.5 rounded-md border uppercase tracking-wider",
+                                role.startsWith('KID_')
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                                  : "bg-white border-gray-200 text-gray-600"
+                              )}>
+                                {role.startsWith('KID_') ? 'Voluntariado' : meta?.category || 'Sistema'}
                               </span>
                             </div>
                             <p className="text-[11px] text-gray-500 line-clamp-2 mt-0.5 leading-snug">
-                              {meta?.description || 'Rol del sistema con permisos específicos'}
+                              {role.startsWith('KID_')
+                                ? 'Permiso ministerial derivado automáticamente del Directorio de Voluntarios.'
+                                : meta?.description || 'Rol del sistema con permisos específicos'}
                             </p>
                           </div>
                         </div>
 
-                        {/* Individual Delete Role Button */}
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setRoleToDelete(role);
-                            setShowDeleteRoleModal(true);
-                          }}
-                          className="w-8 h-8 rounded-full bg-white border border-gray-200 hover:border-rose-300 hover:bg-rose-50 text-gray-400 hover:text-rose-600 flex items-center justify-center transition-all shadow-2xs shrink-0 active:scale-95"
-                          title={`Eliminar rol ${meta?.name || role}`}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                        {/* Individual Delete Role Button or Auto indicator */}
+                        {role.startsWith('KID_') ? (
+                          <span
+                            className="text-[10px] text-gray-400 italic shrink-0 px-2 py-1 rounded bg-gray-50 border border-gray-200"
+                            title="Este rol se gestiona automáticamente desde el Directorio de Voluntarios"
+                          >
+                            Automático
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setRoleToDelete(role);
+                              setShowDeleteRoleModal(true);
+                            }}
+                            className="w-8 h-8 rounded-full bg-white border border-gray-200 hover:border-rose-300 hover:bg-rose-50 text-gray-400 hover:text-rose-600 flex items-center justify-center transition-all shadow-2xs shrink-0 active:scale-95"
+                            title={`Eliminar rol ${meta?.name || role}`}
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        )}
                       </div>
                     );
                   })}

@@ -9,6 +9,7 @@ export interface ApiRequestOptions {
   responseType?: any;
   cache?: boolean;
   forceRefresh?: boolean;
+  _retry?: boolean;
 }
 
 /**
@@ -58,10 +59,73 @@ const isCatalogEndpoint = (url: string): boolean => {
   return CATALOG_ENDPOINTS.some((ep) => url.startsWith(ep));
 };
 
+// --- Refresh Token Mechanism ---
+type RefreshTokenGetter = () => string | undefined;
+type TokenRefreshHandler = (token: string, refreshToken?: string) => void;
+
+let getRefreshTokenFn: RefreshTokenGetter | null = null;
+let onTokenRefreshedFn: TokenRefreshHandler | null = null;
+
+/**
+ * Registers session callbacks so the HTTP client can retrieve the refresh token
+ * and notify the Redux store when tokens are silently rotated.
+ *
+ * @param {Object} handlers - Handler functions.
+ * @param {RefreshTokenGetter} handlers.getRefreshToken - Callback to get current refresh token.
+ * @param {TokenRefreshHandler} handlers.onTokenRefreshed - Callback when tokens are refreshed.
+ */
+export const setHttpAuthHandlers = (handlers: {
+  getRefreshToken: RefreshTokenGetter;
+  onTokenRefreshed: TokenRefreshHandler;
+}): void => {
+  getRefreshTokenFn = handlers.getRefreshToken;
+  onTokenRefreshedFn = handlers.onTokenRefreshed;
+};
+
+let isRefreshing = false;
+let refreshSubscribers: Array<(token: string) => void> = [];
+
+const subscribeTokenRefresh = (cb: (token: string) => void) => {
+  refreshSubscribers.push(cb);
+};
+
+const onRefreshed = (token: string) => {
+  refreshSubscribers.forEach((cb) => cb(token));
+  refreshSubscribers = [];
+};
+
+/**
+ * Performs silent refresh by exchanging the refresh token with User MS.
+ *
+ * @returns {Promise<string>} The new access token.
+ */
+const triggerSilentRefresh = async (): Promise<string> => {
+  const currentRefreshToken = getRefreshTokenFn ? getRefreshTokenFn() : undefined;
+  if (!currentRefreshToken) {
+    throw new Error('No refresh token available');
+  }
+
+  const response = await axios.post(`${API_BASE_URL}/ms-user/user/refresh-token`, {
+    refreshToken: currentRefreshToken,
+  });
+
+  const { token: newToken, refreshToken: newRefreshToken } = response.data;
+  if (!newToken) {
+    throw new Error('Invalid refresh token response');
+  }
+
+  if (onTokenRefreshedFn) {
+    onTokenRefreshedFn(newToken, newRefreshToken);
+  }
+
+  return newToken;
+};
+
 /**
  * Executes an API request using the specified method, URL, and options.
  * Caches catalog GET requests in memory to eliminate redundant 304 network roundtrips.
- * Dispatches an 'auth:unauthorized' event globally on HTTP 401.
+ * Handles silent token refresh and retries failed requests on HTTP 401.
+ * Dispatches an 'auth:unauthorized' event globally if refresh fails.
  *
  * @param {string} baseURL - The base URL of the API.
  * @param {HttpRequestMethod} method - The HTTP method to use for the request.
@@ -133,6 +197,59 @@ const executeApiRequest = async (
     return response;
   } catch (error: any) {
     if (error?.response?.status === 401) {
+      const isAuthEndpoint =
+        url.includes('/user/login') ||
+        url.includes('/user/refresh-token') ||
+        url.includes('/user/logout');
+
+      if (!isAuthEndpoint && !options._retry) {
+        options._retry = true;
+
+        if (!isRefreshing) {
+          isRefreshing = true;
+          try {
+            const newToken = await triggerSilentRefresh();
+            onRefreshed(newToken);
+            isRefreshing = false;
+
+            const updatedHeaders = {
+              ...headers,
+              Authorization: `Bearer ${newToken}`,
+            };
+            return executeApiRequest(baseURL, method, url, {
+              ...options,
+              headers: updatedHeaders,
+            });
+          } catch (refreshErr) {
+            isRefreshing = false;
+            refreshSubscribers = [];
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+            }
+            throw refreshErr;
+          }
+        }
+
+        // If a refresh is already in flight, queue this request to retry when ready
+        return new Promise((resolve, reject) => {
+          subscribeTokenRefresh(async (newToken) => {
+            try {
+              const updatedHeaders = {
+                ...headers,
+                Authorization: `Bearer ${newToken}`,
+              };
+              const retryResponse = await executeApiRequest(baseURL, method, url, {
+                ...options,
+                headers: updatedHeaders,
+              });
+              resolve(retryResponse);
+            } catch (retryErr) {
+              reject(retryErr);
+            }
+          });
+        });
+      }
+
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('auth:unauthorized'));
       }

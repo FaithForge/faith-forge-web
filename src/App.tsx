@@ -10,7 +10,9 @@ import PrivateRoute from '@/components/auth/PrivateRoute';
 import PageLoader from '@/components/layout/PageLoader';
 import { APP_ROUTES } from '@/config/routes';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { logout } from '@/libs/state/redux/slices/user/auth.slice';
+import { logout, updateTokens } from '@/libs/state/redux/slices/user/auth.slice';
+import { setHttpAuthHandlers } from '@/libs/utils/http';
+import { store } from '@/libs/state/redux/store';
 import { userRolesNavBarConfig } from '@/components/layout/TopBar';
 
 // Lazy-loaded route views for optimal code-splitting and reduced initial bundle size
@@ -61,6 +63,12 @@ function App() {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
+    setHttpAuthHandlers({
+      getRefreshToken: () => store.getState().authSlice.refreshToken,
+      onTokenRefreshed: (token, refreshToken) =>
+        dispatch(updateTokens({ token, refreshToken })),
+    });
+
     const handleUnauthorized = () => {
       dispatch(logout());
       toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');

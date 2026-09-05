@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, ShieldPlus, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { X, ShieldPlus, ShieldCheck, CheckCircle2, Info } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { AssignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';
@@ -44,9 +44,10 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
     }
   }, [open]);
 
-  // Roles available for assignment (excluding KID and already assigned roles)
-  const availableRoles = Object.values(UserRole)
-    .filter((role) => role !== UserRole.KID)
+  // Only system roles can be manually assigned to a user account
+  const SYSTEM_MANUAL_ROLES = [UserRole.ADMIN, UserRole.STAFF, UserRole.USER];
+
+  const availableRoles = SYSTEM_MANUAL_ROLES
     .filter((role) => !user?.roles?.includes(role))
     .map((role) => {
       const meta = ALL_SYSTEM_ROLES_METADATA[role];
@@ -127,10 +128,18 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
               </div>
             )}
 
+            {/* Informative Banner for Volunteer Roles */}
+            <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
+              <Info size={18} className="text-amber-600 shrink-0 mt-0.5" />
+              <span>
+                Los roles de <strong>Regikids</strong> e <strong>Iglekids</strong> (Coordinador, Supervisor, Maestro) se asignan automáticamente desde el <strong>Directorio de Voluntarios</strong> según el área y cargo del servidor.
+              </span>
+            </div>
+
             {/* Check if user already has all roles */}
             {availableRoles.length === 0 ? (
               <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-4 rounded-2xl text-center text-xs font-semibold">
-                ✨ Este usuario ya cuenta con todos los roles disponibles en la plataforma.
+                ✨ Este usuario ya cuenta con todos los roles de sistema disponibles.
               </div>
             ) : (
               <>
