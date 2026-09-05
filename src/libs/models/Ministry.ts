@@ -20,12 +20,18 @@ export interface IMinistryAreaKidGroupRelation {
   active: boolean;
 }
 
+export enum MinistryAreaScope {
+  KID_REGISTRATION = 'KID_REGISTRATION',
+  KID_GROUP_MANAGEMENT = 'KID_GROUP_MANAGEMENT',
+}
+
 export interface IMinistryArea {
   id: string;
   ministryId: string;
   churchCampusId?: string;
   name: string;
   description?: string;
+  scope?: MinistryAreaScope | null;
   active: boolean;
   kidGroupId?: string;
   kidGroupIds?: string[];

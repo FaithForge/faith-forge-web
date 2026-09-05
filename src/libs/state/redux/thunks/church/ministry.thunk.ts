@@ -1,5 +1,5 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup } from '@/libs/models';
+import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup, MinistryAreaScope } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
@@ -180,6 +180,7 @@ export const CreateMinistryArea = createAsyncThunk(
       ministryId: string;
       name: string;
       description?: string;
+      scope?: MinistryAreaScope | null;
       kidGroupId?: string;
       kidGroupIds?: string[];
     },
@@ -219,6 +220,7 @@ export const CreateMinistryArea = createAsyncThunk(
  * @param {string} payload.id - Area identifier.
  * @param {string} [payload.name] - Area name.
  * @param {string} [payload.description] - Area description.
+ * @param {MinistryAreaScope|null} [payload.scope] - Functional scope.
  * @param {boolean} [payload.active] - Active status flag.
  * @param {string} [payload.ministryId] - Optional ministryId to trigger fresh query.
  * @param {string} [payload.kidGroupId] - Optional classroom ID to associate.
@@ -232,6 +234,7 @@ export const UpdateMinistryArea = createAsyncThunk(
       id: string;
       name?: string;
       description?: string;
+      scope?: MinistryAreaScope | null;
       active?: boolean;
       ministryId?: string;
       kidGroupId?: string;

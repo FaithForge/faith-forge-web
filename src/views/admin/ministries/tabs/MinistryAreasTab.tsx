@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from 'react';
-import { Layers, Plus, Edit2, CheckCircle2, XCircle, Inbox } from 'lucide-react';
+import { Layers, Plus, Edit2, CheckCircle2, XCircle, Inbox, ShieldCheck } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetMinistryAreas } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
-import { IMinistryArea } from '@/libs/models';
+import { IMinistryArea, MinistryAreaScope } from '@/libs/models';
 import MinistryAreaModal from '../components/MinistryAreaModal';
 import clsx from 'clsx';
 
@@ -143,6 +143,18 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
                           </>
                         )}
                       </span>
+
+                      {/* Scope Badge */}
+                      {area.scope === MinistryAreaScope.KID_REGISTRATION && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0">
+                          <ShieldCheck size={10} /> Regikids (Check-in)
+                        </span>
+                      )}
+                      {area.scope === MinistryAreaScope.KID_GROUP_MANAGEMENT && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
+                          <ShieldCheck size={10} /> Iglekids (Salones)
+                        </span>
+                      )}
 
                       {/* Classroom Assignment Bullet Badge (Only rendered when assigned) */}
                       {hasClassroom && (

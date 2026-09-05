@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IKidGroup, IMinistryArea } from '@/libs/models';
+import { IKidGroup, IMinistryArea, MinistryAreaScope } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   CreateMinistryArea,
@@ -11,7 +11,7 @@ import {
 import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
-import { Layers, Sparkles, Check } from 'lucide-react';
+import { Layers, Sparkles, Check, Shield } from 'lucide-react';
 import clsx from 'clsx';
 
 interface MinistryAreaModalProps {
@@ -44,6 +44,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [scope, setScope] = useState<MinistryAreaScope | null>(null);
   const [active, setActive] = useState(true);
   const [selectedKidGroupIds, setSelectedKidGroupIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState('');
@@ -62,6 +63,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
       if (areaToEdit) {
         setName(areaToEdit.name);
         setDescription(areaToEdit.description || '');
+        setScope(areaToEdit.scope || null);
         setActive(areaToEdit.active);
 
         // Pre-populate already assigned classrooms strictly matching valid availableKidGroups
@@ -101,6 +103,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
       } else {
         setName('');
         setDescription('');
+        setScope(null);
         setActive(true);
         setSelectedKidGroupIds([]);
       }
@@ -132,6 +135,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             ministryId,
             name: name.trim(),
             description: description.trim() || undefined,
+            scope: scope ?? null,
             active,
             kidGroupId: primaryKidGroupId,
             kidGroupIds: kidGroupIdsPayload,
@@ -143,6 +147,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             ministryId,
             name: name.trim(),
             description: description.trim() || undefined,
+            scope: scope ?? undefined,
             kidGroupId: primaryKidGroupId,
             kidGroupIds: kidGroupIdsPayload,
           }),
@@ -197,6 +202,76 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             rows={3}
             className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
           />
+        </div>
+
+        {/* Functional Scope (Permissions) Selector */}
+        <div className="flex flex-col gap-1.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+              <Shield size={14} className="text-primary" />
+              Alcance Ministerial / Permisos del Sistema
+            </label>
+          </div>
+          <p className="text-[11px] text-gray-500 leading-relaxed mb-1">
+            Determina qué permisos y módulos (Regikids, Iglekids, etc.) recibirán automáticamente los voluntarios asignados a esta área (Coordinadores, Supervisores y Maestros).
+          </p>
+
+          <div className="grid grid-cols-1 gap-2 pt-1">
+            {[
+              {
+                id: null,
+                label: 'Sin alcance específico (General)',
+                desc: 'Área estándar sin permisos automáticos de módulos infantiles.',
+                badge: 'General',
+              },
+              {
+                id: MinistryAreaScope.KID_REGISTRATION,
+                label: 'Registro y Check-in de Niños (Regikids)',
+                desc: 'Otorga permisos de Check-in, escáner QR y creación de niños.',
+                badge: 'Regikids',
+              },
+              {
+                id: MinistryAreaScope.KID_GROUP_MANAGEMENT,
+                label: 'Gestión de Salones y Asistencia (Iglekids)',
+                desc: 'Otorga permisos de pase de lista en salones y reporte de asistencia.',
+                badge: 'Iglekids',
+              },
+            ].map((option) => {
+              const isSelected = scope === option.id;
+              return (
+                <div
+                  key={option.id ?? 'none'}
+                  onClick={() => setScope(option.id as any)}
+                  className={clsx(
+                    'p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-3 select-none',
+                    isSelected
+                      ? 'bg-primary/5 border-primary shadow-2xs'
+                      : 'bg-white border-gray-200 hover:border-gray-300',
+                  )}
+                >
+                  <div
+                    className={clsx(
+                      'w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all',
+                      isSelected ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white',
+                    )}
+                  >
+                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className={clsx('text-xs font-bold', isSelected ? 'text-primary' : 'text-gray-900')}>
+                        {option.label}
+                      </p>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-gray-600">
+                        {option.badge}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{option.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) */}

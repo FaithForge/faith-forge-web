@@ -114,6 +114,9 @@ const UserDetailView: React.FC = () => {
       toast.success(`¡Rol "${roleName}" eliminado con éxito!`);
       setShowDeleteRoleModal(false);
       setRoleToDelete(null);
+      if (id) {
+        dispatch(GetUser({ id }));
+      }
     } catch (err: any) {
       toast.error(err?.message || err?.error || 'Error al eliminar el rol del usuario');
     } finally {
@@ -524,6 +527,11 @@ const UserDetailView: React.FC = () => {
         open={showAssignRoleModal}
         onClose={() => setShowAssignRoleModal(false)}
         user={user}
+        onSuccess={() => {
+          if (id) {
+            dispatch(GetUser({ id }));
+          }
+        }}
       />
 
       {/* User Account / Credentials Modal */}
