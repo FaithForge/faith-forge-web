@@ -404,7 +404,7 @@ const NewKidView = () => {
       <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
       <StepProgress currentStep={step} steps={NEW_KID_STEPS} />
 
-      <div className="p-4 pb-16">
+      <div className="p-4 pb-36">
         {step === 1 && (
           <form onSubmit={handleKidSubmit(onKidSubmit)} className="animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Foto de Perfil */}

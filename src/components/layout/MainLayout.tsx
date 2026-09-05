@@ -160,7 +160,7 @@ const MainLayout = () => {
     }
   };
 
-  // Automatically scroll any focused input or textarea smoothly into center view on mobile devices
+  // Automatically scroll any focused input or textarea into a comfortable upper view on mobile devices
   useEffect(() => {
     const handleGlobalFocusIn = (e: FocusEvent) => {
       const target = e.target as HTMLElement;
@@ -170,19 +170,33 @@ const MainLayout = () => {
           target.tagName === 'TEXTAREA' ||
           target.isContentEditable)
       ) {
+        // Only act on elements inside the main content (never interfere with dialogs or modals)
         if (mainRef.current && mainRef.current.contains(target)) {
-          const scrollCenter = () => {
-            target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          const runScroll = () => {
+            if (!mainRef.current) return;
+            const targetRect = target.getBoundingClientRect();
+            const mainRect = mainRef.current.getBoundingClientRect();
+            const offsetFromMainTop = targetRect.top - mainRect.top;
+            // Place the focused input comfortably at ~80px below the main container's top
+            const desiredOffset = 80;
+            const diff = offsetFromMainTop - desiredOffset;
+
+            if (diff > 15) {
+              mainRef.current.scrollBy({
+                top: diff,
+                behavior: 'smooth',
+              });
+            }
           };
-          requestAnimationFrame(scrollCenter);
-          setTimeout(scrollCenter, 150);
-          setTimeout(scrollCenter, 300);
-          setTimeout(scrollCenter, 500);
+
+          requestAnimationFrame(runScroll);
+          setTimeout(runScroll, 180);
+          setTimeout(runScroll, 380);
         }
       }
     };
 
-    window.addEventListener('focusin', handleGlobalFocusIn);
+    window.addEventListener('focusin', handleGlobalFocusIn, { passive: true });
     return () => window.removeEventListener('focusin', handleGlobalFocusIn);
   }, []);
 

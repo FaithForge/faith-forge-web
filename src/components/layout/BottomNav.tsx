@@ -10,7 +10,6 @@ import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
-import { useIsKeyboardOpen } from '@/libs/hooks/useIsKeyboardOpen';
 import { toast } from 'sonner';
 
 const BottomNav = () => {
@@ -22,7 +21,6 @@ const BottomNav = () => {
   const [openSettings, setOpenSettings] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
-  const isKeyboardOpen = useIsKeyboardOpen();
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
@@ -72,12 +70,7 @@ const BottomNav = () => {
 
   return (
     <>
-      <nav
-        className={clsx(
-          'shrink-0 w-full bg-surface border-t border-gray-200 pb-safe pt-2 px-2 flex justify-between items-center z-50 transition-all duration-150',
-          isKeyboardOpen && 'hidden'
-        )}
-      >
+      <nav className="shrink-0 w-full bg-surface border-t border-gray-200 pb-safe pt-2 px-2 flex justify-between items-center z-50">
         {navItems.map((item) => {
           const isActive = pathname === item.path && item.action === 'link';
           const isBlocked = shouldBlockKids && (item.label === 'Crear Niño' || item.label === 'Escanear QR');
