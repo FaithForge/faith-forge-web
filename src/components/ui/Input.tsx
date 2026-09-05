@@ -39,6 +39,17 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     const showClearButton = Boolean(onClear && hasValue && !props.disabled && !isPasswordType);
     const showEyeButton = Boolean(isPasswordType && showPasswordToggle);
 
+    const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+      props.onFocus?.(e);
+      const target = e.currentTarget;
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }, 150);
+      setTimeout(() => {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+      }, 350);
+    };
+
     return (
       <div className={twMerge(clsx(fullWidth && 'w-full', wrapperClassName))}>
         {label && (
@@ -60,6 +71,7 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
             autoCorrect={autoCorrect}
             autoCapitalize={autoCapitalize}
             spellCheck={spellCheck}
+            onFocus={handleFocus}
             className={twMerge(clsx(
               'block w-full rounded-xl border-2 border-gray-200 bg-white text-gray-900 placeholder:text-gray-400 placeholder:font-normal font-medium py-2.5 focus:border-primary focus:ring-0 outline-none text-base shadow-sm transition-colors',
               'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed disabled:border-gray-200 disabled:opacity-80',

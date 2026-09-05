@@ -160,6 +160,31 @@ const MainLayout = () => {
     }
   };
 
+  // Automatically scroll any focused input or textarea smoothly into center view on mobile devices
+  useEffect(() => {
+    const handleGlobalFocusIn = (e: FocusEvent) => {
+      const target = e.target as HTMLElement;
+      if (
+        target &&
+        (target.tagName === 'INPUT' ||
+          target.tagName === 'TEXTAREA' ||
+          target.isContentEditable)
+      ) {
+        if (mainRef.current && mainRef.current.contains(target)) {
+          setTimeout(() => {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          }, 150);
+          setTimeout(() => {
+            target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+          }, 350);
+        }
+      }
+    };
+
+    window.addEventListener('focusin', handleGlobalFocusIn);
+    return () => window.removeEventListener('focusin', handleGlobalFocusIn);
+  }, []);
+
   return (
     <NavigationGuardProvider>
       <div className="flex flex-col h-screen bg-background text-text-main overflow-hidden relative">

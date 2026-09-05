@@ -10,6 +10,7 @@ import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useIsKeyboardOpen } from '@/libs/hooks/useIsKeyboardOpen';
 import { toast } from 'sonner';
 
 const BottomNav = () => {
@@ -21,6 +22,7 @@ const BottomNav = () => {
   const [openSettings, setOpenSettings] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
+  const isKeyboardOpen = useIsKeyboardOpen();
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
@@ -33,8 +35,8 @@ const BottomNav = () => {
     }
   }, [isConfigured, openSettings, isAdminRole]);
 
-  // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
-  if (isAdminRole) {
+  // If admin or virtual keyboard is active on mobile, hide the bottom navigation bar
+  if (isAdminRole || isKeyboardOpen) {
     return null;
   }
 

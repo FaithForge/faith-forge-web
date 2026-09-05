@@ -45,6 +45,7 @@ const LoginView = () => {
     token: string;
   } | null>(null);
   const [showRegisterBioModal, setShowRegisterBioModal] = useState(false);
+  const [showConfirmForgetBioModal, setShowConfirmForgetBioModal] = useState(false);
   
   const defaultInitialUsername = initialBioData?.user?.username || initialBioData?.username || '';
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<IFormLoginInput>({
@@ -197,17 +198,18 @@ const LoginView = () => {
   };
 
   /**
-   * Clears the biometric session from device storage and resets the form to manual login mode.
+   * Confirms deletion of the biometric session and resets the form to manual login mode.
    *
    * @returns {void}
    */
-  const handleForgetBiometricUser = () => {
+  const handleConfirmForgetBiometricUser = () => {
     clearBiometricSession();
     setRegisteredBioData(null);
     setShowManualLogin(true);
     setValue('username', '');
     setValue('password', '');
-    toast.info('Se desvinculó el usuario de este dispositivo');
+    setShowConfirmForgetBioModal(false);
+    toast.info('Se desvinculó la biometría de este dispositivo');
   };
 
   /**
@@ -386,13 +388,15 @@ const LoginView = () => {
                   Iniciar sesión con usuario
                 </Button>
 
-                <button
-                  type="button"
-                  onClick={handleForgetBiometricUser}
-                  className="text-xs text-gray-400 hover:text-red-500 transition-colors pt-1 font-medium cursor-pointer text-center"
-                >
-                  ¿No eres tú? Olvidar huella en este equipo
-                </button>
+                <div className="pt-4 mt-1 border-t border-gray-100 flex justify-center">
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmForgetBioModal(true)}
+                    className="text-xs text-gray-400 hover:text-red-500 active:text-red-600 transition-colors py-2 px-3 font-medium cursor-pointer"
+                  >
+                    ¿No eres tú? Desvincular huella
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
@@ -444,22 +448,22 @@ const LoginView = () => {
               </form>
 
               {bioAvailable && registeredBioData && (
-                <div className="text-center pt-2 border-t border-gray-100 flex flex-col items-center gap-2">
+                <div className="pt-4 mt-2 border-t border-gray-100 flex flex-col items-center gap-3">
                   <button
                     type="button"
                     onClick={() => setShowManualLogin(false)}
-                    className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium py-1 transition-colors cursor-pointer"
+                    className="w-full inline-flex items-center justify-center gap-2 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 font-semibold py-3 px-4 rounded-2xl transition-colors cursor-pointer"
                   >
-                    <Fingerprint size={16} />
+                    <Fingerprint size={16} className="text-emerald-600 shrink-0" />
                     Volver a ingreso con huella
                   </button>
 
                   <button
                     type="button"
-                    onClick={handleForgetBiometricUser}
-                    className="text-[11px] text-gray-400 hover:text-red-500 transition-colors font-medium cursor-pointer"
+                    onClick={() => setShowConfirmForgetBioModal(true)}
+                    className="text-[11px] text-gray-400 hover:text-red-500 active:text-red-600 transition-colors py-2 px-3 font-medium cursor-pointer"
                   >
-                    Olvidar huella de {displayUsername}
+                    Desvincular huella de {displayUsername}
                   </button>
                 </div>
               )}
@@ -480,6 +484,18 @@ const LoginView = () => {
         cancelText="Ahora no"
         type="info"
         onConfirm={handleConfirmRegisterBio}
+      />
+
+      {/* Modal to confirm forgetting biometrics */}
+      <ConfirmModal
+        open={showConfirmForgetBioModal}
+        onOpenChange={setShowConfirmForgetBioModal}
+        title="¿Desvincular huella de este equipo?"
+        description={`Se eliminará la configuración biométrica de ${savedDisplayName || 'este usuario'} en este dispositivo. Podrás volver a configurarla iniciando sesión con contraseña.`}
+        confirmText="Sí, desvincular"
+        cancelText="Cancelar"
+        type="warning"
+        onConfirm={handleConfirmForgetBiometricUser}
       />
     </div>
   );
