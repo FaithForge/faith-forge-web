@@ -151,7 +151,7 @@ const KidChurchDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-28 relative">
+    <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-6 relative">
       {/* Service Info Banner */}
       {isConfigured && currentMeeting ? (
         <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
@@ -352,7 +352,7 @@ const KidChurchDashboard: React.FC = () => {
             onClick={handleRefresh}
             disabled={isRefreshing}
             className={clsx(
-              'fixed right-5 bottom-24 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center z-40 transition-transform active:scale-90 hover:shadow-2xl cursor-pointer',
+              'fixed right-5 bottom-20 w-14 h-14 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center z-40 transition-transform active:scale-90 hover:shadow-2xl cursor-pointer',
               isRefreshing && 'opacity-70 cursor-not-allowed',
             )}
             title="Actualizar salones"

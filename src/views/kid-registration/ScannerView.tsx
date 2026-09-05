@@ -237,7 +237,7 @@ const ScannerView = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50 pb-28 sm:pb-32">
+    <div className="flex-1 flex flex-col bg-gray-50 pb-6">
       <PageHeader title="Registro por QR" onBack={handleCancelClick} />
 
       <StepProgress currentStep={step} steps={SCAN_STEPS} />

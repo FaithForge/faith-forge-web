@@ -212,7 +212,7 @@ const UpdateKidView: React.FC = () => {
   }));
 
   return (
-    <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-28 sm:pb-32">
+    <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader
         title="Actualizar Datos del Niño"
         onBack={() => navigate(APP_ROUTES.kidRegistration.checkIn(id || ''))}

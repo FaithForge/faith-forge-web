@@ -172,7 +172,7 @@ const MainLayout = () => {
         <main
           ref={mainRef}
           onScroll={handleScroll}
-          className={clsx('flex-1 overflow-y-auto relative flex flex-col bg-slate-50', !isAdminRole && 'pb-[80px]')}
+          className="flex-1 overflow-y-auto relative flex flex-col bg-slate-50 min-h-0"
         >
           <Outlet />
         </main>

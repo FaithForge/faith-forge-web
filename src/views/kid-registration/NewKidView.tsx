@@ -400,7 +400,7 @@ const NewKidView = () => {
   }, [kidGroupSlice.data]);
 
   return (
-    <div className="min-h-full bg-background flex flex-col flex-1 pb-28 sm:pb-32">
+    <div className="min-h-full bg-background flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
       <StepProgress currentStep={step} steps={NEW_KID_STEPS} />
 

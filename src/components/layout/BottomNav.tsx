@@ -70,7 +70,7 @@ const BottomNav = () => {
 
   return (
     <>
-      <nav className="fixed bottom-0 w-full bg-surface border-t border-gray-200 pb-safe pt-2 px-2 flex justify-between items-center z-50">
+      <nav className="shrink-0 w-full bg-surface border-t border-gray-200 pb-safe pt-2 px-2 flex justify-between items-center z-50">
         {navItems.map((item) => {
           const isActive = pathname === item.path && item.action === 'link';
           const isBlocked = shouldBlockKids && (item.label === 'Crear Niño' || item.label === 'Escanear QR');
