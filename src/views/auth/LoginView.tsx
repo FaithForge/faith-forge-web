@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, SubmitHandler } from 'react-hook-form';
-import { Fingerprint, Sparkles, UserCheck } from 'lucide-react';
+import { Fingerprint, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -28,10 +28,13 @@ interface IFormLoginInput {
 const LoginView = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const initialBioData = getRegisteredBiometricData();
+
   const [isLoading, setIsLoading] = useState(false);
   const [isBioLoading, setIsBioLoading] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
-  const [registeredBioData, setRegisteredBioData] = useState<BiometricSessionData | null>(null);
+  const [registeredBioData, setRegisteredBioData] = useState<BiometricSessionData | null>(initialBioData);
+  const [showManualLogin, setShowManualLogin] = useState(!initialBioData);
   const [pendingLoginData, setPendingLoginData] = useState<{
     username: string;
     password?: string;
@@ -40,28 +43,52 @@ const LoginView = () => {
   } | null>(null);
   const [showRegisterBioModal, setShowRegisterBioModal] = useState(false);
   
-  const { register, handleSubmit, formState: { errors } } = useForm<IFormLoginInput>();
+  const { register, handleSubmit, setValue, formState: { errors } } = useForm<IFormLoginInput>({
+    defaultValues: {
+      username: initialBioData?.username || '',
+      password: '',
+    },
+  });
 
   useEffect(() => {
+    let isMounted = true;
     const checkBiometrics = async () => {
       const available = await isBiometricsAvailable();
+      if (!isMounted) return;
       setBioAvailable(available);
+
       if (available && hasRegisteredBiometrics()) {
-        setRegisteredBioData(getRegisteredBiometricData());
+        const bioData = getRegisteredBiometricData();
+        setRegisteredBioData(bioData);
+        if (bioData?.username) {
+          setValue('username', bioData.username);
+        }
+      } else {
+        setShowManualLogin(true);
       }
     };
     checkBiometrics();
-  }, []);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [setValue]);
 
   /**
    * Handles biometric fingerprint / Face ID login.
    * If session token is expired, re-authenticates in the background with decrypted credentials.
+   * On failure or cancellation, automatically switches to the credentials login form.
+   *
+   * @returns {Promise<void>}
    */
   const handleBiometricLogin = async () => {
     setIsBioLoading(true);
     try {
       const result = await authenticateWithBiometrics();
-      if (!result) return;
+      if (!result) {
+        setShowManualLogin(true);
+        return;
+      }
 
       if (result.tokenValid && result.token && result.user) {
         dispatch(
@@ -101,10 +128,12 @@ const LoginView = () => {
             ? 'Tus credenciales han cambiado. Por favor, ingresa con tu contraseña.'
             : (loginResult.payload as any)?.message ?? rawMsg ?? 'Error al iniciar sesión';
           toast.error(errMsg);
+          setShowManualLogin(true);
         }
       }
     } catch (err: any) {
       toast.error(err.message || 'No se pudo verificar la biometría.');
+      setShowManualLogin(true);
     } finally {
       setIsBioLoading(false);
     }
@@ -159,6 +188,11 @@ const LoginView = () => {
     }
   };
 
+  /**
+   * Confirms biometric registration after successful manual login.
+   *
+   * @returns {Promise<void>}
+   */
   const handleConfirmRegisterBio = async () => {
     if (pendingLoginData) {
       const success = await registerBiometrics(pendingLoginData);
@@ -170,10 +204,26 @@ const LoginView = () => {
     navigate('/', { replace: true });
   };
 
+  /**
+   * Skips biometric registration and navigates to the app root.
+   *
+   * @returns {void}
+   */
   const handleSkipRegisterBio = () => {
     setShowRegisterBioModal(false);
     navigate('/', { replace: true });
   };
+
+  const hasBioModeActive = bioAvailable && registeredBioData && !showManualLogin;
+
+  const userInitials = registeredBioData?.user?.firstName || registeredBioData?.user?.lastName
+    ? `${registeredBioData.user.firstName?.[0] ?? ''}${registeredBioData.user.lastName?.[0] ?? ''}`.toUpperCase()
+    : registeredBioData?.username?.slice(0, 2).toUpperCase() || 'US';
+
+  const savedDisplayName =
+    formatPersonShortName(registeredBioData?.user?.firstName, registeredBioData?.user?.lastName) ||
+    registeredBioData?.username ||
+    '';
 
   return (
     <div className="relative flex flex-col items-center justify-center min-h-screen bg-slate-50 px-6 animate-in fade-in duration-500 pb-safe overflow-hidden z-0">
@@ -189,79 +239,116 @@ const LoginView = () => {
         </div>
 
         <div className="w-full bg-white p-7 rounded-3xl shadow-sm border border-gray-100/90 flex flex-col gap-5">
-          <h2 className="text-xl font-bold text-gray-800 text-center">Iniciar Sesión</h2>
-          
-          {/* Quick Access Button with Fingerprint / Face ID if already registered */}
-          {bioAvailable && registeredBioData && (
-            <div className="flex flex-col gap-2.5 p-4 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl animate-in fade-in zoom-in-95 duration-300">
-              <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 px-0.5">
-                <UserCheck size={16} className="text-emerald-600 shrink-0" />
-                <span className="truncate">
-                  Cuenta guardada:{' '}
-                  <strong>
-                    {formatPersonShortName(
-                      registeredBioData.user?.firstName,
-                      registeredBioData.user?.lastName
-                    ) || registeredBioData.username}
-                  </strong>
+          {hasBioModeActive ? (
+            /* Biometric Only View */
+            <div className="flex flex-col items-center text-center animate-in fade-in zoom-in-95 duration-200">
+              {/* User Avatar Circle */}
+              <div className="relative mb-3.5">
+                <div className="w-18 h-18 rounded-full bg-primary/10 border-2 border-primary/20 flex items-center justify-center text-primary font-bold text-xl shadow-inner">
+                  {userInitials}
+                </div>
+                <div className="absolute -bottom-1 -right-1 bg-emerald-500 text-white rounded-full p-1 shadow-xs ring-2 ring-white">
+                  <Fingerprint size={14} />
+                </div>
+              </div>
+
+              <div className="flex flex-col items-center mb-6">
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Bienvenido de nuevo</span>
+                <h2 className="text-lg font-bold text-gray-800 mt-0.5">
+                  {savedDisplayName}
+                </h2>
+                <span className="text-xs text-gray-500 mt-1 font-medium bg-gray-100/80 px-2.5 py-0.5 rounded-full">
+                  @{registeredBioData.username}
                 </span>
               </div>
-              <Button
-                type="button"
-                onClick={handleBiometricLogin}
-                loading={isBioLoading}
-                loadingText="Verificando biometría..."
-                block
-                className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2 py-3 shadow-xs font-semibold"
-              >
-                <Fingerprint size={20} />
-                Ingresar con Huella / Face ID
-              </Button>
-              <div className="text-center pt-0.5">
-                <span className="text-[11px] text-gray-400 font-medium">o ingresa con tus credenciales abajo</span>
+
+              <div className="w-full flex flex-col gap-3">
+                <Button
+                  type="button"
+                  onClick={handleBiometricLogin}
+                  loading={isBioLoading}
+                  loadingText="Verificando huella..."
+                  block
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2.5 py-3.5 text-base shadow-xs font-semibold rounded-2xl"
+                >
+                  <Fingerprint size={22} className="shrink-0" />
+                  Ingresar con huella
+                </Button>
+
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={() => setShowManualLogin(true)}
+                  block
+                  className="py-3 text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-2 rounded-2xl"
+                >
+                  <KeyRound size={16} className="text-gray-400 shrink-0" />
+                  Iniciar sesión con usuario
+                </Button>
               </div>
             </div>
+          ) : (
+            /* Traditional Username & Password Form */
+            <div className="flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-200">
+              <div className="text-center">
+                <h2 className="text-xl font-bold text-gray-800">Iniciar Sesión</h2>
+                <p className="text-xs text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
+              </div>
+
+              <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
+                <Input 
+                  label="Usuario / Email"
+                  type="text" 
+                  placeholder="Ingresa tu usuario"
+                  autoComplete="username"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  error={errors.username?.message}
+                  {...register('username', { required: 'Este campo es obligatorio' })}
+                />
+
+                <Input 
+                  label="Contraseña"
+                  type="password" 
+                  placeholder="Ingresa tu contraseña"
+                  autoComplete="current-password"
+                  autoCorrect="off"
+                  autoCapitalize="none"
+                  spellCheck={false}
+                  error={errors.password?.message}
+                  {...register('password', { 
+                    required: 'La contraseña es obligatoria',
+                    minLength: { value: 6, message: 'Mínimo 6 caracteres' } 
+                  })}
+                />
+
+                <Button 
+                  type="submit" 
+                  block 
+                  variant="primary" 
+                  loading={isLoading}
+                  loadingText="Ingresando..."
+                  className="mt-2 py-3 text-sm font-semibold rounded-2xl"
+                >
+                  Ingresar con Contraseña
+                </Button>
+              </form>
+
+              {bioAvailable && registeredBioData && (
+                <div className="text-center pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowManualLogin(false)}
+                    className="inline-flex items-center gap-1.5 text-xs text-emerald-600 hover:text-emerald-700 font-medium py-1 transition-colors cursor-pointer"
+                  >
+                    <Fingerprint size={16} />
+                    Volver a ingreso con huella
+                  </button>
+                </div>
+              )}
+            </div>
           )}
-
-          <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
-            <Input 
-              label="Usuario / Email"
-              type="text" 
-              placeholder="Ingresa tu usuario"
-              autoComplete="username"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              error={errors.username?.message}
-              {...register('username', { required: 'Este campo es obligatorio' })}
-            />
-
-            <Input 
-              label="Contraseña"
-              type="password" 
-              placeholder="Ingresa tu contraseña"
-              autoComplete="current-password"
-              autoCorrect="off"
-              autoCapitalize="none"
-              spellCheck={false}
-              error={errors.password?.message}
-              {...register('password', { 
-                required: 'La contraseña es obligatoria',
-                minLength: { value: 6, message: 'Mínimo 6 caracteres' } 
-              })}
-            />
-
-            <Button 
-              type="submit" 
-              block 
-              variant="primary" 
-              loading={isLoading}
-              loadingText="Ingresando..."
-              className="mt-2 py-3 text-sm font-semibold"
-            >
-              Ingresar con Contraseña
-            </Button>
-          </form>
         </div>
 
         <p className="text-center mt-6 text-xs text-gray-400 font-medium">Iglekids • v3.0.0</p>
