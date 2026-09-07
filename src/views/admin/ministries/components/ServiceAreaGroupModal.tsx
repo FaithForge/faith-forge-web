@@ -2,7 +2,13 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
-import { IChurchCampus, IMinistryArea, IMinistryGroupConfig } from '@/libs/models';
+import {
+  IChurchCampus,
+  IMinistryArea,
+  IMinistryGroupConfig,
+  MinistryAreaStateEnum,
+  MinistryGroupConfigStateEnum,
+} from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateServiceAreaGroup } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
@@ -48,8 +54,12 @@ export const ServiceAreaGroupModal: React.FC<ServiceAreaGroupModalProps> = ({
   useEffect(() => {
     if (open) {
       setChurchCampusId(selectedCampusId || (campuses[0]?.id ?? ''));
-      const activeAreas = areas.filter((a) => a.active);
-      const activeGroups = groups.filter((g) => g.active);
+      const activeAreas = areas.filter(
+        (a) => a.state === MinistryAreaStateEnum.ACTIVE,
+      );
+      const activeGroups = groups.filter(
+        (g) => g.state === MinistryGroupConfigStateEnum.ACTIVE,
+      );
       setMinistryAreaId(defaultAreaId || activeAreas[0]?.id || '');
       setMinistryGroupConfigId(activeGroups[0]?.id || '');
     }
@@ -92,15 +102,21 @@ export const ServiceAreaGroupModal: React.FC<ServiceAreaGroupModalProps> = ({
     }
   };
 
-  const areaOptions = areas.map((a) => ({
-    value: a.id,
-    label: `${a.name} ${!a.active ? '(Inactiva)' : ''}`,
-  }));
+  const areaOptions = areas.map((a) => {
+    const isAct = a.state === MinistryAreaStateEnum.ACTIVE;
+    return {
+      value: a.id,
+      label: `${a.name} ${!isAct ? '(Inactiva)' : ''}`,
+    };
+  });
 
-  const groupOptions = groups.map((g) => ({
-    value: g.id,
-    label: `${g.name} ${!g.active ? '(Inactivo)' : ''}`,
-  }));
+  const groupOptions = groups.map((g) => {
+    const isAct = g.state === MinistryGroupConfigStateEnum.ACTIVE;
+    return {
+      value: g.id,
+      label: `${g.name} ${!isAct ? '(Inactivo)' : ''}`,
+    };
+  });
 
   const campusOptions = campuses.map((c) => ({
     value: c.id,

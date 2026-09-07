@@ -20,6 +20,7 @@ import {
   GetServiceAreaGroups,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { APP_ROUTES } from '@/config/routes';
+import { MinistryStateEnum } from '@/libs/models';
 import MinistryTeamsSection from './views/MinistryTeamsSection';
 import MinistryLeadershipSection from './views/MinistryLeadershipSection';
 import MinistryOrganigramSection from './views/MinistryOrganigramSection';
@@ -157,12 +158,12 @@ const MinistryDetailView: React.FC = () => {
                 <span
                   className={clsx(
                     'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                    currentMinistry.active
+                    currentMinistry.state === MinistryStateEnum.ACTIVE
                       ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
                       : 'bg-gray-100 text-gray-600 border border-gray-200',
                   )}
                 >
-                  {currentMinistry.active ? (
+                  {currentMinistry.state === MinistryStateEnum.ACTIVE ? (
                     <>
                       <CheckCircle2 size={10} /> Activo
                     </>

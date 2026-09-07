@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-empty-interface */
 /* eslint-disable @typescript-eslint/no-empty-object-type */
 import { UserRole } from '../utils/auth';
+import { EntityState } from './Church';
 import {
   ReduxDefaultState,
   ReduxDefaultStateWithPagination,
@@ -9,6 +10,35 @@ import {
 import { IUser, UserGenderCode, UserIdType, UserState } from './User';
 
 // ENUMS
+
+export const KidStateEnum = {
+  ...EntityState,
+} as const;
+export type KidStateEnum = (typeof KidStateEnum)[keyof typeof KidStateEnum];
+
+export const KidGroupStateEnum = {
+  ...EntityState,
+} as const;
+export type KidGroupStateEnum =
+  (typeof KidGroupStateEnum)[keyof typeof KidGroupStateEnum];
+
+export const KidGuardianStateEnum = {
+  ...EntityState,
+} as const;
+export type KidGuardianStateEnum =
+  (typeof KidGuardianStateEnum)[keyof typeof KidGuardianStateEnum];
+
+export const KidMedicalConditionStateEnum = {
+  ...EntityState,
+} as const;
+export type KidMedicalConditionStateEnum =
+  (typeof KidMedicalConditionStateEnum)[keyof typeof KidMedicalConditionStateEnum];
+
+export const KidMedicalConditionGroupStateEnum = {
+  ...EntityState,
+} as const;
+export type KidMedicalConditionGroupStateEnum =
+  (typeof KidMedicalConditionGroupStateEnum)[keyof typeof KidMedicalConditionGroupStateEnum];
 
 export enum KidGuardianRelationCodeEnum {
   FATHER = 'FATHER', // Padre
@@ -150,7 +180,7 @@ export interface IKid {
   lastName: string;
   gender: UserGenderCode;
   birthday: string;
-  state: UserState;
+  state: KidStateEnum;
   photoUrl?: string;
   healthSecurityEntity?: string;
   age: number;
@@ -173,6 +203,7 @@ export interface IKidGuardian {
   phone: string;
   gender: UserGenderCode;
   relation: KidGuardianRelationCodeEnum;
+  state?: KidGuardianStateEnum;
 }
 
 export interface IKidRegistration {
@@ -201,7 +232,7 @@ export interface IKidGroup {
   initialMonth?: string;
   finalMonth?: string;
   type?: KidGroupType;
-  active?: boolean;
+  state?: KidGroupStateEnum;
 }
 
 export interface IKidMedicalCondition {
@@ -209,6 +240,7 @@ export interface IKidMedicalCondition {
   code: string;
   name: string;
   description?: string;
+  state?: KidMedicalConditionStateEnum;
 }
 
 export interface IAuth extends ReduxDefaultStateWithoutData {

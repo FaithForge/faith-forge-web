@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IMinistryGroupConfig } from '@/libs/models';
+import { IMinistryGroupConfig, MinistryGroupConfigStateEnum } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   CreateMinistryGroupConfig,
@@ -52,7 +52,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
       if (groupToEdit) {
         setName(groupToEdit.name);
         setPosition(groupToEdit.position);
-        setActive(groupToEdit.active);
+        setActive(groupToEdit.state === MinistryGroupConfigStateEnum.ACTIVE);
       } else {
         setName('');
         setPosition(defaultPosition);
@@ -77,7 +77,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
             ministryId,
             name: name.trim(),
             position: Number(position) || 1,
-            active,
+            state: active ? MinistryGroupConfigStateEnum.ACTIVE : MinistryGroupConfigStateEnum.INACTIVE,
           }),
         ).unwrap();
         toast.success('Grupo actualizado correctamente');

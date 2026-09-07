@@ -24,7 +24,11 @@ import {
   CreateVolunteerApplication,
   GetPublicVolunteerCatalog,
 } from '@/libs/state/redux/thunks/church/volunteerApplication.thunk';
-import { ICheckVolunteerUserResponse, VolunteerRole } from '@/libs/models';
+import {
+  ICheckVolunteerUserResponse,
+  VolunteerRole,
+  ServiceAreaGroupStateEnum,
+} from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
 
 const ID_TYPES = [
@@ -97,8 +101,12 @@ const VolunteerRequestPublicView: React.FC = () => {
 
     const sagGroupIds = new Set(
       (catalog.serviceAreaGroups || [])
-        .filter((sag) => sag.churchCampusId === churchCampusId && sag.active !== false)
-        .map((sag) => sag.ministryGroupConfigId)
+        .filter(
+          (sag) =>
+            sag.churchCampusId === churchCampusId &&
+            sag.state === ServiceAreaGroupStateEnum.ACTIVE,
+        )
+        .map((sag) => sag.ministryGroupConfigId),
     );
 
     return catalog.ministryGroupConfigs.filter((g) => {
@@ -117,7 +125,7 @@ const VolunteerRequestPublicView: React.FC = () => {
         (sag) =>
           sag.churchCampusId === churchCampusId &&
           sag.ministryGroupConfigId === ministryGroupConfigId &&
-          sag.active !== false
+          sag.state === ServiceAreaGroupStateEnum.ACTIVE,
       );
 
       if (sagForGroup && sagForGroup.length > 0) {

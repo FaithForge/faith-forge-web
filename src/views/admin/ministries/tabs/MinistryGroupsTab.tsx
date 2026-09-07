@@ -4,7 +4,7 @@ import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetMinistryGroupConfigs } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { IMinistryGroupConfig } from '@/libs/models';
+import { IMinistryGroupConfig, MinistryGroupConfigStateEnum } from '@/libs/models';
 import MinistryGroupModal from '../components/MinistryGroupModal';
 import clsx from 'clsx';
 
@@ -25,7 +25,9 @@ export const MinistryGroupsTab: React.FC<MinistryGroupsTabProps> = ({ ministryId
   const [modalOpen, setModalOpen] = useState(false);
   const [groupToEdit, setGroupToEdit] = useState<IMinistryGroupConfig | null>(null);
 
-  const rawGroups = groupsByMinistry[ministryId] || [];
+  const rawGroups = (groupsByMinistry[ministryId] || []).filter(
+    (g) => g.state !== MinistryGroupConfigStateEnum.DELETED,
+  );
 
   useEffect(() => {
     dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));
@@ -105,12 +107,12 @@ export const MinistryGroupsTab: React.FC<MinistryGroupsTabProps> = ({ ministryId
                     <span
                       className={clsx(
                         'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                        group.active
+                        group.state === MinistryGroupConfigStateEnum.ACTIVE
                           ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
                           : 'bg-gray-100 text-gray-600 border border-gray-200',
                       )}
                     >
-                      {group.active ? (
+                      {group.state === MinistryGroupConfigStateEnum.ACTIVE ? (
                         <>
                           <CheckCircle2 size={10} /> Activo
                         </>

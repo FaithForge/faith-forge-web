@@ -30,7 +30,12 @@ import {
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { GetVolunteersPayload, IVolunteer, VolunteerRole } from '@/libs/models';
+import {
+  GetVolunteersPayload,
+  IVolunteer,
+  VolunteerRole,
+  MinistryVolunteerStateEnum,
+} from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
 import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
@@ -133,11 +138,11 @@ const VolunteerDirectoryView: React.FC = () => {
         ministryId: selectedMinistryFilter !== 'ALL' ? selectedMinistryFilter : undefined,
         churchCampusId: selectedCampusFilter !== 'ALL' ? selectedCampusFilter : undefined,
         role: selectedRoleFilter !== 'ALL' ? selectedRoleFilter : undefined,
-        active:
+        state:
           selectedStatusFilter === 'ACTIVE'
-            ? true
+            ? MinistryVolunteerStateEnum.ACTIVE
             : selectedStatusFilter === 'INACTIVE'
-              ? false
+              ? MinistryVolunteerStateEnum.INACTIVE
               : undefined,
       };
     },

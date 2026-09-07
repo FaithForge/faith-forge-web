@@ -5,7 +5,7 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetMinistryAreas } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
-import { IMinistryArea, MinistryAreaScope } from '@/libs/models';
+import { IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum } from '@/libs/models';
 import MinistryAreaModal from '../components/MinistryAreaModal';
 import clsx from 'clsx';
 
@@ -27,7 +27,9 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
   const [modalOpen, setModalOpen] = useState(false);
   const [areaToEdit, setAreaToEdit] = useState<IMinistryArea | null>(null);
 
-  const areas = areasByMinistry[ministryId] || [];
+  const areas = (areasByMinistry[ministryId] || []).filter(
+    (a) => a.state !== MinistryAreaStateEnum.DELETED,
+  );
 
   useEffect(() => {
     dispatch(GetMinistryAreas({ ministryId, force: false }));
@@ -148,12 +150,12 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
                       <span
                         className={clsx(
                           'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                          area.active
+                          area.state === MinistryAreaStateEnum.ACTIVE
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
                             : 'bg-gray-100 text-gray-600 border border-gray-200',
                         )}
                       >
-                        {area.active ? (
+                        {area.state === MinistryAreaStateEnum.ACTIVE ? (
                           <>
                             <CheckCircle2 size={10} /> Activa
                           </>

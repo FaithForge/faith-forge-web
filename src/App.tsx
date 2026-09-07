@@ -29,7 +29,14 @@ const UserManagementView = lazy(() => import('@/views/admin/users/UserManagement
 const UserDetailView = lazy(() => import('@/views/admin/users/UserDetailView'));
 const UpdateUserView = lazy(() => import('@/views/admin/users/UpdateUserView'));
 const ChurchMeetingsView = lazy(() => import('@/views/admin/ChurchMeetingsView'));
+const CampusesManagementView = lazy(
+  () => import('@/views/admin/campuses/CampusesManagementView'),
+);
+const PrintersManagementView = lazy(
+  () => import('@/views/admin/printers/PrintersManagementView'),
+);
 const MinistriesManagementView = lazy(
+
   () => import('@/views/admin/ministries/MinistriesManagementView'),
 );
 const MinistryDetailView = lazy(() => import('@/views/admin/ministries/MinistryDetailView'));
@@ -127,11 +134,14 @@ function App() {
                   path={APP_ROUTES.admin.userRoles}
                   element={<Navigate to={APP_ROUTES.admin.users} replace />}
                 />
+                <Route path={APP_ROUTES.admin.campuses} element={<CampusesManagementView />} />
                 <Route path={APP_ROUTES.admin.churchMeetings} element={<ChurchMeetingsView />} />
+                <Route path={APP_ROUTES.admin.printers} element={<PrintersManagementView />} />
                 <Route
                   path={APP_ROUTES.admin.ministries}
                   element={<MinistriesManagementView />}
                 />
+
                 <Route
                   path={APP_ROUTES.admin.ministryDetailDynamic}
                   element={<MinistryDetailView />}

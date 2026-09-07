@@ -203,15 +203,19 @@ const UserDetailView: React.FC = () => {
                         'px-2.5 py-0.5 text-xs font-bold rounded-full border',
                         user.state === UserState.ACTIVE
                           ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                          : user.state === UserState.DISABLE
+                          : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
                           ? 'bg-rose-100 text-rose-800 border-rose-200'
+                          : user.state === UserState.DELETED
+                          ? 'bg-gray-100 text-gray-800 border-gray-200'
                           : 'bg-amber-100 text-amber-800 border-amber-200'
                       )}
                     >
                       {user.state === UserState.ACTIVE
                         ? 'Activo'
-                        : user.state === UserState.DISABLE
+                        : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
                         ? 'Deshabilitado'
+                        : user.state === UserState.DELETED
+                        ? 'Eliminado'
                         : 'Verificación Pendiente'}
                     </span>
 
@@ -339,8 +343,10 @@ const UserDetailView: React.FC = () => {
                   <span className="font-bold text-gray-800 text-xs sm:text-sm">
                     {user.state === UserState.ACTIVE
                       ? 'Activo'
-                      : user.state === UserState.DISABLE
+                      : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
                       ? 'Deshabilitado'
+                      : user.state === UserState.DELETED
+                      ? 'Eliminado'
                       : 'Pendiente de verificación'}
                   </span>
                 </div>

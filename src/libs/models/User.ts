@@ -1,5 +1,6 @@
 import { SelectorOption } from '../common-types/global';
 import { UserRole } from '../utils/auth';
+import { EntityState } from './Church';
 import { ReduxDefaultStateWithoutData } from './Redux';
 
 export enum UserGender {
@@ -182,11 +183,12 @@ export const healthSecurityEntitySelect: SelectorOption[] = [
 ];
 
 /** User State Enum */
-export enum UserState {
-  ACTIVE = 'ACTIVE',
-  DISABLE = 'DISABLE',
-  VERIFICATION_PENDING = 'VERIFICATION_PENDING',
-}
+export const UserState = {
+  ...EntityState,
+  DISABLE: 'DISABLE',
+  VERIFICATION_PENDING: 'VERIFICATION_PENDING',
+} as const;
+export type UserState = (typeof UserState)[keyof typeof UserState];
 
 export const userStateSelect = [
   { value: UserState.ACTIVE, label: 'Activo' },

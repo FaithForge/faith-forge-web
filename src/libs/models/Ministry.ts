@@ -1,5 +1,35 @@
-import { IChurchCampus } from './Church';
+import { EntityState, IChurchCampus } from './Church';
 import { ReduxDefaultState } from './Redux';
+
+export const MinistryStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryStateEnum =
+  (typeof MinistryStateEnum)[keyof typeof MinistryStateEnum];
+
+export const MinistryAreaStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryAreaStateEnum =
+  (typeof MinistryAreaStateEnum)[keyof typeof MinistryAreaStateEnum];
+
+export const MinistryAreaKidGroupStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryAreaKidGroupStateEnum =
+  (typeof MinistryAreaKidGroupStateEnum)[keyof typeof MinistryAreaKidGroupStateEnum];
+
+export const MinistryGroupConfigStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryGroupConfigStateEnum =
+  (typeof MinistryGroupConfigStateEnum)[keyof typeof MinistryGroupConfigStateEnum];
+
+export const ServiceAreaGroupStateEnum = {
+  ...EntityState,
+} as const;
+export type ServiceAreaGroupStateEnum =
+  (typeof ServiceAreaGroupStateEnum)[keyof typeof ServiceAreaGroupStateEnum];
 
 export interface IMinistry {
   id: string;
@@ -7,7 +37,7 @@ export interface IMinistry {
   churchId: string;
   name: string;
   description?: string;
-  active: boolean;
+  state?: MinistryStateEnum;
   createdAt?: string;
   updatedAt?: string;
   churchCampus?: IChurchCampus;
@@ -17,7 +47,7 @@ export interface IMinistryAreaKidGroupRelation {
   id: string;
   ministryAreaId: string;
   kidGroupId: string;
-  active: boolean;
+  state?: MinistryAreaKidGroupStateEnum;
 }
 
 export enum MinistryAreaScope {
@@ -32,7 +62,7 @@ export interface IMinistryArea {
   name: string;
   description?: string;
   scope?: MinistryAreaScope | null;
-  active: boolean;
+  state?: MinistryAreaStateEnum;
   kidGroupId?: string;
   kidGroupIds?: string[];
   kidGroups?: IMinistryAreaKidGroupRelation[];
@@ -45,7 +75,7 @@ export interface IMinistryGroupConfig {
   churchCampusId?: string;
   name: string;
   position: number;
-  active: boolean;
+  state?: MinistryGroupConfigStateEnum;
   ministry?: IMinistry;
 }
 
@@ -54,7 +84,7 @@ export interface IServiceAreaGroup {
   ministryAreaId: string;
   ministryGroupConfigId: string;
   churchCampusId: string;
-  active: boolean;
+  state?: ServiceAreaGroupStateEnum;
   ministryArea?: IMinistryArea;
   ministryGroupConfig?: IMinistryGroupConfig;
   churchCampus?: IChurchCampus;

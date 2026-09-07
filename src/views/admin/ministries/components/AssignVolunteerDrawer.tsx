@@ -11,6 +11,10 @@ import {
   IUser,
   IVolunteer,
   IVolunteerAssignment,
+  MinistryAreaStateEnum,
+  MinistryGroupConfigStateEnum,
+  MinistryVolunteerAssignmentStateEnum,
+  ServiceAreaGroupStateEnum,
   VolunteerRole,
 } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -175,14 +179,18 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   // Filter service area groups based on selected campus
   const availableTeams = useMemo<IServiceAreaGroup[]>(() => {
     return serviceAreaGroups.filter((sag: IServiceAreaGroup) => {
-      return sag.churchCampusId === selectedCampusId && sag.active;
+      const isSagActive = sag.state === ServiceAreaGroupStateEnum.ACTIVE;
+      return sag.churchCampusId === selectedCampusId && isSagActive;
     });
   }, [serviceAreaGroups, selectedCampusId]);
 
   // Areas that actually have teams configured in this campus
   const availableAreasForCampus = useMemo<IMinistryArea[]>(() => {
     const areaIdSet = new Set(availableTeams.map((t: IServiceAreaGroup) => t.ministryAreaId));
-    return areas.filter((a: IMinistryArea) => a.active && areaIdSet.has(a.id));
+    return areas.filter((a: IMinistryArea) => {
+      const isAreaActive = a.state === MinistryAreaStateEnum.ACTIVE;
+      return isAreaActive && areaIdSet.has(a.id);
+    });
   }, [availableTeams, areas]);
 
   // Groups available for the selected area in this campus
@@ -192,7 +200,10 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     );
     const groupIdSet = new Set(matchingTeams.map((t: IServiceAreaGroup) => t.ministryGroupConfigId));
     return groups
-      .filter((g: IMinistryGroupConfig) => g.active && groupIdSet.has(g.id))
+      .filter((g: IMinistryGroupConfig) => {
+        const isGroupActive = g.state === MinistryGroupConfigStateEnum.ACTIVE;
+        return isGroupActive && groupIdSet.has(g.id);
+      })
       .sort((a, b) => a.position - b.position);
   }, [availableTeams, selectedTeamAreaId, groups]);
 
@@ -213,8 +224,12 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       setSelectedUser(null);
       setSelectedRole(defaultRole || VolunteerRole.VOLUNTEER);
 
-      const activeAreas = areas.filter((a) => a.active);
-      const activeGroups = groups.filter((g) => g.active);
+      const activeAreas = areas.filter(
+        (a) => a.state === MinistryAreaStateEnum.ACTIVE,
+      );
+      const activeGroups = groups.filter(
+        (g) => g.state === MinistryGroupConfigStateEnum.ACTIVE,
+      );
       setSelectedAreaId(activeAreas[0]?.id || '');
       setSelectedGroupId(activeGroups[0]?.id || '');
 
@@ -232,9 +247,12 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
         const campId = churchCampusId || campuses[0]?.id || '';
         setSelectedCampusId(campId);
 
-        const campusTeams = serviceAreaGroups.filter(
-          (t) => t.churchCampusId === campId && t.active,
-        );
+        const campusTeams = serviceAreaGroups.filter((t) => {
+          return (
+            t.churchCampusId === campId &&
+            t.state === ServiceAreaGroupStateEnum.ACTIVE
+          );
+        });
         if (campusTeams.length > 0) {
           setSelectedTeamAreaId(campusTeams[0].ministryAreaId);
           setSelectedTeamGroupId(campusTeams[0].ministryGroupConfigId);
@@ -257,9 +275,12 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
   const handleCampusChange = (newCampusId: string) => {
     setSelectedCampusId(newCampusId);
-    const campusTeams = serviceAreaGroups.filter(
-      (t) => t.churchCampusId === newCampusId && t.active,
-    );
+    const campusTeams = serviceAreaGroups.filter((t) => {
+      return (
+        t.churchCampusId === newCampusId &&
+        t.state === ServiceAreaGroupStateEnum.ACTIVE
+      );
+    });
     if (campusTeams.length > 0) {
       const areaExists = campusTeams.some((t) => t.ministryAreaId === selectedTeamAreaId);
       const targetAreaId = areaExists ? selectedTeamAreaId : campusTeams[0].ministryAreaId;
@@ -363,7 +384,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
           a.volunteer?.userId === selectedUser.id ||
           a.volunteerId === selectedUser.id;
         const isSameSAG = a.serviceAreaGroupId === targetServiceAreaGroupId;
-        return isSameVolunteer && isSameSAG && a.active;
+        const isAsgActive =
+          a.state === MinistryVolunteerAssignmentStateEnum.ACTIVE;
+        return isSameVolunteer && isSameSAG && isAsgActive;
       });
 
       if (conflict) {

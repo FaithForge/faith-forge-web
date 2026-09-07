@@ -4,6 +4,8 @@ import {
   GetVolunteersPayload,
   IVolunteer,
   IVolunteerAssignment,
+  MinistryVolunteerAssignmentStateEnum,
+  MinistryVolunteerStateEnum,
   PaginationResponse,
   VolunteerRole,
 } from '@/libs/models';
@@ -36,7 +38,7 @@ export const GetVolunteers = createAsyncThunk(
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
     if (payload.role) params.role = payload.role;
     if (payload.search && payload.search.trim()) params.search = payload.search.trim();
-    if (payload.active !== undefined) params.active = payload.active;
+    if (payload.state !== undefined) params.state = payload.state;
 
     try {
       const response = (
@@ -88,7 +90,7 @@ export const GetMoreVolunteers = createAsyncThunk(
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
     if (payload.role) params.role = payload.role;
     if (payload.search && payload.search.trim()) params.search = payload.search.trim();
-    if (payload.active !== undefined) params.active = payload.active;
+    if (payload.state !== undefined) params.state = payload.state;
 
     try {
       const response = (
@@ -207,7 +209,7 @@ export const GetVolunteerAssignments = createAsyncThunk(
     if (payload.serviceAreaGroupId) params.serviceAreaGroupId = payload.serviceAreaGroupId;
     if (payload.volunteerId) params.volunteerId = payload.volunteerId;
     if (payload.role) params.role = payload.role;
-    if (payload.active !== undefined) params.active = payload.active;
+    if (payload.state !== undefined) params.state = payload.state;
 
     try {
       const response = (
@@ -313,13 +315,17 @@ export const CreateVolunteerAssignment = createAsyncThunk(
  * @param {Object} payload - Assignment update payload.
  * @param {string} payload.id - Assignment identifier.
  * @param {VolunteerRole} [payload.role] - Updated role.
- * @param {boolean} [payload.active] - Active status flag.
+ * @param {MinistryVolunteerAssignmentStateEnum} [payload.state] - State enum.
  * @returns {Promise<IVolunteerAssignment>} The updated assignment.
  */
 export const UpdateVolunteerAssignment = createAsyncThunk(
   'church/UpdateVolunteerAssignment',
   async (
-    payload: { id: string; role?: VolunteerRole; active?: boolean },
+    payload: {
+      id: string;
+      role?: VolunteerRole;
+      state?: MinistryVolunteerAssignmentStateEnum;
+    },
     { getState, rejectWithValue },
   ) => {
     const { id, ...data } = payload;

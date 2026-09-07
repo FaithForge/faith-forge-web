@@ -13,7 +13,7 @@ import { updateCurrentChurchMeeting } from '@/libs/state/redux/slices/church/chu
 import { updateCurrentChurchPrinter } from '@/libs/state/redux/slices/church/churchPrinter.slice';
 import { setPrinterMode, setBluetoothStatus, PrinterModeType } from '@/libs/state/redux/slices/church/printerMode.slice';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
-import { ChurchMeetingStateEnum } from '@/libs/models';
+import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurchPrinter } from '@/libs/models';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { IsAdmin, UserRole } from '@/libs/utils/auth';
@@ -114,7 +114,9 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       dispatch(GetChurchCampuses({ force: true }));
       const activeCampusId = campuses.current?.id || '';
       setSelectedCampusId(activeCampusId);
-      setSelectedPrinterId(printers.current?.id || '');
+      const isCurrentPrinterActive =
+        printers.current?.state === ChurchPrinterStateEnum.ACTIVE;
+      setSelectedPrinterId(isCurrentPrinterActive ? printers.current?.id || '' : '');
       setSelectedMode(printerModeSlice?.mode || 'NETWORK');
     }
   }, [open]);
@@ -227,8 +229,12 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     });
   }, [rawMeetings, isDayRestrictedRole]);
 
-  const availablePrinters =
-    (printers as any).printersByCampus?.[selectedCampusId] || printers.data || [];
+  // Filtrado de impresoras: mostrar únicamente las que estén en estado ACTIVE
+  const availablePrinters = useMemo(() => {
+    const rawPrinters: IChurchPrinter[] =
+      (printers as any).printersByCampus?.[selectedCampusId] || printers.data || [];
+    return rawPrinters.filter((p) => p.state === ChurchPrinterStateEnum.ACTIVE);
+  }, [printers, selectedCampusId]);
 
   // Auto-select or align meeting when availableMeetings change
   useEffect(() => {
@@ -240,7 +246,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       }
     } else if (availableMeetings.length > 1) {
       const isCurrentValidInList = availableMeetings.some(
-        (m: any) => m.id === selectedMeetingId
+        (m: any) => m.id === selectedMeetingId,
       );
       if (!isCurrentValidInList) {
         const preferredMeeting =
@@ -259,20 +265,46 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     }
   }, [availableMeetings, selectedCampusId, selectedMeetingId, meetings.current, open]);
 
-  // Auto-select printer if there is only one available in the list
+  // Auto-select or align printer when availablePrinters change
   useEffect(() => {
-    if (availablePrinters.length === 1 && selectedPrinterId !== availablePrinters[0].id) {
-      setSelectedPrinterId(availablePrinters[0].id);
+    if (!selectedCampusId || !open || isBluetoothMode) return;
+
+    if (availablePrinters.length === 1) {
+      if (selectedPrinterId !== availablePrinters[0].id) {
+        setSelectedPrinterId(availablePrinters[0].id);
+      }
+    } else if (availablePrinters.length > 1) {
+      const isCurrentValidInList = availablePrinters.some(
+        (p: IChurchPrinter) => p.id === selectedPrinterId,
+      );
+      if (!isCurrentValidInList) {
+        const preferredPrinter =
+          printers.current &&
+          availablePrinters.find((p: IChurchPrinter) => p.id === printers.current?.id);
+        if (preferredPrinter) {
+          setSelectedPrinterId(preferredPrinter.id);
+        } else {
+          setSelectedPrinterId(availablePrinters[0].id);
+        }
+      }
+    } else if (availablePrinters.length === 0) {
+      if (selectedPrinterId !== '') {
+        setSelectedPrinterId('');
+      }
     }
-  }, [availablePrinters, selectedPrinterId]);
+  }, [availablePrinters, selectedCampusId, selectedPrinterId, printers.current, open, isBluetoothMode]);
 
   // Handle Campus Change
   const handleCampusChange = (campusId: string) => {
     setSelectedCampusId(campusId);
     setSelectedMeetingId('');
-    const campusPrinters = (printers as any).printersByCampus?.[campusId] || [];
-    if (campusPrinters.length === 1) {
-      setSelectedPrinterId(campusPrinters[0].id);
+    const rawCampusPrinters: IChurchPrinter[] =
+      (printers as any).printersByCampus?.[campusId] || [];
+    const activePrinters = rawCampusPrinters.filter(
+      (p) => p.state === ChurchPrinterStateEnum.ACTIVE,
+    );
+    if (activePrinters.length === 1) {
+      setSelectedPrinterId(activePrinters[0].id);
     } else {
       setSelectedPrinterId('');
     }
@@ -284,7 +316,10 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     if (availablePrinters.length === 1) {
       setSelectedPrinterId(availablePrinters[0].id);
     } else {
-      setSelectedPrinterId('');
+      const isCurrentValid = availablePrinters.some((p) => p.id === selectedPrinterId);
+      if (!isCurrentValid) {
+        setSelectedPrinterId(availablePrinters.length > 0 ? availablePrinters[0].id : '');
+      }
     }
   };
 

@@ -31,6 +31,7 @@ import {
   IServiceAreaGroup,
   IVolunteerAssignment,
   VolunteerRole,
+  MinistryAreaStateEnum,
 } from '@/libs/models';
 import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
 import TeamRosterDrawer from '../components/TeamRosterDrawer';
@@ -278,7 +279,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
           id: 'other',
           name: 'Otras Áreas',
           ministryId,
-          active: true,
+          state: MinistryAreaStateEnum.ACTIVE,
         },
         teams: leftoverTeams,
       });

@@ -217,7 +217,7 @@ const UserManagementView: React.FC = () => {
             {!loading &&
               users.map((user) => {
                 const rolesCount = user.roles?.length || 0;
-                const isInactive = user.state === UserState.DISABLE;
+                const isInactive = user.state === UserState.DISABLE || user.state === UserState.INACTIVE;
 
                 const badgeElement = (
                   <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -226,15 +226,19 @@ const UserManagementView: React.FC = () => {
                         className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
                           user.state === UserState.ACTIVE
                             ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
-                            : user.state === UserState.DISABLE
+                            : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
                             ? 'bg-rose-100 text-rose-800 border-rose-200'
+                            : user.state === UserState.DELETED
+                            ? 'bg-gray-100 text-gray-800 border-gray-200'
                             : 'bg-amber-100 text-amber-800 border-amber-200'
                         }`}
                       >
                         {user.state === UserState.ACTIVE
                           ? 'Activo'
-                          : user.state === UserState.DISABLE
+                          : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
                           ? 'Inactivo'
+                          : user.state === UserState.DELETED
+                          ? 'Eliminado'
                           : 'Pendiente'}
                       </span>
                     )}

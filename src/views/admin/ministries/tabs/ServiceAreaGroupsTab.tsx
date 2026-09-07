@@ -24,7 +24,13 @@ import {
   GetServiceAreaGroups,
   UpdateServiceAreaGroup,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { IMinistryGroupConfig, IServiceAreaGroup } from '@/libs/models';
+import {
+  IMinistryGroupConfig,
+  IServiceAreaGroup,
+  MinistryAreaStateEnum,
+  MinistryGroupConfigStateEnum,
+  ServiceAreaGroupStateEnum,
+} from '@/libs/models';
 import ServiceAreaGroupModal from '../components/ServiceAreaGroupModal';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -117,11 +123,13 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
   // Filter combinations relevant to this ministry and this campus
   const currentTeams = useMemo(() => {
     const areaIdSet = new Set(areas.map((a) => a.id));
-    return serviceAreaGroups.filter((sag) => {
-      const matchCampus = sag.churchCampusId === selectedCampusId;
-      const matchArea = areaIdSet.has(sag.ministryAreaId);
-      return matchCampus && matchArea;
-    });
+    return serviceAreaGroups
+      .filter((t) => t.state !== ServiceAreaGroupStateEnum.DELETED)
+      .filter((sag) => {
+        const matchCampus = sag.churchCampusId === selectedCampusId;
+        const matchArea = areaIdSet.has(sag.ministryAreaId);
+        return matchCampus && matchArea;
+      });
   }, [serviceAreaGroups, selectedCampusId, areas]);
 
   // Structure Area x Groups
@@ -149,7 +157,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       result.push({
         areaId: area.id,
         areaName: area.name,
-        areaActive: area.active,
+        areaActive: area.state === MinistryAreaStateEnum.ACTIVE,
         areaDescription: area.description,
         teams: areaTeams,
       });
@@ -169,7 +177,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
         result.push({
           areaId: team.ministryAreaId,
           areaName: team.ministryArea?.name || 'Área desconocida',
-          areaActive: team.ministryArea?.active ?? true,
+          areaActive: team.ministryArea?.state === MinistryAreaStateEnum.ACTIVE,
           areaDescription: team.ministryArea?.description,
           teams: leftoverTeams,
         });
@@ -223,15 +231,19 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
   const handleToggleActive = async (team: IServiceAreaGroup) => {
     setTogglingId(team.id);
+    const isCurrentlyActive = team.state === ServiceAreaGroupStateEnum.ACTIVE;
+    const nextState = isCurrentlyActive
+      ? ServiceAreaGroupStateEnum.INACTIVE
+      : ServiceAreaGroupStateEnum.ACTIVE;
     try {
       await dispatch(
         UpdateServiceAreaGroup({
           id: team.id,
-          active: !team.active,
+          state: nextState,
         }),
       ).unwrap();
       toast.success(
-        `Equipo ${!team.active ? 'activado' : 'desactivado'} correctamente`,
+        `Equipo ${!isCurrentlyActive ? 'activado' : 'desactivado'} correctamente`,
       );
     } catch (err: unknown) {
       const errMsg = typeof err === 'string' ? err : 'Error al cambiar estado del equipo';
@@ -245,8 +257,12 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
    * Generates all missing Area × Group combinations for the selected campus in bulk.
    */
   const handleBulkGenerate = async () => {
-    const activeAreas = areas.filter((a) => a.active);
-    const activeGroups = groups.filter((g) => g.active);
+    const activeAreas = areas.filter(
+      (a) => a.state === MinistryAreaStateEnum.ACTIVE,
+    );
+    const activeGroups = groups.filter(
+      (g) => g.state === MinistryGroupConfigStateEnum.ACTIVE,
+    );
 
     if (activeAreas.length === 0 || activeGroups.length === 0) {
       toast.error('Se requieren áreas y grupos activos para generar combinaciones');
@@ -471,7 +487,9 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
         <div className="flex flex-col gap-3">
           {areasWithTeams.map((areaItem) => {
             const isExpanded = expandedAreaIds.has(areaItem.areaId);
-            const activeTeamsCount = areaItem.teams.filter((t) => t.team.active).length;
+            const activeTeamsCount = areaItem.teams.filter(
+              (t) => t.team.state === ServiceAreaGroupStateEnum.ACTIVE,
+            ).length;
 
             return (
               <div
@@ -566,81 +584,84 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                 {isExpanded && (
                   <div className="border-t border-gray-100 bg-slate-50/50 p-3 sm:p-4">
                     {areaItem.teams.length === 0 ? (
-                      <div className="p-4 rounded-xl border border-dashed border-gray-200 bg-white text-center flex flex-col items-center justify-center gap-2">
-                        <p className="text-xs text-gray-500">
-                          No hay grupos asignados a <strong className="text-gray-700">{areaItem.areaName}</strong> en esta sede.
-                        </p>
-                        {hasPrerequisites && (
-                          <Button
-                            onClick={() => handleOpenCreateModal(areaItem.areaId)}
-                            size="sm"
-                            variant="default"
-                            className="text-xs py-1 px-3 gap-1 mt-1"
-                          >
-                            <Plus size={13} /> Asociar Grupo
-                          </Button>
-                        )}
-                      </div>
+                      <p className="text-xs text-gray-400 py-3 text-center">
+                        No hay combinaciones de grupos configuradas para esta área en esta sede.
+                      </p>
                     ) : (
                       <div className="flex flex-col gap-2">
                         {areaItem.teams.map(({ team, group }) => {
                           const isToggling = togglingId === team.id;
+
                           return (
                             <div
                               key={team.id}
-                              className="bg-white rounded-xl p-3 border border-gray-200/80 shadow-2xs flex items-center justify-between gap-3 hover:border-gray-300 transition-all"
+                              className="bg-white rounded-xl border border-gray-200/80 p-3 sm:p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3"
                             >
                               <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+                                <div className="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-700 flex items-center justify-center shrink-0">
                                   <Users size={15} />
                                 </div>
-                                <div className="min-w-0">
-                                  <div className="flex items-center gap-2 flex-wrap">
-                                    <span className="text-xs sm:text-sm font-bold text-gray-900 truncate">
-                                      {group?.name ?? 'Grupo desconocido'}
-                                    </span>
-                                    <span
-                                      className={clsx(
-                                        'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                                        team.active
-                                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                                          : 'bg-gray-100 text-gray-600 border border-gray-200',
-                                      )}
-                                    >
-                                      {team.active ? (
-                                        <>
-                                          <CheckCircle2 size={10} /> Activo
-                                        </>
-                                      ) : (
-                                        <>
-                                          <XCircle size={10} /> Inactivo
-                                        </>
-                                      )}
-                                    </span>
-                                  </div>
+                              <div className="min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap">
+                                  <span className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                                    {group?.name ?? 'Grupo desconocido'}
+                                  </span>
+                                  {(() => {
+                                    const isTeamActive =
+                                      team.state === ServiceAreaGroupStateEnum.ACTIVE;
+                                    return (
+                                      <>
+                                        <span
+                                          className={clsx(
+                                            'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
+                                            isTeamActive
+                                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                                              : 'bg-gray-100 text-gray-600 border border-gray-200',
+                                          )}
+                                        >
+                                          {isTeamActive ? (
+                                            <>
+                                              <CheckCircle2 size={10} /> Activo
+                                            </>
+                                          ) : (
+                                            <>
+                                              <XCircle size={10} /> Inactivo
+                                            </>
+                                          )}
+                                        </span>
+                                      </>
+                                    );
+                                  })()}
                                 </div>
                               </div>
+                            </div>
 
-                              <div className="flex items-center gap-2 shrink-0">
-                                <button
-                                  type="button"
-                                  onClick={() => handleToggleActive(team)}
-                                  disabled={isToggling}
-                                  className={clsx(
-                                    'text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all cursor-pointer',
-                                    team.active
-                                      ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
-                                      : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100',
-                                  )}
-                                >
-                                  {isToggling ? (
-                                    <Loader2 className="animate-spin" size={13} />
-                                  ) : team.active ? (
-                                    'Desactivar'
-                                  ) : (
-                                    'Activar'
-                                  )}
-                                </button>
+                            <div className="flex items-center gap-2 shrink-0">
+                              {(() => {
+                                const isTeamActive =
+                                  team.state === ServiceAreaGroupStateEnum.ACTIVE;
+                                  return (
+                                    <button
+                                      type="button"
+                                      onClick={() => handleToggleActive(team)}
+                                      disabled={isToggling}
+                                      className={clsx(
+                                        'text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all cursor-pointer',
+                                        isTeamActive
+                                          ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                          : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100',
+                                      )}
+                                    >
+                                      {isToggling ? (
+                                        <Loader2 className="animate-spin" size={13} />
+                                      ) : isTeamActive ? (
+                                        'Desactivar'
+                                      ) : (
+                                        'Activar'
+                                      )}
+                                    </button>
+                                  );
+                                })()}
                               </div>
                             </div>
                           );

@@ -7,7 +7,9 @@ export const APP_ROUTES = {
   },
   admin: {
     root: '/admin',
+    campuses: '/admin/campuses',
     churchMeetings: '/admin/church-meetings',
+    printers: '/admin/printers',
     createUser: '/admin/users/new',
     users: '/admin/users',
     userDetailDynamic: '/admin/users/:id',

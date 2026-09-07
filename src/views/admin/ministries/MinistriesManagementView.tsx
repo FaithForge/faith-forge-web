@@ -25,7 +25,7 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { IMinistry } from '@/libs/models';
+import { IMinistry, MinistryStateEnum } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
 import MinistryModal from './components/MinistryModal';
 import clsx from 'clsx';
@@ -83,9 +83,10 @@ const MinistriesManagementView: React.FC = () => {
   };
 
   const filteredMinistries = useMemo(() => {
-    if (!searchText.trim()) return ministries;
+    const list = ministries.filter((m) => m.state !== MinistryStateEnum.DELETED);
+    if (!searchText.trim()) return list;
     const query = searchText.toLowerCase().trim();
-    return ministries.filter(
+    return list.filter(
       (m) =>
         m.name.toLowerCase().includes(query) ||
         (m.description && m.description.toLowerCase().includes(query)),
@@ -239,12 +240,12 @@ const MinistriesManagementView: React.FC = () => {
                             <span
                               className={clsx(
                                 'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                                ministry.active
+                                ministry.state === MinistryStateEnum.ACTIVE
                                   ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
                                   : 'bg-gray-100 text-gray-600 border border-gray-200',
                               )}
                             >
-                              {ministry.active ? (
+                              {ministry.state === MinistryStateEnum.ACTIVE ? (
                                 <>
                                   <CheckCircle2 size={10} /> Activo
                                 </>

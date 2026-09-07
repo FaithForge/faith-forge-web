@@ -13,7 +13,10 @@ import {
   Trash2,
   Loader2,
   Layers,
+  MapPin,
+  Printer,
 } from 'lucide-react';
+
 import { APP_ROUTES } from '@/config/routes';
 import clsx from 'clsx';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -92,21 +95,40 @@ const ADMIN_CATEGORIES: AdminCategory[] = [
     ],
   },
   {
-    title: 'Gestión de Servicios',
-    description: 'Control de cultos, reuniones y horarios de apertura por campus.',
+    title: 'Sedes e Instalaciones',
+    description: 'Administración de sedes físicas, cultos, horarios e impresoras térmicas.',
     icon: Church,
     items: [
       {
+        id: 'campuses-management',
+        title: 'Gestión de Sedes',
+        description: 'Crea, edita y organiza las sedes físicas y campus de la iglesia.',
+        icon: MapPin,
+        route: APP_ROUTES.admin.campuses,
+        iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+        iconColor: 'text-emerald-600',
+      },
+      {
         id: 'service-status',
-        title: 'Estado de Servicios por Sede',
-        description: 'Habilita, deshabilita o cambia la visibilidad y disponibilidad de los servicios por sede.',
+        title: 'Horarios y Servicios por Sede',
+        description: 'Configura reuniones, franjas de culto y apertura de registro, y administra estados.',
         icon: CalendarClock,
         route: APP_ROUTES.admin.churchMeetings,
         iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
         iconColor: 'text-amber-600',
       },
+      {
+        id: 'printers-management',
+        title: 'Impresoras Térmicas',
+        description: 'Configura y gestiona las impresoras Bluetooth y de red asignadas por sede.',
+        icon: Printer,
+        route: APP_ROUTES.admin.printers,
+        iconBg: 'bg-cyan-50 text-cyan-600 border border-cyan-100',
+        iconColor: 'text-cyan-600',
+      },
     ],
   },
+
   {
     title: 'Sistema',
     description: 'Tareas de mantenimiento, optimización y utilidades del sistema.',

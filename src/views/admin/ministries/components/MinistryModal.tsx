@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IMinistry } from '@/libs/models';
+import { IMinistry, MinistryStateEnum } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateMinistry, UpdateMinistry } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
@@ -50,7 +50,7 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       if (ministryToEdit) {
         setName(ministryToEdit.name);
         setDescription(ministryToEdit.description || '');
-        setActive(ministryToEdit.active);
+        setActive(ministryToEdit.state === MinistryStateEnum.ACTIVE);
       } else {
         setName('');
         setDescription('');
@@ -74,7 +74,7 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
             id: ministryToEdit.id,
             name: name.trim(),
             description: description.trim() || undefined,
-            active,
+            state: active ? MinistryStateEnum.ACTIVE : MinistryStateEnum.INACTIVE,
           }),
         ).unwrap();
         toast.success('Ministerio actualizado correctamente');

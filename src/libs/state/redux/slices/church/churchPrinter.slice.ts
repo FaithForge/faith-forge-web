@@ -1,10 +1,11 @@
-import { IChurchPrinter, IChurchPrinters } from '@/libs/models';
+import { ChurchPrinterStateEnum, IChurchPrinter, IChurchPrinters } from '@/libs/models';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GetChurchPrinters } from '../../thunks/church/church.thunk';
+import { GetChurchPrinters, GetChurchPrintersAdmin } from '../../thunks/church/church.thunk';
 
 export interface ChurchPrinterSliceState extends IChurchPrinters {
   loadedCampusId?: string;
   printersByCampus: Record<string, IChurchPrinter[]>;
+  adminPrintersByCampus: Record<string, IChurchPrinter[]>;
 }
 
 const initialState: ChurchPrinterSliceState = {
@@ -14,6 +15,7 @@ const initialState: ChurchPrinterSliceState = {
   loading: false,
   loadedCampusId: undefined,
   printersByCampus: {},
+  adminPrintersByCampus: {},
 };
 
 const churchPrinterSlice = createSlice({
@@ -41,6 +43,7 @@ const churchPrinterSlice = createSlice({
       state.loading = initialState.loading;
       state.loadedCampusId = undefined;
       state.printersByCampus = {};
+      state.adminPrintersByCampus = {};
     },
   },
   extraReducers(builder) {
@@ -49,7 +52,7 @@ const churchPrinterSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(GetChurchPrinters.fulfilled, (state, action) => {
-      const incoming = action.payload || [];
+      const incoming: IChurchPrinter[] = action.payload || [];
       const campusId =
         typeof action.meta.arg === 'string'
           ? action.meta.arg
@@ -58,23 +61,29 @@ const churchPrinterSlice = createSlice({
       if (!state.printersByCampus) {
         state.printersByCampus = {};
       }
+      // Ensure only ACTIVE printers are stored in operational cache
+      const activeIncoming = incoming.filter(
+        (p) => p.state === ChurchPrinterStateEnum.ACTIVE,
+      );
       if (campusId) {
-        state.printersByCampus[campusId] = incoming;
+        state.printersByCampus[campusId] = activeIncoming;
       }
 
-      state.data = incoming;
+      state.data = activeIncoming;
       state.error = initialState.error;
       state.loading = false;
       state.loadedCampusId = campusId;
 
-      if (!state.current && incoming.length > 0) {
-        state.current = incoming[0];
+      if (!state.current && activeIncoming.length > 0) {
+        state.current = activeIncoming[0];
       } else if (state.current) {
-        const match = incoming.find((p: any) => p.id === state.current?.id);
+        const match = activeIncoming.find((p: any) => p.id === state.current?.id);
         if (match) {
           state.current = match;
-        } else if (incoming.length === 1) {
-          state.current = incoming[0];
+        } else if (activeIncoming.length === 1) {
+          state.current = activeIncoming[0];
+        } else {
+          state.current = undefined;
         }
       }
     });
@@ -87,7 +96,35 @@ const churchPrinterSlice = createSlice({
       state.error = action.error.message;
       state.loading = false;
     });
+    builder.addCase(GetChurchPrintersAdmin.fulfilled, (state, action) => {
+      const { churchCampusId, printers } = action.payload;
+      if (!state.adminPrintersByCampus) {
+        state.adminPrintersByCampus = {};
+      }
+      state.adminPrintersByCampus[churchCampusId] = printers;
+
+      // Invalidate operational cache for this campus if admin data was fetched/updated
+      if (state.printersByCampus?.[churchCampusId]) {
+        state.printersByCampus[churchCampusId] = (printers as IChurchPrinter[]).filter(
+          (p) => p.state === ChurchPrinterStateEnum.ACTIVE,
+        );
+      }
+
+      // If current selected printer became inactive or deleted, deselect it
+      if (state.current) {
+        const currentInAdmin = (printers as IChurchPrinter[]).find(
+          (p) => p.id === state.current?.id,
+        );
+        if (
+          currentInAdmin &&
+          currentInAdmin.state !== ChurchPrinterStateEnum.ACTIVE
+        ) {
+          state.current = undefined;
+        }
+      }
+    });
   },
+
 });
 
 export const { updateCurrentChurchPrinter, resetChurchPrinterState } =

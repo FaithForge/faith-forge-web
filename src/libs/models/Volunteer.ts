@@ -1,6 +1,18 @@
-import { IChurchCampus, IChurchMeeting } from './Church';
+import { EntityState, IChurchCampus, IChurchMeeting } from './Church';
 import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup } from './Ministry';
 import { IUser } from './User';
+
+export const MinistryVolunteerStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryVolunteerStateEnum =
+  (typeof MinistryVolunteerStateEnum)[keyof typeof MinistryVolunteerStateEnum];
+
+export const MinistryVolunteerAssignmentStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryVolunteerAssignmentStateEnum =
+  (typeof MinistryVolunteerAssignmentStateEnum)[keyof typeof MinistryVolunteerAssignmentStateEnum];
 
 export enum VolunteerRole {
   VOLUNTEER = 'VOLUNTEER',
@@ -13,6 +25,7 @@ export enum VolunteerRole {
 export interface IVolunteer {
   id: string;
   userId: string;
+  state?: MinistryVolunteerStateEnum;
   user?: Partial<IUser>;
   assignments?: IVolunteerAssignment[];
 }
@@ -27,7 +40,7 @@ export interface IVolunteerAssignment {
   ministryAreaId?: string;
   ministryId?: string;
   churchCampusId?: string;
-  active: boolean;
+  state?: MinistryVolunteerAssignmentStateEnum;
   volunteer?: IVolunteer;
   ministryVolunteer?: IVolunteer;
   user?: Partial<IUser>;
@@ -57,7 +70,7 @@ export interface GetVolunteersPayload {
   churchCampusId?: string;
   role?: VolunteerRole;
   search?: string;
-  active?: boolean;
+  state?: MinistryVolunteerStateEnum;
 }
 
 export interface GetVolunteerAssignmentsPayload {
@@ -71,7 +84,7 @@ export interface GetVolunteerAssignmentsPayload {
   serviceAreaGroupId?: string;
   volunteerId?: string;
   role?: VolunteerRole;
-  active?: boolean;
+  state?: MinistryVolunteerAssignmentStateEnum;
 }
 
 export interface GetVolunteerAttendancePayload {
@@ -165,4 +178,3 @@ export interface IPublicVolunteerCatalog {
   serviceAreaGroups?: IServiceAreaGroup[];
   availableRoles: VolunteerRole[];
 }
-

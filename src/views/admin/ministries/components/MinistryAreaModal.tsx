@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IKidGroup, IMinistryArea, MinistryAreaScope } from '@/libs/models';
+import { IKidGroup, IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   CreateMinistryArea,
@@ -64,7 +64,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
         setName(areaToEdit.name);
         const currentScope = areaToEdit.scope || null;
         setScope(currentScope);
-        setActive(areaToEdit.active);
+        setActive(areaToEdit.state === MinistryAreaStateEnum.ACTIVE);
 
         // Pre-populate already assigned classrooms strictly matching valid availableKidGroups
         const validGroupIds = new Set((availableKidGroups || []).map((g) => g.id));
@@ -139,7 +139,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             name: name.trim(),
             description: description.trim() || undefined,
             scope: scope ?? null,
-            active,
+            state: active ? MinistryAreaStateEnum.ACTIVE : MinistryAreaStateEnum.INACTIVE,
             kidGroupId: primaryKidGroupId,
             kidGroupIds: kidGroupIdsPayload,
           }),

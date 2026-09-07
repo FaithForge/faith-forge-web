@@ -12,16 +12,21 @@ import {
   Save, 
   RotateCcw,
   Sparkles,
-  CalendarDays
+  CalendarDays,
+  Plus,
+  Edit2,
+  Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import PageHeader from '@/components/ui/PageHeader';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { 
   GetChurchCampuses, 
   GetAllChurchMeetingsAdmin, 
-  BulkUpdateChurchMeetingStates 
+  BulkUpdateChurchMeetingStates,
+  DeleteChurchMeeting,
 } from '@/libs/state/redux/thunks/church/church.thunk';
 import { resetAdminChurchMeetingStatus } from '@/libs/state/redux/slices/church/adminChurchMeeting.slice';
 import { ChurchMeetingStateEnum, IChurchMeeting } from '@/libs/models';
@@ -29,6 +34,8 @@ import { Days } from '@/libs/common-types/constants';
 import { APP_ROUTES } from '@/config/routes';
 import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
+import ChurchMeetingModal from './components/ChurchMeetingModal';
+
 
 // ---------------------------------------------------------------------------
 // Helper Constants and Dictionaries
@@ -89,6 +96,22 @@ const STATE_CONFIG: Record<
     badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
     textClass: 'text-rose-600',
   },
+  [ChurchMeetingStateEnum.INACTIVE]: {
+    label: 'Inactivo',
+    shortLabel: 'Inactivo',
+    icon: XCircle,
+    activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
+    badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
+    textClass: 'text-rose-600',
+  },
+  [ChurchMeetingStateEnum.DELETED]: {
+    label: 'Eliminado',
+    shortLabel: 'Eliminado',
+    icon: Trash2,
+    activeClass: 'bg-gray-600 text-white border-gray-600 shadow-xs',
+    badgeClass: 'bg-gray-50 text-gray-700 border border-gray-200/80',
+    textClass: 'text-gray-600',
+  },
 };
 
 const STATE_CATEGORIES = [
@@ -145,6 +168,8 @@ interface MeetingCardProps {
   currentState: ChurchMeetingStateEnum;
   isModified: boolean;
   onStateChange: (state: ChurchMeetingStateEnum) => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
 }
 
 /**
@@ -158,6 +183,8 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   currentState,
   isModified,
   onStateChange,
+  onEdit,
+  onDelete,
 }) => {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const m = meeting as any;
@@ -195,15 +222,39 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
           )}
         </div>
 
-        {/* Current Status Badge */}
-        <div
-          className={clsx(
-            'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0',
-            config.badgeClass
+        {/* Current Status Badge and Actions */}
+        <div className="flex items-center gap-1.5 shrink-0">
+          <div
+            className={clsx(
+              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0',
+              config.badgeClass
+            )}
+          >
+            <CurrentIcon size={13} className="shrink-0" />
+            <span>{config.label}</span>
+          </div>
+
+          {onEdit && (
+            <button
+              type="button"
+              onClick={onEdit}
+              className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-slate-50 text-gray-500 hover:text-gray-800 transition-all shadow-2xs cursor-pointer"
+              title="Editar Servicio y Horarios"
+            >
+              <Edit2 size={13} />
+            </button>
           )}
-        >
-          <CurrentIcon size={13} className="shrink-0" />
-          <span>{config.label}</span>
+
+          {onDelete && (
+            <button
+              type="button"
+              onClick={onDelete}
+              className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all shadow-2xs cursor-pointer"
+              title="Eliminar Servicio"
+            >
+              <Trash2 size={13} />
+            </button>
+          )}
         </div>
       </div>
 
@@ -219,7 +270,11 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
 
       {/* Segmented State Selector (Pills) */}
       <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-gray-200/70">
-        {Object.values(ChurchMeetingStateEnum).map((stateKey) => {
+        {[
+          ChurchMeetingStateEnum.ACTIVE,
+          ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
+          ChurchMeetingStateEnum.DISABLE,
+        ].map((stateKey) => {
           const itemConfig = STATE_CONFIG[stateKey];
           const ItemIcon = itemConfig.icon;
           const isSelected = currentState === stateKey;
@@ -230,7 +285,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
               type="button"
               onClick={() => onStateChange(stateKey)}
               className={clsx(
-                'flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition-all duration-150',
+                'flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer',
                 isSelected
                   ? itemConfig.activeClass
                   : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 bg-transparent'
@@ -245,6 +300,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
     </div>
   );
 };
+
 
 // ---------------------------------------------------------------------------
 // Vista Principal
@@ -268,6 +324,11 @@ const ChurchMeetingsView: React.FC = () => {
   const [selectedStateFilter, setSelectedStateFilter] = useState<'ALL' | ChurchMeetingStateEnum>('ALL');
   /** Local registry of pending changes: meetingId -> new state */
   const [pendingChanges, setPendingChanges] = useState<Record<string, ChurchMeetingStateEnum>>({});
+
+  const [modalOpen, setModalOpen] = useState(false);
+  const [meetingToEdit, setMeetingToEdit] = useState<IChurchMeeting | null>(null);
+  const [meetingToDelete, setMeetingToDelete] = useState<IChurchMeeting | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Load campuses on view mount
   useEffect(() => {
@@ -307,6 +368,25 @@ const ChurchMeetingsView: React.FC = () => {
       dispatch(resetAdminChurchMeetingStatus());
     }
   }, [success, error, selectedCampusId, dispatch]);
+
+  const handleConfirmDelete = async () => {
+    if (!meetingToDelete || !selectedCampusId) return;
+    setIsDeleting(true);
+    try {
+      await dispatch(
+        DeleteChurchMeeting({
+          id: meetingToDelete.id,
+          churchCampusId: selectedCampusId,
+        }),
+      ).unwrap();
+      toast.success('Servicio eliminado correctamente');
+      setMeetingToDelete(null);
+    } catch (err: any) {
+      toast.error(typeof err === 'string' ? err : 'Error al eliminar el servicio');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   /**
    * Handles meeting state toggle, reverting if it matches the original value.
@@ -353,25 +433,29 @@ const ChurchMeetingsView: React.FC = () => {
 
   const dirtyCount = Object.keys(pendingChanges).length;
 
+  const nonDeletedMeetings = useMemo(() => {
+    return meetings.filter((m) => m.state !== ChurchMeetingStateEnum.DELETED);
+  }, [meetings]);
+
   const stateCounts = useMemo(() => {
     let active = 0;
     let noVisible = 0;
     let inactive = 0;
 
-    meetings.forEach((m) => {
+    nonDeletedMeetings.forEach((m) => {
       const state = pendingChanges[m.id] ?? m.state ?? ChurchMeetingStateEnum.ACTIVE;
       if (state === ChurchMeetingStateEnum.ACTIVE) active++;
       else if (state === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY) noVisible++;
       else if (state === ChurchMeetingStateEnum.DISABLE) inactive++;
     });
 
-    return { active, noVisible, inactive, total: meetings.length };
-  }, [meetings, pendingChanges]);
+    return { active, noVisible, inactive, total: nonDeletedMeetings.length };
+  }, [nonDeletedMeetings, pendingChanges]);
 
   // Group meetings by day of the week, ordered Sunday to Saturday
   const meetingsByDay = useMemo(() => {
     const grouped: Record<string, IChurchMeeting[]> = {};
-    [...meetings]
+    [...nonDeletedMeetings]
       .sort((a, b) => {
         const dA = DAY_ORDER[a.day as Days] ?? 99;
         const dB = DAY_ORDER[b.day as Days] ?? 99;
@@ -383,7 +467,7 @@ const ChurchMeetingsView: React.FC = () => {
         grouped[key].push(m);
       });
     return grouped;
-  }, [meetings]);
+  }, [nonDeletedMeetings]);
 
   const campusOptions = useMemo(() => {
     return campuses.data.map((campus) => ({
@@ -396,7 +480,26 @@ const ChurchMeetingsView: React.FC = () => {
 
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
-      <PageHeader title="Estado de Servicios" onBack={() => navigate(APP_ROUTES.admin.root)} />
+      <PageHeader
+        title="Estado de Servicios"
+        onBack={() => navigate(APP_ROUTES.admin.root)}
+        rightAction={
+          selectedCampusId ? (
+            <button
+              type="button"
+              onClick={() => {
+                setMeetingToEdit(null);
+                setModalOpen(true);
+              }}
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 text-white transition-all shadow-xs cursor-pointer"
+              title="Nuevo Servicio"
+            >
+              <Plus size={18} />
+            </button>
+          ) : undefined
+        }
+      />
+
 
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
         {/* Card de Encabezado Informativo */}
@@ -604,6 +707,11 @@ const ChurchMeetingsView: React.FC = () => {
                                       onStateChange={(newState) =>
                                         handleStateChange(meeting.id, meeting.state, newState)
                                       }
+                                      onEdit={() => {
+                                        setMeetingToEdit(meeting);
+                                        setModalOpen(true);
+                                      }}
+                                      onDelete={() => setMeetingToDelete(meeting)}
                                     />
                                   );
                                 })}
@@ -656,8 +764,35 @@ const ChurchMeetingsView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Meeting Modal for Create and Edit */}
+      <ChurchMeetingModal
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        meetingToEdit={meetingToEdit}
+        churchCampusId={selectedCampusId}
+        onSuccess={() => {
+          if (selectedCampusId) {
+            dispatch(GetAllChurchMeetingsAdmin(selectedCampusId));
+          }
+        }}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmModal
+        open={Boolean(meetingToDelete)}
+        onOpenChange={(open) => !open && setMeetingToDelete(null)}
+        title="¿Eliminar este Servicio?"
+        description={`¿Estás seguro de que deseas eliminar el servicio "${meetingToDelete?.name}"?`}
+        confirmText="Sí, eliminar servicio"
+        cancelText="Cancelar"
+        type="danger"
+        onConfirm={handleConfirmDelete}
+      />
+
     </div>
   );
 };
+
 
 export default ChurchMeetingsView;

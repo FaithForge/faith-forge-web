@@ -27,7 +27,12 @@ import {
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { GetServiceAreaGroups } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { IServiceAreaGroup, IVolunteerAssignment, VolunteerRole } from '@/libs/models';
+import {
+  IServiceAreaGroup,
+  IVolunteerAssignment,
+  VolunteerRole,
+  MinistryGroupConfigStateEnum,
+} from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
 import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
 import TeamRosterDrawer from '../components/TeamRosterDrawer';
@@ -259,7 +264,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           name: 'Otros Equipos',
           position: 999,
           ministryId,
-          active: true,
+          state: MinistryGroupConfigStateEnum.ACTIVE,
         },
         teams: leftover,
       });

@@ -57,6 +57,11 @@
 - If a change depends on a repository convention, encode that convention in a file-specific instruction rather than repeating it in chat.
 - **NEVER modify API/Service contract parameters**: NEVER rename, remove, add, or alter query parameters, path params, or request payload fields in API calls, services, or thunks (e.g. `registrationChurchMeetingId`) unless the user explicitly requests it. Backend contracts must remain strictly untouched.
 
-## JSDoc Requirement
-
 - Agents should generate or update JSDoc comments for functions when adding or modifying code. Follow the repository's JSDoc format (one-line summary, `@param` tags with types and descriptions, `@returns` with resolved type and description). See `src/libs/utils/http/index.ts` for an example.
+
+## Entity State & Soft-Delete Rules
+
+- **Uso obligatorio de `state` en modelos de entidad**: Toda entidad en `src/libs/models` debe incorporar el campo `state`.
+- **Extensión de `EntityState`**: `EntityState` define los estados inmutables (`ACTIVE`, `INACTIVE`, `DELETED`). Los enums específicos de entidad deben extender de este objeto mediante propagación (`...EntityState`) para evitar duplicar valores base.
+- **Eliminación y prohibición de `active: boolean`**: La propiedad booleana `active` ha sido completamente purgada y eliminada de los modelos, slices, thunks y componentes. Queda estrictamente PROHIBIDO reintroducir campos `active: boolean`. Toda verificación de visibilidad o activación debe comprobar `state === EntityState.ACTIVE` (o el enum específico de la entidad).
+- **Soft-Delete**: Las eliminaciones lógicas deben reflejarse mediante `state: EntityState.DELETED`.

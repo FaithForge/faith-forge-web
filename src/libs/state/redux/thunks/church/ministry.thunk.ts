@@ -1,5 +1,15 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup, MinistryAreaScope } from '@/libs/models';
+import {
+  IMinistry,
+  IMinistryArea,
+  IMinistryGroupConfig,
+  IServiceAreaGroup,
+  MinistryAreaScope,
+  MinistryStateEnum,
+  MinistryAreaStateEnum,
+  MinistryGroupConfigStateEnum,
+  ServiceAreaGroupStateEnum,
+} from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
@@ -95,13 +105,18 @@ export const CreateMinistry = createAsyncThunk(
  * @param {string} payload.id - Ministry identifier.
  * @param {string} [payload.name] - Updated name.
  * @param {string} [payload.description] - Updated description.
- * @param {boolean} [payload.active] - Active status flag.
+ * @param {MinistryStateEnum} [payload.state] - State enum.
  * @returns {Promise<IMinistry>} The updated ministry.
  */
 export const UpdateMinistry = createAsyncThunk(
   'church/UpdateMinistry',
   async (
-    payload: { id: string; name?: string; description?: string; active?: boolean },
+    payload: {
+      id: string;
+      name?: string;
+      description?: string;
+      state?: MinistryStateEnum;
+    },
     { getState, rejectWithValue },
   ) => {
     const { id, ...data } = payload;
@@ -221,7 +236,7 @@ export const CreateMinistryArea = createAsyncThunk(
  * @param {string} [payload.name] - Area name.
  * @param {string} [payload.description] - Area description.
  * @param {MinistryAreaScope|null} [payload.scope] - Functional scope.
- * @param {boolean} [payload.active] - Active status flag.
+ * @param {MinistryAreaStateEnum} [payload.state] - State enum.
  * @param {string} [payload.ministryId] - Optional ministryId to trigger fresh query.
  * @param {string} [payload.kidGroupId] - Optional classroom ID to associate.
  * @param {string[]} [payload.kidGroupIds] - Optional classrooms IDs array to associate.
@@ -235,7 +250,7 @@ export const UpdateMinistryArea = createAsyncThunk(
       name?: string;
       description?: string;
       scope?: MinistryAreaScope | null;
-      active?: boolean;
+      state?: MinistryAreaStateEnum;
       ministryId?: string;
       kidGroupId?: string;
       kidGroupIds?: string[];
@@ -354,13 +369,19 @@ export const CreateMinistryGroupConfig = createAsyncThunk(
  * @param {string} payload.id - Group config identifier.
  * @param {string} [payload.name] - Group name.
  * @param {number} [payload.position] - Position order.
- * @param {boolean} [payload.active] - Active status flag.
+ * @param {MinistryGroupConfigStateEnum} [payload.state] - State enum.
  * @returns {Promise<IMinistryGroupConfig>} The updated group config.
  */
 export const UpdateMinistryGroupConfig = createAsyncThunk(
   'church/UpdateMinistryGroupConfig',
   async (
-    payload: { id: string; name?: string; position?: number; active?: boolean; ministryId?: string },
+    payload: {
+      id: string;
+      name?: string;
+      position?: number;
+      state?: MinistryGroupConfigStateEnum;
+      ministryId?: string;
+    },
     { getState, dispatch, rejectWithValue },
   ) => {
     const { id, ministryId, ...data } = payload;
@@ -483,17 +504,20 @@ export const CreateServiceAreaGroup = createAsyncThunk(
 );
 
 /**
- * Updates a service area group active state via PUT /service-area-group/:id.
+ * Updates a service area group state via PUT /service-area-group/:id.
  *
  * @param {Object} payload - Update parameters.
  * @param {string} payload.id - Service area group identifier.
- * @param {boolean} payload.active - Active status flag.
+ * @param {ServiceAreaGroupStateEnum} [payload.state] - State enum.
  * @returns {Promise<IServiceAreaGroup>} The updated service area group.
  */
 export const UpdateServiceAreaGroup = createAsyncThunk(
   'church/UpdateServiceAreaGroup',
-  async (payload: { id: string; active: boolean }, { getState, rejectWithValue }) => {
-    const { id, active } = payload;
+  async (
+    payload: { id: string; state?: ServiceAreaGroupStateEnum },
+    { getState, rejectWithValue },
+  ) => {
+    const { id, ...data } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
@@ -504,7 +528,7 @@ export const UpdateServiceAreaGroup = createAsyncThunk(
           method: HttpRequestMethod.PUT,
           url: `/service-area-group/${id}`,
           options: {
-            data: { active },
+            data,
             headers: { Authorization: `Bearer ${token}` },
           },
         })
