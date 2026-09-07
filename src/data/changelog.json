@@ -1,5 +1,17 @@
 [
   {
+    "version": "3.1.0",
+    "type": "minor",
+    "timestamp": "2026-09-07T05:23:55.890Z",
+    "dateFormatted": "07/09/2026 12:23 AM",
+    "title": "Novedades de la versión y mejoras en números de teléfono",
+    "changes": [
+      "Se añadió la sección 'Novedades e Historial' en el menú de usuario para consultar los cambios y versiones de la app.",
+      "Cada actualización ahora incluye fecha, hora y detalle claro de mejoras.",
+      "Formato más ordenado y legible al ingresar y mostrar números de teléfono celular."
+    ]
+  },
+  {
     "version": "3.0.0",
     "type": "major",
     "timestamp": "2026-09-07T05:00:00.000Z",

@@ -66,12 +66,17 @@
 - **Eliminación y prohibición de `active: boolean`**: La propiedad booleana `active` ha sido completamente purgada y eliminada de los modelos, slices, thunks y componentes. Queda estrictamente PROHIBIDO reintroducir campos `active: boolean`. Toda verificación de visibilidad o activación debe comprobar `state === EntityState.ACTIVE` (o el enum específico de la entidad).
 - **Soft-Delete**: Las eliminaciones lógicas deben reflejarse mediante `state: EntityState.DELETED`.
 
-## SemVer Versioning & Changelog Tracking
+## SemVer Versioning & Changelog Tracking (OBLIGACIÓN AUTOMÁTICA DE LA IA)
 
-- **Fuente única de verdad de la versión**: La versión del frontend se gestiona centralizadamente en `package.json` y `src/data/changelog.json`, y se exporta desde `src/constants/version.ts`.
-- **Registro obligatorio en cada commit de Frontend**: Todo commit que introduzca cambios funcionales, visuales o de corrección en `faith-forge-web` debe reflejarse en `src/data/changelog.json` y actualizar la versión SemVer en `package.json`:
-  - **Parche (Patch)**: Corrección de errores, ajustes de interfaz, estabilidad (ej: `3.0.0` → `3.0.1`).
-  - **Menor (Minor)**: Nuevas pantallas, módulos o herramientas compatibles (ej: `3.0.0` → `3.1.0`).
-  - **Mayor (Major)**: Rediseño completo o cambios incompatibles (ej: `3.0.0` → `4.0.0`).
-- **Lenguaje no técnico**: Las descripciones y viñetas de cambios registradas en `src/data/changelog.json` DEBEN estar redactadas en lenguaje simple, conciso y comprensible para usuarios regulares (evitar tecnicismos de código como "refactor", "endpoint", "slice", etc.).
-- **Uso de scripts**: Utilizar `npm run commit` de manera interactiva o `node scripts/bump-version.mjs --type=<patch|minor|major> --title="..." --change="..."` para mantener sincronizados el historial y la versión.
+- **Responsabilidad 100% de la IA**: Casi la totalidad de los cambios en el proyecto son desarrollados a través del Agente IA. Por tanto, la IA DEBE determinar por sí misma el nivel de versión (Major, Minor o Patch), redactar los cambios en lenguaje amigable y actualizar automáticamente `package.json` y `src/data/changelog.json` al concluir cualquier cambio o commit en Frontend. El usuario no debe realizar pasos manuales.
+- **Criterio de clasificación autónomo de la IA**:
+  - **Parche (Patch)** (ej: `3.0.0` → `3.0.1`): Corrección de errores, ajustes de interfaz, mejoras visuales menores, formato de campos o fallos de rapidez.
+  - **Menor (Minor)** (ej: `3.0.0` → `3.1.0`): Nuevas pantallas, componentes visuales nuevos (modales, drawers), nuevas herramientas o flujos funcionales compatibles.
+  - **Mayor (Major)** (ej: `3.0.0` → `4.0.0`): Rediseño visual global de la aplicación, cambios incompatibles o reescritura de módulos principales.
+- **Lenguaje no técnico obligatorio**: Las descripciones y viñetas DEBEN redactarse en español simple, conciso y comprensible para cualquier usuario final (padres de familia, voluntarios, maestros). PROHIBIDO usar tecnicismos como "refactor", "endpoint", "slice", "thunk", "props", "payload", "hook", etc.
+  - *Correcto*: "Ahora puedes consultar las novedades y el historial de cambios de la app desde tu foto de perfil."
+  - *Incorrecto*: "Se refactorizó el componente TopBar e integró el slice de changelog."
+- **Ejecución automática por la IA**:
+  - Al completar los cambios de código, la IA ejecuta:
+    `node scripts/bump-version.mjs --type=<patch|minor|major> --title="Título sencillo" --change="Punto 1 claro" --change="Punto 2 claro"`
+  - Esto mantiene sincronizados `package.json`, `src/data/changelog.json` y la constante `APP_VERSION`.
