@@ -30,6 +30,7 @@ export interface IVolunteerAssignment {
   active: boolean;
   volunteer?: IVolunteer;
   ministryVolunteer?: IVolunteer;
+  user?: Partial<IUser>;
   serviceAreaGroup?: IServiceAreaGroup;
   ministryGroupConfig?: IMinistryGroupConfig;
   ministryArea?: IMinistryArea;

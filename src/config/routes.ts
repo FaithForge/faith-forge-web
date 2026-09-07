@@ -18,6 +18,11 @@ export const APP_ROUTES = {
     ministries: '/admin/ministries',
     ministryDetailDynamic: '/admin/ministries/:id',
     ministryDetail: (id: string | number) => `/admin/ministries/${id}`,
+    ministrySectionDynamic: '/admin/ministries/:id/:section',
+    ministryTeams: (id: string | number) => `/admin/ministries/${id}/teams`,
+    ministryLeadership: (id: string | number) => `/admin/ministries/${id}/leadership`,
+    ministryOrganigram: (id: string | number) => `/admin/ministries/${id}/organigram`,
+    ministryStructure: (id: string | number) => `/admin/ministries/${id}/structure`,
     volunteers: '/admin/volunteers',
   },
   kidChurch: {

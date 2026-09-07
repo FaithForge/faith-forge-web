@@ -111,9 +111,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   // Initial load
   useEffect(() => {
     if (open) {
-      if (campuses.data.length === 0) {
-        dispatch(GetChurchCampuses());
-      }
+      dispatch(GetChurchCampuses({ force: true }));
       const activeCampusId = campuses.current?.id || '';
       setSelectedCampusId(activeCampusId);
       setSelectedPrinterId(printers.current?.id || '');

@@ -9,7 +9,7 @@ import {
   VolunteerRole,
 } from '@/libs/models';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-import { formatPhoneWithDialCode } from '@/libs/utils/text';
+import { formatPhoneWithDialCode, capitalizeWords } from '@/libs/utils/text';
 import {
   ShieldCheck,
   Award,
@@ -79,9 +79,10 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
         asg.ministryVolunteer ||
         volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
       const user = asg.volunteer?.user || vol?.user;
-      return user && (user.firstName || user.lastName)
+      const raw = user && (user.firstName || user.lastName)
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
         : '';
+      return capitalizeWords(raw);
     },
     [volunteersList],
   );
@@ -256,7 +257,7 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wide">
               <Award size={15} />
               <span>
-                Servidores / Maestros ({volunteers.length})
+                Servidores ({volunteers.length})
               </span>
             </div>
             <Button

@@ -64,6 +64,7 @@ function App() {
 
   useEffect(() => {
     setHttpAuthHandlers({
+      getToken: () => store.getState().authSlice.token,
       getRefreshToken: () => store.getState().authSlice.refreshToken,
       onTokenRefreshed: (token, refreshToken) =>
         dispatch(updateTokens({ token, refreshToken })),
@@ -74,8 +75,29 @@ function App() {
       toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     };
 
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'persist:root' && e.newValue) {
+        try {
+          const parsed = JSON.parse(e.newValue);
+          if (parsed.authSlice) {
+            const auth = JSON.parse(parsed.authSlice);
+            const currentToken = store.getState().authSlice.token;
+            if (auth.token && auth.token !== currentToken) {
+              dispatch(updateTokens({ token: auth.token, refreshToken: auth.refreshToken }));
+            }
+          }
+        } catch {
+          // Silent catch on storage parse errors
+        }
+      }
+    };
+
     window.addEventListener('auth:unauthorized', handleUnauthorized);
-    return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('auth:unauthorized', handleUnauthorized);
+      window.removeEventListener('storage', handleStorageChange);
+    };
   }, [dispatch]);
 
   return (
@@ -112,6 +134,10 @@ function App() {
                 />
                 <Route
                   path={APP_ROUTES.admin.ministryDetailDynamic}
+                  element={<MinistryDetailView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.ministrySectionDynamic}
                   element={<MinistryDetailView />}
                 />
                 <Route

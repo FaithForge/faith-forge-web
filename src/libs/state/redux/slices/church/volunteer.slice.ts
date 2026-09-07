@@ -1,4 +1,9 @@
-import { IVolunteer, IVolunteerAssignment, PaginationResponse } from '@/libs/models';
+import {
+  IVolunteer,
+  IVolunteerAssignment,
+  PaginationResponse,
+  VolunteerRole,
+} from '@/libs/models';
 import {
   CreateVolunteer,
   CreateVolunteerAssignment,
@@ -195,14 +200,52 @@ export const volunteerSlice = createSlice({
         CreateVolunteerAssignment.fulfilled,
         (state, action: PayloadAction<IVolunteerAssignment>) => {
           state.loadingAction = false;
-          state.assignments.push(action.payload);
-          state.currentVolunteerAssignments.push(action.payload);
+          if (!state.assignments.some((a) => a.id === action.payload.id)) {
+            state.assignments.push(action.payload);
+          }
+          if (!state.currentVolunteerAssignments.some((a) => a.id === action.payload.id)) {
+            state.currentVolunteerAssignments.push(action.payload);
+          }
 
-          // Update any relevant partitions
+          // Update ONLY relevant partitions matching the assignment's role and scope
           Object.keys(state.assignmentsByPartition).forEach((key) => {
-            const list = state.assignmentsByPartition[key];
-            if (list && !list.some((a) => a.id === action.payload.id)) {
-              state.assignmentsByPartition[key] = [...list, action.payload];
+            const isMinistryCoord = key.startsWith('ministry_coords_');
+            const isAreaCoord = key.startsWith('area_coords_');
+            const isGroupCoord = key.startsWith('group_coords_');
+            const isCampusTeams = key.startsWith('campus_teams_');
+
+            let matches = false;
+            if (
+              isMinistryCoord &&
+              action.payload.role === VolunteerRole.MINISTRY_GENERAL_COORDINATOR
+            ) {
+              matches = true;
+            } else if (
+              isAreaCoord &&
+              action.payload.role === VolunteerRole.AREA_GENERAL_COORDINATOR
+            ) {
+              matches = true;
+            } else if (
+              isGroupCoord &&
+              action.payload.role === VolunteerRole.GROUP_COORDINATOR
+            ) {
+              matches = true;
+            } else if (
+              isCampusTeams &&
+              (action.payload.role === VolunteerRole.VOLUNTEER ||
+                action.payload.role === VolunteerRole.SUPERVISOR)
+            ) {
+              const sagCampusId = action.payload.serviceAreaGroup?.churchCampusId;
+              if (!sagCampusId || key.includes(sagCampusId)) {
+                matches = true;
+              }
+            }
+
+            if (matches) {
+              const list = state.assignmentsByPartition[key];
+              if (list && !list.some((a) => a.id === action.payload.id)) {
+                state.assignmentsByPartition[key] = [...list, action.payload];
+              }
             }
           });
         },

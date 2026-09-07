@@ -7,6 +7,7 @@ export interface BiometricSessionData {
   username: string;
   user: any;
   token?: string;
+  refreshToken?: string;
   encryptedPassword?: string;
   iv?: string;
   salt?: string;
@@ -18,6 +19,7 @@ export interface BiometricAuthResult {
   username: string;
   user: any;
   token?: string;
+  refreshToken?: string;
   password?: string;
   tokenValid: boolean;
 }
@@ -184,11 +186,13 @@ export const registerBiometrics = async ({
   password,
   user,
   token,
+  refreshToken,
 }: {
   username: string;
   password?: string;
   user: any;
   token?: string;
+  refreshToken?: string;
 }): Promise<boolean> => {
   try {
     if (!(await isBiometricsAvailable())) {
@@ -256,6 +260,7 @@ export const registerBiometrics = async ({
       username: cleanUsername,
       user,
       token,
+      refreshToken,
       encryptedPassword,
       iv,
       salt,
@@ -276,16 +281,19 @@ export const registerBiometrics = async ({
  *
  * @param {object} params - The session payload.
  * @param {string} params.token - The new JWT token.
+ * @param {string} [params.refreshToken] - The rotated refresh token.
  * @param {any} [params.user] - Updated user info.
  * @param {string} [params.password] - Plain text password to encrypt and persist with the existing credential.
  * @returns {Promise<void>} Resolves when storage has been updated.
  */
 export const updateBiometricSessionToken = async ({
   token,
+  refreshToken,
   user,
   password,
 }: {
   token: string;
+  refreshToken?: string;
   user?: any;
   password?: string;
 }): Promise<void> => {
@@ -316,6 +324,7 @@ export const updateBiometricSessionToken = async ({
     const updated: BiometricSessionData = {
       ...saved,
       token,
+      refreshToken: refreshToken || saved.refreshToken,
       username: resolvedUsername,
       user: user || saved.user,
       encryptedPassword,
@@ -374,6 +383,7 @@ export const authenticateWithBiometrics = async (): Promise<BiometricAuthResult 
         username: savedData.username,
         user: savedData.user,
         token: savedData.token,
+        refreshToken: savedData.refreshToken,
         tokenValid: true,
       };
     }

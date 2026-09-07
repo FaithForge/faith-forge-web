@@ -11,6 +11,10 @@ import {
   XCircle,
   Inbox,
   MapPin,
+  Crown,
+  Settings,
+  ShieldCheck,
+  Network,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
@@ -205,60 +209,133 @@ const MinistriesManagementView: React.FC = () => {
               </div>
             ) : (
               filteredMinistries.map((ministry) => {
+                const ministryCampusName =
+                  ministry.churchCampus?.name ||
+                  campuses.data.find((c) => c.id === ministry.churchCampusId)?.name ||
+                  '';
+
                 return (
                   <div
                     key={ministry.id}
-                    onClick={() => navigate(APP_ROUTES.admin.ministryDetail(ministry.id))}
-                    className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs hover:border-primary/40 hover:shadow-sm cursor-pointer transition-all active:scale-[0.99] flex items-center justify-between gap-3 group"
+                    className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-200/90 shadow-xs hover:border-gray-300 hover:shadow-sm transition-all flex flex-col gap-3.5 group"
                   >
-                    <div className="flex items-start gap-3 min-w-0">
-                      <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0 mt-0.5">
-                        <Layers size={20} />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <h2 className="text-sm font-bold text-gray-900 truncate">
-                            {ministry.name}
-                          </h2>
-                          <span
-                            className={clsx(
-                              'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
-                              ministry.active
-                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                                : 'bg-gray-100 text-gray-600 border border-gray-200',
-                            )}
-                          >
-                            {ministry.active ? (
-                              <>
-                                <CheckCircle2 size={10} /> Activo
-                              </>
-                            ) : (
-                              <>
-                                <XCircle size={10} /> Inactivo
-                              </>
-                            )}
-                          </span>
+                    {/* Ministry Card Header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex items-start gap-3 min-w-0">
+                        <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-indigo-50 to-indigo-100/70 text-indigo-700 border border-indigo-200/80 flex items-center justify-center shrink-0 shadow-2xs">
+                          <Layers size={22} />
                         </div>
-                        {ministry.description && (
-                          <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
-                            {ministry.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <h2 className="text-base font-extrabold text-gray-900 truncate">
+                              {ministry.name}
+                            </h2>
+                            {ministryCampusName && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0">
+                                <MapPin size={10} className="text-indigo-600" />
+                                <span>{ministryCampusName}</span>
+                              </span>
+                            )}
+                            <span
+                              className={clsx(
+                                'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
+                                ministry.active
+                                  ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                                  : 'bg-gray-100 text-gray-600 border border-gray-200',
+                              )}
+                            >
+                              {ministry.active ? (
+                                <>
+                                  <CheckCircle2 size={10} /> Activo
+                                </>
+                              ) : (
+                                <>
+                                  <XCircle size={10} /> Inactivo
+                                </>
+                              )}
+                            </span>
+                          </div>
 
-                    <div className="flex items-center gap-1 shrink-0">
+                          {ministry.description && (
+                            <p className="text-xs text-gray-500 line-clamp-2 mt-1">
+                              {ministry.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Edit Button */}
                       <button
                         type="button"
                         onClick={(e) => handleOpenEdit(e, ministry)}
-                        className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-slate-100 transition-colors"
-                        title="Editar"
+                        className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-slate-100 transition-colors shrink-0 cursor-pointer"
+                        title="Editar Ministerio"
                       >
                         <Edit2 size={15} />
                       </button>
-                      <div className="w-6 h-6 flex items-center justify-center text-gray-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
-                        <ChevronRight size={18} />
-                      </div>
+                    </div>
+
+                    {/* Dedicated Action Paths in User's Requested Order: Equipos, Liderazgo, Organigrama, Configuración */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-3 border-t border-gray-100">
+                      {/* Option 1: Equipos */}
+                      <button
+                        type="button"
+                        onClick={() => navigate(APP_ROUTES.admin.ministryTeams(ministry.id))}
+                        className="flex flex-col items-center text-center p-2.5 rounded-2xl bg-slate-50 hover:bg-teal-50/60 border border-gray-200/70 hover:border-teal-200 text-gray-700 hover:text-teal-900 transition-all group/btn cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 group-hover/btn:border-teal-200 text-teal-600 flex items-center justify-center mb-1 shadow-2xs">
+                          <ShieldCheck size={15} />
+                        </div>
+                        <span className="text-xs font-black">Equipos</span>
+                        <span className="text-[10px] text-gray-400 group-hover/btn:text-teal-600 truncate mt-0.5 max-w-full">
+                          Supervisores y Servidores
+                        </span>
+                      </button>
+
+                      {/* Option 2: Liderazgo (Telegram-style view) */}
+                      <button
+                        type="button"
+                        onClick={() => navigate(APP_ROUTES.admin.ministryLeadership(ministry.id))}
+                        className="flex flex-col items-center text-center p-2.5 rounded-2xl bg-slate-50 hover:bg-amber-50/60 border border-gray-200/70 hover:border-amber-200 text-gray-700 hover:text-amber-900 transition-all group/btn cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 group-hover/btn:border-amber-200 text-amber-500 flex items-center justify-center mb-1 shadow-2xs">
+                          <Crown size={15} />
+                        </div>
+                        <span className="text-xs font-black">Liderazgo</span>
+                        <span className="text-[10px] text-gray-400 group-hover/btn:text-amber-600 truncate mt-0.5 max-w-full">
+                          Coordinadores
+                        </span>
+                      </button>
+
+                      {/* Option 3: Organigrama & PDF */}
+                      <button
+                        type="button"
+                        onClick={() => navigate(APP_ROUTES.admin.ministryOrganigram(ministry.id))}
+                        className="flex flex-col items-center text-center p-2.5 rounded-2xl bg-slate-50 hover:bg-blue-50/60 border border-gray-200/70 hover:border-blue-200 text-gray-700 hover:text-blue-900 transition-all group/btn cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 group-hover/btn:border-blue-200 text-blue-600 flex items-center justify-center mb-1 shadow-2xs">
+                          <Network size={15} />
+                        </div>
+                        <span className="text-xs font-black">Organigrama</span>
+                        <span className="text-[10px] text-gray-400 group-hover/btn:text-blue-600 truncate mt-0.5 max-w-full">
+                          Visual y PDF
+                        </span>
+                      </button>
+
+                      {/* Option 4: Configurar */}
+                      <button
+                        type="button"
+                        onClick={() => navigate(APP_ROUTES.admin.ministryStructure(ministry.id))}
+                        className="flex flex-col items-center text-center p-2.5 rounded-2xl bg-slate-50 hover:bg-indigo-50/60 border border-gray-200/70 hover:border-indigo-200 text-gray-700 hover:text-indigo-900 transition-all group/btn cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-white border border-gray-200 group-hover/btn:border-indigo-200 text-indigo-600 flex items-center justify-center mb-1 shadow-2xs">
+                          <Settings size={15} />
+                        </div>
+                        <span className="text-xs font-black">Configurar</span>
+                        <span className="text-[10px] text-gray-400 group-hover/btn:text-indigo-600 truncate mt-0.5 max-w-full">
+                          Áreas y Grupos
+                        </span>
+                      </button>
                     </div>
                   </div>
                 );

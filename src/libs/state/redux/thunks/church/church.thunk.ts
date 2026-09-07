@@ -18,6 +18,8 @@ export const GetChurchCampuses = createAsyncThunk(
         options: {
           params: { churchId: import.meta.env.VITE_CHURCH_ID },
           headers: { Authorization: `Bearer ${token}` },
+          forceRefresh: true,
+          cache: false,
         },
       })
     ).data;
@@ -27,8 +29,9 @@ export const GetChurchCampuses = createAsyncThunk(
     condition: (payload, { getState }) => {
       if (payload && typeof payload === 'object' && payload.force) return true;
       const state = getState() as RootState;
-      const hasCampuses = (state.churchCampusSlice.data?.length ?? 0) > 0;
-      return !hasCampuses;
+      // Debounce: prevent duplicate parallel calls when a request is already in-flight
+      if (state.churchCampusSlice.loading) return false;
+      return true;
     },
   },
 );

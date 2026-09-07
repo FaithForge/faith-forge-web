@@ -408,6 +408,8 @@ export const GetServiceAreaGroups = createAsyncThunk(
     payload: {
       ministryAreaId?: string;
       groupConfigId?: string;
+      ministryId?: string;
+      churchCampusId?: string;
     } = {},
     { getState, rejectWithValue },
   ) => {
@@ -417,6 +419,8 @@ export const GetServiceAreaGroups = createAsyncThunk(
     const params: Record<string, string> = {};
     if (payload.ministryAreaId) params.ministryAreaId = payload.ministryAreaId;
     if (payload.groupConfigId) params.groupConfigId = payload.groupConfigId;
+    if (payload.ministryId) params.ministryId = payload.ministryId;
+    if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
 
     try {
       const response = (

@@ -7,6 +7,7 @@ import {
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { UserLogin } from '../../thunks/user/auth.thunk';
 import { clearHttpCache } from '@/libs/utils/http';
+import { updateBiometricSessionToken } from '@/libs/utils/biometrics';
 
 const initialState: IAuth = {
   user: undefined,
@@ -32,6 +33,10 @@ const AuthSlice = createSlice({
       if (action.payload.refreshToken) {
         state.refreshToken = action.payload.refreshToken;
       }
+      updateBiometricSessionToken({
+        token: action.payload.token,
+        refreshToken: action.payload.refreshToken,
+      }).catch(() => {});
     },
     updateUserRoles: (state, action: PayloadAction<UserRole[]>) => {
       if (state.user) {

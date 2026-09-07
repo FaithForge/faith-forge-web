@@ -22,6 +22,8 @@ import {
   GetVolunteerAssignments,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { HttpRequestMethod, MS } from '@/libs/common-types/global';
+import { microserviceApiRequest } from '@/libs/utils/http';
 import { toast } from 'sonner';
 import {
   ShieldCheck,
@@ -119,7 +121,35 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   useModalBackClose(open, () => onOpenChange(false));
 
   const dispatch = useAppDispatch();
+  const { token } = useAppSelector((state) => state.authSlice);
   const volunteersState = useAppSelector((state) => state.volunteerSlice.volunteers.data);
+
+  /**
+   * Retrieves an existing volunteer record by userId directly from Church MS.
+   *
+   * @param {string} userId - User identifier to query.
+   * @returns {Promise<IVolunteer | undefined>} Found volunteer or undefined.
+   */
+  const fetchVolunteerByUserId = async (userId: string): Promise<IVolunteer | undefined> => {
+    try {
+      const res = await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.GET,
+        url: '/volunteer',
+        options: {
+          params: { search: userId, limit: 10 },
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      });
+      const responseData = res.data;
+      const list: IVolunteer[] = Array.isArray(responseData)
+        ? responseData
+        : responseData?.data || [];
+      return list.find((v) => v.userId === userId);
+    } catch {
+      return undefined;
+    }
+  };
 
   // Step 1: User selection
   const [searchText, setSearchText] = useState('');
@@ -360,33 +390,26 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
     setSubmitting(true);
     try {
-      // Step 1: Find the volunteer record by userId in the local state
-      let volunteer: IVolunteer | undefined = volunteersState.find(
-        (v) => v.userId === selectedUser.id,
-      );
+      // Step 1: Find the volunteer record by userId in local state or existing assignments
+      let volunteer: IVolunteer | undefined =
+        volunteersState.find((v) => v.userId === selectedUser.id) ||
+        existingAssignments.find(
+          (a) => a.volunteer?.userId === selectedUser.id || a.volunteer?.id === selectedUser.id,
+        )?.volunteer;
 
+      // If not present in local state, fetch directly by userId from Church MS
+      if (!volunteer) {
+        volunteer = await fetchVolunteerByUserId(selectedUser.id);
+      }
+
+      // If still not found, attempt to register as a new volunteer in Church MS
       if (!volunteer) {
         try {
-          // Attempt to auto-register as a new volunteer
           volunteer = await dispatch(CreateVolunteer({ userId: selectedUser.id })).unwrap();
         } catch (createErr: unknown) {
-          // 409 Conflict means the volunteer already exists in another ministry.
-          // Fetch the full list (force) and look up the existing record.
-          const isConflict =
-            typeof createErr === 'object' &&
-            createErr !== null &&
-            (
-              (createErr as { statusCode?: number }).statusCode === 409 ||
-              (createErr as { message?: string }).message
-                ?.toLowerCase()
-                .includes('already exists')
-            );
-
-          if (isConflict) {
-            const freshList = await dispatch(GetVolunteers({ force: true })).unwrap();
-            const list: IVolunteer[] = Array.isArray(freshList) ? freshList : freshList?.data || [];
-            volunteer = list.find((v) => v.userId === selectedUser.id);
-          }
+          // If conflict (409) occurs because the user was already registered as a volunteer,
+          // retrieve their existing volunteer profile using direct search
+          volunteer = await fetchVolunteerByUserId(selectedUser.id);
 
           if (!volunteer) {
             throw createErr;
@@ -416,8 +439,17 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
-      const errMsg =
-        typeof err === 'string' ? err : 'Error al guardar la asignación del servidor';
+      let errMsg = 'Error al guardar la asignación del servidor';
+      if (typeof err === 'string') {
+        errMsg = err;
+      } else if (typeof err === 'object' && err !== null) {
+        const anyErr = err as { message?: unknown; error?: unknown };
+        if (typeof anyErr.message === 'string') {
+          errMsg = anyErr.message;
+        } else if (typeof anyErr.error === 'string') {
+          errMsg = anyErr.error;
+        }
+      }
       toast.error(errMsg);
     } finally {
       setSubmitting(false);

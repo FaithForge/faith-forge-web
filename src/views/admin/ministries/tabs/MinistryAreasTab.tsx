@@ -71,6 +71,26 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
       .filter(Boolean) as string[];
   };
 
+  /**
+   * Formats the classroom badge text according to the number of assigned classrooms.
+   *
+   * @param {string[]} names - Array of assigned classroom names.
+   * @returns {string} Formatted label summarizing the assigned classrooms.
+   */
+  const formatClassroomBadgeText = (names: string[]): string => {
+    if (names.length === 0) return 'Salón asignado';
+    if (kidGroups && kidGroups.length > 0 && names.length >= kidGroups.length) {
+      return `Todos los salones (${names.length})`;
+    }
+    if (names.length === 1) {
+      return `Salón: ${names[0]}`;
+    }
+    if (names.length === 2) {
+      return `Salones: ${names[0]}, ${names[1]}`;
+    }
+    return `Salones: ${names.slice(0, 2).join(', ')} (+${names.length - 2})`;
+  };
+
   return (
     <div className="flex flex-col gap-4">
       {/* Header action bar */}
@@ -118,11 +138,11 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
                 key={area.id}
                 className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-gray-300 transition-all"
               >
-                <div className="flex items-start gap-3 min-w-0">
+                <div className="flex items-start gap-3 min-w-0 flex-1">
                   <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
                     <Layers size={18} />
                   </div>
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-bold text-gray-900 truncate">{area.name}</h3>
                       <span
@@ -158,11 +178,12 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
 
                       {/* Classroom Assignment Bullet Badge (Only rendered when assigned) */}
                       {hasClassroom && (
-                        <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80 shrink-0">
+                        <span
+                          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/80 shrink-0 max-w-[260px] sm:max-w-[340px]"
+                          title={classroomNames.length > 0 ? classroomNames.join(', ') : undefined}
+                        >
                           <span className="w-1.5 h-1.5 rounded-full bg-purple-600 shrink-0" />
-                          {classroomNames.length > 0
-                            ? `Salón: ${classroomNames.join(', ')}`
-                            : 'Salón asignado'}
+                          <span className="truncate">{formatClassroomBadgeText(classroomNames)}</span>
                         </span>
                       )}
                     </div>

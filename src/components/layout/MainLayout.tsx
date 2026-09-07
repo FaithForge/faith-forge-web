@@ -7,7 +7,8 @@ import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { SearchScrollProvider, useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
-import { isTokenExpired } from '@/libs/utils/jwt';
+import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
+import { triggerSilentRefresh } from '@/libs/utils/http';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
@@ -49,7 +50,7 @@ const MainLayoutContent = () => {
   useEffect(() => {
     if (!token) return;
 
-    dispatch(GetChurchCampuses());
+    dispatch(GetChurchCampuses({ force: true }));
     if (currentCampus?.id) {
       dispatch(
         GetChurchMeetings({
@@ -62,11 +63,21 @@ const MainLayoutContent = () => {
 
   // Active session expiration watcher (checks every 15 seconds or when returning to tab)
   useEffect(() => {
-    const checkExpiration = () => {
+    const checkExpiration = async () => {
       if (token && isTokenExpired(token) && !refreshToken) {
         dispatch(logout());
         toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
         navigate(APP_ROUTES.auth.login, { replace: true });
+        return;
+      }
+
+      // Proactively refresh if token is expiring within 3 minutes and refreshToken exists
+      if (token && refreshToken && isTokenExpiringSoon(token, 180)) {
+        try {
+          await triggerSilentRefresh();
+        } catch {
+          // Silent catch: network drops/offline won't log out users
+        }
       }
     };
 

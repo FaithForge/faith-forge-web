@@ -43,3 +43,21 @@ export const isTokenExpired = (token?: string): boolean => {
   }
 };
 
+/**
+ * Checks if a JWT token will expire within a given threshold (in seconds).
+ *
+ * @param {string | undefined} token - The JWT token string.
+ * @param {number} [thresholdSeconds=120] - Lookahead threshold in seconds.
+ * @returns {boolean} True if token is missing, invalid, expired, or will expire within threshold.
+ */
+export const isTokenExpiringSoon = (token?: string, thresholdSeconds = 120): boolean => {
+  if (!token) return true;
+  try {
+    const payload = parseJwt(token);
+    if (!payload || typeof payload.exp !== 'number') return false;
+    return payload.exp * 1000 <= Date.now() + thresholdSeconds * 1000;
+  } catch {
+    return true;
+  }
+};
+

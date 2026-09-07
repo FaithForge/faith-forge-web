@@ -198,7 +198,7 @@ export const GetVolunteerAssignments = createAsyncThunk(
 
     const params: Record<string, string | number | boolean> = {};
     if (payload.page !== undefined) params.page = payload.page;
-    if (payload.limit !== undefined) params.limit = payload.limit;
+    params.limit = payload.limit !== undefined ? payload.limit : 500;
     if (payload.order) params.order = payload.order;
     if (payload.ministryId) params.ministryId = payload.ministryId;
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;

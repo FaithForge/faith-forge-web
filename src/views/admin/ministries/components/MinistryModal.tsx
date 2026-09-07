@@ -95,8 +95,11 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       }
       onOpenChange(false);
       onSuccess?.();
-    } catch (err) {
-      const errMsg = typeof err === 'string' ? err : 'Error al guardar el ministerio';
+    } catch (err: any) {
+      const errMsg =
+        typeof err === 'string'
+          ? err
+          : err?.message || err?.error || 'Error al guardar el ministerio';
       toast.error(errMsg);
     }
   };

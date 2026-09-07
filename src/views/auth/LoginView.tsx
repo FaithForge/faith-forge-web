@@ -43,6 +43,7 @@ const LoginView = () => {
     password?: string;
     user: any;
     token: string;
+    refreshToken?: string;
   } | null>(null);
   const [showRegisterBioModal, setShowRegisterBioModal] = useState(false);
   const [showConfirmForgetBioModal, setShowConfirmForgetBioModal] = useState(false);
@@ -147,6 +148,7 @@ const LoginView = () => {
           setAuthSession({
             user: result.user,
             token: result.token,
+            refreshToken: result.refreshToken,
           })
         );
         const name =
@@ -171,6 +173,7 @@ const LoginView = () => {
           const payload = loginResult.payload;
           await updateBiometricSessionToken({
             token: payload.token,
+            refreshToken: payload.refreshToken,
             user: payload.user,
             password: result.password,
           });
@@ -239,6 +242,7 @@ const LoginView = () => {
             password: data.password,
             user: payload.user,
             token: payload.token,
+            refreshToken: payload.refreshToken,
           });
           setShowRegisterBioModal(true);
         } else {
@@ -246,6 +250,7 @@ const LoginView = () => {
           if (registeredBioData) {
             await updateBiometricSessionToken({
               token: payload.token,
+              refreshToken: payload.refreshToken,
               user: payload.user,
               password: data.password,
             });

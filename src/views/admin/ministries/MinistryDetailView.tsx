@@ -1,10 +1,10 @@
-import React, { useEffect, useState, useMemo } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import {
-  Layers,
-  Users2,
-  Network,
   ShieldCheck,
+  Crown,
+  Network,
+  Settings,
   Edit2,
   CheckCircle2,
   XCircle,
@@ -20,48 +20,72 @@ import {
   GetServiceAreaGroups,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { APP_ROUTES } from '@/config/routes';
-import MinistryAreasTab from './tabs/MinistryAreasTab';
-import MinistryGroupsTab from './tabs/MinistryGroupsTab';
-import ServiceAreaGroupsTab from './tabs/ServiceAreaGroupsTab';
-import VolunteerAssignmentsTab from './tabs/VolunteerAssignmentsTab';
+import MinistryTeamsSection from './views/MinistryTeamsSection';
+import MinistryLeadershipSection from './views/MinistryLeadershipSection';
+import MinistryOrganigramSection from './views/MinistryOrganigramSection';
+import MinistryStructureSection from './views/MinistryStructureSection';
 import MinistryModal from './components/MinistryModal';
 import clsx from 'clsx';
 
-type TabKey = 'areas' | 'groups' | 'teams' | 'roles';
+type MinistryMainTabKey = 'teams' | 'leadership' | 'organigram' | 'structure';
 
 interface TabItem {
-  key: TabKey;
+  key: MinistryMainTabKey;
   label: string;
   icon: React.ElementType;
 }
 
-const TABS: TabItem[] = [
-  { key: 'areas', label: 'Áreas', icon: Layers },
-  { key: 'groups', label: 'Grupos', icon: Users2 },
-  { key: 'teams', label: 'Equipos', icon: Network },
-  { key: 'roles', label: 'Servidores y Roles', icon: ShieldCheck },
+const MAIN_TABS: TabItem[] = [
+  { key: 'teams', label: 'Equipos', icon: ShieldCheck },
+  { key: 'leadership', label: 'Liderazgo', icon: Crown },
+  { key: 'organigram', label: 'Organigrama', icon: Network },
+  { key: 'structure', label: 'Configuración', icon: Settings },
 ];
 
 /**
- * Ministry Detail View at /admin/ministries/:id.
- * Central hub for configuring a ministry's service areas, groups, campus teams,
- * and volunteer role assignments.
+ * Ministry Detail View at /admin/ministries/:id and /admin/ministries/:id/:section.
+ * Dynamic unified hub connecting the 4 administrative pillars:
+ * 1. Teams & Rosters (Organización de equipos por Área y Grupo)
+ * 2. Leadership (Liderazgo estilo Telegram)
+ * 3. Organigram & Analytics (Organigrama visual y exportación PDF)
+ * 4. Structure Configuration (Áreas, Grupos y Equipos)
  *
  * @returns {JSX.Element} Rendered ministry detail view.
  */
 const MinistryDetailView: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id, section } = useParams<{ id: string; section?: string }>();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
   const ministryId = id || '';
   const campuses = useAppSelector((state) => state.churchCampusSlice);
-  const { ministries, loadingMinistries } = useAppSelector((state) => state.ministrySlice);
+  const { ministries } = useAppSelector((state) => state.ministrySlice);
 
-  const [activeTab, setActiveTab] = useState<TabKey>('areas');
   const [editModalOpen, setEditModalOpen] = useState(false);
 
   const churchId = import.meta.env.VITE_CHURCH_ID;
+
+  // Determine active tab from URL param (:section) or query (?tab=...)
+  const activeTab: MinistryMainTabKey = useMemo(() => {
+    const raw = section || searchParams.get('tab');
+    if (raw === 'leadership') return 'leadership';
+    if (raw === 'organigram' || raw === 'chart') return 'organigram';
+    if (raw === 'structure' || raw === 'config') return 'structure';
+    return 'teams';
+  }, [section, searchParams]);
+
+  const handleTabChange = (key: MinistryMainTabKey) => {
+    if (key === 'teams') {
+      navigate(APP_ROUTES.admin.ministryTeams(ministryId));
+    } else if (key === 'leadership') {
+      navigate(APP_ROUTES.admin.ministryLeadership(ministryId));
+    } else if (key === 'organigram') {
+      navigate(APP_ROUTES.admin.ministryOrganigram(ministryId));
+    } else if (key === 'structure') {
+      navigate(APP_ROUTES.admin.ministryStructure(ministryId));
+    }
+  };
 
   // Load campuses if not yet available
   useEffect(() => {
@@ -77,12 +101,12 @@ const MinistryDetailView: React.FC = () => {
     }
   }, [dispatch, churchId, ministries.length]);
 
-  // Load child catalogs for this ministry
+  // Preload structure catalogs for this ministry
   useEffect(() => {
     if (ministryId) {
       dispatch(GetMinistryAreas({ ministryId, force: false }));
       dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));
-      // Service area groups will be loaded by the child tab when areas are available
+      dispatch(GetServiceAreaGroups({ ministryId }));
     }
   }, [dispatch, ministryId]);
 
@@ -106,7 +130,7 @@ const MinistryDetailView: React.FC = () => {
             <button
               type="button"
               onClick={() => setEditModalOpen(true)}
-              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 text-white transition-all"
+              className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 text-white transition-all cursor-pointer"
               title="Editar Ministerio"
             >
               <Edit2 size={16} />
@@ -118,10 +142,10 @@ const MinistryDetailView: React.FC = () => {
       <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-4">
         {/* Ministry Information Card */}
         {currentMinistry && (
-          <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3">
+          <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3">
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 truncate">
+                <h1 className="text-lg sm:text-xl font-black text-gray-900 truncate">
                   {currentMinistry.name}
                 </h1>
                 {campusName && (
@@ -158,43 +182,66 @@ const MinistryDetailView: React.FC = () => {
           </div>
         )}
 
-        {/* Tab Navigation (Segmented Bar) */}
-        <div className="grid grid-cols-4 gap-1 p-1 bg-slate-200/80 rounded-2xl border border-gray-200/70">
-          {TABS.map((tab) => {
+        {/* Top Segmented Navigation (The 4 Core Pillars in exact requested order) */}
+        <div className="grid grid-cols-4 gap-1 p-1 bg-slate-200/80 rounded-2xl border border-gray-200/70 shadow-2xs">
+          {MAIN_TABS.map((tab) => {
             const Icon = tab.icon;
             const isSelected = activeTab === tab.key;
             return (
               <button
                 key={tab.key}
                 type="button"
-                onClick={() => setActiveTab(tab.key)}
+                onClick={() => handleTabChange(tab.key)}
                 className={clsx(
-                  'flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition-all duration-150',
+                  'flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none',
                   isSelected
-                    ? 'bg-white text-gray-900 shadow-xs'
+                    ? 'bg-white text-gray-900 shadow-xs scale-[1.01]'
                     : 'text-gray-600 hover:text-gray-900 bg-transparent',
                 )}
               >
-                <Icon size={14} className={isSelected ? 'text-primary' : 'text-gray-500'} />
+                <Icon
+                  size={14}
+                  className={clsx(
+                    isSelected
+                      ? tab.key === 'teams'
+                        ? 'text-teal-600'
+                        : tab.key === 'leadership'
+                        ? 'text-amber-500'
+                        : tab.key === 'organigram'
+                        ? 'text-blue-600'
+                        : 'text-indigo-600'
+                      : 'text-gray-400',
+                  )}
+                />
                 <span className="truncate">{tab.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* Tab Content */}
-        <div className="mt-1">
-          {activeTab === 'areas' && <MinistryAreasTab ministryId={ministryId} />}
-          {activeTab === 'groups' && <MinistryGroupsTab ministryId={ministryId} />}
+        {/* Tab Content Panels */}
+        <div className="mt-0.5">
           {activeTab === 'teams' && (
-            <ServiceAreaGroupsTab
+            <MinistryTeamsSection
               ministryId={ministryId}
               churchCampusId={currentMinistry?.churchCampusId}
-              onNavigateToTab={(tab) => setActiveTab(tab as TabKey)}
             />
           )}
-          {activeTab === 'roles' && (
-            <VolunteerAssignmentsTab
+          {activeTab === 'leadership' && (
+            <MinistryLeadershipSection
+              ministryId={ministryId}
+              churchCampusId={currentMinistry?.churchCampusId}
+            />
+          )}
+          {activeTab === 'organigram' && (
+            <MinistryOrganigramSection
+              ministryId={ministryId}
+              churchCampusId={currentMinistry?.churchCampusId}
+              ministry={currentMinistry}
+            />
+          )}
+          {activeTab === 'structure' && (
+            <MinistryStructureSection
               ministryId={ministryId}
               churchCampusId={currentMinistry?.churchCampusId}
             />
