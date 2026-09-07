@@ -142,10 +142,11 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
         GetChurchMeetings({
           churchCampusId: selectedCampusId,
           state: ChurchMeetingStateEnum.ACTIVE,
+          force: true,
         })
       );
       if (!isKidChurchRole) {
-        dispatch(GetChurchPrinters(selectedCampusId));
+        dispatch(GetChurchPrinters({ churchCampusId: selectedCampusId, force: true }));
       }
     }
   }, [selectedCampusId, isKidChurchRole, open, dispatch]);
@@ -229,11 +230,17 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     });
   }, [rawMeetings, isDayRestrictedRole]);
 
-  // Filtrado de impresoras: mostrar únicamente las que estén en estado ACTIVE
+  // Filtrado de impresoras: mostrar únicamente las de la sede seleccionada que estén en estado ACTIVE
   const availablePrinters = useMemo(() => {
+    if (!selectedCampusId) return [];
     const rawPrinters: IChurchPrinter[] =
-      (printers as any).printersByCampus?.[selectedCampusId] || printers.data || [];
-    return rawPrinters.filter((p) => p.state === ChurchPrinterStateEnum.ACTIVE);
+      (printers as any).printersByCampus?.[selectedCampusId] ?? [];
+    return rawPrinters.filter(
+      (p) =>
+        p.state === ChurchPrinterStateEnum.ACTIVE ||
+        (p as any).state === 'ACTIVE' ||
+        (p as any).active === true,
+    );
   }, [printers, selectedCampusId]);
 
   // Auto-select or align meeting when availableMeetings change
@@ -463,12 +470,20 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                       onChange={(e) => setSelectedPrinterId(e.target.value)}
                       disabled={isPrinterDisabled}
                     >
-                      {availablePrinters.length !== 1 && (
-                        <option value="" disabled>Seleccione impresora de red...</option>
+                      {isPrinterLoading ? (
+                        <option value="" disabled>Cargando impresoras...</option>
+                      ) : availablePrinters.length === 0 ? (
+                        <option value="" disabled>No hay impresoras disponibles en esta sede</option>
+                      ) : (
+                        <>
+                          {availablePrinters.length !== 1 && (
+                            <option value="" disabled>Seleccione impresora de red...</option>
+                          )}
+                          {availablePrinters.map((printer: any) => (
+                            <option key={printer.id} value={printer.id}>{printer.name}</option>
+                          ))}
+                        </>
                       )}
-                      {availablePrinters.map((printer: any) => (
-                        <option key={printer.id} value={printer.id}>{printer.name}</option>
-                      ))}
                     </select>
                     <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                       {isPrinterLoading ? <Loader2 size={16} className="animate-spin" /> : <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>}

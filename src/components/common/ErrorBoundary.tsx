@@ -48,11 +48,15 @@ export class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <h1 className="text-xl font-bold text-gray-900 mb-2">
-              Actualización disponible
+              Actualización requerida
             </h1>
 
-            <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-              La aplicación necesita renovar sus archivos temporales para continuar funcionando sin problemas.
+            <p className="text-sm text-gray-600 mb-6 leading-relaxed">
+              Analizamos que tu navegador tiene una versión antigua o archivos desactualizados de la aplicación.
+              Por favor presiona el botón de abajo para actualizarla e inicia sesión nuevamente.
+              <span className="block mt-2 text-xs text-gray-400">
+                Si el problema persiste luego de esto, contacta al administrador del sistema.
+              </span>
             </p>
 
             <div className="w-full flex flex-col gap-3">
@@ -63,14 +67,14 @@ export class ErrorBoundary extends Component<Props, State> {
                 className="flex items-center justify-center gap-2 py-3"
               >
                 <RotateCcw size={18} />
-                Limpiar caché y actualizar
+                Limpiar caché e iniciar sesión
               </Button>
 
               <Button
                 onClick={this.handleReload}
                 block
                 variant="ghost"
-                className="flex items-center justify-center gap-2 py-2.5"
+                className="flex items-center justify-center gap-2 py-2.5 text-gray-500"
               >
                 <RefreshCw size={16} />
                 Reintentar

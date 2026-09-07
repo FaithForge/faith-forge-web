@@ -196,9 +196,9 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
       <ConfirmModal
         open={showClearCacheConfirm}
         onOpenChange={setShowClearCacheConfirm}
-        title="¿Limpiar caché y datos locales?"
-        description="Se eliminarán los archivos temporales de la app y se recargarán los datos más recientes del servidor."
-        confirmText="Limpiar y recargar"
+        title="¿Limpiar caché y actualizar app?"
+        description="Analizamos que tu navegador puede tener una versión antigua o archivos desactualizados. Al confirmar se limpiará la memoria de la aplicación, se instalará la versión más reciente y deberás iniciar sesión nuevamente. Si el problema persiste luego de esto, por favor contacta al administrador del sistema."
+        confirmText="Limpiar y actualizar"
         cancelText="Cancelar"
         type="info"
         onConfirm={clearAppCacheAndReload}

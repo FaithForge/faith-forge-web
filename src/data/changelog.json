@@ -1,5 +1,17 @@
 [
   {
+    "version": "3.1.1",
+    "type": "patch",
+    "timestamp": "2026-09-07T12:43:01.093Z",
+    "dateFormatted": "07/09/2026 07:43 AM",
+    "title": "Corrección en selector de impresoras y mensajes de actualización",
+    "changes": [
+      "Solucionado el problema que impedía listar las impresoras disponibles en algunas sedes.",
+      "Mensaje más claro y descriptivo cuando se requiere renovar la versión de la aplicación.",
+      "Mejora en la visualización del historial de versiones para leer los títulos completos y ver los parches agrupados."
+    ]
+  },
+  {
     "version": "3.1.0",
     "type": "minor",
     "timestamp": "2026-09-07T05:23:55.890Z",

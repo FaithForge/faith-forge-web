@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Sparkles, ChevronDown, Clock, CheckCircle2, Info, Layers } from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { Sparkles, ChevronDown, Clock, CheckCircle2, Info, Layers, Wrench } from 'lucide-react';
 import clsx from 'clsx';
 import { AppDrawer } from '@/components/ui/AppDrawer';
 import { APP_CHANGELOG, APP_VERSION, SEMVER_META, ChangelogItem } from '@/constants/version';
@@ -10,9 +10,17 @@ interface ChangelogDrawerProps {
   onOpenChange: (open: boolean) => void;
 }
 
+interface ChangelogGroup {
+  seriesKey: string;
+  latestItem: ChangelogItem;
+  baseItem: ChangelogItem;
+  patches: ChangelogItem[];
+}
+
 /**
  * ChangelogDrawer displays the version history of the application following the SemVer standard.
- * It provides users with a friendly, non-technical explanation of changes release by release.
+ * It groups patch releases under their parent minor/major version without creating separate dropdowns,
+ * keeping the history organized and clear for end users.
  *
  * @param {ChangelogDrawerProps} props - Component props.
  * @returns {JSX.Element} The rendered drawer.
@@ -20,12 +28,52 @@ interface ChangelogDrawerProps {
 export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenChange }) => {
   useModalBackClose(open, () => onOpenChange(false));
 
-  // Initialize with the most recent version expanded by default
-  const [expandedVersions, setExpandedVersions] = useState<string[]>([APP_VERSION]);
+  // Groups releases by Major.Minor series (e.g. 3.1.x, 3.0.x)
+  const groupedReleases: ChangelogGroup[] = useMemo(() => {
+    const groupsMap = new Map<string, ChangelogGroup>();
+
+    for (const item of APP_CHANGELOG) {
+      const parts = item.version.split('.');
+      const seriesKey = parts.length >= 2 ? `${parts[0]}.${parts[1]}` : item.version;
+
+      if (!groupsMap.has(seriesKey)) {
+        groupsMap.set(seriesKey, {
+          seriesKey,
+          latestItem: item,
+          baseItem: item,
+          patches: [],
+        });
+      }
+
+      const group = groupsMap.get(seriesKey)!;
+
+      if (item.type === 'patch') {
+        group.patches.push(item);
+      } else {
+        // Base major or minor release
+        group.baseItem = item;
+      }
+    }
+
+    return Array.from(groupsMap.values());
+  }, []);
+
+  // Initialize with the most recent series expanded by default
+  const [expandedVersions, setExpandedVersions] = useState<string[]>([
+    groupedReleases[0]?.seriesKey || '3.1',
+  ]);
+  // Patches are collapsible and closed by default
+  const [expandedPatches, setExpandedPatches] = useState<string[]>([]);
   const [showSemVerGuide, setShowSemVerGuide] = useState<boolean>(false);
 
-  const toggleVersion = (version: string) => {
+  const toggleVersion = (seriesKey: string) => {
     setExpandedVersions((prev) =>
+      prev.includes(seriesKey) ? prev.filter((v) => v !== seriesKey) : [...prev, seriesKey]
+    );
+  };
+
+  const togglePatch = (version: string) => {
+    setExpandedPatches((prev) =>
       prev.includes(version) ? prev.filter((v) => v !== version) : [...prev, version]
     );
   };
@@ -106,43 +154,50 @@ export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenCh
           </div>
         )}
 
-        {/* Releases Accordion List */}
+        {/* Releases Accordion List (Grouped by Major.Minor) */}
         <div className="space-y-3">
-          {APP_CHANGELOG.map((release: ChangelogItem, index: number) => {
-            const isExpanded = expandedVersions.includes(release.version);
+          {groupedReleases.map((group: ChangelogGroup, index: number) => {
+            const isExpanded = expandedVersions.includes(group.seriesKey);
             const isLatest = index === 0;
-            const meta = SEMVER_META[release.type] || SEMVER_META.patch;
+            const baseMeta = SEMVER_META[group.baseItem.type] || SEMVER_META.minor;
 
             return (
               <div
-                key={release.version}
+                key={group.seriesKey}
                 className={clsx(
                   'bg-white rounded-2xl border transition-all duration-200 overflow-hidden shadow-2xs',
                   isLatest ? 'border-primary/30 ring-1 ring-primary/10' : 'border-gray-200'
                 )}
               >
-                {/* Accordion Trigger Header */}
+                {/* Accordion Trigger Header: shows latest version and title */}
                 <button
                   type="button"
-                  onClick={() => toggleVersion(release.version)}
+                  onClick={() => toggleVersion(group.seriesKey)}
                   className="w-full text-left px-4 py-3.5 flex items-start justify-between gap-3 hover:bg-gray-50/60 transition-colors cursor-pointer select-none"
                   aria-expanded={isExpanded}
                 >
                   <div className="space-y-1.5 flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="font-extrabold text-sm text-gray-900">
-                        v{release.version}
+                        v{group.latestItem.version}
                       </span>
 
                       <span
                         className={clsx(
                           'inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold border',
-                          meta.badgeClass
+                          baseMeta.badgeClass
                         )}
                       >
-                        <span className={clsx('w-1.5 h-1.5 rounded-full', meta.dotClass)} />
-                        {meta.label}
+                        <span className={clsx('w-1.5 h-1.5 rounded-full', baseMeta.dotClass)} />
+                        {baseMeta.label}
                       </span>
+
+                      {group.patches.length > 0 && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          {group.patches.length} {group.patches.length === 1 ? 'parche' : 'parches'}
+                        </span>
+                      )}
 
                       {isLatest && (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-bold bg-gray-100 text-gray-700 border border-gray-200">
@@ -151,13 +206,14 @@ export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenCh
                       )}
                     </div>
 
-                    <p className="font-semibold text-sm text-gray-800 leading-snug truncate">
-                      {release.title}
+                    {/* Title with break-words to ensure it is never cut off */}
+                    <p className="font-semibold text-sm text-gray-800 leading-snug break-words">
+                      {group.latestItem.title}
                     </p>
 
                     <div className="flex items-center gap-1.5 text-[11px] text-gray-400">
                       <Clock size={12} />
-                      <span>{release.dateFormatted}</span>
+                      <span>{group.latestItem.dateFormatted}</span>
                     </div>
                   </div>
 
@@ -175,19 +231,22 @@ export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenCh
 
                 {/* Accordion Body */}
                 {isExpanded && (
-                  <div className="px-4 pb-4 pt-1 border-t border-gray-100 bg-gray-50/40 text-sm space-y-3 animate-in fade-in-50 duration-150">
-                    {release.description && (
+                  <div className="px-4 pb-4 pt-1 border-t border-gray-100 bg-gray-50/40 text-sm space-y-4 animate-in fade-in-50 duration-150">
+                    {/* Base Release Details */}
+                    {group.baseItem.description && (
                       <p className="text-xs text-gray-600 leading-relaxed pt-1">
-                        {release.description}
+                        {group.baseItem.description}
                       </p>
                     )}
 
                     <div className="space-y-2">
                       <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
-                        Cambios incluidos:
+                        {group.patches.length > 0
+                          ? `Funcionalidades de la versión v${group.baseItem.version}:`
+                          : 'Cambios incluidos:'}
                       </p>
                       <ul className="space-y-2">
-                        {release.changes.map((change: string, idx: number) => (
+                        {group.baseItem.changes.map((change: string, idx: number) => (
                           <li
                             key={idx}
                             className="flex items-start gap-2.5 text-xs text-gray-700 leading-relaxed"
@@ -201,6 +260,103 @@ export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenCh
                         ))}
                       </ul>
                     </div>
+
+                    {/* Patches History Section (Newest to Oldest) */}
+                    {group.patches.length > 0 && (
+                      <div className="pt-3 border-t border-gray-200/80 space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-6 h-6 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Wrench size={13} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-gray-800 uppercase tracking-wider">
+                              Historial de Parches
+                            </p>
+                            <p className="text-[11px] text-gray-500">
+                              Correcciones de errores y mejoras en orden reciente
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2.5">
+                          {group.patches.map((patch: ChangelogItem) => {
+                            const isPatchExpanded = expandedPatches.includes(patch.version);
+
+                            return (
+                              <div
+                                key={patch.version}
+                                className="bg-white rounded-xl border border-emerald-100 shadow-2xs overflow-hidden transition-all duration-150"
+                              >
+                                {/* Patch Accordion Trigger Header */}
+                                <button
+                                  type="button"
+                                  onClick={() => togglePatch(patch.version)}
+                                  className="w-full text-left p-3 flex items-start justify-between gap-2.5 hover:bg-emerald-50/40 transition-colors cursor-pointer select-none"
+                                  aria-expanded={isPatchExpanded}
+                                >
+                                  <div className="space-y-1 flex-1 min-w-0">
+                                    <div className="flex flex-wrap items-center gap-1.5">
+                                      <span className="font-extrabold text-xs text-gray-900">
+                                        v{patch.version}
+                                      </span>
+                                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                                        Parche
+                                      </span>
+                                    </div>
+
+                                    <p className="text-xs font-bold text-gray-800 leading-snug break-words">
+                                      {patch.title}
+                                    </p>
+
+                                    <div className="flex items-center gap-1 text-[10px] text-gray-400">
+                                      <Clock size={11} />
+                                      <span>{patch.dateFormatted}</span>
+                                    </div>
+                                  </div>
+
+                                  <div className="pt-0.5 shrink-0">
+                                    <div
+                                      className={clsx(
+                                        'w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 transition-transform duration-200',
+                                        isPatchExpanded ? 'rotate-180 bg-emerald-100 text-emerald-700' : ''
+                                      )}
+                                    >
+                                      <ChevronDown size={14} />
+                                    </div>
+                                  </div>
+                                </button>
+
+                                {/* Patch Accordion Body (Collapsible) */}
+                                {isPatchExpanded && (
+                                  <div className="px-3 pb-3 pt-2 border-t border-emerald-100/80 bg-emerald-50/20 space-y-2 text-xs animate-in fade-in-50 duration-150">
+                                    {patch.description && (
+                                      <p className="text-[11px] text-gray-600 leading-relaxed">
+                                        {patch.description}
+                                      </p>
+                                    )}
+
+                                    <ul className="space-y-1.5 pt-0.5">
+                                      {patch.changes.map((change: string, cIdx: number) => (
+                                        <li
+                                          key={cIdx}
+                                          className="flex items-start gap-2 text-xs text-gray-700 leading-relaxed"
+                                        >
+                                          <CheckCircle2
+                                            size={14}
+                                            className="text-emerald-500 shrink-0 mt-0.5"
+                                          />
+                                          <span>{change}</span>
+                                        </li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

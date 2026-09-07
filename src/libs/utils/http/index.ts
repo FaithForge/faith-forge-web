@@ -181,6 +181,7 @@ const executeApiRequest = async (
   if (method !== HttpRequestMethod.GET) {
     if (url.includes('church-meeting')) invalidateHttpCachePattern('church-meeting');
     if (url.includes('church-campus')) invalidateHttpCachePattern('church-campus');
+    if (url.includes('church-printer')) invalidateHttpCachePattern('church-printer');
     if (url.includes('kid-group')) invalidateHttpCachePattern('kid-group');
     if (url.includes('kid-medical-condition')) invalidateHttpCachePattern('kid-medical-condition');
     if (url.includes('kid-guardian')) invalidateHttpCachePattern('kid-guardian');

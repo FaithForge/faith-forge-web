@@ -63,7 +63,10 @@ const churchPrinterSlice = createSlice({
       }
       // Ensure only ACTIVE printers are stored in operational cache
       const activeIncoming = incoming.filter(
-        (p) => p.state === ChurchPrinterStateEnum.ACTIVE,
+        (p) =>
+          p.state === ChurchPrinterStateEnum.ACTIVE ||
+          (p as any).state === 'ACTIVE' ||
+          (p as any).active === true,
       );
       if (campusId) {
         state.printersByCampus[campusId] = activeIncoming;
@@ -103,12 +106,15 @@ const churchPrinterSlice = createSlice({
       }
       state.adminPrintersByCampus[churchCampusId] = printers;
 
-      // Invalidate operational cache for this campus if admin data was fetched/updated
-      if (state.printersByCampus?.[churchCampusId]) {
-        state.printersByCampus[churchCampusId] = (printers as IChurchPrinter[]).filter(
-          (p) => p.state === ChurchPrinterStateEnum.ACTIVE,
-        );
+      if (!state.printersByCampus) {
+        state.printersByCampus = {};
       }
+      state.printersByCampus[churchCampusId] = (printers as IChurchPrinter[]).filter(
+        (p) =>
+          p.state === ChurchPrinterStateEnum.ACTIVE ||
+          (p as any).state === 'ACTIVE' ||
+          (p as any).active === true,
+      );
 
       // If current selected printer became inactive or deleted, deselect it
       if (state.current) {

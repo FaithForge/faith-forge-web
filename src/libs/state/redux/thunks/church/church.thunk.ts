@@ -155,15 +155,16 @@ export const GetChurchPrinters = createAsyncThunk(
   'church/GetChurchPrinters',
   async (payload: string | { churchCampusId: string; force?: boolean }, { getState }) => {
     const churchCampusId = typeof payload === 'string' ? payload : payload.churchCampusId;
+    const force = typeof payload === 'object' && payload.force;
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const response = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: `/church-printers`,
+        url: `/church-printers?churchCampusId=${churchCampusId}&states=ACTIVE`,
         options: {
-          params: { churchCampusId, states: ChurchPrinterStateEnum.ACTIVE },
+          forceRefresh: !!force,
           headers: { Authorization: `Bearer ${token}` },
         },
       })
@@ -178,8 +179,15 @@ export const GetChurchPrinters = createAsyncThunk(
       const state = getState() as RootState;
       const printerSlice = state.churchPrinterSlice as any;
       const campusPrinters = printerSlice.printersByCampus?.[churchCampusId];
-      const hasPrintersForCampus = campusPrinters && campusPrinters.length > 0;
-      return !hasPrintersForCampus;
+      const hasActivePrinters =
+        Array.isArray(campusPrinters) &&
+        campusPrinters.some(
+          (p: any) =>
+            p?.state === ChurchPrinterStateEnum.ACTIVE ||
+            p?.state === 'ACTIVE' ||
+            p?.active === true,
+        );
+      return !hasActivePrinters;
     },
   },
 );
