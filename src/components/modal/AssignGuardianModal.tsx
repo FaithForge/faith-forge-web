@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, Search, UserCheck } from 'lucide-react';
+import { X, Search, UserCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKidGuardian, CreateKidGuardian } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
@@ -12,6 +12,7 @@ import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/utils/phone';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import {
   IdType,
@@ -137,8 +138,9 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
         toast.error(typeof lastNameValidation === 'string' ? lastNameValidation : 'Se deben colocar ambos apellidos');
         return;
       }
-      if (!phone.trim() || phone.trim().length < 7) {
-        toast.error('Por favor ingrese un número de teléfono válido (mínimo 7 dígitos)');
+      const phoneValidation = validatePhoneNumber(phone, dialCodePhone);
+      if (!phoneValidation.isValid) {
+        toast.error(phoneValidation.error || 'Por favor ingrese un número de teléfono válido');
         return;
       }
       if (!gender) {
@@ -152,6 +154,14 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
       return;
     }
 
+    const phoneToValidate = phone.trim() || existingGuardian?.phone || '';
+    const dialCodeToValidate = dialCodePhone || existingGuardian?.dialCodePhone || '+57';
+    const phoneValidation = validatePhoneNumber(phoneToValidate, dialCodeToValidate);
+    if (!phoneValidation.isValid) {
+      toast.error(phoneValidation.error || 'El acudiente tiene un teléfono errado. Debe preguntarle el número correcto y corregirlo.');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const payload = {
@@ -160,8 +170,8 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
         nationalId: (existingGuardian?.nationalId || nationalId).trim(),
         firstName: (existingGuardian?.firstName || firstName).trim(),
         lastName: (existingGuardian?.lastName || lastName).trim(),
-        dialCodePhone: existingGuardian?.dialCodePhone || dialCodePhone,
-        phone: (existingGuardian?.phone || phone).trim(),
+        dialCodePhone: dialCodePhone,
+        phone: phone.trim(),
         gender: existingGuardian?.gender || gender,
         relation,
       };
@@ -206,6 +216,17 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
                 >
                   Limpiar
                 </button>
+              </div>
+            )}
+
+            {/* Salvedad visual si el acudiente existente tiene formato de teléfono errado */}
+            {existingGuardian && !isPhoneValid(phone || existingGuardian.phone, dialCodePhone || existingGuardian.dialCodePhone) && (
+              <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
+                <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                <div className="leading-relaxed">
+                  <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto al acudiente:</strong>
+                  El número registrado para este acudiente ({formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo inferior para poder asignarlo.
+                </div>
               </div>
             )}
 
@@ -273,10 +294,10 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Phone */}
             <PhoneInput
               label="Teléfono"
-              required={!existingGuardian}
+              required={!existingGuardian || !isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
               dialCode={dialCodePhone}
               phone={phone}
-              disabled={!!existingGuardian}
+              disabled={!!existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
               onDialCodeChange={setDialCodePhone}
               onPhoneChange={setPhone}
             />

@@ -4,11 +4,12 @@ import Button from '@/components/ui/Button';
 import PhoneInput from '@/components/ui/PhoneInput';
 import SelectSearch from '@/components/ui/SelectSearch';
 import { toast } from 'sonner';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { UpdateKidGuardianPhone } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
 import { GetKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { kidRelationSelect } from '@/libs/models/KidChurch';
+import { validatePhoneNumber, cleanPhoneDigits, isPhoneValid } from '@/libs/utils/phone';
 
 export interface GuardianToUpdate {
   id: string;
@@ -69,9 +70,9 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
       return;
     }
 
-    const cleanPhone = sanitizePhoneDigits(phone);
-    if (cleanPhone.length < 7) {
-      setError('El teléfono debe tener al menos 7 dígitos');
+    const validation = validatePhoneNumber(phone, dialCode);
+    if (!validation.isValid) {
+      setError(validation.error || 'El número de teléfono no es válido');
       return;
     }
 
@@ -84,6 +85,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
     setIsLoading(true);
 
     try {
+      const cleanPhone = cleanPhoneDigits(phone, dialCode);
       const response = await dispatch(UpdateKidGuardianPhone({
         id: guardian.id,
         dialCodePhone: dialCode,
@@ -128,6 +130,15 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
             <X size={16} />
           </button>
         </div>
+
+        {guardian && !isPhoneValid(guardian.phone, guardian.dialCodePhone) && (
+          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2.5">
+            <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
+              <strong>Teléfono errado:</strong> Debe preguntarle al acudiente el número correcto para corregirlo y poder registrar la asistencia del niño.
+            </span>
+          </div>
+        )}
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">

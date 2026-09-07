@@ -12,7 +12,9 @@
     "dev:stack:down": "docker compose -f docker-compose.stack.yml down",
     "build": "tsc && NODE_OPTIONS=\"--experimental-global-webcrypto\" vite build",
     "start": "vite preview",
-    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "commit": "node scripts/commit.mjs",
+    "version:bump": "node scripts/bump-version.mjs"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.23",

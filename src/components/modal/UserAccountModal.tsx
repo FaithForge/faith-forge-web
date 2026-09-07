@@ -17,6 +17,7 @@ import { CreateUserAccount, UpdateUserAccount } from '@/libs/state/redux/thunks/
 import { IUser, generateSuggestedUsername, generateTemporaryPassword } from '@/libs/models';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { formatPhoneDisplay } from '@/libs/utils/phone';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 interface UserAccountModalProps {
@@ -238,7 +239,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                   </p>
                   <p className="text-xs text-gray-500 truncate">
                     {user.nationalIdType || 'CC'}: <span className="font-semibold text-gray-700">{user.nationalId || 'Sin documento'}</span>
-                    {user.phone ? ` • Tel: ${user.phone}` : ''}
+                    {user.phone ? ` • Tel: ${formatPhoneDisplay(user.phone, (user as any).dialCodePhone)}` : ''}
                   </p>
                 </div>
                 {user.username && (

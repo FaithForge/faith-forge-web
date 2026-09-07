@@ -1,0 +1,17 @@
+[
+  {
+    "version": "3.0.0",
+    "type": "major",
+    "timestamp": "2026-09-07T05:00:00.000Z",
+    "dateFormatted": "07/09/2026 12:00 AM",
+    "title": "Lanzamiento oficial de Iglekids 3.0",
+    "description": "Nueva versión completamente renovada para el registro, control de asistencia e impresión térmica de tickets para niños y familias.",
+    "changes": [
+      "Diseño táctil y moderno optimizado para dispositivos móviles y tablets.",
+      "Sistema de registro ágil para padres y tutores con código QR.",
+      "Impresión térmica Bluetooth de tickets de seguridad para entrega y retiro de niños.",
+      "Módulo de gestión de servidores, sedes y reuniones de la iglesia.",
+      "Control de condiciones médicas y observaciones especiales de cada niño."
+    ]
+  }
+]

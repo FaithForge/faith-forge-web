@@ -21,6 +21,7 @@ import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
 import DeleteKidModal from '@/components/modal/DeleteKidModal';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday, toDateOnlyInputValue } from '@/libs/utils/date';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
@@ -90,7 +91,8 @@ const KidCheckInView = () => {
     
     const fullName = capitalizeWords(`${firstName} ${lastName}`.trim());
     const relationLabel = getTranslatedRelation(rawRelation);
-    const displayPhone = `${dialCodePhone} ${rawPhone}`.trim();
+    const displayPhone = formatPhoneDisplay(rawPhone, dialCodePhone);
+    const isPhoneErroneous = rawPhone ? !isPhoneValid(rawPhone, dialCodePhone) : false;
     const rawGender = g?.gender || rel?.gender || '';
 
     return {
@@ -104,6 +106,7 @@ const KidCheckInView = () => {
       dialCodePhone,
       rawPhone,
       displayPhone,
+      isPhoneErroneous,
       rawRelation,
       raw: rel
     };
@@ -180,6 +183,12 @@ const KidCheckInView = () => {
     return isKidOverage(kid);
   }, [kid, isKidVolunteer]);
 
+  const selectedGuardianObj = useMemo(() => {
+    return relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
+  }, [relationsList, selectedGuardian]);
+
+  const isSelectedGuardianPhoneInvalid = !!selectedGuardianObj?.isPhoneErroneous;
+
   const executeRegistration = async () => {
     if (isOverage && !isAdmin) {
       toast.error(KID_AGE_COPY.maxAgeToastError);
@@ -187,6 +196,10 @@ const KidCheckInView = () => {
     }
     if (!selectedGuardian) {
       toast.error("Por favor seleccione un acudiente");
+      return;
+    }
+    if (isSelectedGuardianPhoneInvalid) {
+      toast.error("El acudiente seleccionado tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo antes de registrar.");
       return;
     }
     if (!kid?.id || !kid?.kidGroup?.id) {
@@ -246,6 +259,10 @@ const KidCheckInView = () => {
   const handleCheckIn = async () => {
     if (!selectedGuardian) {
       toast.error("Por favor seleccione un acudiente");
+      return;
+    }
+    if (isSelectedGuardianPhoneInvalid) {
+      toast.error("El acudiente seleccionado tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo antes de registrar.");
       return;
     }
     if (!kid?.id || !kid?.kidGroup?.id) {
@@ -685,7 +702,15 @@ const KidCheckInView = () => {
                         <div className="col-span-12 border-t border-gray-50 my-0.5"></div>
                         <div className="col-span-4 text-gray-800 font-medium leading-tight truncate" title={rel.fullName}>{rel.fullName}</div>
                         <div className="col-span-3 text-gray-600">{rel.relation}</div>
-                        <div className={clsx(isAdmin ? 'col-span-3' : 'col-span-4', 'text-gray-600')}>{rel.displayPhone}</div>
+                        <div className={clsx(isAdmin ? 'col-span-3' : 'col-span-4', 'text-gray-600 flex items-center gap-1.5 flex-wrap')}>
+                          <span>{rel.displayPhone}</span>
+                          {rel.isPhoneErroneous && (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-300" title="Formato de teléfono errado. Por favor pregúntele el número correcto al acudiente y corríjalo con el lápiz.">
+                              <AlertTriangle size={11} className="text-amber-600 shrink-0" />
+                              <span>Teléfono errado — Preguntar número correcto al acudiente</span>
+                            </span>
+                          )}
+                        </div>
                         <div className={clsx(isAdmin ? 'col-span-2' : 'col-span-1', 'flex justify-end items-center gap-1.5')}>
                           <button 
                             type="button"
@@ -773,11 +798,19 @@ const KidCheckInView = () => {
                               <p className="font-bold text-xs text-gray-800 break-words leading-tight" title={`${rel.fullName} (${rel.relation})`}>
                                 {rel.fullName} <span className="font-semibold text-gray-500 text-[11px]">({rel.relation})</span>
                               </p>
-                              <p className="text-[11px] text-gray-500 truncate">Tel: {rel.displayPhone}</p>
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <p className="text-[11px] text-gray-500 truncate">Tel: {rel.displayPhone}</p>
+                                {rel.isPhoneErroneous && (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-950 text-[10px] font-bold border border-amber-300" title="Teléfono con formato errado. Corregir con el lápiz antes de registrar.">
+                                    <AlertTriangle size={11} className="text-amber-700 shrink-0" />
+                                    <span>Teléfono errado — Preguntar número correcto al acudiente</span>
+                                  </span>
+                                )}
+                              </div>
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
                               <button 
-                                type="button"
+                                type="button" 
                                 onClick={(e) => {
                                   e.preventDefault(); 
                                   e.stopPropagation();
@@ -817,6 +850,39 @@ const KidCheckInView = () => {
                         ))
                       )}
                     </div>
+
+                    {selectedGuardianObj?.isPhoneErroneous && (
+                      <div className="mt-3 bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs animate-in fade-in">
+                        <div className="flex items-start gap-2.5">
+                          <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
+                          <div className="text-xs">
+                            <strong className="block font-bold text-amber-950 text-sm mb-0.5">
+                              Teléfono errado — Preguntar número correcto al acudiente
+                            </strong>
+                            <span className="text-amber-900 leading-relaxed">
+                              El número registrado (<strong>{selectedGuardianObj.displayPhone}</strong>) tiene un formato errado. Por seguridad y comunicación, <strong>debes preguntarle el número correcto</strong> y actualizarlo antes de poder registrar al niño.
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => handleUpdateGuardian({
+                            id: selectedGuardianObj.id,
+                            firstName: selectedGuardianObj.firstName,
+                            lastName: selectedGuardianObj.lastName,
+                            fullName: selectedGuardianObj.fullName,
+                            gender: selectedGuardianObj.gender,
+                            dialCodePhone: selectedGuardianObj.dialCodePhone,
+                            phone: selectedGuardianObj.rawPhone,
+                            relation: selectedGuardianObj.rawRelation,
+                            kidId: kid?.id
+                          })}
+                          className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs active:scale-95 self-end sm:self-center"
+                        >
+                          <Pencil size={14} /> Corregir Teléfono Ahora
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -835,7 +901,7 @@ const KidCheckInView = () => {
                     {observationType === 'OTHER' && (
                       <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
                         <textarea 
-                          className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm"
+                          className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm placeholder:text-gray-400"
                           rows={3}
                           maxLength={300}
                           placeholder="Escriba la observación personalizada..."
@@ -864,6 +930,15 @@ const KidCheckInView = () => {
                   />
                 )}
 
+                {isSelectedGuardianPhoneInvalid && (
+                  <div className="mb-4 p-3.5 bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs rounded-xl flex items-center gap-2.5 shadow-xs">
+                    <AlertTriangle size={18} className="text-amber-600 shrink-0" />
+                    <span>
+                      <strong className="text-amber-950">Registro bloqueado:</strong> El acudiente seleccionado tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo para poder registrar.
+                    </span>
+                  </div>
+                )}
+
                 <Button 
                   onClick={handleCheckIn} 
                   block 
@@ -871,7 +946,7 @@ const KidCheckInView = () => {
                   className="mb-8"
                   loading={isProcessing}
                   loadingText={processingStep}
-                  disabled={shouldBlockKids || loading || isProcessing || relationsList.length === 0 || (isOverage && !isAdmin)}
+                  disabled={shouldBlockKids || loading || isProcessing || relationsList.length === 0 || (isOverage && !isAdmin) || isSelectedGuardianPhoneInvalid}
                 >
                   <Printer size={20} className="mr-2 shrink-0" /> Registrar e Imprimir Etiqueta
                 </Button>

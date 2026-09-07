@@ -35,6 +35,7 @@ import {
 } from '@/libs/models/User';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { validatePhoneNumber } from '@/libs/utils/phone';
 import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 import { APP_ROUTES } from '@/config/routes';
 import dayjs from 'dayjs';
@@ -648,11 +649,13 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
               control={control}
               rules={{
                 validate: (val) => {
-                  if (!watch('createAccount')) return true;
-                  if (!val || !val.trim()) return 'El teléfono es obligatorio para crear la cuenta de acceso';
-                  const clean = val.replace(/\D/g, '');
-                  if (clean.length < 7) return 'El teléfono debe tener al menos 7 dígitos';
-                  return true;
+                  if (!val || !val.trim()) {
+                    if (watch('createAccount')) return 'El teléfono es obligatorio para crear la cuenta de acceso';
+                    return true;
+                  }
+                  const dialCode = watch('dialCodePhone') || '+57';
+                  const res = validatePhoneNumber(val, dialCode);
+                  return res.isValid ? true : (res.error || 'Número de teléfono inválido');
                 },
               }}
               render={({ field }) => (
@@ -661,10 +664,13 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con �
                   required={watchedCreateAccount}
                   dialCode={watch('dialCodePhone') || '+57'}
                   phone={field.value}
-                  onDialCodeChange={(code) => setValue('dialCodePhone', code, { shouldDirty: true })}
+                  onDialCodeChange={(code) => {
+                    setValue('dialCodePhone', code, { shouldDirty: true });
+                    if (watchedPhone) trigger('phone');
+                  }}
                   onPhoneChange={(val) => {
                     field.onChange(val);
-                    if (watchedCreateAccount) trigger('phone');
+                    trigger('phone');
                   }}
                   error={errors.phone?.message}
                 />

@@ -3,6 +3,13 @@ import clsx from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { Drawer } from 'vaul';
 import { Search, X, ChevronDown, Check } from 'lucide-react';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import {
+  maskPhoneNumber,
+  cleanPhoneDigits,
+  getPhoneCountryConfig,
+  getMaxPhoneDigits,
+} from '@/libs/utils/phone';
 
 export interface CountryDialCode {
   name: string;
@@ -96,8 +103,6 @@ interface PhoneInputProps {
   className?: string;
 }
 
-import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-
 const DEFAULT_DIAL_CODE = '+57';
 
 const PhoneInput: React.FC<PhoneInputProps> = ({
@@ -115,14 +120,24 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   useModalBackClose(open, () => setOpen(false));
   const [search, setSearch] = useState('');
 
+  const targetCode = dialCode || DEFAULT_DIAL_CODE;
+  const countryConfig = useMemo(() => getPhoneCountryConfig(targetCode), [targetCode]);
+  const displayPhone = useMemo(() => maskPhoneNumber(phone, targetCode), [phone, targetCode]);
+
   const selectedCountry = useMemo(() => {
-    const targetCode = dialCode || DEFAULT_DIAL_CODE;
     return (
       countryDialCodes.find((c) => c.code === targetCode) ||
       countryDialCodes.find((c) => c.code === DEFAULT_DIAL_CODE) ||
       countryDialCodes[0]
     );
-  }, [dialCode]);
+  }, [targetCode]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const maxDigits = getMaxPhoneDigits(targetCode);
+    const clean = cleanPhoneDigits(raw, targetCode).slice(0, maxDigits);
+    onPhoneChange(clean);
+  };
 
   const filteredCountries = useMemo(() => {
     if (!search.trim()) return countryDialCodes;
@@ -178,14 +193,14 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
         {/* Input Numérico */}
         <input
           type="tel"
-          value={phone}
+          value={displayPhone}
           disabled={disabled}
-          placeholder="300 123 4567"
+          placeholder={countryConfig?.placeholder || '300 123 4567'}
           autoComplete="off"
           autoCorrect="off"
           autoCapitalize="off"
           spellCheck={false}
-          onChange={(e) => onPhoneChange(e.target.value)}
+          onChange={handleInputChange}
           className="w-full h-full px-3.5 bg-transparent text-text-main placeholder-gray-400 outline-none text-base font-semibold tracking-wide"
         />
       </div>
@@ -268,6 +283,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                       type="button"
                       onClick={() => {
                         onDialCodeChange(c.code);
+                        const newMax = getMaxPhoneDigits(c.code);
+                        const reCleaned = cleanPhoneDigits(phone, c.code).slice(0, newMax);
+                        if (reCleaned !== phone) {
+                          onPhoneChange(reCleaned);
+                        }
                         setOpen(false);
                         setSearch('');
                       }}

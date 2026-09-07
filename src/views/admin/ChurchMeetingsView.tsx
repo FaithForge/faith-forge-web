@@ -13,6 +13,7 @@ import {
   RotateCcw,
   Sparkles,
   CalendarDays,
+  ChevronDown,
   Plus,
   Edit2,
   Trash2,
@@ -324,6 +325,8 @@ const ChurchMeetingsView: React.FC = () => {
   const [selectedStateFilter, setSelectedStateFilter] = useState<'ALL' | ChurchMeetingStateEnum>('ALL');
   /** Local registry of pending changes: meetingId -> new state */
   const [pendingChanges, setPendingChanges] = useState<Record<string, ChurchMeetingStateEnum>>({});
+  /** Tracks which days are expanded. Default is empty (all closed). */
+  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
   const [modalOpen, setModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState<IChurchMeeting | null>(null);
@@ -350,6 +353,7 @@ const ChurchMeetingsView: React.FC = () => {
       dispatch(resetAdminChurchMeetingStatus());
       dispatch(GetAllChurchMeetingsAdmin(selectedCampusId));
       setPendingChanges({});
+      setExpandedDays(new Set());
     }
   }, [selectedCampusId, dispatch]);
 
@@ -468,6 +472,32 @@ const ChurchMeetingsView: React.FC = () => {
       });
     return grouped;
   }, [nonDeletedMeetings]);
+
+  const toggleDay = useCallback((day: string) => {
+    setExpandedDays((prev) => {
+      const next = new Set(prev);
+      if (next.has(day)) {
+        next.delete(day);
+      } else {
+        next.add(day);
+      }
+      return next;
+    });
+  }, []);
+
+  const allDayKeys = useMemo(() => Object.keys(meetingsByDay), [meetingsByDay]);
+  const allDaysExpanded = useMemo(() => {
+    if (allDayKeys.length === 0) return false;
+    return allDayKeys.every((d) => expandedDays.has(d));
+  }, [allDayKeys, expandedDays]);
+
+  const toggleAllDays = useCallback(() => {
+    if (allDaysExpanded) {
+      setExpandedDays(new Set());
+    } else {
+      setExpandedDays(new Set(allDayKeys));
+    }
+  }, [allDaysExpanded, allDayKeys]);
 
   const campusOptions = useMemo(() => {
     return campuses.data.map((campus) => ({
@@ -633,6 +663,19 @@ const ChurchMeetingsView: React.FC = () => {
                   </button>
                 </div>
 
+                {/* Expand / Collapse All Trigger */}
+                {allDayKeys.length > 1 && (
+                  <div className="flex items-center justify-end px-1 -mb-1">
+                    <button
+                      type="button"
+                      onClick={toggleAllDays}
+                      className="text-xs font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                    >
+                      {allDaysExpanded ? 'Colapsar todos' : 'Expandir todos'}
+                    </button>
+                  </div>
+                )}
+
                 {/* Grouped by Days & Categorized by State */}
                 {Object.entries(meetingsByDay).map(([day, dayMeetings]) => {
                   const filteredDayMeetings = dayMeetings.filter((meeting) => {
@@ -644,82 +687,130 @@ const ChurchMeetingsView: React.FC = () => {
 
                   if (filteredDayMeetings.length === 0) return null;
 
+                  const isExpanded = expandedDays.has(day);
+                  const hasModifiedInDay = dayMeetings.some(
+                    (meeting) => pendingChanges[meeting.id] !== undefined
+                  );
+
                   return (
-                    <div key={day} className="flex flex-col gap-4">
-                      {/* Day Header */}
-                      <div className="flex items-center gap-2 px-1">
-                        <div className="w-5 h-5 rounded-md bg-indigo-50 text-indigo-600 flex items-center justify-center">
-                          <CalendarDays size={13} />
+                    <div
+                      key={day}
+                      className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden transition-all"
+                    >
+                      {/* Day Header Dropdown Button */}
+                      <button
+                        type="button"
+                        onClick={() => toggleDay(day)}
+                        aria-expanded={isExpanded}
+                        className={clsx(
+                          'w-full flex items-center justify-between p-4 sm:p-4.5 text-left cursor-pointer transition-colors',
+                          isExpanded
+                            ? 'bg-slate-50/70 border-b border-gray-200/70'
+                            : 'hover:bg-slate-50/60'
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div
+                            className={clsx(
+                              'w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-2xs',
+                              isExpanded
+                                ? 'bg-primary text-white shadow-primary/20'
+                                : 'bg-indigo-50 text-indigo-600'
+                            )}
+                          >
+                            <CalendarDays size={16} />
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 uppercase tracking-wider">
+                              {DAY_LABEL[day as Days] ?? day}
+                            </h3>
+                            <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-slate-100 text-gray-600 border border-gray-200/80">
+                              {filteredDayMeetings.length}
+                            </span>
+                            {hasModifiedInDay && (
+                              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
+                                Modificado
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <h3 className="text-xs font-extrabold text-gray-700 uppercase tracking-wider">
-                          {DAY_LABEL[day as Days] ?? day} ({filteredDayMeetings.length})
-                        </h3>
-                      </div>
 
-                      {/* Categorized Subsections */}
-                      <div className="flex flex-col gap-5">
-                        {STATE_CATEGORIES.map((cat) => {
-                          if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
-                            return null;
-                          }
+                        <div
+                          className={clsx(
+                            'w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 transition-transform duration-200',
+                            isExpanded && 'rotate-180 text-gray-700'
+                          )}
+                        >
+                          <ChevronDown size={18} />
+                        </div>
+                      </button>
 
-                          // Filter items belonging to this category in original DB order
-                          const catMeetings = dayMeetings.filter((meeting) => {
-                            const effectiveState =
-                              pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                            return effectiveState === cat.state;
-                          });
+                      {/* Categorized Subsections - strictly INSIDE the Day Card */}
+                      {isExpanded && (
+                        <div className="p-3.5 sm:p-5 bg-slate-50/50 flex flex-col gap-5 animate-in fade-in duration-200">
+                          {STATE_CATEGORIES.map((cat) => {
+                            if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
+                              return null;
+                            }
 
-                          if (catMeetings.length === 0) return null;
+                            // Filter items belonging to this category in original DB order
+                            const catMeetings = dayMeetings.filter((meeting) => {
+                              const effectiveState =
+                                pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                              return effectiveState === cat.state;
+                            });
 
-                          const CatIcon = cat.icon;
+                            if (catMeetings.length === 0) return null;
 
-                          return (
-                            <div key={cat.state} className="flex flex-col gap-2.5">
-                              {/* Category Header */}
-                              <div className="flex items-center justify-between px-1">
-                                <div className="flex items-center gap-2">
-                                  <div className={clsx('w-5 h-5 rounded-md flex items-center justify-center', cat.iconBg)}>
-                                    <CatIcon size={13} />
+                            const CatIcon = cat.icon;
+
+                            return (
+                              <div key={cat.state} className="flex flex-col gap-2.5">
+                                {/* Category Header */}
+                                <div className="flex items-center justify-between px-1">
+                                  <div className="flex items-center gap-2">
+                                    <div className={clsx('w-5 h-5 rounded-md flex items-center justify-center', cat.iconBg)}>
+                                      <CatIcon size={13} />
+                                    </div>
+                                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                                      {cat.label}
+                                    </h4>
                                   </div>
-                                  <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-                                    {cat.label}
-                                  </h4>
+                                  <span className={clsx('px-2 py-0.5 text-[11px] font-bold rounded-full border', cat.badgeClass)}>
+                                    {catMeetings.length}
+                                  </span>
                                 </div>
-                                <span className={clsx('px-2 py-0.5 text-[11px] font-bold rounded-full border', cat.badgeClass)}>
-                                  {catMeetings.length}
-                                </span>
-                              </div>
 
-                              {/* Cards in original DB order */}
-                              <div className="flex flex-col gap-3">
-                                {catMeetings.map((meeting) => {
-                                  const effectiveState =
-                                    pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                                  const isModified = pendingChanges[meeting.id] !== undefined;
+                                {/* Cards in original DB order */}
+                                <div className="flex flex-col gap-3">
+                                  {catMeetings.map((meeting) => {
+                                    const effectiveState =
+                                      pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                                    const isModified = pendingChanges[meeting.id] !== undefined;
 
-                                  return (
-                                    <MeetingCard
-                                      key={meeting.id}
-                                      meeting={meeting}
-                                      currentState={effectiveState}
-                                      isModified={isModified}
-                                      onStateChange={(newState) =>
-                                        handleStateChange(meeting.id, meeting.state, newState)
-                                      }
-                                      onEdit={() => {
-                                        setMeetingToEdit(meeting);
-                                        setModalOpen(true);
-                                      }}
-                                      onDelete={() => setMeetingToDelete(meeting)}
-                                    />
-                                  );
-                                })}
+                                    return (
+                                      <MeetingCard
+                                        key={meeting.id}
+                                        meeting={meeting}
+                                        currentState={effectiveState}
+                                        isModified={isModified}
+                                        onStateChange={(newState) =>
+                                          handleStateChange(meeting.id, meeting.state, newState)
+                                        }
+                                        onEdit={() => {
+                                          setMeetingToEdit(meeting);
+                                          setModalOpen(true);
+                                        }}
+                                        onDelete={() => setMeetingToDelete(meeting)}
+                                      />
+                                    );
+                                  })}
+                                </div>
                               </div>
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      )}
                     </div>
                   );
                 })}

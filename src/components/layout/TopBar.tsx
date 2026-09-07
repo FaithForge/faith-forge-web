@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { User, LogOut, Settings, ChevronDown, Check, Search } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, Check, Search, Sparkles } from 'lucide-react';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
 import { useNavigate } from 'react-router-dom';
@@ -9,6 +9,8 @@ import { logout, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.s
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import SettingsDrawer from '@/components/modal/SettingsDrawer';
 import UserProfileModal from '@/components/modal/UserProfileModal';
+import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
+import { APP_VERSION } from '@/constants/version';
 import { UserRole } from '@/libs/utils/auth';
 import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -37,6 +39,7 @@ const TopBar = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [profileOpen, setProfileOpen] = useState(false);
+  const [changelogOpen, setChangelogOpen] = useState(false);
   const { isSearchAvailable, isScrolledPastSearch, triggerFocusSearch } = useSearchScroll();
 
   const user = useAppSelector((state) => state.authSlice.user);
@@ -213,6 +216,14 @@ const TopBar = () => {
                 <User size={16} className="text-text-muted" />
                 Mi Perfil
               </DropdownMenu.Item>
+
+              <DropdownMenu.Item 
+                onSelect={() => setChangelogOpen(true)}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
+              >
+                <Sparkles size={16} className="text-amber-500" />
+                Novedades e Historial
+              </DropdownMenu.Item>
               
               <DropdownMenu.Item 
                 onSelect={handleLogout}
@@ -223,7 +234,13 @@ const TopBar = () => {
               </DropdownMenu.Item>
 
               <div className="mt-2 pt-2 border-t border-gray-100 text-center">
-                <span className="text-[10px] font-semibold text-gray-400">Iglekids v3.0.0</span>
+                <button
+                  type="button"
+                  onClick={() => setChangelogOpen(true)}
+                  className="text-[10px] font-semibold text-gray-400 hover:text-primary transition-colors cursor-pointer"
+                >
+                  Iglekids v{APP_VERSION}
+                </button>
               </div>
             </DropdownMenu.Content>
           </DropdownMenu.Portal>
@@ -232,6 +249,9 @@ const TopBar = () => {
 
       {/* User Profile Modal */}
       <UserProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
+
+      {/* Changelog Drawer */}
+      <ChangelogDrawer open={changelogOpen} onOpenChange={setChangelogOpen} />
     </header>
     </>
   );

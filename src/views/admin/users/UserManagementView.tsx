@@ -12,6 +12,7 @@ import { GetUsers, GetMoreUsers } from '@/libs/state/redux/thunks/user/user.thun
 import { updateCurrentUser } from '@/libs/state/redux/slices/user/users.slice';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatPhoneDisplay } from '@/libs/utils/phone';
 import { UserState } from '@/libs/models';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
@@ -251,7 +252,7 @@ const UserManagementView: React.FC = () => {
                 const subtitleText = `ID: #${user.faithForgeId || user.id.slice(0, 8)} • ${
                   user.nationalIdType || 'CC'
                 }: ${user.nationalId || 'Sin documento'}${
-                  user.phone ? ` • Tel: ${user.dialCodePhone || '+57'} ${user.phone}` : ''
+                  user.phone ? ` • Tel: ${formatPhoneDisplay(user.phone, user.dialCodePhone)}` : ''
                 }`;
 
                 return (

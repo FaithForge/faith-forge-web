@@ -65,3 +65,13 @@
 - **Extensión de `EntityState`**: `EntityState` define los estados inmutables (`ACTIVE`, `INACTIVE`, `DELETED`). Los enums específicos de entidad deben extender de este objeto mediante propagación (`...EntityState`) para evitar duplicar valores base.
 - **Eliminación y prohibición de `active: boolean`**: La propiedad booleana `active` ha sido completamente purgada y eliminada de los modelos, slices, thunks y componentes. Queda estrictamente PROHIBIDO reintroducir campos `active: boolean`. Toda verificación de visibilidad o activación debe comprobar `state === EntityState.ACTIVE` (o el enum específico de la entidad).
 - **Soft-Delete**: Las eliminaciones lógicas deben reflejarse mediante `state: EntityState.DELETED`.
+
+## SemVer Versioning & Changelog Tracking
+
+- **Fuente única de verdad de la versión**: La versión del frontend se gestiona centralizadamente en `package.json` y `src/data/changelog.json`, y se exporta desde `src/constants/version.ts`.
+- **Registro obligatorio en cada commit de Frontend**: Todo commit que introduzca cambios funcionales, visuales o de corrección en `faith-forge-web` debe reflejarse en `src/data/changelog.json` y actualizar la versión SemVer en `package.json`:
+  - **Parche (Patch)**: Corrección de errores, ajustes de interfaz, estabilidad (ej: `3.0.0` → `3.0.1`).
+  - **Menor (Minor)**: Nuevas pantallas, módulos o herramientas compatibles (ej: `3.0.0` → `3.1.0`).
+  - **Mayor (Major)**: Rediseño completo o cambios incompatibles (ej: `3.0.0` → `4.0.0`).
+- **Lenguaje no técnico**: Las descripciones y viñetas de cambios registradas en `src/data/changelog.json` DEBEN estar redactadas en lenguaje simple, conciso y comprensible para usuarios regulares (evitar tecnicismos de código como "refactor", "endpoint", "slice", etc.).
+- **Uso de scripts**: Utilizar `npm run commit` de manera interactiva o `node scripts/bump-version.mjs --type=<patch|minor|major> --title="..." --change="..."` para mantener sincronizados el historial y la versión.

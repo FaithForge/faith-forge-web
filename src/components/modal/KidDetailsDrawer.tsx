@@ -14,6 +14,7 @@ import {
   KidGuardianRelationCodeEnum,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday } from '@/libs/utils/date';
 import { isKidOverage, KID_AGE_COPY } from '@/libs/common-types/constants';
 import { useAppSelector } from '@/libs/state/redux/hooks';
@@ -111,7 +112,8 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     const relationLabel = (KID_RELATION_CODE_MAPPER as any)[rawRelation as KidGuardianRelationCodeEnum] || rawRelation;
     const dialCode = g.dialCodePhone || guardian.dialCodePhone || '+57';
     const phone = g.phone || guardian.phone || '';
-    const phoneFormatted = `${dialCode} ${phone}`.trim();
+    const phoneFormatted = formatPhoneDisplay(phone, dialCode);
+    const isPhoneErroneous = phone ? !isPhoneValid(phone, dialCode) : false;
     const rawPhone = `${dialCode}${phone}`.replace(/\s+/g, '');
     const cleanWhatsAppDigits = `${dialCode}${phone}`.replace(/\D/g, '');
     const kidName = capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim());
@@ -142,9 +144,17 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
               {relationLabel}
             </span>
           </div>
-          <p className="text-xs font-semibold text-gray-600">
-            {phoneFormatted}
-          </p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p className="text-xs font-semibold text-gray-600">
+              {phoneFormatted}
+            </p>
+            {isPhoneErroneous && (
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200" title="El teléfono registrado para este acudiente tiene un formato errado">
+                <AlertTriangle size={10} className="text-amber-600 shrink-0" />
+                <span>Formato errado</span>
+              </span>
+            )}
+          </div>
         </div>
 
         {phone && (

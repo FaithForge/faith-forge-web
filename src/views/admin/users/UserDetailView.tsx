@@ -20,6 +20,7 @@ import 'dayjs/locale/es';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import PhoneDisplay from '@/components/ui/PhoneDisplay';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
 import AssignUserRoleModal from '@/components/modal/AssignUserRoleModal';
 import UserAccountModal from '@/components/modal/UserAccountModal';
@@ -303,9 +304,11 @@ const UserDetailView: React.FC = () => {
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
                     <span className="font-semibold text-gray-500 text-xs">Teléfono / Celular</span>
                     <div className="flex items-center gap-2">
-                      <span className="font-bold text-gray-800 text-xs sm:text-sm">
-                        {user.dialCodePhone || '+57'} {user.phone}
-                      </span>
+                      <PhoneDisplay
+                        phone={user.phone}
+                        dialCode={user.dialCodePhone}
+                        phoneClassName="font-bold text-gray-800 text-xs sm:text-sm"
+                      />
                       <a
                         href={`https://api.whatsapp.com/send?phone=${(user.dialCodePhone || '+57').replace(/\D/g, '')}${user.phone.replace(/\D/g, '')}`}
                         target="_blank"

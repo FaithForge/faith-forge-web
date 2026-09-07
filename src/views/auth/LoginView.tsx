@@ -20,6 +20,7 @@ import {
   BiometricSessionData,
 } from '@/libs/utils/biometrics';
 import { formatPersonShortName } from '@/libs/utils/text';
+import { APP_VERSION } from '@/constants/version';
 
 interface IFormLoginInput {
   username: string;
@@ -476,7 +477,7 @@ const LoginView = () => {
           )}
         </div>
 
-        <p className="text-center mt-6 text-xs text-gray-400 font-medium">Iglekids • v3.0.0</p>
+        <p className="text-center mt-6 text-xs text-gray-400 font-medium">Iglekids • v{APP_VERSION}</p>
       </div>
 
       {/* Modal suggesting biometric registration on first login */}

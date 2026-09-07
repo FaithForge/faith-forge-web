@@ -38,6 +38,7 @@ import {
 import { resizeAndCropImageToSquare } from '@/libs/utils/image/index';
 import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/utils/phone';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import Alert from '@/components/ui/Alert';
@@ -315,6 +316,14 @@ const NewKidView = () => {
        return;
     }
     
+    const guardianPhone = (values.phone || kidGuardianSlice.current?.phone)?.trim();
+    const guardianDialCode = values.dialCodePhone || kidGuardianSlice.current?.dialCodePhone || '+57';
+    const phoneVal = validatePhoneNumber(guardianPhone, guardianDialCode);
+    if (!phoneVal.isValid) {
+      toast.error(phoneVal.error || 'El número de teléfono del acudiente no es válido. Debe preguntarle el número correcto y actualizarlo.');
+      return;
+    }
+
     setIsUploading(true);
     try {
        const guardianPayload = {
@@ -323,8 +332,8 @@ const NewKidView = () => {
          nationalId: (kidGuardianSlice.current?.nationalId || values.nationalId)?.trim(),
          firstName: (kidGuardianSlice.current?.firstName || values.firstName)?.trim(),
          lastName: (kidGuardianSlice.current?.lastName || values.lastName)?.trim(),
-         dialCodePhone: kidGuardianSlice.current?.dialCodePhone || values.dialCodePhone || '+57',
-         phone: (kidGuardianSlice.current?.phone || values.phone)?.trim(),
+         dialCodePhone: guardianDialCode,
+         phone: guardianPhone,
          gender: kidGuardianSlice.current?.gender || values.gender,
          relation: values.relation,
        };
@@ -785,20 +794,38 @@ const NewKidView = () => {
               <Controller
                 name="phone"
                 control={guardianControl}
-                rules={{ required: !kidGuardianSlice.current ? 'Requerido' : false }}
+                rules={{
+                  required: !kidGuardianSlice.current || !isPhoneValid(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone) ? 'Requerido' : false,
+                  validate: (val) => {
+                    const dialCode = watchGuardian('dialCodePhone') || '+57';
+                    const targetVal = val || (kidGuardianSlice.current ? kidGuardianSlice.current.phone : '');
+                    const res = validatePhoneNumber(targetVal, dialCode);
+                    return res.isValid ? true : (res.error || 'Número de teléfono inválido');
+                  },
+                }}
                 render={({ field }) => (
                   <PhoneInput
                     label="Teléfono"
-                    required={!kidGuardianSlice.current}
+                    required={!kidGuardianSlice.current || !isPhoneValid(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}
                     dialCode={watchGuardian('dialCodePhone') || '+57'}
                     phone={field.value}
-                    disabled={!!kidGuardianSlice.current}
+                    disabled={!!kidGuardianSlice.current && isPhoneValid(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}
                     onDialCodeChange={(code) => setGuardianValue('dialCodePhone', code)}
                     onPhoneChange={field.onChange}
                     error={guardianErrors.phone?.message as string}
                   />
                 )}
               />
+
+              {kidGuardianSlice.current && !isPhoneValid(watchGuardian('phone') || kidGuardianSlice.current.phone, watchGuardian('dialCodePhone') || kidGuardianSlice.current.dialCodePhone) && (
+                <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
+                  <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto al acudiente:</strong>
+                    El número registrado para este acudiente ({formatPhoneDisplay(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo de teléfono antes de continuar.
+                  </div>
+                </div>
+              )}
 
               {/* Gender */}
               <Controller

@@ -36,6 +36,7 @@ import {
 } from '@/libs/models/User';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { validateTwoLastNames } from '@/libs/utils/validator';
+import { validatePhoneNumber } from '@/libs/utils/phone';
 import { toDateOnlyInputValue } from '@/libs/utils/date';
 import { APP_ROUTES } from '@/config/routes';
 import dayjs from 'dayjs';
@@ -90,6 +91,7 @@ const ModifyUserView: React.FC = () => {
     watch,
     setValue,
     reset,
+    trigger,
     formState: { errors, isDirty }
   } = useForm<ModifyUserFormData>({
     defaultValues: {
@@ -108,6 +110,7 @@ const ModifyUserView: React.FC = () => {
   });
 
   const watchedGender = watch('gender');
+  const watchedPhone = watch('phone');
 
   /**
    * Loads found user data into form fields.
@@ -584,13 +587,27 @@ const ModifyUserView: React.FC = () => {
               <Controller
                 name="phone"
                 control={control}
+                rules={{
+                  validate: (val) => {
+                    if (!val || !val.trim()) return true;
+                    const dialCode = watch('dialCodePhone') || '+57';
+                    const res = validatePhoneNumber(val, dialCode);
+                    return res.isValid ? true : (res.error || 'Número de teléfono inválido');
+                  },
+                }}
                 render={({ field }) => (
                   <PhoneInput
                     label="Teléfono / Celular"
                     dialCode={watch('dialCodePhone') || '+57'}
-                    onDialCodeChange={(dial) => setValue('dialCodePhone', dial, { shouldDirty: true })}
+                    onDialCodeChange={(dial) => {
+                      setValue('dialCodePhone', dial, { shouldDirty: true });
+                      if (watchedPhone) trigger('phone');
+                    }}
                     phone={field.value || ''}
-                    onPhoneChange={field.onChange}
+                    onPhoneChange={(val) => {
+                      field.onChange(val);
+                      trigger('phone');
+                    }}
                     error={errors.phone?.message}
                   />
                 )}

@@ -15,12 +15,21 @@ import fs from 'node:fs';
 
 const currentBuildTime = Date.now();
 
+const getPackageVersion = () => {
+  try {
+    const pkg = JSON.parse(fs.readFileSync('package.json', 'utf-8'));
+    return pkg.version || '3.0.0';
+  } catch {
+    return '3.0.0';
+  }
+};
+
 const versionPlugin = () => ({
   name: 'generate-version-json',
   apply: 'build' as const,
   buildStart() {
     const buildInfo = {
-      version: '3.0.0',
+      version: getPackageVersion(),
       buildTime: currentBuildTime,
       buildDate: new Date().toISOString(),
     };

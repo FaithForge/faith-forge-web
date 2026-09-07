@@ -18,6 +18,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import PhoneInput from '@/components/ui/PhoneInput';
 import Button from '@/components/ui/Button';
+import { validatePhoneNumber } from '@/libs/utils/phone';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   CheckVolunteerUser,
@@ -283,6 +284,13 @@ const VolunteerRequestPublicView: React.FC = () => {
       if (!gender) {
         toast.error('Por favor selecciona tu género');
         return;
+      }
+      if (phone && phone.trim()) {
+        const phoneVal = validatePhoneNumber(phone, dialCodePhone);
+        if (!phoneVal.isValid) {
+          toast.error(phoneVal.error || 'Por favor ingresa un número de teléfono válido');
+          return;
+        }
       }
     }
 

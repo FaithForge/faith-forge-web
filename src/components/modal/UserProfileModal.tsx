@@ -4,6 +4,7 @@ import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Lock } from 'lucide-
 import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatPhoneDisplay } from '@/libs/utils/phone';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Input from '@/components/ui/Input';
@@ -47,7 +48,7 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
   const userInitials = `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || 'US';
   const userName = capitalizeWords(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim());
   const userPhone = user.phone 
-    ? ((user as any).dialCodePhone ? `${(user as any).dialCodePhone} ${user.phone}` : user.phone)
+    ? formatPhoneDisplay(user.phone, (user as any).dialCodePhone)
     : 'No disponible';
 
   const handleToggleBiometrics = async () => {
