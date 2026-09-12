@@ -22,29 +22,34 @@ export const UserLogin = createAsyncThunk(
       })
     ).data;
 
-    // Fetch dynamic church volunteer permissions
+    // Fetch dynamic church volunteer permissions with retry logic
     if (response?.token) {
-      try {
-        const churchPermsResponse = (
-          await microserviceApiRequest({
-            microservice: MS.Church,
-            method: HttpRequestMethod.GET,
-            url: `/volunteer/me/permissions`,
-            options: {
-              headers: {
-                Authorization: `Bearer ${response.token}`,
+      for (let attempt = 1; attempt <= 2; attempt++) {
+        try {
+          const churchPermsResponse = (
+            await microserviceApiRequest({
+              microservice: MS.Church,
+              method: HttpRequestMethod.GET,
+              url: `/volunteer/me/permissions`,
+              options: {
+                headers: {
+                  Authorization: `Bearer ${response.token}`,
+                },
               },
-            },
-          })
-        ).data;
+            })
+          ).data;
 
-        if (churchPermsResponse?.permissions && Array.isArray(churchPermsResponse.permissions)) {
-          response.user.roles = Array.from(
-            new Set([...(response.user.roles || []), ...churchPermsResponse.permissions])
-          );
+          if (churchPermsResponse?.permissions && Array.isArray(churchPermsResponse.permissions)) {
+            response.user.roles = Array.from(
+              new Set([...(response.user.roles || []), ...churchPermsResponse.permissions])
+            );
+            break;
+          }
+        } catch {
+          if (attempt < 2) {
+            await new Promise((resolve) => setTimeout(resolve, 400));
+          }
         }
-      } catch {
-        // Silently continue with base roles if church permissions fetch fails
       }
     }
 

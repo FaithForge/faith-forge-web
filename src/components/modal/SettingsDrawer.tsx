@@ -16,7 +16,7 @@ import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurchPrinter } from '@/libs/models';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-import { IsAdmin, UserRole } from '@/libs/utils/auth';
+import { ChurchRole, IsAdmin, UserRole } from '@/libs/utils/auth';
 import { APP_ROUTES } from '@/config/routes';
 
 interface SettingsDrawerProps {
@@ -93,6 +93,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     currentRole === UserRole.ADMIN;
 
   const isKidChurchRole =
+    currentRole === ChurchRole.MINISTRY_ADMIN ||
     currentRole === UserRole.KID_GROUP_ADMIN ||
     currentRole === UserRole.KID_GROUP_SUPERVISOR ||
     currentRole === UserRole.KID_GROUP_USER;

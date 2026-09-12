@@ -7,6 +7,7 @@ import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { SearchScrollProvider, useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
+import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
 import { triggerSilentRefresh } from '@/libs/utils/http';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
@@ -40,11 +41,17 @@ const MainLayoutContent = () => {
   const { token, refreshToken } = useAppSelector((state) => state.authSlice);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
-  const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+  const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
 
   useEffect(() => {
     registerMainContainer(mainRef.current);
   }, [registerMainContainer]);
+
+  // Automatically refresh volunteer permissions in background on mount/session restore
+  useEffect(() => {
+    if (!token) return;
+    dispatch(FetchMyVolunteerPermissions());
+  }, [token, dispatch]);
 
   // Automatically refresh church campuses and active meetings from BE on mount/focus
   useEffect(() => {
@@ -100,6 +107,7 @@ const MainLayoutContent = () => {
     if (!config) return;
 
     const isIglekidsRole =
+      currentRole === 'MINISTRY_ADMIN' ||
       currentRole === 'KID_GROUP_ADMIN' ||
       currentRole === 'KID_GROUP_SUPERVISOR' ||
       currentRole === 'KID_GROUP_USER';

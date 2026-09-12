@@ -1,11 +1,12 @@
 import { IAuth } from '@/libs/models';
 import {
+  AppRole,
   getMainUserRole,
   sortUserRolesByPriority,
   UserRole,
 } from '@/libs/utils/auth';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { UserLogin } from '../../thunks/user/auth.thunk';
+import { FetchMyVolunteerPermissions, UserLogin } from '../../thunks/user/auth.thunk';
 import { clearHttpCache } from '@/libs/utils/http';
 import { updateBiometricSessionToken } from '@/libs/utils/biometrics';
 
@@ -22,7 +23,7 @@ const AuthSlice = createSlice({
   name: 'auth',
   initialState: initialState,
   reducers: {
-    changeCurrentRole: (state, action: PayloadAction<UserRole>) => {
+    changeCurrentRole: (state, action: PayloadAction<AppRole>) => {
       state.currentRole = action.payload;
     },
     updateTokens: (
@@ -38,14 +39,18 @@ const AuthSlice = createSlice({
         refreshToken: action.payload.refreshToken,
       }).catch(() => {});
     },
-    updateUserRoles: (state, action: PayloadAction<UserRole[]>) => {
+    updateUserRoles: (state, action: PayloadAction<AppRole[]>) => {
       if (state.user) {
         state.user = {
           ...state.user,
-          roles: sortUserRolesByPriority(action.payload),
+          roles: sortUserRolesByPriority(action.payload as any),
         };
+        const isSuperAdmin = (action.payload as any[])?.includes(UserRole.SUPER_ADMIN);
+        if (isSuperAdmin && state.currentRole && state.currentRole !== UserRole.USER) {
+          return;
+        }
         if (!state.currentRole || !action.payload.includes(state.currentRole)) {
-          state.currentRole = getMainUserRole(action.payload);
+          state.currentRole = getMainUserRole(action.payload as any);
         }
       }
     },
@@ -55,7 +60,7 @@ const AuthSlice = createSlice({
         user: any;
         token: string;
         refreshToken?: string;
-        currentRole?: UserRole;
+        currentRole?: AppRole;
       }>
     ) => {
       state.user = {
@@ -111,6 +116,27 @@ const AuthSlice = createSlice({
       state.refreshToken = undefined;
       state.error = action.error.message;
       state.loading = false;
+    });
+    builder.addCase(FetchMyVolunteerPermissions.fulfilled, (state, action) => {
+      if (state.user && action.payload && Array.isArray(action.payload)) {
+        const merged = Array.from(
+          new Set([...(state.user.roles || []), ...action.payload])
+        ) as AppRole[];
+        state.user.roles = sortUserRolesByPriority(merged as any);
+
+        const isSuperAdmin = (state.user.roles as any[])?.includes(UserRole.SUPER_ADMIN);
+        if (isSuperAdmin && state.currentRole && state.currentRole !== UserRole.USER) {
+          return;
+        }
+
+        if (
+          !state.currentRole ||
+          state.currentRole === UserRole.USER ||
+          !merged.includes(state.currentRole)
+        ) {
+          state.currentRole = getMainUserRole(state.user.roles as any);
+        }
+      }
     });
   },
 });

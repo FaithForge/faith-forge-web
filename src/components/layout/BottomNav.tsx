@@ -24,7 +24,7 @@ const BottomNav = () => {
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
-  const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN';
+  const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
 
   React.useEffect(() => {
     // Only force configuration if not an admin role
@@ -42,6 +42,7 @@ const BottomNav = () => {
   const isServidor = currentRole === 'KID_REGISTER_USER' || currentRole === 'KID_GROUP_USER';
   
   const isKidChurchRole =
+    currentRole === 'MINISTRY_ADMIN' ||
     currentRole === 'KID_GROUP_ADMIN' ||
     currentRole === 'KID_GROUP_SUPERVISOR' ||
     currentRole === 'KID_GROUP_USER';

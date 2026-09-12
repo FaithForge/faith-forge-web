@@ -1,6 +1,4 @@
-/* eslint-disable @typescript-eslint/no-empty-interface */
-/* eslint-disable @typescript-eslint/no-empty-object-type */
-import { UserRole } from '../utils/auth';
+import { AppRole, UserRole } from '../utils/auth';
 import { EntityState } from './Church';
 import {
   ReduxDefaultState,
@@ -245,7 +243,7 @@ export interface IKidMedicalCondition {
 
 export interface IAuth extends ReduxDefaultStateWithoutData {
   user?: IUser;
-  currentRole?: UserRole;
+  currentRole?: AppRole;
   token: string;
   refreshToken?: string;
 }

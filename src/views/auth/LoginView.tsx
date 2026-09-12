@@ -7,7 +7,7 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { UserLogin } from '@/libs/state/redux/thunks/user/auth.thunk';
+import { FetchMyVolunteerPermissions, UserLogin } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { setAuthSession } from '@/libs/state/redux/slices/user/auth.slice';
 import {
   isBiometricsAvailable,
@@ -152,6 +152,7 @@ const LoginView = () => {
             refreshToken: result.refreshToken,
           })
         );
+        dispatch(FetchMyVolunteerPermissions());
         const name =
           formatPersonShortName(result.user?.firstName, result.user?.lastName) ||
           result.username;

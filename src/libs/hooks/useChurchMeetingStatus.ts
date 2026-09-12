@@ -100,6 +100,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   }, []);
 
   const isKidChurchRole =
+    currentRole === 'MINISTRY_ADMIN' ||
     currentRole === 'KID_GROUP_ADMIN' ||
     currentRole === 'KID_GROUP_SUPERVISOR' ||
     currentRole === 'KID_GROUP_USER';

@@ -29,6 +29,14 @@
     --color-primary: #475569; /* slate-600 */
     --color-primary-rgb: 71, 85, 105;
   }
+  .theme-STAFF {
+    --color-primary: #3b82f6; /* blue-500 */
+    --color-primary-rgb: 59, 130, 246;
+  }
+  .theme-MINISTRY_ADMIN {
+    --color-primary: #d97706; /* amber-600 */
+    --color-primary-rgb: 217, 119, 6;
+  }
   .theme-KID_REGISTER_ADMIN {
     --color-primary: #166534; /* bg-green-800 */
     --color-primary-rgb: 22, 101, 52;

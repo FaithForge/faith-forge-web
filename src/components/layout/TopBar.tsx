@@ -11,12 +11,12 @@ import SettingsDrawer from '@/components/modal/SettingsDrawer';
 import UserProfileModal from '@/components/modal/UserProfileModal';
 import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
 import { APP_VERSION } from '@/constants/version';
-import { UserRole } from '@/libs/utils/auth';
+import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
 
 export type ThemeRole = {
-  id: UserRole;
+  id: AppRole;
   appTitle: string;
   label: string;
   themeClass: string;
@@ -24,14 +24,95 @@ export type ThemeRole = {
   dashboardUrl: string;
 };
 
-export const userRolesNavBarConfig: Partial<Record<UserRole, ThemeRole>> = {
-  SUPER_ADMIN: { id: UserRole.SUPER_ADMIN, appTitle: 'Admin', label: 'Super Administrador', themeClass: 'theme-SUPER_ADMIN', color: '#334155', dashboardUrl: APP_ROUTES.admin.root },
-  ADMIN: { id: UserRole.ADMIN, appTitle: 'Admin', label: 'Administrador', themeClass: 'theme-ADMIN', color: '#475569', dashboardUrl: APP_ROUTES.admin.root },
-  KID_REGISTER_ADMIN: { id: UserRole.KID_REGISTER_ADMIN, appTitle: 'Regikids', label: 'Coordinador', themeClass: 'theme-KID_REGISTER_ADMIN', color: '#166534', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_ADMIN: { id: UserRole.KID_GROUP_ADMIN, appTitle: 'Iglekids', label: 'Coordinador', themeClass: 'theme-KID_GROUP_ADMIN', color: '#db2777', dashboardUrl: APP_ROUTES.kidChurch.root },
-  KID_REGISTER_SUPERVISOR: { id: UserRole.KID_REGISTER_SUPERVISOR, appTitle: 'Regikids', label: 'Supervisor', themeClass: 'theme-KID_REGISTER_SUPERVISOR', color: '#15803d', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_REGISTER_USER: { id: UserRole.KID_REGISTER_USER, appTitle: 'Regikids', label: 'Servidor', themeClass: 'theme-KID_REGISTER_USER', color: '#16a34a', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_USER: { id: UserRole.KID_GROUP_USER, appTitle: 'Iglekids', label: 'Servidor', themeClass: 'theme-KID_GROUP_USER', color: '#fbbf24', dashboardUrl: APP_ROUTES.kidChurch.root },
+export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
+  [UserRole.SUPER_ADMIN]: {
+    id: UserRole.SUPER_ADMIN,
+    appTitle: 'Admin',
+    label: 'Super Administrador',
+    themeClass: 'theme-SUPER_ADMIN',
+    color: '#334155',
+    dashboardUrl: APP_ROUTES.admin.root,
+  },
+  [UserRole.ADMIN]: {
+    id: UserRole.ADMIN,
+    appTitle: 'Admin',
+    label: 'Administrador',
+    themeClass: 'theme-ADMIN',
+    color: '#475569',
+    dashboardUrl: APP_ROUTES.admin.root,
+  },
+  [UserRole.STAFF]: {
+    id: UserRole.STAFF,
+    appTitle: 'Admin',
+    label: 'Staff',
+    themeClass: 'theme-STAFF',
+    color: '#3b82f6',
+    dashboardUrl: APP_ROUTES.admin.root,
+  },
+  [ChurchRole.MINISTRY_ADMIN]: {
+    id: ChurchRole.MINISTRY_ADMIN,
+    appTitle: 'Iglekids',
+    label: 'Admin General',
+    themeClass: 'theme-MINISTRY_ADMIN',
+    color: '#d97706',
+    dashboardUrl: APP_ROUTES.kidChurch.root,
+  },
+  [UserRole.KID_GROUP_ADMIN]: {
+    id: UserRole.KID_GROUP_ADMIN,
+    appTitle: 'Iglekids',
+    label: 'Coordinador',
+    themeClass: 'theme-KID_GROUP_ADMIN',
+    color: '#db2777',
+    dashboardUrl: APP_ROUTES.kidChurch.root,
+  },
+  [UserRole.KID_GROUP_SUPERVISOR]: {
+    id: UserRole.KID_GROUP_SUPERVISOR,
+    appTitle: 'Iglekids',
+    label: 'Supervisor',
+    themeClass: 'theme-KID_GROUP_SUPERVISOR',
+    color: '#9333ea',
+    dashboardUrl: APP_ROUTES.kidChurch.root,
+  },
+  [UserRole.KID_GROUP_USER]: {
+    id: UserRole.KID_GROUP_USER,
+    appTitle: 'Iglekids',
+    label: 'Servidor',
+    themeClass: 'theme-KID_GROUP_USER',
+    color: '#fbbf24',
+    dashboardUrl: APP_ROUTES.kidChurch.root,
+  },
+  [UserRole.KID_REGISTER_ADMIN]: {
+    id: UserRole.KID_REGISTER_ADMIN,
+    appTitle: 'Regikids',
+    label: 'Coordinador',
+    themeClass: 'theme-KID_REGISTER_ADMIN',
+    color: '#166534',
+    dashboardUrl: APP_ROUTES.kidRegistration.root,
+  },
+  [UserRole.KID_REGISTER_SUPERVISOR]: {
+    id: UserRole.KID_REGISTER_SUPERVISOR,
+    appTitle: 'Regikids',
+    label: 'Supervisor',
+    themeClass: 'theme-KID_REGISTER_SUPERVISOR',
+    color: '#15803d',
+    dashboardUrl: APP_ROUTES.kidRegistration.root,
+  },
+  [UserRole.KID_REGISTER_USER]: {
+    id: UserRole.KID_REGISTER_USER,
+    appTitle: 'Regikids',
+    label: 'Servidor',
+    themeClass: 'theme-KID_REGISTER_USER',
+    color: '#16a34a',
+    dashboardUrl: APP_ROUTES.kidRegistration.root,
+  },
+  [UserRole.USER]: {
+    id: UserRole.USER,
+    appTitle: 'Regikids',
+    label: 'Usuario',
+    themeClass: 'theme-USER',
+    color: '#94a3b8',
+    dashboardUrl: APP_ROUTES.kidRegistration.root,
+  },
 };
 
 const TopBar = () => {
@@ -44,16 +125,23 @@ const TopBar = () => {
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
-  const userRoles = (user?.roles as UserRole[]) || [];
-  
-  // Create dynamic available roles strictly matching the old config mapping
-  const availableRoles = userRoles
-    .filter((userRole: UserRole) => userRolesNavBarConfig[userRole] !== undefined)
-    .map((userRole: UserRole) => userRolesNavBarConfig[userRole]!);
+  const userRoles = (user?.roles as AppRole[]) || [];
+  const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
 
-  // Safe fallback if user has no mapped roles
+  // Filter out USER so base account role is never treated as a selectable operational role in the switcher
+  const operationalRoles = userRoles.filter(
+    (role: AppRole) => role !== UserRole.USER && userRolesNavBarConfig[role] !== undefined
+  );
+
+  // Super Admin can view and switch to ALL configured system roles.
+  // Other users only see their operational roles.
+  const availableRoles: ThemeRole[] = isSuperAdmin
+    ? (ALL_SYSTEM_ROLES_ORDER.map((role) => userRolesNavBarConfig[role]).filter(Boolean) as ThemeRole[])
+    : operationalRoles.map((role: AppRole) => userRolesNavBarConfig[role]!);
+
+  // Safe fallback if user has no operational roles (only regular USER or unmapped)
   if (availableRoles.length === 0) {
-    availableRoles.push({ id: UserRole.USER, appTitle: 'Regikids', label: 'Usuario', themeClass: 'theme-USER', color: '#fbbf24', dashboardUrl: APP_ROUTES.kidRegistration.root });
+    availableRoles.push(userRolesNavBarConfig[UserRole.USER]);
   }
 
   // Find the active visual role based on Redux currentRole
@@ -122,7 +210,7 @@ const TopBar = () => {
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content 
-                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[200px] z-[250] pointer-events-auto animate-in fade-in duration-150"
+                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[210px] max-h-[75vh] overflow-y-auto z-[250] pointer-events-auto animate-in fade-in duration-150"
                 sideOffset={8}
                 align="start"
               >

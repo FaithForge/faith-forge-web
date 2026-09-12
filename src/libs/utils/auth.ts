@@ -31,10 +31,19 @@ export const AppRole = { ...UserRole, ...ChurchRole };
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
 
-export const KidChurchRegisterAdminRoles: AppRole[] = [UserRole.KID_REGISTER_ADMIN];
-export const KidChurchAdminRoles: AppRole[] = [ChurchRole.MINISTRY_ADMIN];
+export const KidChurchRegisterAdminRoles: AppRole[] = [
+  ...AdminRoles,
+  UserRole.KID_REGISTER_ADMIN,
+];
+export const KidChurchAdminRoles: AppRole[] = [
+  ...AdminRoles,
+  ChurchRole.MINISTRY_ADMIN,
+];
 
-export const KidGroupAdminRoles: AppRole[] = [UserRole.KID_GROUP_ADMIN];
+export const KidGroupAdminRoles: AppRole[] = [
+  ...KidChurchAdminRoles,
+  UserRole.KID_GROUP_ADMIN,
+];
 
 export const KidChurchSupervisorRoles: AppRole[] = [
   ...KidChurchAdminRoles,
@@ -44,18 +53,16 @@ export const KidChurchSupervisorRoles: AppRole[] = [
 
 // Kid Registration
 export const KidChurchRegisterSupervisorRoles: AppRole[] = [
-  UserRole.KID_REGISTER_ADMIN,
+  ...KidChurchRegisterAdminRoles,
   UserRole.KID_REGISTER_SUPERVISOR,
 ];
 export const KidChurchRegisterRoles: AppRole[] = [
-  UserRole.KID_REGISTER_ADMIN,
-  UserRole.KID_REGISTER_SUPERVISOR,
+  ...KidChurchRegisterSupervisorRoles,
   UserRole.KID_REGISTER_USER,
 ];
 
 export const KidChurchGroupRoles: AppRole[] = [
-  UserRole.KID_GROUP_ADMIN,
-  UserRole.KID_GROUP_SUPERVISOR,
+  ...KidChurchSupervisorRoles,
   UserRole.KID_GROUP_USER,
 ];
 
@@ -81,15 +88,15 @@ export const GetUserRoles = () => {
  * @param {UserRole[]} roles - Array of user roles to check.
  * @returns {boolean} True if any admin role is present.
  */
-export const IsAdmin = (roles: UserRole[]) => {
+export const IsAdmin = (roles: (UserRole | ChurchRole)[]) => {
   if (!roles?.length) return false;
-  return roles.some((role) => AdminRoles.includes(role));
+  return roles.some((role) => AdminRoles.includes(role as UserRole));
 };
 
 /**
  * Checks whether the provided roles include a Kid Church admin role.
  *
- * @param {UserRole[]} roles - Array of user roles to check.
+ * @param {(UserRole | ChurchRole)[]} roles - Array of user roles to check.
  * @returns {boolean} True if any Kid Church admin role is present.
  */
 export const IsAdminKidChurch = (roles: (UserRole | ChurchRole)[]) => {
@@ -100,10 +107,10 @@ export const IsAdminKidChurch = (roles: (UserRole | ChurchRole)[]) => {
 /**
  * Checks whether the provided roles include a Kid Register admin role.
  *
- * @param {UserRole[]} roles - Array of user roles to check.
+ * @param {(UserRole | ChurchRole)[]} roles - Array of user roles to check.
  * @returns {boolean} True if any Kid Register admin role is present.
  */
-export const IsAdminKidRegisterChurch = (roles: UserRole[]) => {
+export const IsAdminKidRegisterChurch = (roles: (UserRole | ChurchRole)[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterAdminRoles.includes(role));
 };
@@ -111,10 +118,10 @@ export const IsAdminKidRegisterChurch = (roles: UserRole[]) => {
 /**
  * Checks whether the provided roles include a Kid Register supervisor role.
  *
- * @param {UserRole[]} roles - Array of user roles to check.
+ * @param {(UserRole | ChurchRole)[]} roles - Array of user roles to check.
  * @returns {boolean} True if any Kid Register supervisor role is present.
  */
-export const IsSupervisorRegisterKidChurch = (roles: UserRole[]) => {
+export const IsSupervisorRegisterKidChurch = (roles: (UserRole | ChurchRole)[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterSupervisorRoles.includes(role));
 };
@@ -122,10 +129,10 @@ export const IsSupervisorRegisterKidChurch = (roles: UserRole[]) => {
 /**
  * Checks whether the provided roles include a Kid Church supervisor role.
  *
- * @param {UserRole[]} roles - Array of user roles to check.
+ * @param {(UserRole | ChurchRole)[]} roles - Array of user roles to check.
  * @returns {boolean} True if any Kid Church supervisor role is present.
  */
-export const IsSupervisorKidChurch = (roles: UserRole[]) => {
+export const IsSupervisorKidChurch = (roles: (UserRole | ChurchRole)[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchSupervisorRoles.includes(role));
 };
@@ -133,10 +140,10 @@ export const IsSupervisorKidChurch = (roles: UserRole[]) => {
 /**
  * Checks whether the provided roles include a Kid Register role.
  *
- * @param {UserRole[]} roles - Array of user roles to check.
+ * @param {(UserRole | ChurchRole)[]} roles - Array of user roles to check.
  * @returns {boolean} True if any Kid Register role is present.
  */
-export const IsRegisterKidChurch = (roles: UserRole[]) => {
+export const IsRegisterKidChurch = (roles: (UserRole | ChurchRole)[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchRegisterRoles.includes(role));
 };
@@ -150,17 +157,30 @@ export const IsAllRole = () => {
   return true;
 };
 
+export const ALL_SYSTEM_ROLES_ORDER: AppRole[] = [
+  UserRole.SUPER_ADMIN,
+  UserRole.ADMIN,
+  UserRole.STAFF,
+  ChurchRole.MINISTRY_ADMIN,
+  UserRole.KID_GROUP_ADMIN,
+  UserRole.KID_GROUP_SUPERVISOR,
+  UserRole.KID_GROUP_USER,
+  UserRole.KID_REGISTER_ADMIN,
+  UserRole.KID_REGISTER_SUPERVISOR,
+  UserRole.KID_REGISTER_USER,
+];
+
 const userRolePriority: Record<string, number> = {
   SUPER_ADMIN: 1,
   ADMIN: 2,
   STAFF: 3,
   MINISTRY_ADMIN: 4,
-  KID_REGISTER_ADMIN: 5,
   KID_GROUP_ADMIN: 5,
-  KID_REGISTER_SUPERVISOR: 6,
+  KID_REGISTER_ADMIN: 5,
   KID_GROUP_SUPERVISOR: 6,
-  KID_REGISTER_USER: 7,
+  KID_REGISTER_SUPERVISOR: 6,
   KID_GROUP_USER: 7,
+  KID_REGISTER_USER: 7,
   USER: 8,
 };
 

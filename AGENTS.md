@@ -69,15 +69,15 @@
 
 ## SemVer Versioning & Changelog Tracking (OBLIGACIÓN AUTOMÁTICA DE LA IA)
 
-- **Responsabilidad 100% de la IA**: Casi la totalidad de los cambios en el proyecto son desarrollados a través del Agente IA. Por tanto, la IA DEBE determinar por sí misma el nivel de versión (Major, Minor o Patch), redactar los cambios en lenguaje amigable y actualizar automáticamente `package.json` y `src/data/changelog.json` al concluir cualquier cambio o commit en Frontend. El usuario no debe realizar pasos manuales.
+- **Agrupación estricta por jornada/día de trabajo**: PROHIBIDO crear o incrementar versiones por cada prompt, ajuste menor, commit o respuesta interactiva individual. Todos los cambios realizados en el mismo día o sesión de trabajo DEBEN agruparse bajo **una única versión del día** (agrupando todos los avances en un solo bloque consolidado).
 - **Criterio de clasificación autónomo de la IA**:
   - **Parche (Patch)** (ej: `3.0.0` → `3.0.1`): Corrección de errores, ajustes de interfaz, mejoras visuales menores, formato de campos o fallos de rapidez.
   - **Menor (Minor)** (ej: `3.0.0` → `3.1.0`): Nuevas pantallas, componentes visuales nuevos (modales, drawers), nuevas herramientas o flujos funcionales compatibles.
   - **Mayor (Major)** (ej: `3.0.0` → `4.0.0`): Rediseño visual global de la aplicación, cambios incompatibles o reescritura de módulos principales.
-- **Lenguaje no técnico obligatorio**: Las descripciones y viñetas DEBEN redactarse en español simple, conciso y comprensible para cualquier usuario final (padres de familia, voluntarios, maestros). PROHIBIDO usar tecnicismos como "refactor", "endpoint", "slice", "thunk", "props", "payload", "hook", etc.
-  - *Correcto*: "Ahora puedes consultar las novedades y el historial de cambios de la app desde tu foto de perfil."
-  - *Incorrecto*: "Se refactorizó el componente TopBar e integró el slice de changelog."
+- **Lenguaje no técnico obligatorio (No exponer detalles internos de desarrollo)**: Las descripciones y viñetas DEBEN redactarse en español simple, conciso y comprensible para cualquier usuario final (padres de familia, voluntarios). PROHIBIDO usar tecnicismos ("refactor", "endpoint", "slice", "thunk", "props", "payload", "hook", etc.) y PROHIBIDO exponer mecánicas internas de desarrollo o de base de datos ("roles de cuenta base", "roles operativos", "superadministrador", "sincronización de llamadas"). Describir únicamente el beneficio práctico visible o mejoras generales (ej. "Mejoras de estabilidad y acceso", "Correcciones y optimizaciones varias").
+  - *Correcto*: "Mayor rapidez y fluidez al ingresar a la aplicación." / "Correcciones y mejoras visuales en la navegación."
+  - *Incorrecto*: "Se excluyó la cuenta base de usuario del selector para que servidores solo vean roles operativos."
 - **Ejecución automática por la IA**:
-  - Al completar los cambios de código, la IA ejecuta:
+  - Al completar los cambios de código y preparar el commit, la IA ejecuta:
     `node scripts/bump-version.mjs --type=<patch|minor|major> --title="Título sencillo" --change="Punto 1 claro" --change="Punto 2 claro"`
   - Esto mantiene sincronizados `package.json`, `src/data/changelog.json` y la constante `APP_VERSION`.
