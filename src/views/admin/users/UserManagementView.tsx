@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, UserPlus, Users, Sparkles } from 'lucide-react';
+import { Loader2, UserPlus, Users, Sparkles, Award } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Cell from '@/components/ui/Cell';
 import Button from '@/components/ui/Button';
@@ -14,6 +14,7 @@ import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
 import { formatPhoneDisplay } from '@/libs/utils/phone';
 import { UserState } from '@/libs/models';
+import { UserRole } from '@/libs/utils/auth';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 
@@ -50,6 +51,8 @@ const UserManagementView: React.FC = () => {
   const { data: users, loading, currentPage, totalPages, needsRefresh } = useAppSelector(
     (state) => state.userSlice
   );
+
+
 
   const prevSearchTextRef = useRef<string | null>(null);
 
@@ -116,11 +119,22 @@ const UserManagementView: React.FC = () => {
     }
   };
 
+  const lastLoadMoreTimeRef = useRef<number>(0);
+
   /**
    * Loads the next page of users for infinite scroll.
    */
   const handleLoadMore = useCallback(async () => {
-    if (loading || loadingMore || currentPage >= totalPages) return;
+    const now = Date.now();
+    if (
+      loading ||
+      loadingMore ||
+      currentPage >= totalPages ||
+      now - lastLoadMoreTimeRef.current < 1000
+    ) {
+      return;
+    }
+    lastLoadMoreTimeRef.current = now;
     setLoadingMore(true);
     try {
       await dispatch(GetMoreUsers({ findText: searchText })).unwrap();
@@ -217,7 +231,11 @@ const UserManagementView: React.FC = () => {
 
             {!loading &&
               users.map((user) => {
-                const rolesCount = user.roles?.length || 0;
+                const rolesCount =
+                  user.roles?.filter((r) => r !== UserRole.USER && (r as string) !== 'USER').length || 0;
+                const isVolunteer = user.roles?.some(
+                  (r) => (r as string) === 'VOLUNTEER' || r.startsWith('KID_'),
+                );
                 const isInactive = user.state === UserState.DISABLE || user.state === UserState.INACTIVE;
 
                 const badgeElement = (
@@ -243,9 +261,16 @@ const UserManagementView: React.FC = () => {
                           : 'Pendiente'}
                       </span>
                     )}
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
-                      {rolesCount} {rolesCount === 1 ? 'rol' : 'roles'}
-                    </span>
+                    {isVolunteer && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-violet-50 text-violet-700 rounded-full border border-violet-200 flex items-center gap-0.5">
+                        <Award size={10} /> Servidor
+                      </span>
+                    )}
+                    {rolesCount > 0 && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
+                        {rolesCount} {rolesCount === 1 ? 'rol' : 'roles'}
+                      </span>
+                    )}
                   </div>
                 );
 

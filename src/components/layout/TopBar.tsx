@@ -30,9 +30,8 @@ export const userRolesNavBarConfig: Partial<Record<UserRole, ThemeRole>> = {
   KID_REGISTER_ADMIN: { id: UserRole.KID_REGISTER_ADMIN, appTitle: 'Regikids', label: 'Coordinador', themeClass: 'theme-KID_REGISTER_ADMIN', color: '#166534', dashboardUrl: APP_ROUTES.kidRegistration.root },
   KID_GROUP_ADMIN: { id: UserRole.KID_GROUP_ADMIN, appTitle: 'Iglekids', label: 'Coordinador', themeClass: 'theme-KID_GROUP_ADMIN', color: '#db2777', dashboardUrl: APP_ROUTES.kidChurch.root },
   KID_REGISTER_SUPERVISOR: { id: UserRole.KID_REGISTER_SUPERVISOR, appTitle: 'Regikids', label: 'Supervisor', themeClass: 'theme-KID_REGISTER_SUPERVISOR', color: '#15803d', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_SUPERVISOR: { id: UserRole.KID_GROUP_SUPERVISOR, appTitle: 'Iglekids', label: 'Supervisor', themeClass: 'theme-KID_GROUP_SUPERVISOR', color: '#9333ea', dashboardUrl: APP_ROUTES.kidChurch.root },
-  KID_REGISTER_USER: { id: UserRole.KID_REGISTER_USER, appTitle: 'Regikids', label: 'Maestro', themeClass: 'theme-KID_REGISTER_USER', color: '#16a34a', dashboardUrl: APP_ROUTES.kidRegistration.root },
-  KID_GROUP_USER: { id: UserRole.KID_GROUP_USER, appTitle: 'Iglekids', label: 'Maestro', themeClass: 'theme-KID_GROUP_USER', color: '#fbbf24', dashboardUrl: APP_ROUTES.kidChurch.root },
+  KID_REGISTER_USER: { id: UserRole.KID_REGISTER_USER, appTitle: 'Regikids', label: 'Servidor', themeClass: 'theme-KID_REGISTER_USER', color: '#16a34a', dashboardUrl: APP_ROUTES.kidRegistration.root },
+  KID_GROUP_USER: { id: UserRole.KID_GROUP_USER, appTitle: 'Iglekids', label: 'Servidor', themeClass: 'theme-KID_GROUP_USER', color: '#fbbf24', dashboardUrl: APP_ROUTES.kidChurch.root },
 };
 
 const TopBar = () => {

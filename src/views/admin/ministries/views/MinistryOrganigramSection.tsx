@@ -12,6 +12,7 @@ import {
   Loader2,
   CheckCircle2,
   Filter,
+  X,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import SelectSearch from '@/components/ui/SelectSearch';
@@ -92,6 +93,7 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
   const [filterCoverage, setFilterCoverage] = useState<CoverageFilter>('ALL');
   // Privacy mode: mask sensitive data (cédula and phone)
   const [maskSensitiveData, setMaskSensitiveData] = useState<boolean>(true);
+  const [showFilters, setShowFilters] = useState(false);
 
   const campuses = useAppSelector((state) => state.churchCampusSlice.data);
   const { areasByMinistry, groupsByMinistry, serviceAreaGroups } = useAppSelector(
@@ -111,7 +113,11 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
     }
   }, [dispatch, ministryId]);
 
-  const areas = areasByMinistry[ministryId] || [];
+  const areas = useMemo(() => {
+    return [...(areasByMinistry[ministryId] || [])].sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+    );
+  }, [areasByMinistry, ministryId]);
   const groups = useMemo(() => {
     return [...(groupsByMinistry[ministryId] || [])].sort((a, b) =>
       a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
@@ -829,154 +835,188 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
     setFilterCoverage('ALL');
   };
 
+  const activeFiltersCount =
+    (filterAreaId !== 'ALL' ? 1 : 0) +
+    (filterGroupId !== 'ALL' ? 1 : 0) +
+    (filterCoverage !== 'ALL' ? 1 : 0);
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3.5">
       {/* HEADER & PDF EXPORT ACTION BAR */}
-      <div className="bg-white rounded-3xl p-4 sm:p-5 border border-gray-200/90 shadow-xs flex items-center justify-between gap-3 flex-wrap">
+      <div className="bg-white rounded-2xl p-3 sm:p-4 border border-gray-200/90 shadow-2xs flex items-center justify-between gap-3 flex-wrap">
         <div>
-          <div className="flex items-center gap-1.5 text-xs font-black text-primary uppercase tracking-wider mb-0.5">
-            <Sparkles size={14} />
-            <span>Estructura y Cobertura</span>
-          </div>
-          <h2 className="text-base sm:text-lg font-black text-gray-900">
+          <h2 className="text-sm sm:text-base font-bold text-gray-900">
             Organigrama Ministerial
           </h2>
-          <p className="text-xs text-gray-500 mt-0.5">
-            Filtra por área o grupo para consultar y exportar reportes personalizados en PDF.
+          <p className="text-[11px] text-gray-500 mt-0.5">
+            Estructura jerárquica y generación de reporte PDF oficial.
           </p>
         </div>
 
         <Button
           onClick={handleExportPDF}
           disabled={isExporting}
-          className="rounded-2xl text-xs gap-1.5 py-2.5 px-4 bg-primary text-white shadow-xs shrink-0 cursor-pointer"
+          size="sm"
+          className="rounded-xl text-xs gap-1.5 py-2 px-3.5 bg-primary text-white shadow-2xs shrink-0 cursor-pointer"
         >
-          {isExporting ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />}
+          {isExporting ? <Loader2 size={14} className="animate-spin" /> : <Download size={14} />}
           <span>Exportar PDF</span>
         </Button>
       </div>
 
-      {/* FILTER BAR: ÁREA + GRUPO + COBERTURA (RESPONDS TO USER REQUIREMENT) */}
-      <div className="bg-white rounded-3xl p-4 border border-gray-200/90 shadow-xs flex flex-col gap-3">
-        <div className="flex items-center justify-between border-b border-gray-100 pb-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800 uppercase tracking-wide">
-            <Filter size={13} className="text-primary" />
-            <span>Filtros del Organigrama y Reporte PDF</span>
+      {/* FILTER BAR: ÁREA + GRUPO + COBERTURA */}
+      <div className="bg-white rounded-2xl p-3 border border-gray-200/90 shadow-2xs flex flex-col gap-2.5">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setShowFilters((prev) => !prev)}
+              className={clsx(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all cursor-pointer shadow-2xs',
+                showFilters || activeFiltersCount > 0
+                  ? 'bg-primary/10 border-primary/30 text-primary'
+                  : 'bg-slate-50 border-gray-200/90 text-gray-600 hover:bg-slate-100',
+              )}
+            >
+              <Filter size={13} />
+              <span>Filtros</span>
+              {activeFiltersCount > 0 && (
+                <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center font-bold">
+                  {activeFiltersCount}
+                </span>
+              )}
+            </button>
+
+            {/* Privacy toggle inline */}
+            <label className="flex items-center gap-1.5 cursor-pointer select-none text-[11px] font-semibold text-gray-700">
+              <input
+                type="checkbox"
+                checked={maskSensitiveData}
+                onChange={(e) => setMaskSensitiveData(e.target.checked)}
+                className="w-3.5 h-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer accent-primary"
+              />
+              <span className="hidden sm:inline">Proteger Cédula y Teléfono</span>
+              <span className="sm:hidden">Privacidad</span>
+            </label>
           </div>
 
-          {(filterAreaId !== 'ALL' || filterGroupId !== 'ALL' || filterCoverage !== 'ALL') && (
+          {activeFiltersCount > 0 && (
             <button
               type="button"
               onClick={handleResetFilters}
               className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
             >
-              Restablecer filtros
+              Restablecer
             </button>
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {/* Filter 1: Área */}
-          <div>
-            <label className="text-[11px] font-bold text-gray-600 block mb-1">
-              Filtrar por Área
-            </label>
-            <SelectSearch
-              label=""
-              placeholder="Todas las áreas..."
-              options={areaOptions}
-              value={filterAreaId}
-              onChange={(val) => setFilterAreaId(val)}
-              searchable={areaOptions.length > 5}
-            />
-          </div>
+        {/* Collapsible Selects */}
+        {showFilters && (
+          <div className="pt-2 border-t border-gray-100 grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div>
+              <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
+                Filtrar por Área
+              </label>
+              <SelectSearch
+                label=""
+                placeholder="Todas las áreas..."
+                options={areaOptions}
+                value={filterAreaId}
+                onChange={(val) => setFilterAreaId(val)}
+                searchable={areaOptions.length > 5}
+              />
+            </div>
 
-          {/* Filter 2: Grupo */}
-          <div>
-            <label className="text-[11px] font-bold text-gray-600 block mb-1">
-              Filtrar por Grupo
-            </label>
-            <SelectSearch
-              label=""
-              placeholder="Todos los grupos..."
-              options={groupOptions}
-              value={filterGroupId}
-              onChange={(val) => setFilterGroupId(val)}
-              searchable={groupOptions.length > 5}
-            />
-          </div>
+            <div>
+              <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
+                Filtrar por Grupo
+              </label>
+              <SelectSearch
+                label=""
+                placeholder="Todos los grupos..."
+                options={groupOptions}
+                value={filterGroupId}
+                onChange={(val) => setFilterGroupId(val)}
+                searchable={groupOptions.length > 5}
+              />
+            </div>
 
-          {/* Filter 3: Estado de Supervisión */}
-          <div>
-            <label className="text-[11px] font-bold text-gray-600 block mb-1">
-              Estado de Supervisión
-            </label>
-            <SelectSearch
-              label=""
-              placeholder="Todos los estados..."
-              options={coverageOptions}
-              value={filterCoverage}
-              onChange={(val) => setFilterCoverage(val as CoverageFilter)}
-            />
+            <div>
+              <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
+                Estado de Supervisión
+              </label>
+              <SelectSearch
+                label=""
+                placeholder="Todos los estados..."
+                options={coverageOptions}
+                value={filterCoverage}
+                onChange={(val) => setFilterCoverage(val as CoverageFilter)}
+              />
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Privacy toggle for sensitive data in PDF and UI */}
-        <div className="pt-2.5 border-t border-gray-100 flex items-center justify-between flex-wrap gap-2">
-          <label className="flex items-center gap-2 cursor-pointer select-none text-xs font-semibold text-gray-700">
-            <input
-              type="checkbox"
-              checked={maskSensitiveData}
-              onChange={(e) => setMaskSensitiveData(e.target.checked)}
-              className="w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer accent-primary"
-            />
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className={maskSensitiveData ? 'text-primary' : 'text-gray-400'} />
-              <span>Enmascarar datos sensibles en reporte PDF (Cédula y Teléfono)</span>
-            </span>
-          </label>
-          <span
-            className={clsx(
-              'text-[10px] font-bold px-2.5 py-0.5 rounded-full border',
-              maskSensitiveData
-                ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
-                : 'text-amber-700 bg-amber-50 border-amber-200',
+        {/* Active Filter Chips when collapsed */}
+        {!showFilters && activeFiltersCount > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-gray-100/80">
+            {filterAreaId !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span>Área: {areaOptions.find((o) => o.id === filterAreaId)?.name || filterAreaId}</span>
+                <button type="button" onClick={() => setFilterAreaId('ALL')} className="hover:text-indigo-900 cursor-pointer">
+                  <X size={10} />
+                </button>
+              </span>
             )}
-          >
-            {maskSensitiveData ? '🛡️ Modo Privacidad Activo' : '⚠️ Cédula y Teléfono Visibles'}
-          </span>
-        </div>
+            {filterGroupId !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                <span>Grupo: {groupOptions.find((o) => o.id === filterGroupId)?.name || filterGroupId}</span>
+                <button type="button" onClick={() => setFilterGroupId('ALL')} className="hover:text-teal-900 cursor-pointer">
+                  <X size={10} />
+                </button>
+              </span>
+            )}
+            {filterCoverage !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                <span>{coverageOptions.find((o) => o.id === filterCoverage)?.name || filterCoverage}</span>
+                <button type="button" onClick={() => setFilterCoverage('ALL')} className="hover:text-amber-900 cursor-pointer">
+                  <X size={10} />
+                </button>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* EXECUTIVE KPI BAR FOR FILTERED SCOPE */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-400">Equipos Filtrados</span>
-          <p className="text-xl font-black text-gray-900 mt-0.5">{kpiStats.totalTeams}</p>
-          <p className="text-[10px] text-gray-400">En {organigramAreas.length} área(s)</p>
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="bg-white rounded-2xl p-2.5 border border-gray-200/80 shadow-2xs">
+          <span className="text-[10.5px] font-bold text-gray-400">Equipos</span>
+          <p className="text-lg sm:text-xl font-black text-gray-900 mt-0.5">{kpiStats.totalTeams}</p>
+          <p className="text-[9.5px] text-gray-400">En {organigramAreas.length} área(s)</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-400">Supervisores</span>
-          <p className="text-xl font-black text-indigo-700 mt-0.5">
+        <div className="bg-white rounded-2xl p-2.5 border border-gray-200/80 shadow-2xs">
+          <span className="text-[10.5px] font-bold text-gray-400">Supervisores</span>
+          <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
             {kpiStats.supervisorsCount}
           </p>
-          <p className="text-[10px] text-gray-400">Líderes de equipo</p>
+          <p className="text-[9.5px] text-gray-400">Líderes de equipo</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-400">Servidores Activos</span>
-          <p className="text-xl font-black text-teal-700 mt-0.5">
+        <div className="bg-white rounded-2xl p-2.5 border border-gray-200/80 shadow-2xs">
+          <span className="text-[10.5px] font-bold text-gray-400">Servidores</span>
+          <p className="text-lg sm:text-xl font-black text-teal-700 mt-0.5">
             {kpiStats.volunteersCount}
           </p>
-          <p className="text-[10px] text-gray-400">Plantilla operativa</p>
+          <p className="text-[9.5px] text-gray-400">Plantilla operativa</p>
         </div>
 
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <span className="text-[11px] font-bold text-gray-400">Tasa de Cobertura</span>
+        <div className="bg-white rounded-2xl p-2.5 border border-gray-200/80 shadow-2xs">
+          <span className="text-[10.5px] font-bold text-gray-400">Cobertura</span>
           <p
             className={clsx(
-              'text-xl font-black mt-0.5',
+              'text-lg sm:text-xl font-black mt-0.5',
               kpiStats.coveragePct >= 80
                 ? 'text-emerald-600'
                 : kpiStats.coveragePct >= 50
@@ -986,7 +1026,7 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
           >
             {kpiStats.coveragePct}%
           </p>
-          <p className="text-[10px] text-gray-400">
+          <p className="text-[9.5px] text-gray-400">
             {kpiStats.coveredTeams}/{kpiStats.totalTeams || 1} cubiertos
           </p>
         </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Layers, Plus, Edit2, CheckCircle2, XCircle, Inbox, ShieldCheck } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
@@ -27,8 +27,12 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
   const [modalOpen, setModalOpen] = useState(false);
   const [areaToEdit, setAreaToEdit] = useState<IMinistryArea | null>(null);
 
-  const areas = (areasByMinistry[ministryId] || []).filter(
-    (a) => a.state !== MinistryAreaStateEnum.DELETED,
+  const areas: IMinistryArea[] = useMemo(
+    () =>
+      (areasByMinistry[ministryId] || [])
+        .filter((a) => a.state !== MinistryAreaStateEnum.DELETED)
+        .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })),
+    [areasByMinistry, ministryId],
   );
 
   useEffect(() => {

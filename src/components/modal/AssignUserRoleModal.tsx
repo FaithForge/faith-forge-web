@@ -1,14 +1,19 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, ShieldPlus, ShieldCheck, CheckCircle2, Info } from 'lucide-react';
+import { X, ShieldPlus, ShieldCheck, CheckCircle2, Layers } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { AssignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';
 import { IUser } from '@/libs/models';
-import { UserRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
+import {
+  UserRole,
+  ALL_SYSTEM_ROLES_METADATA,
+  MINISTRY_ROLE_GROUPS,
+} from '@/libs/utils/auth';
 import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import clsx from 'clsx';
 
 interface AssignUserRoleModalProps {
   open: boolean;
@@ -33,29 +38,39 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
   useModalBackClose(open, onClose);
   const dispatch = useAppDispatch();
 
+  const [selectedMinistry, setSelectedMinistry] = useState<string>('ALL');
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [isAssigning, setIsAssigning] = useState(false);
 
   // Reset state when opening modal
   useEffect(() => {
     if (open) {
+      setSelectedMinistry('ALL');
       setSelectedRole('');
       setIsAssigning(false);
     }
   }, [open]);
 
-  // Only system roles can be manually assigned to a user account
-  const SYSTEM_MANUAL_ROLES = [UserRole.ADMIN, UserRole.STAFF, UserRole.USER];
+  const filteredRoles: UserRole[] = useMemo(() => {
+    let roles = MINISTRY_ROLE_GROUPS.flatMap((g) => g.roles);
+    if (selectedMinistry !== 'ALL') {
+      const group = MINISTRY_ROLE_GROUPS.find((g) => g.id === selectedMinistry);
+      roles = group ? group.roles : [];
+    }
+    return roles.filter((role) => !user?.roles?.includes(role));
+  }, [selectedMinistry, user?.roles]);
 
-  const availableRoles = SYSTEM_MANUAL_ROLES
-    .filter((role) => !user?.roles?.includes(role))
-    .map((role) => {
-      const meta = ALL_SYSTEM_ROLES_METADATA[role];
-      return {
-        id: role,
-        name: meta ? `${meta.name} (${meta.category})` : role,
-      };
-    });
+  const availableRoles = useMemo(
+    () =>
+      filteredRoles.map((role) => {
+        const meta = ALL_SYSTEM_ROLES_METADATA[role];
+        return {
+          id: role,
+          name: meta ? `${meta.name} (${meta.category})` : role,
+        };
+      }),
+    [filteredRoles],
+  );
 
   const selectedRoleMeta = selectedRole ? ALL_SYSTEM_ROLES_METADATA[selectedRole as UserRole] : null;
 
@@ -128,12 +143,45 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
               </div>
             )}
 
-            {/* Informative Banner for Volunteer Roles */}
-            <div className="p-3.5 bg-amber-50/80 border border-amber-200/80 rounded-2xl flex items-start gap-2.5 text-xs text-amber-900 leading-relaxed">
-              <Info size={18} className="text-amber-600 shrink-0 mt-0.5" />
-              <span>
-                Los roles de <strong>Regikids</strong> e <strong>Iglekids</strong> (Coordinador, Supervisor, Maestro) se asignan automáticamente desde el <strong>Directorio de Voluntarios</strong> según el área y cargo del servidor.
-              </span>
+            {/* Filtro por Ministerio / Módulo */}
+            <div className="flex flex-col gap-1.5">
+              <label className="text-xs font-bold text-gray-700">
+                Ministerio / Módulo
+              </label>
+              <div className="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setSelectedMinistry('ALL')}
+                  className={clsx(
+                    'flex-1 py-1.5 px-2 text-xs font-bold rounded-lg transition-all text-center cursor-pointer',
+                    selectedMinistry === 'ALL'
+                      ? 'bg-white text-gray-900 shadow-2xs'
+                      : 'text-gray-500 hover:text-gray-800'
+                  )}
+                >
+                  Todos
+                </button>
+                {MINISTRY_ROLE_GROUPS.map((g) => (
+                  <button
+                    key={g.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedMinistry(g.id);
+                      if (selectedRole && !g.roles.includes(selectedRole as UserRole)) {
+                        setSelectedRole('');
+                      }
+                    }}
+                    className={clsx(
+                      'flex-1 py-1.5 px-2 text-xs font-bold rounded-lg transition-all text-center cursor-pointer',
+                      selectedMinistry === g.id
+                        ? 'bg-white text-gray-900 shadow-2xs'
+                        : 'text-gray-500 hover:text-gray-800'
+                    )}
+                  >
+                    {g.label === 'Administración General' ? 'General' : g.label}
+                  </button>
+                ))}
+              </div>
             </div>
 
             {/* Check if user already has all roles */}

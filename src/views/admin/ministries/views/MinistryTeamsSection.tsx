@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import clsx from 'clsx';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck,
@@ -14,6 +15,7 @@ import {
   FolderKanban,
   CheckCircle2,
   Sparkles,
+  Filter,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import SelectSearch from '@/components/ui/SelectSearch';
@@ -74,6 +76,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   // Filtering by Area and Grupo
   const [selectedAreaId, setSelectedAreaId] = useState<string>('ALL');
   const [selectedGroupId, setSelectedGroupId] = useState<string>('ALL');
+  const [showFilters, setShowFilters] = useState(false);
   const [searchMemberTerm, setSearchMemberTerm] = useState('');
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
@@ -88,8 +91,20 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const areas = areasByMinistry[ministryId] || [];
-  const groups = groupsByMinistry[ministryId] || [];
+  const areas = useMemo(
+    () =>
+      [...(areasByMinistry[ministryId] || [])].sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+      ),
+    [areasByMinistry, ministryId],
+  );
+  const groups = useMemo(
+    () =>
+      [...(groupsByMinistry[ministryId] || [])].sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+      ),
+    [groupsByMinistry, ministryId],
+  );
   const campuses = campusesState.data;
 
   const campusTeamsKey = `campus_teams_${ministryId}_${selectedCampusId}`;
@@ -371,123 +386,185 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     ).length;
   }, [currentCampusTeams, campusTeamAssignments]);
 
+  const activeFiltersCount =
+    (selectedAreaId !== 'ALL' ? 1 : 0) + (selectedGroupId !== 'ALL' ? 1 : 0);
+
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-3.5">
       {/* QUICK METRICS BAR */}
       <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <p className="text-[11px] font-semibold text-gray-400">Total Equipos</p>
-          <p className="text-xl font-extrabold text-gray-900 mt-0.5">{totalTeamsCount}</p>
+        <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+          <p className="text-[10.5px] font-semibold text-gray-400">Total Equipos</p>
+          <p className="text-lg sm:text-xl font-black text-gray-900 mt-0.5">{totalTeamsCount}</p>
         </div>
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <p className="text-[11px] font-semibold text-gray-400">Con Supervisor</p>
-          <p className="text-xl font-extrabold text-indigo-700 mt-0.5">
+        <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+          <p className="text-[10.5px] font-semibold text-gray-400">Con Supervisor</p>
+          <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
             {teamsWithSupervisorCount}/{totalTeamsCount || 1}
           </p>
         </div>
-        <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-xs">
-          <p className="text-[11px] font-semibold text-gray-400">Total Plantilla</p>
-          <p className="text-xl font-extrabold text-teal-700 mt-0.5">{totalMembersCount}</p>
+        <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+          <p className="text-[10.5px] font-semibold text-gray-400">Total Plantilla</p>
+          <p className="text-lg sm:text-xl font-black text-teal-700 mt-0.5">{totalMembersCount}</p>
         </div>
       </div>
 
-      {/* FILTER HEADER CARD: ÁREA + GRUPO + BUSCADOR */}
-      <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex flex-col gap-3">
-        <div className="flex items-center justify-between gap-2 border-b border-gray-100 pb-2.5">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-              <Layers size={13} />
+      {/* SEARCH AND COLLAPSIBLE FILTERS BAR */}
+      <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-2xs flex flex-col gap-2.5">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <Search size={14} />
             </div>
-            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wide">
-              Filtrar Equipos y Plantillas
-            </h3>
+            <input
+              type="text"
+              value={searchMemberTerm}
+              onChange={(e) => setSearchMemberTerm(e.target.value)}
+              placeholder="Buscar servidor o supervisor por nombre..."
+              className="w-full pl-8 pr-8 py-2 bg-slate-50 border border-gray-200/90 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+            {searchMemberTerm && (
+              <button
+                type="button"
+                onClick={() => setSearchMemberTerm('')}
+                className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            )}
           </div>
-          {(selectedAreaId !== 'ALL' || selectedGroupId !== 'ALL' || searchMemberTerm) && (
+
+          <button
+            type="button"
+            onClick={() => setShowFilters((prev) => !prev)}
+            className={clsx(
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold border transition-all cursor-pointer shrink-0 shadow-2xs',
+              showFilters || activeFiltersCount > 0
+                ? 'bg-primary/10 border-primary/30 text-primary'
+                : 'bg-slate-50 border-gray-200/90 text-gray-600 hover:bg-slate-100',
+            )}
+            title="Filtrar por Área o Grupo"
+          >
+            <Filter size={13} />
+            <span>Filtros</span>
+            {activeFiltersCount > 0 && (
+              <span className="w-4 h-4 rounded-full bg-primary text-white text-[10px] flex items-center justify-center font-bold">
+                {activeFiltersCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Collapsible Dropdown Area */}
+        {showFilters && (
+          <div className="pt-2 border-t border-gray-100 flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-gray-700 uppercase tracking-wider">
+                Filtros de Área y Grupo
+              </span>
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedAreaId('ALL');
+                    setSelectedGroupId('ALL');
+                  }}
+                  className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+                >
+                  Restablecer
+                </button>
+              )}
+            </div>
+
+            {/* Campus Selector (if not fixed by parent) */}
+            {!churchCampusId && (
+              <div>
+                <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
+                  Sede (Campus)
+                </label>
+                <SelectSearch
+                  label=""
+                  placeholder="Seleccionar sede..."
+                  options={campusOptions}
+                  value={selectedCampusId}
+                  onChange={(val) => setSelectedCampusId(val)}
+                  searchable={campusOptions.length > 4}
+                  disabled={campusesState.loading}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
+                  1. Filtrar por Área
+                </label>
+                <SelectSearch
+                  label=""
+                  placeholder="Todas las áreas..."
+                  options={areaFilterOptions}
+                  value={selectedAreaId}
+                  onChange={(val) => setSelectedAreaId(val)}
+                  searchable={areaFilterOptions.length > 5}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
+                  2. Filtrar por Grupo
+                </label>
+                <SelectSearch
+                  label=""
+                  placeholder="Todos los grupos..."
+                  options={groupFilterOptions}
+                  value={selectedGroupId}
+                  onChange={(val) => setSelectedGroupId(val)}
+                  searchable={groupFilterOptions.length > 5}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Active Filter Chips when collapsed */}
+        {!showFilters && activeFiltersCount > 0 && (
+          <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-gray-100/80">
+            {selectedAreaId !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+                <span>Área: {areaFilterOptions.find((o) => o.id === selectedAreaId)?.name || selectedAreaId}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedAreaId('ALL')}
+                  className="hover:text-indigo-900 cursor-pointer"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            )}
+            {selectedGroupId !== 'ALL' && (
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                <span>Grupo: {groupFilterOptions.find((o) => o.id === selectedGroupId)?.name || selectedGroupId}</span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedGroupId('ALL')}
+                  className="hover:text-teal-900 cursor-pointer"
+                >
+                  <X size={10} />
+                </button>
+              </span>
+            )}
             <button
               type="button"
               onClick={() => {
                 setSelectedAreaId('ALL');
                 setSelectedGroupId('ALL');
-                setSearchMemberTerm('');
               }}
-              className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
+              className="text-[10px] font-bold text-gray-400 hover:text-gray-600 ml-1 cursor-pointer"
             >
-              Restablecer filtros
+              Limpiar
             </button>
-          )}
-        </div>
-
-        {/* Campus Selector (if not fixed by parent) */}
-        {!churchCampusId && (
-          <div>
-            <label className="text-[11px] font-bold text-gray-600 block mb-1">
-              Sede (Campus)
-            </label>
-            <SelectSearch
-              label=""
-              placeholder="Seleccionar sede..."
-              options={campusOptions}
-              value={selectedCampusId}
-              onChange={(val) => setSelectedCampusId(val)}
-              searchable={campusOptions.length > 4}
-              disabled={campusesState.loading}
-            />
           </div>
         )}
-
-        {/* The 2 Primary Filters: Área and Grupo */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          <div>
-            <label className="text-[11px] font-bold text-gray-700 block mb-1">
-              1. Filtrar por Área
-            </label>
-            <SelectSearch
-              label=""
-              placeholder="Todas las áreas..."
-              options={areaFilterOptions}
-              value={selectedAreaId}
-              onChange={(val) => setSelectedAreaId(val)}
-              searchable={areaFilterOptions.length > 5}
-            />
-          </div>
-
-          <div>
-            <label className="text-[11px] font-bold text-gray-700 block mb-1">
-              2. Filtrar por Grupo
-            </label>
-            <SelectSearch
-              label=""
-              placeholder="Todos los grupos..."
-              options={groupFilterOptions}
-              value={selectedGroupId}
-              onChange={(val) => setSelectedGroupId(val)}
-              searchable={groupFilterOptions.length > 5}
-            />
-          </div>
-        </div>
-
-        {/* Search member by name inside teams */}
-        <div className="relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-            <Search size={14} />
-          </div>
-          <input
-            type="text"
-            value={searchMemberTerm}
-            onChange={(e) => setSearchMemberTerm(e.target.value)}
-            placeholder="Buscar servidor o supervisor por nombre..."
-            className="w-full pl-8 pr-8 py-2 bg-slate-50 border border-gray-200/90 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
-          />
-          {searchMemberTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchMemberTerm('')}
-              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-gray-400 hover:text-gray-600"
-            >
-              <X size={14} />
-            </button>
-          )}
-        </div>
       </div>
 
       {/* TEAMS LIST GROUPED BY GRUPO IN ALPHABETICAL ORDER */}

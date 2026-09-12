@@ -38,8 +38,8 @@ const BottomNav = () => {
     return null;
   }
 
-  // Determine if the current role is a "Maestro" (USER) role
-  const isMaestro = currentRole === 'KID_REGISTER_USER' || currentRole === 'KID_GROUP_USER';
+  // Determine if the current role is a "Servidor" (USER) role
+  const isServidor = currentRole === 'KID_REGISTER_USER' || currentRole === 'KID_GROUP_USER';
   
   // Determine if the current role is Iglekids
   const isKidChurchRole = currentRole === 'KID_GROUP_ADMIN' || currentRole === 'KID_GROUP_SUPERVISOR' || currentRole === 'KID_GROUP_USER';
@@ -52,7 +52,7 @@ const BottomNav = () => {
       { path: APP_ROUTES.kidChurch.root, icon: Users, label: 'Niños Registrados', action: 'link' },
       { path: '#', icon: Settings, label: 'Configurar', action: 'settings' },
     ];
-    if (!isMaestro) {
+    if (!isServidor) {
       navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
     }
   } else {
@@ -63,7 +63,7 @@ const BottomNav = () => {
       { path: APP_ROUTES.kidRegistration.scanner, icon: QrCode, label: 'Escanear QR', action: 'link' },
       { path: '#', icon: Settings, label: 'Configurar', action: 'settings' },
     ];
-    if (!isMaestro) {
+    if (!isServidor) {
       navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
     }
   }

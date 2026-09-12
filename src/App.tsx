@@ -43,6 +43,9 @@ const MinistryDetailView = lazy(() => import('@/views/admin/ministries/MinistryD
 const VolunteerDirectoryView = lazy(
   () => import('@/views/admin/volunteers/VolunteerDirectoryView'),
 );
+const VolunteerApplicationsView = lazy(
+  () => import('@/views/admin/volunteers/VolunteerApplicationsView'),
+);
 const VolunteerRequestPublicView = lazy(
   () => import('@/views/public/VolunteerRequestPublicView'),
 );
@@ -152,7 +155,11 @@ function App() {
                 />
                 <Route
                   path={APP_ROUTES.admin.volunteers}
-                  element={<VolunteerDirectoryView />}
+                  element={<Navigate to={APP_ROUTES.admin.users} replace />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.volunteerApplications}
+                  element={<VolunteerApplicationsView />}
                 />
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
                 <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />

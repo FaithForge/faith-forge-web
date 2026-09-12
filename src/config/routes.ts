@@ -26,6 +26,7 @@ export const APP_ROUTES = {
     ministryOrganigram: (id: string | number) => `/admin/ministries/${id}/organigram`,
     ministryStructure: (id: string | number) => `/admin/ministries/${id}/structure`,
     volunteers: '/admin/volunteers',
+    volunteerApplications: '/admin/volunteers/applications',
   },
   kidChurch: {
     root: '/kid-church',

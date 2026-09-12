@@ -73,7 +73,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
   const senderName = user ? capitalizeWords(`${user.firstName || ''} ${user.lastName || ''}`.trim()) : 'un servidor';
   let roleTitle = 'Servidor(a)';
   if (currentRole === UserRole.KID_GROUP_USER || currentRole === UserRole.KID_REGISTER_USER) {
-    roleTitle = 'Maestro(a)';
+    roleTitle = 'Servidor(a)';
   } else if (currentRole === UserRole.KID_GROUP_SUPERVISOR || currentRole === UserRole.KID_REGISTER_SUPERVISOR) {
     roleTitle = 'Supervisor(a)';
   } else if (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN) {

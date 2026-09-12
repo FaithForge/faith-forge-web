@@ -216,7 +216,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             </label>
           </div>
           <p className="text-[11px] text-gray-500 leading-relaxed mb-1">
-            Determina qué permisos y módulos (Regikids, Iglekids, etc.) recibirán automáticamente los voluntarios asignados a esta área (Coordinadores, Supervisores y Maestros).
+            Determina qué permisos y módulos (Regikids, Iglekids, etc.) recibirán automáticamente los voluntarios asignados a esta área (Coordinadores, Supervisores y Servidores).
           </p>
 
           <div className="grid grid-cols-1 gap-2 pt-1">

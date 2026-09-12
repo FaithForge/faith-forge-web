@@ -19,6 +19,7 @@
 - Preserve the existing naming patterns in `src/components`, `src/libs`, `src/services`, and `src/views`.
 - **Route and URL Naming**: All routes, paths, and URLs MUST be strictly in English (e.g. `/kid-registration/generate-guardian-qr`, `/kid-church/attendance`, `/admin/church-meetings`). NEVER mix Spanish and English in route names or URL paths.
 - **Brand Name in User-Facing Copy**: The user-facing app name presented to the end user in UI texts, modals, alerts, and messages is strictly **Iglekids** (and its sub-modules Regikids/Iglekids). NEVER use "Faith Forge" in user-facing copy or modals. "Faith Forge" is only the internal/project codebase name.
+- **Role Terminology: Use STRICTLY 'Servidor' (NEVER 'Maestro')**: In all user-facing texts, labels, badges, modals, descriptions, and messages, the role name to use is strictly **Servidor** (or 'Servidor(a)'). NEVER use the words 'Maestro', 'Maestro(a)', or 'Maestro / Servidor' anywhere in the application copy or UI.
 
 ## Architecture
 

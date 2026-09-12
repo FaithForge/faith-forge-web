@@ -4,6 +4,8 @@ import {
   GetVolunteersPayload,
   IVolunteer,
   IVolunteerAssignment,
+  IVolunteerPermissionGrant,
+  CreateVolunteerPermissionGrantPayload,
   MinistryVolunteerAssignmentStateEnum,
   MinistryVolunteerStateEnum,
   PaginationResponse,
@@ -431,3 +433,144 @@ export const GetVolunteerWithAssignments = createAsyncThunk(
     }
   },
 );
+
+/**
+ * Fetches volunteer record and its active assignments for a specific user ID via GET /volunteer/by-user/:userId.
+ *
+ * @param {Object} payload - Payload with userId.
+ * @param {string} payload.userId - User identifier.
+ * @returns {Promise<IVolunteer | null>} Volunteer details or null if user is not a volunteer.
+ */
+export const GetVolunteerByUserId = createAsyncThunk(
+  'church/GetVolunteerByUserId',
+  async (payload: { userId: string }, { getState, rejectWithValue }) => {
+    const { userId } = payload;
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: `/volunteer/by-user/${userId}`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return (response || null) as IVolunteer | null;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(
+        error.response?.data ?? 'Error al obtener datos de servidor del usuario',
+      );
+    }
+  },
+);
+
+/**
+ * Fetches all temporary permission grants for a specific user via GET /volunteer-permission-grant/user/:userId.
+ *
+ * @param {Object} payload - Payload with userId.
+ * @param {string} payload.userId - User identifier.
+ * @returns {Promise<IVolunteerPermissionGrant[]>} Active permission grants.
+ */
+export const GetUserPermissionGrants = createAsyncThunk(
+  'church/GetUserPermissionGrants',
+  async (payload: { userId: string }, { getState, rejectWithValue }) => {
+    const { userId } = payload;
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: `/volunteer-permission-grant/user/${userId}`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return (Array.isArray(response) ? response : []) as IVolunteerPermissionGrant[];
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(
+        error.response?.data ?? 'Error al obtener permisos temporales del usuario',
+      );
+    }
+  },
+);
+
+/**
+ * Creates an ad-hoc or temporary permission grant via POST /volunteer-permission-grant.
+ *
+ * @param {CreateVolunteerPermissionGrantPayload} payload - Grant parameters.
+ * @returns {Promise<IVolunteerPermissionGrant>} Created grant.
+ */
+export const CreateVolunteerPermissionGrant = createAsyncThunk(
+  'church/CreateVolunteerPermissionGrant',
+  async (payload: CreateVolunteerPermissionGrantPayload, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.POST,
+          url: '/volunteer-permission-grant',
+          options: {
+            data: payload,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response as IVolunteerPermissionGrant;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(
+        error.response?.data ?? 'Error al conceder permiso temporal al usuario',
+      );
+    }
+  },
+);
+
+/**
+ * Revokes a temporary permission grant via DELETE /volunteer-permission-grant/:id.
+ *
+ * @param {Object} payload - Grant ID and target userId.
+ * @returns {Promise<string>} Revoked grant ID.
+ */
+export const RevokeVolunteerPermissionGrant = createAsyncThunk(
+  'church/RevokeVolunteerPermissionGrant',
+  async (payload: { grantId: string; userId?: string }, { getState, rejectWithValue }) => {
+    const { grantId } = payload;
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      await microserviceApiRequest({
+        microservice: MS.Church,
+        method: HttpRequestMethod.DELETE,
+        url: `/volunteer-permission-grant/${grantId}`,
+        options: {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      });
+
+      return grantId;
+    } catch (err) {
+      const error = err as AxiosError;
+      return rejectWithValue(
+        error.response?.data ?? 'Error al revocar el permiso temporal',
+      );
+    }
+  },
+);
+

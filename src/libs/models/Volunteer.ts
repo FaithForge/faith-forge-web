@@ -178,3 +178,32 @@ export interface IPublicVolunteerCatalog {
   serviceAreaGroups?: IServiceAreaGroup[];
   availableRoles: VolunteerRole[];
 }
+
+export const VolunteerPermissionGrantStateEnum = {
+  ...EntityState,
+} as const;
+export type VolunteerPermissionGrantStateEnum =
+  (typeof VolunteerPermissionGrantStateEnum)[keyof typeof VolunteerPermissionGrantStateEnum];
+
+export interface IVolunteerPermissionGrant {
+  id: string;
+  userId: string;
+  churchId: string;
+  permission: string;
+  grantedByUserId: string;
+  reason?: string;
+  state?: VolunteerPermissionGrantStateEnum;
+  expiresAt?: string | Date;
+  createdAt?: string | Date;
+  updatedAt?: string | Date;
+  grantedByUser?: Partial<IUser>;
+}
+
+export interface CreateVolunteerPermissionGrantPayload {
+  userId: string;
+  churchId: string;
+  permission: string;
+  reason?: string;
+  expiresAt?: string;
+}
+

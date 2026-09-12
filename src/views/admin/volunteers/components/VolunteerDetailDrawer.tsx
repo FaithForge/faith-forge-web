@@ -65,7 +65,7 @@ const ROLE_STYLE_MAP: Record<
     icon: ShieldCheck,
   },
   [VolunteerRole.VOLUNTEER]: {
-    label: 'Servidor / Maestro',
+    label: 'Servidor',
     badge: 'bg-emerald-50 text-emerald-800 border-emerald-200',
     icon: Award,
   },
@@ -202,20 +202,32 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
                 const campus =
                   asg.serviceAreaGroup?.churchCampus?.name ||
                   asg.ministry?.churchCampus?.name ||
+                  asg.ministryArea?.ministry?.churchCampus?.name ||
+                  asg.ministryGroupConfig?.ministry?.churchCampus?.name ||
                   campuses.find(
                     (c) =>
                       c.id ===
                       (asg.serviceAreaGroup?.churchCampusId ||
                         asg.churchCampusId ||
-                        asg.ministry?.churchCampusId),
+                        asg.ministry?.churchCampusId ||
+                        asg.ministryArea?.ministry?.churchCampusId ||
+                        asg.ministryArea?.churchCampusId ||
+                        asg.ministryGroupConfig?.ministry?.churchCampusId ||
+                        asg.ministryGroupConfig?.churchCampusId),
                   )?.name ||
                   '';
+                const ministryName =
+                  asg.ministry?.name ||
+                  asg.ministryArea?.ministry?.name ||
+                  asg.ministryGroupConfig?.ministry?.name ||
+                  asg.serviceAreaGroup?.ministryArea?.ministry?.name;
+
                 let scopeText = '';
                 if (campus) {
                   scopeText = `Sede: ${campus} • `;
                 }
-                if (asg.ministry) {
-                  scopeText += asg.ministry.name;
+                if (ministryName) {
+                  scopeText += ministryName;
                 }
                 if (asg.ministryArea) {
                   scopeText += ` • Área: ${asg.ministryArea.name}`;

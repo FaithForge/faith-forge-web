@@ -5,7 +5,7 @@ import { MinistryGroupsTab } from '../tabs/MinistryGroupsTab';
 import { ServiceAreaGroupsTab } from '../tabs/ServiceAreaGroupsTab';
 import clsx from 'clsx';
 
-type StructureTabKey = 'areas' | 'groups' | 'teams';
+type StructureTabKey = 'groups' | 'areas' | 'teams';
 
 interface TabItem {
   key: StructureTabKey;
@@ -14,8 +14,8 @@ interface TabItem {
 }
 
 const STRUCTURE_TABS: TabItem[] = [
-  { key: 'areas', label: 'Áreas de Servicio', icon: Layers },
   { key: 'groups', label: 'Grupos', icon: Users2 },
+  { key: 'areas', label: 'Áreas de Servicio', icon: Layers },
   { key: 'teams', label: 'Equipos (Sede)', icon: Network },
 ];
 
@@ -26,7 +26,7 @@ interface MinistryStructureSectionProps {
 
 /**
  * Dedicated Structure Configuration View.
- * Exclusively manages Ministry Service Areas, Groups, and Team Combinations per Campus.
+ * Exclusively manages Ministry Groups, Service Areas, and Team Combinations per Campus.
  *
  * @param {MinistryStructureSectionProps} props - Component properties.
  * @returns {JSX.Element} Rendered structure management view.
@@ -35,7 +35,7 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
   ministryId,
   churchCampusId,
 }) => {
-  const [activeTab, setActiveTab] = useState<StructureTabKey>('areas');
+  const [activeTab, setActiveTab] = useState<StructureTabKey>('groups');
 
   return (
     <div className="flex flex-col gap-4">
@@ -65,8 +65,8 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
 
       {/* Tab Panels */}
       <div className="mt-1">
-        {activeTab === 'areas' && <MinistryAreasTab ministryId={ministryId} />}
         {activeTab === 'groups' && <MinistryGroupsTab ministryId={ministryId} />}
+        {activeTab === 'areas' && <MinistryAreasTab ministryId={ministryId} />}
         {activeTab === 'teams' && (
           <ServiceAreaGroupsTab
             ministryId={ministryId}

@@ -15,6 +15,7 @@ import {
   Layers,
   MapPin,
   Printer,
+  UserCheck,
 } from 'lucide-react';
 
 import { APP_ROUTES } from '@/config/routes';
@@ -51,8 +52,8 @@ const ADMIN_CATEGORIES: AdminCategory[] = [
     items: [
       {
         id: 'user-management',
-        title: 'Directorio de Usuarios y Roles',
-        description: 'Consulta la lista de usuarios, gestiona información de perfiles y asigna o revoca roles del sistema.',
+        title: 'Directorio de Usuarios y Servidores',
+        description: 'Consulta personas y servidores, gestiona datos personales, servicio ministerial, credenciales y roles.',
         icon: UserCog,
         route: APP_ROUTES.admin.users,
         iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
@@ -84,11 +85,11 @@ const ADMIN_CATEGORIES: AdminCategory[] = [
         iconColor: 'text-indigo-600',
       },
       {
-        id: 'volunteer-directory',
-        title: 'Directorio de Servidores',
-        description: 'Consulta los servidores registrados, sus roles asignados y sedes activas.',
-        icon: Users,
-        route: APP_ROUTES.admin.volunteers,
+        id: 'volunteer-applications',
+        title: 'Solicitudes de Servidores',
+        description: 'Revisa, aprueba o rechaza postulaciones de personas que desean servir en los ministerios.',
+        icon: UserCheck,
+        route: APP_ROUTES.admin.volunteerApplications,
         iconBg: 'bg-violet-50 text-violet-600 border border-violet-100',
         iconColor: 'text-violet-600',
       },

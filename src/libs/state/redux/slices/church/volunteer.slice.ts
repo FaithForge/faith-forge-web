@@ -1,17 +1,22 @@
 import {
   IVolunteer,
   IVolunteerAssignment,
+  IVolunteerPermissionGrant,
   PaginationResponse,
   VolunteerRole,
 } from '@/libs/models';
 import {
   CreateVolunteer,
   CreateVolunteerAssignment,
+  CreateVolunteerPermissionGrant,
   DeleteVolunteerAssignment,
   GetMoreVolunteers,
+  GetUserPermissionGrants,
   GetVolunteerAssignments,
+  GetVolunteerByUserId,
   GetVolunteers,
   GetVolunteerWithAssignments,
+  RevokeVolunteerPermissionGrant,
   UpdateVolunteerAssignment,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
@@ -38,6 +43,12 @@ export interface VolunteerSliceState {
   loadingCurrentAssignments: boolean;
   errorCurrentAssignments: string | null;
 
+  activeUserVolunteer: IVolunteer | null;
+  loadingUserVolunteer: boolean;
+
+  userPermissionGrants: IVolunteerPermissionGrant[];
+  loadingUserPermissionGrants: boolean;
+
   loadingAction: boolean;
   errorAction: string | null;
 }
@@ -62,6 +73,12 @@ const initialState: VolunteerSliceState = {
   loadingCurrentAssignments: false,
   errorCurrentAssignments: null,
 
+  activeUserVolunteer: null,
+  loadingUserVolunteer: false,
+
+  userPermissionGrants: [],
+  loadingUserPermissionGrants: false,
+
   loadingAction: false,
   errorAction: null,
 };
@@ -73,6 +90,10 @@ export const volunteerSlice = createSlice({
     clearCurrentVolunteerAssignments: (state) => {
       state.currentVolunteerAssignments = [];
       state.errorCurrentAssignments = null;
+    },
+    clearActiveUserVolunteer: (state) => {
+      state.activeUserVolunteer = null;
+      state.userPermissionGrants = [];
     },
     clearPartitionAssignments: (state, action: PayloadAction<string>) => {
       delete state.assignmentsByPartition[action.payload];
@@ -334,13 +355,57 @@ export const volunteerSlice = createSlice({
         state.errorCurrentAssignments =
           (action.payload as string) || 'Error al obtener asignaciones del voluntario';
       });
+
+    // -------------------------------------------------------------------------
+    // Volunteer by User ID
+    // -------------------------------------------------------------------------
+    builder
+      .addCase(GetVolunteerByUserId.pending, (state) => {
+        state.loadingUserVolunteer = true;
+      })
+      .addCase(GetVolunteerByUserId.fulfilled, (state, action) => {
+        state.loadingUserVolunteer = false;
+        state.activeUserVolunteer = action.payload;
+      })
+      .addCase(GetVolunteerByUserId.rejected, (state) => {
+        state.loadingUserVolunteer = false;
+        state.activeUserVolunteer = null;
+      });
+
+    // -------------------------------------------------------------------------
+    // User Temporary Permission Grants
+    // -------------------------------------------------------------------------
+    builder
+      .addCase(GetUserPermissionGrants.pending, (state) => {
+        state.loadingUserPermissionGrants = true;
+      })
+      .addCase(GetUserPermissionGrants.fulfilled, (state, action) => {
+        state.loadingUserPermissionGrants = false;
+        state.userPermissionGrants = action.payload;
+      })
+      .addCase(GetUserPermissionGrants.rejected, (state) => {
+        state.loadingUserPermissionGrants = false;
+        state.userPermissionGrants = [];
+      });
+
+    builder
+      .addCase(CreateVolunteerPermissionGrant.fulfilled, (state, action) => {
+        state.userPermissionGrants.unshift(action.payload);
+      })
+      .addCase(RevokeVolunteerPermissionGrant.fulfilled, (state, action) => {
+        state.userPermissionGrants = state.userPermissionGrants.filter(
+          (g) => g.id !== action.payload,
+        );
+      });
   },
 });
 
 export const {
   clearCurrentVolunteerAssignments,
+  clearActiveUserVolunteer,
   clearPartitionAssignments,
   resetVolunteerErrors,
 } = volunteerSlice.actions;
 export default volunteerSlice.reducer;
+
 

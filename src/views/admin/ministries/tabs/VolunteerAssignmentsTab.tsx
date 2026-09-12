@@ -97,8 +97,20 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
   const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
-  const areas = areasByMinistry[ministryId] || [];
-  const groups = groupsByMinistry[ministryId] || [];
+  const areas = useMemo(
+    () =>
+      [...(areasByMinistry[ministryId] || [])].sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+      ),
+    [areasByMinistry, ministryId],
+  );
+  const groups = useMemo(
+    () =>
+      [...(groupsByMinistry[ministryId] || [])].sort((a, b) =>
+        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+      ),
+    [groupsByMinistry, ministryId],
+  );
   const campuses = campusesState.data;
 
   // Partition Keys

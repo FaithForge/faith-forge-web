@@ -44,7 +44,8 @@ export const UnassignUserRoleModal: React.FC<UnassignUserRoleModalProps> = ({
     }
   }, [open]);
 
-  const userRoles = user?.roles || [];
+  const userRoles =
+    user?.roles?.filter((r) => r !== UserRole.USER && (r as string) !== 'USER') || [];
 
   /**
    * Handles submitting role deletion / unassignment.
@@ -61,6 +62,11 @@ export const UnassignUserRoleModal: React.FC<UnassignUserRoleModalProps> = ({
 
     if (!selectedRole) {
       toast.error('Por favor, selecciona el rol que deseas eliminar');
+      return;
+    }
+
+    if (selectedRole === UserRole.USER || (selectedRole as string) === 'USER') {
+      toast.error('El rol básico de usuario es obligatorio y no puede ser eliminado');
       return;
     }
 

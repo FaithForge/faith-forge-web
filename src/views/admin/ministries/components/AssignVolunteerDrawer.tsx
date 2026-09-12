@@ -94,7 +94,7 @@ const ROLE_DEFINITIONS: Array<{
   },
   {
     role: VolunteerRole.VOLUNTEER,
-    label: 'Servidor / Maestro',
+    label: 'Servidor',
     description: 'Miembro voluntario activo sirviendo en el equipo (Área × Grupo).',
     badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
     icon: Award,

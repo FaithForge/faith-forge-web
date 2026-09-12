@@ -233,7 +233,7 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<UserRole, RoleMetadata> = {
   },
   [UserRole.KID_REGISTER_USER]: {
     id: UserRole.KID_REGISTER_USER,
-    name: 'Regikids - Maestro / Servidor',
+    name: 'Regikids - Servidor',
     category: 'Regikids',
     description: 'Atención y registro en mesas de entrada',
     badgeColor: 'bg-teal-100 text-teal-700 border-teal-200',
@@ -254,9 +254,9 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<UserRole, RoleMetadata> = {
   },
   [UserRole.KID_GROUP_USER]: {
     id: UserRole.KID_GROUP_USER,
-    name: 'Iglekids - Maestro / Servidor',
+    name: 'Iglekids - Servidor',
     category: 'Iglekids',
-    description: 'Maestro de salón y pase de lista',
+    description: 'Servidor de salón y pase de lista',
     badgeColor: 'bg-lime-100 text-lime-700 border-lime-200',
   },
   [UserRole.USER]: {
@@ -274,3 +274,45 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<UserRole, RoleMetadata> = {
     badgeColor: 'bg-pink-100 text-pink-700 border-pink-200',
   },
 };
+
+export interface MinistryRoleGroup {
+  id: string;
+  label: string;
+  description: string;
+  roles: UserRole[];
+}
+
+export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
+  {
+    id: 'Regikids',
+    label: 'Regikids',
+    description: 'Módulo de registro, recepción y acreditación de niños',
+    roles: [
+      UserRole.KID_REGISTER_USER,
+      UserRole.KID_REGISTER_SUPERVISOR,
+      UserRole.KID_REGISTER_ADMIN,
+    ],
+  },
+  {
+    id: 'Iglekids',
+    label: 'Iglekids',
+    description: 'Módulo de iglesia infantil, salones, clases y actividades',
+    roles: [
+      UserRole.KID_GROUP_USER,
+      UserRole.KID_GROUP_SUPERVISOR,
+      UserRole.KID_GROUP_ADMIN,
+      UserRole.KID_CHURCH_ADMIN,
+    ],
+  },
+  {
+    id: 'Administración General',
+    label: 'Administración General',
+    description: 'Gestión global de la congregación, sedes y personal',
+    roles: [
+      UserRole.ADMIN,
+      UserRole.STAFF,
+    ],
+  },
+];
+
+export const ALL_ASSIGNABLE_ROLES: UserRole[] = MINISTRY_ROLE_GROUPS.flatMap((g) => g.roles);
