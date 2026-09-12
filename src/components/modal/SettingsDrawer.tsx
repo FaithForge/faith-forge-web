@@ -93,9 +93,9 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     currentRole === UserRole.ADMIN;
 
   const isKidChurchRole =
-    currentRole === 'KID_GROUP_ADMIN' ||
-    currentRole === 'KID_GROUP_SUPERVISOR' ||
-    currentRole === 'KID_GROUP_USER';
+    currentRole === UserRole.KID_GROUP_ADMIN ||
+    currentRole === UserRole.KID_GROUP_SUPERVISOR ||
+    currentRole === UserRole.KID_GROUP_USER;
 
   // Roles restringidos que exclusivamente deben ver las reuniones del día actual (los administradores ven todos los días)
   const isDayRestrictedRole =
@@ -103,7 +103,6 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     (currentRole === UserRole.KID_REGISTER_ADMIN ||
       currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
       currentRole === UserRole.KID_REGISTER_USER ||
-      currentRole === UserRole.KID_CHURCH_ADMIN ||
       currentRole === UserRole.KID_GROUP_ADMIN ||
       currentRole === UserRole.KID_GROUP_SUPERVISOR ||
       currentRole === UserRole.KID_GROUP_USER);

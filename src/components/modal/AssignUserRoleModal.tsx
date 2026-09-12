@@ -6,6 +6,7 @@ import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { AssignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';
 import { IUser } from '@/libs/models';
 import {
+  AppRole,
   UserRole,
   ALL_SYSTEM_ROLES_METADATA,
   MINISTRY_ROLE_GROUPS,
@@ -19,7 +20,7 @@ interface AssignUserRoleModalProps {
   open: boolean;
   onClose: () => void;
   user: Partial<IUser> | IUser | null | undefined;
-  onSuccess?: (assignedRole: UserRole) => void;
+  onSuccess?: (assignedRole: AppRole) => void;
 }
 
 /**
@@ -51,13 +52,13 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
     }
   }, [open]);
 
-  const filteredRoles: UserRole[] = useMemo(() => {
+  const filteredRoles: AppRole[] = useMemo(() => {
     let roles = MINISTRY_ROLE_GROUPS.flatMap((g) => g.roles);
     if (selectedMinistry !== 'ALL') {
       const group = MINISTRY_ROLE_GROUPS.find((g) => g.id === selectedMinistry);
       roles = group ? group.roles : [];
     }
-    return roles.filter((role) => !user?.roles?.includes(role));
+    return roles.filter((role) => !user?.roles?.includes(role as any));
   }, [selectedMinistry, user?.roles]);
 
   const availableRoles = useMemo(
@@ -72,7 +73,7 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
     [filteredRoles],
   );
 
-  const selectedRoleMeta = selectedRole ? ALL_SYSTEM_ROLES_METADATA[selectedRole as UserRole] : null;
+  const selectedRoleMeta = selectedRole ? ALL_SYSTEM_ROLES_METADATA[selectedRole as AppRole] : null;
 
   /**
    * Handles submitting the role assignment.

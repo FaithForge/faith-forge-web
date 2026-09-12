@@ -18,7 +18,7 @@ import clsx from 'clsx';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { GetUserByNationalId, AssignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';
 import { IUser } from '@/libs/models/User';
-import { UserRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
+import { ALL_ASSIGNABLE_ROLES, ALL_SYSTEM_ROLES_METADATA, AppRole } from '@/libs/utils/auth';
 import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
 import SelectSearch from '@/components/ui/SelectSearch';
@@ -83,8 +83,8 @@ const AssignUserRolesView: React.FC = () => {
       return;
     }
 
-    const roleEnum = selectedRoleToAssign as UserRole;
-    if (foundUser.roles?.includes(roleEnum)) {
+    const roleEnum = selectedRoleToAssign as AppRole;
+    if (foundUser.roles?.includes(roleEnum as any)) {
       toast.info('El usuario ya cuenta con este rol asignado');
       return;
     }
@@ -95,7 +95,7 @@ const AssignUserRolesView: React.FC = () => {
       await dispatch(
         AssignUserRole({
           userId: foundUser.id,
-          userRole: roleEnum,
+          userRole: roleEnum as any,
         })
       ).unwrap();
 
@@ -107,7 +107,7 @@ const AssignUserRolesView: React.FC = () => {
         const currentRoles = prev.roles || [];
         return {
           ...prev,
-          roles: [...currentRoles, roleEnum],
+          roles: [...currentRoles, roleEnum as any],
         };
       });
 
@@ -120,9 +120,8 @@ const AssignUserRolesView: React.FC = () => {
   };
 
   // Available roles to assign (excluding existing roles user already has)
-  const availableRolesToAssign = Object.values(UserRole)
-    .filter((role) => role !== UserRole.KID) // Excluir rol KID de asignaciones
-    .filter((role) => !foundUser?.roles?.includes(role))
+  const availableRolesToAssign = ALL_ASSIGNABLE_ROLES
+    .filter((role) => !foundUser?.roles?.includes(role as any))
     .map((role) => {
       const meta = ALL_SYSTEM_ROLES_METADATA[role];
       return {

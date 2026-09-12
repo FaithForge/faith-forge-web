@@ -1,5 +1,26 @@
 [
   {
+    "version": "3.2.8",
+    "type": "patch",
+    "timestamp": "2026-09-12T04:49:14.271Z",
+    "dateFormatted": "11/09/2026 11:49 PM",
+    "title": "Actualización y depuración de roles de servicio",
+    "changes": [
+      "Se organizó la administración general de ministerios infantiles en el catálogo de roles.",
+      "Se retiraron del sistema los perfiles y registros de roles no utilizados."
+    ]
+  },
+  {
+    "version": "3.2.7",
+    "type": "patch",
+    "timestamp": "2026-09-12T04:47:26.879Z",
+    "dateFormatted": "11/09/2026 11:47 PM",
+    "title": "Corrección al guardar configuración de sesión",
+    "changes": [
+      "Se solucionó el problema por el cual la ventana de configuración se reabría continuamente tras pulsar Finalizar."
+    ]
+  },
+  {
     "version": "3.2.6",
     "type": "patch",
     "timestamp": "2026-09-12T04:04:01.415Z",

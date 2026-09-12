@@ -2,18 +2,20 @@ import _ from 'lodash';
 import { useSelector } from 'react-redux';
 import { RootState } from '../state/redux';
 
+/** Church and Ministry domain roles */
+export enum ChurchRole {
+  MINISTRY_ADMIN = 'MINISTRY_ADMIN',
+}
+
 /** User Roles Enum */
 export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   STAFF = 'STAFF',
 
-  // Kid
-  KID = 'KID',
   USER = 'USER',
 
   // Kid MS Roles
-  KID_CHURCH_ADMIN = 'KID_CHURCH_ADMIN',
   KID_REGISTER_ADMIN = 'KID_REGISTER_ADMIN',
   KID_REGISTER_SUPERVISOR = 'KID_REGISTER_SUPERVISOR',
   KID_REGISTER_USER = 'KID_REGISTER_USER',
@@ -22,33 +24,36 @@ export enum UserRole {
   KID_GROUP_USER = 'KID_GROUP_USER',
 }
 
+export type AppRole = UserRole | ChurchRole;
+export const AppRole = { ...UserRole, ...ChurchRole };
+
 // ADMIN ROLES
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
 
-export const KidChurchRegisterAdminRoles = [UserRole.KID_REGISTER_ADMIN];
-export const KidChurchAdminRoles = [UserRole.KID_CHURCH_ADMIN];
+export const KidChurchRegisterAdminRoles: AppRole[] = [UserRole.KID_REGISTER_ADMIN];
+export const KidChurchAdminRoles: AppRole[] = [ChurchRole.MINISTRY_ADMIN];
 
-export const KidGroupAdminRoles = [UserRole.KID_GROUP_ADMIN];
+export const KidGroupAdminRoles: AppRole[] = [UserRole.KID_GROUP_ADMIN];
 
-export const KidChurchSupervisorRoles = [
+export const KidChurchSupervisorRoles: AppRole[] = [
   ...KidChurchAdminRoles,
   ...KidGroupAdminRoles,
   UserRole.KID_GROUP_SUPERVISOR,
 ];
 
 // Kid Registration
-export const KidChurchRegisterSupervisorRoles = [
+export const KidChurchRegisterSupervisorRoles: AppRole[] = [
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
 ];
-export const KidChurchRegisterRoles = [
+export const KidChurchRegisterRoles: AppRole[] = [
   UserRole.KID_REGISTER_ADMIN,
   UserRole.KID_REGISTER_SUPERVISOR,
   UserRole.KID_REGISTER_USER,
 ];
 
-export const KidChurchGroupRoles = [
+export const KidChurchGroupRoles: AppRole[] = [
   UserRole.KID_GROUP_ADMIN,
   UserRole.KID_GROUP_SUPERVISOR,
   UserRole.KID_GROUP_USER,
@@ -87,7 +92,7 @@ export const IsAdmin = (roles: UserRole[]) => {
  * @param {UserRole[]} roles - Array of user roles to check.
  * @returns {boolean} True if any Kid Church admin role is present.
  */
-export const IsAdminKidChurch = (roles: UserRole[]) => {
+export const IsAdminKidChurch = (roles: (UserRole | ChurchRole)[]) => {
   if (!roles?.length) return false;
   return roles.some((role) => KidChurchAdminRoles.includes(role));
 };
@@ -145,11 +150,11 @@ export const IsAllRole = () => {
   return true;
 };
 
-const userRolePriority: Record<UserRole, number> = {
+const userRolePriority: Record<string, number> = {
   SUPER_ADMIN: 1,
   ADMIN: 2,
   STAFF: 3,
-  KID_CHURCH_ADMIN: 4,
+  MINISTRY_ADMIN: 4,
   KID_REGISTER_ADMIN: 5,
   KID_GROUP_ADMIN: 5,
   KID_REGISTER_SUPERVISOR: 6,
@@ -157,7 +162,6 @@ const userRolePriority: Record<UserRole, number> = {
   KID_REGISTER_USER: 7,
   KID_GROUP_USER: 7,
   USER: 8,
-  KID: 9,
 };
 
 /**
@@ -181,14 +185,14 @@ export const getMainUserRole = (roles: UserRole[]): UserRole | undefined => {
 };
 
 export interface RoleMetadata {
-  id: UserRole;
+  id: AppRole;
   name: string;
   category: string;
   description: string;
   badgeColor: string;
 }
 
-export const ALL_SYSTEM_ROLES_METADATA: Record<UserRole, RoleMetadata> = {
+export const ALL_SYSTEM_ROLES_METADATA: Record<AppRole, RoleMetadata> = {
   [UserRole.SUPER_ADMIN]: {
     id: UserRole.SUPER_ADMIN,
     name: 'Super Administrador',
@@ -210,8 +214,8 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<UserRole, RoleMetadata> = {
     description: 'Personal de apoyo de la iglesia',
     badgeColor: 'bg-blue-100 text-blue-700 border-blue-200',
   },
-  [UserRole.KID_CHURCH_ADMIN]: {
-    id: UserRole.KID_CHURCH_ADMIN,
+  [ChurchRole.MINISTRY_ADMIN]: {
+    id: ChurchRole.MINISTRY_ADMIN,
     name: 'Iglekids - Admin General',
     category: 'Iglekids',
     description: 'Administrador general de iglesia infantil',
@@ -266,20 +270,13 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<UserRole, RoleMetadata> = {
     description: 'Usuario básico del sistema',
     badgeColor: 'bg-gray-100 text-gray-700 border-gray-200',
   },
-  [UserRole.KID]: {
-    id: UserRole.KID,
-    name: 'Niño',
-    category: 'Niños',
-    description: 'Perfil de niño registrado',
-    badgeColor: 'bg-pink-100 text-pink-700 border-pink-200',
-  },
 };
 
 export interface MinistryRoleGroup {
   id: string;
   label: string;
   description: string;
-  roles: UserRole[];
+  roles: AppRole[];
 }
 
 export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
@@ -301,7 +298,7 @@ export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
       UserRole.KID_GROUP_USER,
       UserRole.KID_GROUP_SUPERVISOR,
       UserRole.KID_GROUP_ADMIN,
-      UserRole.KID_CHURCH_ADMIN,
+      ChurchRole.MINISTRY_ADMIN,
     ],
   },
   {
@@ -315,4 +312,4 @@ export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
   },
 ];
 
-export const ALL_ASSIGNABLE_ROLES: UserRole[] = MINISTRY_ROLE_GROUPS.flatMap((g) => g.roles);
+export const ALL_ASSIGNABLE_ROLES: AppRole[] = MINISTRY_ROLE_GROUPS.flatMap((g) => g.roles);

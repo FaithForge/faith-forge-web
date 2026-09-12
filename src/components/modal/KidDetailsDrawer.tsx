@@ -18,7 +18,7 @@ import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday } from '@/libs/utils/date';
 import { isKidOverage, KID_AGE_COPY } from '@/libs/common-types/constants';
 import { useAppSelector } from '@/libs/state/redux/hooks';
-import { UserRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
+import { UserRole, ChurchRole, AppRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 interface KidDetailsDrawerProps {
@@ -78,10 +78,10 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     roleTitle = 'Supervisor(a)';
   } else if (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN) {
     roleTitle = 'Coordinador(a)';
-  } else if (currentRole === UserRole.ADMIN || currentRole === UserRole.SUPER_ADMIN || currentRole === UserRole.KID_CHURCH_ADMIN) {
+  } else if (currentRole === UserRole.ADMIN || currentRole === UserRole.SUPER_ADMIN || (currentRole as any) === ChurchRole.MINISTRY_ADMIN) {
     roleTitle = 'Administrador(a)';
-  } else if (currentRole && ALL_SYSTEM_ROLES_METADATA[currentRole as UserRole]?.name) {
-    roleTitle = ALL_SYSTEM_ROLES_METADATA[currentRole as UserRole].name;
+  } else if (currentRole && ALL_SYSTEM_ROLES_METADATA[currentRole as AppRole]?.name) {
+    roleTitle = ALL_SYSTEM_ROLES_METADATA[currentRole as AppRole].name;
   }
 
   const isBirthdayToday = isDateToday(kid.birthday);

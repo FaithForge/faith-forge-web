@@ -41,8 +41,10 @@ const BottomNav = () => {
   // Determine if the current role is a "Servidor" (USER) role
   const isServidor = currentRole === 'KID_REGISTER_USER' || currentRole === 'KID_GROUP_USER';
   
-  // Determine if the current role is Iglekids
-  const isKidChurchRole = currentRole === 'KID_GROUP_ADMIN' || currentRole === 'KID_GROUP_SUPERVISOR' || currentRole === 'KID_GROUP_USER';
+  const isKidChurchRole =
+    currentRole === 'KID_GROUP_ADMIN' ||
+    currentRole === 'KID_GROUP_SUPERVISOR' ||
+    currentRole === 'KID_GROUP_USER';
 
   let navItems = [];
 

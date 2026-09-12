@@ -154,11 +154,11 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     }
   }
 
-  const isMeetingDayValid = isAdmin || isMeetingValid;
-  const isPrinterConfigured = printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
+  const isPrinterConfigured =
+    printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
   const isConfigured = isKidChurchRole
-    ? !!currentMeeting && isMeetingDayValid
-    : !!currentMeeting && isMeetingDayValid && isPrinterConfigured;
+    ? !!currentMeeting
+    : !!currentMeeting && isPrinterConfigured;
 
   const shouldBlockKids = !isAdmin && !isMeetingValid && isConfigured;
 

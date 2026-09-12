@@ -7,6 +7,7 @@ import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CreateVolunteerPermissionGrant } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { IUser } from '@/libs/models';
 import {
+  AppRole,
   UserRole,
   ALL_SYSTEM_ROLES_METADATA,
   MINISTRY_ROLE_GROUPS,
@@ -69,7 +70,7 @@ export const GrantTemporaryPermissionModal: React.FC<GrantTemporaryPermissionMod
   }, [open]);
 
   // Roles available for temporary grants based on selected ministry
-  const filteredRoles: UserRole[] = useMemo(() => {
+  const filteredRoles: AppRole[] = useMemo(() => {
     if (selectedMinistry === 'ALL') {
       return MINISTRY_ROLE_GROUPS.flatMap((g) => g.roles);
     }
@@ -90,7 +91,7 @@ export const GrantTemporaryPermissionModal: React.FC<GrantTemporaryPermissionMod
   );
 
   const selectedRoleMeta = selectedRole
-    ? ALL_SYSTEM_ROLES_METADATA[selectedRole as UserRole]
+    ? ALL_SYSTEM_ROLES_METADATA[selectedRole as AppRole]
     : null;
 
   /**
