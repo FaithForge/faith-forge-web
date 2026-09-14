@@ -3,10 +3,11 @@ import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 import { logout } from '../../slices/user/auth.slice';
+import { setVolunteerContext } from '../../slices/church/volunteerContext.slice';
 
 export const UserLogin = createAsyncThunk(
   'user/UserLogin',
-  async (payload: { username: string; password: string }) => {
+  async (payload: { username: string; password: string }, { dispatch }) => {
     const { username, password } = payload;
     const response = (
       await microserviceApiRequest({
@@ -21,6 +22,8 @@ export const UserLogin = createAsyncThunk(
         },
       })
     ).data;
+
+    const userMsRoles = [...(response?.user?.roles || [])];
 
     // Fetch dynamic church volunteer permissions with retry logic
     if (response?.token) {
@@ -39,10 +42,26 @@ export const UserLogin = createAsyncThunk(
             })
           ).data;
 
-          if (churchPermsResponse?.permissions && Array.isArray(churchPermsResponse.permissions)) {
-            response.user.roles = Array.from(
-              new Set([...(response.user.roles || []), ...churchPermsResponse.permissions])
+          if (churchPermsResponse) {
+            dispatch(
+              setVolunteerContext({
+                isChurchVolunteer: !!churchPermsResponse.isChurchVolunteer,
+                campuses: churchPermsResponse.campuses || [],
+                userMsRoles,
+              })
             );
+
+            if (
+              churchPermsResponse.permissions &&
+              Array.isArray(churchPermsResponse.permissions)
+            ) {
+              response.user.roles = Array.from(
+                new Set([
+                  ...(response.user.roles || []),
+                  ...churchPermsResponse.permissions,
+                ])
+              );
+            }
             break;
           }
         } catch {
@@ -53,14 +72,18 @@ export const UserLogin = createAsyncThunk(
       }
     }
 
-    return response;
+    return {
+      ...response,
+      userMsRoles,
+    };
   },
 );
 
 export const FetchMyVolunteerPermissions = createAsyncThunk(
   'user/FetchMyVolunteerPermissions',
-  async (_, { getState }) => {
-    const token = (getState() as RootState).authSlice.token;
+  async (_, { getState, dispatch }) => {
+    const state = getState() as RootState;
+    const token = state.authSlice.token;
     if (!token) return [];
 
     const response = (
@@ -75,6 +98,16 @@ export const FetchMyVolunteerPermissions = createAsyncThunk(
         },
       })
     ).data;
+
+    if (response) {
+      dispatch(
+        setVolunteerContext({
+          isChurchVolunteer: !!response.isChurchVolunteer,
+          campuses: response.campuses || [],
+          userMsRoles: state.authSlice.userMsRoles || [],
+        })
+      );
+    }
 
     return response?.permissions || [];
   },

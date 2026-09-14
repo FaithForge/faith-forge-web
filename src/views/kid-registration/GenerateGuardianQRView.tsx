@@ -8,13 +8,13 @@ import {
   Printer, 
   Loader2, 
   QrCode, 
-  MessageCircle,
   User,
   Phone,
   FileText,
   Check,
   X
 } from 'lucide-react';
+import { FaWhatsapp } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -269,7 +269,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
                 disabled={!whatsappUrl || isGeneratingUrl}
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
-                <MessageCircle size={18} />
+                <FaWhatsapp size={18} />
                 Compartir por WhatsApp
               </button>
 

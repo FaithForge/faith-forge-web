@@ -52,6 +52,7 @@ const VolunteerRequestPublicView = lazy(
   () => import('@/views/public/VolunteerRequestPublicView'),
 );
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
+const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -166,7 +167,9 @@ function App() {
                   element={<VolunteerApplicationsView />}
                 />
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
+                <Route path={APP_ROUTES.kidChurch.myTeam} element={<SupervisorTeamView />} />
                 <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />
+                <Route path={APP_ROUTES.kidRegistration.myTeam} element={<SupervisorTeamView />} />
                 <Route path={APP_ROUTES.kidRegistration.new} element={<NewKidView />} />
                 <Route
                   path={APP_ROUTES.kidRegistration.checkInDynamic}

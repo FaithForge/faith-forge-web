@@ -75,6 +75,12 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const meetings = useAppSelector((state) => state.churchMeetingSlice);
   const printers = useAppSelector((state) => state.churchPrinterSlice);
   const printerModeSlice = useAppSelector((state) => state.printerModeSlice);
+  const {
+    isChurchVolunteer,
+    activeCampusId: volunteerActiveCampusId,
+    activeCampusName: volunteerActiveCampusName,
+    userMsRoles = [],
+  } = useAppSelector((state) => state.volunteerContextSlice);
 
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>('');
@@ -85,6 +91,10 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+
+  const isChurchRole =
+    isChurchVolunteer &&
+    (!currentRole || !userMsRoles.includes(currentRole));
 
   const userRoles = (user?.roles as UserRole[]) || [];
   const isUserAdmin =
@@ -112,14 +122,18 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   useEffect(() => {
     if (open) {
       dispatch(GetChurchCampuses({ force: true }));
-      const activeCampusId = campuses.current?.id || '';
-      setSelectedCampusId(activeCampusId);
+      const effectiveCampusId =
+        volunteerActiveCampusId || campuses.current?.id || '';
+      setSelectedCampusId(effectiveCampusId);
+      if (effectiveCampusId && campuses.current?.id !== effectiveCampusId) {
+        dispatch(updateCurrentChurchCampus(effectiveCampusId));
+      }
       const isCurrentPrinterActive =
         printers.current?.state === ChurchPrinterStateEnum.ACTIVE;
       setSelectedPrinterId(isCurrentPrinterActive ? printers.current?.id || '' : '');
       setSelectedMode(printerModeSlice?.mode || 'NETWORK');
     }
-  }, [open]);
+  }, [open, volunteerActiveCampusId]);
 
   // Subscribe to Bluetooth printer events
   useEffect(() => {
@@ -242,6 +256,14 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
         (p as any).active === true,
     );
   }, [printers, selectedCampusId]);
+
+  const selectedCampusName = useMemo(() => {
+    if (volunteerActiveCampusName && volunteerActiveCampusId === selectedCampusId) {
+      return volunteerActiveCampusName;
+    }
+    const found = campuses.data.find((c) => c.id === selectedCampusId);
+    return found?.name || campuses.current?.name || volunteerActiveCampusName || 'Sede asignada';
+  }, [campuses.data, campuses.current, selectedCampusId, volunteerActiveCampusId, volunteerActiveCampusName]);
 
   // Auto-select or align meeting when availableMeetings change
   useEffect(() => {
@@ -369,27 +391,48 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       }}
     >
             
-            {/* Sede */}
-            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                <MapPin size={16} className="text-primary" /> Sede a registrar
-              </label>
-              <div className="relative">
-                <select 
-                  className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-                  value={selectedCampusId}
-                  onChange={(e) => handleCampusChange(e.target.value)}
-                >
-                  <option value="" disabled>Seleccione sede...</option>
-                  {campuses.data.map((campus) => (
-                    <option key={campus.id} value={campus.id}>{campus.name}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
-                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+            {/* Sede: Fija e informativa si el servidor ya tiene sede elegida / asignada por Church */}
+            {isChurchRole || volunteerActiveCampusId ? (
+              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 flex items-center justify-between">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                    <MapPin size={20} />
+                  </div>
+                  <div className="min-w-0">
+                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
+                      Sede de servicio
+                    </span>
+                    <p className="text-base font-bold text-gray-900 truncate">
+                      {selectedCampusName}
+                    </p>
+                  </div>
+                </div>
+                <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/10 text-primary shrink-0">
+                  Sede elegida
+                </span>
+              </div>
+            ) : (
+              <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                  <MapPin size={16} className="text-primary" /> Sede a registrar
+                </label>
+                <div className="relative">
+                  <select 
+                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                    value={selectedCampusId}
+                    onChange={(e) => handleCampusChange(e.target.value)}
+                  >
+                    <option value="" disabled>Seleccione sede...</option>
+                    {campuses.data.map((campus) => (
+                      <option key={campus.id} value={campus.id}>{campus.name}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                    <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Servicio */}
             <div className={`bg-white p-4 rounded-2xl shadow-sm border border-gray-100 transition-opacity ${isMeetingDisabled || (selectedCampusId && availableMeetings.length === 0 && !isMeetingLoading) ? 'opacity-70' : ''}`}>
@@ -570,7 +613,11 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
                 <Alert
                   type="warning"
                   title="Sin servicios programados hoy"
-                  message="No se encontraron servicios activos para el día de hoy en esta sede. Puedes seleccionar otra sede o cerrar tu sesión."
+                  message={
+                    isChurchRole || volunteerActiveCampusId
+                      ? 'No se encontraron servicios activos para el día de hoy en tu sede asignada. Contacta a tu coordinador(a) o cierra tu sesión.'
+                      : 'No se encontraron servicios activos para el día de hoy en esta sede. Puedes seleccionar otra sede o cerrar tu sesión.'
+                  }
                 />
                 <Button
                   type="button"

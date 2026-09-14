@@ -4,12 +4,18 @@
     "type": "patch",
     "timestamp": "2026-09-14T01:39:12.214Z",
     "dateFormatted": "13/09/2026 08:39 PM",
-    "title": "Pantalla siempre activa, control de acceso y mejoras de uso",
+    "title": "Experiencia de servicio personalizada, equipo de supervisión y mejoras de uso",
     "changes": [
+      "Selección guiada de sede y grupo de servicio para una jornada más organizada y personalizada.",
+      "Visualización del grupo activo en la barra superior con opción de cambio rápido de grupo.",
+      "Nueva vista de equipo para supervisores para consultar y contactar a sus servidores asignados.",
       "La pantalla ahora se mantiene siempre encendida mientras usas la aplicación.",
       "Mayor seguridad y control de acceso indicando a cuentas sin roles asignados que contacten a su coordinación.",
+      "Ajuste en la configuración de sesión para enfocar directamente el servicio del día según la sede de servicio elegida.",
       "Selector de roles optimizado para mostrar únicamente los módulos y funciones activas.",
-      "Mayor comodidad y continuidad de uso en estaciones de registro y salones."
+      "Ordenamiento de sedes respetando el orden configurado en el sistema para facilitar la selección.",
+      "Filtros optimizados en Mi Equipo para consultar coordinadores de grupo por separado y filtrar cada área sin mezclar funciones.",
+      "Visualización detallada de sede, área y rol en la barra superior, junto a mejoras en los colores oficiales de la aplicación."
     ]
   },
   {

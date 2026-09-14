@@ -32,7 +32,13 @@ const churchCampusSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(GetChurchCampuses.fulfilled, (state, action) => {
-      state.data = action.payload || [];
+      const rawCampuses = action.payload || [];
+      state.data = [...rawCampuses].sort((a, b) => {
+        const posA = a.position ?? 0;
+        const posB = b.position ?? 0;
+        if (posA !== posB) return posA - posB;
+        return (a.name || '').localeCompare(b.name || '');
+      });
       state.error = initialState.error;
       state.loading = false;
 

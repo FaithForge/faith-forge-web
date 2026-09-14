@@ -11,9 +11,9 @@
 
 @layer base {
   :root {
-    /* Default (Primary fallback) */
-    --color-primary: #15803d; /* Green 700 */
-    --color-primary-rgb: 21, 128, 61;
+    /* Default (Primary fallback - Iglekids Navy Blue from 'Kids' logo) */
+    --color-primary: #003963;
+    --color-primary-rgb: 0, 57, 99;
     --color-primary-foreground: #ffffff;
     --color-background: #f8fafc; /* Slate 50 */
     --color-surface: #ffffff;
@@ -62,8 +62,8 @@
     --color-primary-rgb: 251, 191, 36;
   }
   .theme-USER {
-    --color-primary: #fbbf24; /* bg-amber-400 */
-    --color-primary-rgb: 251, 191, 36;
+    --color-primary: #003963;
+    --color-primary-rgb: 0, 57, 99;
   }
 
   html,

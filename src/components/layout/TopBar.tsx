@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { User, LogOut, Settings, ChevronDown, Check, Search, Sparkles } from 'lucide-react';
+import { User, LogOut, Settings, ChevronDown, ChevronRight, Check, Search, Sparkles, Building2, Users as UsersIcon } from 'lucide-react';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
+import { setActiveGroupConfig } from '@/libs/state/redux/slices/church/volunteerContext.slice';
+import { IVolunteerGroupConfigContext } from '@/libs/models/Volunteer';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
-import SettingsDrawer from '@/components/modal/SettingsDrawer';
 import UserProfileModal from '@/components/modal/UserProfileModal';
 import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
+import ServiceOnboardingModal from '@/components/modal/ServiceOnboardingModal';
 import { APP_VERSION } from '@/constants/version';
 import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
@@ -108,10 +110,10 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.USER]: {
     id: UserRole.USER,
-    appTitle: 'Regikids',
+    appTitle: 'Iglekids',
     label: 'Usuario',
     themeClass: 'theme-USER',
-    color: '#94a3b8',
+    color: '#003963',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
 };
@@ -125,6 +127,54 @@ const TopBar = () => {
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+
+  const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+
+  const {
+    isChurchVolunteer,
+    campuses,
+    activeCampusId,
+    activeCampusName,
+    activeGroupConfigId,
+    activeGroupConfigName,
+    isOnboardingCompleted,
+    userMsRoles,
+  } = useAppSelector((state) => state.volunteerContextSlice);
+
+  const currentMasterCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const currentVolunteerCampus = campuses.find((c) => c.id === activeCampusId);
+  const currentCampusName =
+    activeCampusName ||
+    currentVolunteerCampus?.name ||
+    currentMasterCampus?.name ||
+    '';
+
+  const availableGroups = currentVolunteerCampus?.groups || [];
+  const hasMultipleGroups = availableGroups.length > 1;
+  const hasMultipleCampuses = campuses.length > 1;
+
+  // Check if active role originates from church vs fixed user ms role
+  const isChurchRole =
+    isChurchVolunteer &&
+    (!currentRole || !userMsRoles.includes(currentRole));
+
+  const handleGroupChange = (group: IVolunteerGroupConfigContext) => {
+    const primaryRole = group.areas[0]?.role || group.groupRole || null;
+    dispatch(
+      setActiveGroupConfig({
+        groupConfigId: group.id,
+        groupConfigName: group.name,
+        role: primaryRole,
+      })
+    );
+    if (group.areas[0]?.permissions?.[0]) {
+      const targetRole = group.areas[0].permissions[0] as AppRole;
+      if (isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
+        dispatch(changeCurrentRole(targetRole));
+      }
+    }
+    toast.success(`Cambiado a ${group.name}`);
+  };
 
   const userRoles = (user?.roles as AppRole[]) || [];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
@@ -173,6 +223,9 @@ const TopBar = () => {
   /** Dispatches logout action and redirects to login page. */
   const handleLogout = () => {
     dispatch(logout());
+    if (typeof document !== 'undefined') {
+      document.body.className = 'antialiased';
+    }
     navigate(APP_ROUTES.auth.login, { replace: true });
     toast.success('Se ha cerrado su sesión', {
       duration: 5000,
@@ -180,9 +233,18 @@ const TopBar = () => {
   };
 
   React.useEffect(() => {
-    // Restore Tailwind v4 class injection on body
-    document.body.className = `${activeVisualRole.themeClass} antialiased`;
-  }, [activeVisualRole]);
+    // If user is awaiting onboarding (selecting campus/group), maintain the default brand blue theme
+    const isAwaitingOnboarding =
+      isChurchRole &&
+      campuses.length > 0 &&
+      (!isOnboardingCompleted || !activeCampusId);
+
+    if (isAwaitingOnboarding) {
+      document.body.className = 'antialiased';
+    } else {
+      document.body.className = `${activeVisualRole.themeClass} antialiased`;
+    }
+  }, [activeVisualRole, isChurchRole, campuses.length, isOnboardingCompleted, activeCampusId]);
 
   React.useEffect(() => {
     if (currentRole && !isRoleEnabled(currentRole) && availableRoles.length > 0) {
@@ -192,20 +254,32 @@ const TopBar = () => {
   }, [currentRole, availableRoles, dispatch, navigate]);
 
   const hasMultipleRoles = availableRoles.length > 1;
+  const canOpenContextDropdown = hasMultipleRoles || hasMultipleGroups || hasMultipleCampuses;
+
+  const appTitleDisplay = currentCampusName
+    ? `${activeVisualRole.appTitle} - ${currentCampusName}`
+    : activeVisualRole.appTitle;
+
+  let roleLabelDisplay = activeVisualRole.label;
+  if (activeGroupConfigName) {
+    roleLabelDisplay = `${activeVisualRole.label} - ${activeGroupConfigName}`;
+  }
 
   const roleTriggerContent = (
     <div className={clsx(
-      "flex items-center gap-2 outline-none rounded-xl py-0.5 px-1 transition-colors",
-      hasMultipleRoles ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
+      "flex items-center gap-2.5 outline-none rounded-xl py-0.5 px-1 transition-colors",
+      canOpenContextDropdown ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
     )}>
-      <div className="w-7 h-7 sm:w-7.5 sm:h-7.5 rounded-full flex items-center justify-center bg-white p-0.5 shadow-xs shrink-0">
+      <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white p-1 shadow-xs shrink-0 self-center">
          <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain drop-shadow-xs" />
       </div>
-      <div className="text-left">
-        <h1 className="font-extrabold text-[14px] sm:text-[15px] leading-tight tracking-tight">{activeVisualRole.appTitle}</h1>
-        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] uppercase tracking-wide opacity-90 font-semibold mt-0.5">
-          Rol: {activeVisualRole.label}
-          {hasMultipleRoles && <ChevronDown size={11} />}
+      <div className="flex flex-col justify-center text-left min-w-0">
+        <h1 className="font-extrabold text-[13px] sm:text-[15px] leading-snug tracking-tight truncate max-w-[200px] sm:max-w-xs md:max-w-sm">
+          {appTitleDisplay}
+        </h1>
+        <div className="flex items-center gap-1 text-[10px] sm:text-[11px] tracking-wide opacity-90 font-medium mt-0.5 leading-none">
+          <span>Rol: {roleLabelDisplay}</span>
+          {canOpenContextDropdown && <ChevronDown size={11} className="shrink-0" />}
         </div>
       </div>
     </div>
@@ -215,8 +289,8 @@ const TopBar = () => {
     <>
       <header className="bg-primary text-primary-foreground px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 transition-colors duration-300 z-[200] relative shadow-none border-none outline-none">
         
-        {/* Lado Izquierdo: Menú de Roles */}
-        {hasMultipleRoles ? (
+        {/* Lado Izquierdo: Menú de Roles y Contexto */}
+        {canOpenContextDropdown ? (
           <DropdownMenu.Root>
             <DropdownMenu.Trigger asChild>
               {roleTriggerContent}
@@ -224,33 +298,95 @@ const TopBar = () => {
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content 
-                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[210px] max-h-[75vh] overflow-y-auto z-[250] pointer-events-auto animate-in fade-in duration-150"
+                className="bg-surface text-text-main rounded-2xl shadow-xl border border-gray-100 p-2.5 min-w-[270px] sm:min-w-[300px] max-h-[75vh] overflow-y-auto z-[250] pointer-events-auto animate-in fade-in duration-150"
                 sideOffset={8}
                 align="start"
               >
-                <div className="text-xs font-bold text-text-muted mb-2 px-2 pt-1 uppercase">Cambiar Rol</div>
-                {availableRoles.map(role => (
-                  <DropdownMenu.Item
-                    key={role.id}
-                    onSelect={() => handleRoleChange(role)}
-                    className={clsx(
-                      "flex items-center justify-between px-3 py-2 rounded-lg cursor-pointer outline-none transition-colors text-sm",
-                      activeVisualRole.id === role.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-gray-100"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <span
-                        className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs ring-1 ring-black/10"
-                        style={{ backgroundColor: role.color }}
-                      />
-                      <div className="flex flex-col">
-                        <span className="font-bold text-[10px] text-gray-400 uppercase tracking-wider">{role.appTitle}</span>
-                        <span className="font-semibold text-gray-800 text-sm leading-tight">{role.label}</span>
-                      </div>
+                {hasMultipleRoles && (
+                  <>
+                    <div className="text-[10px] font-bold text-text-muted mb-2 px-2 pt-1 uppercase tracking-wider">Cambiar Rol</div>
+                    {availableRoles.map(role => (
+                      <DropdownMenu.Item
+                        key={role.id}
+                        onSelect={() => handleRoleChange(role)}
+                        className={clsx(
+                          "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer outline-none transition-colors text-sm",
+                          activeVisualRole.id === role.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-gray-100"
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs ring-1 ring-black/10"
+                            style={{ backgroundColor: role.color }}
+                          />
+                          <div className="flex flex-col">
+                            <span className="font-bold text-[10px] text-gray-400 uppercase tracking-wider">{role.appTitle}</span>
+                            <span className="font-semibold text-gray-800 text-sm leading-tight">{role.label}</span>
+                          </div>
+                        </div>
+                        {activeVisualRole.id === role.id && <Check size={16} className="text-primary shrink-0 ml-2" />}
+                      </DropdownMenu.Item>
+                    ))}
+                  </>
+                )}
+
+                {hasMultipleGroups && (
+                  <>
+                    <div className="text-[10px] font-bold text-text-muted mb-1.5 px-2 pt-2.5 border-t border-gray-100 uppercase tracking-wider">
+                      Cambiar Grupo
                     </div>
-                    {activeVisualRole.id === role.id && <Check size={16} className="text-primary shrink-0 ml-2" />}
-                  </DropdownMenu.Item>
-                ))}
+                    {availableGroups.map((group) => {
+                      const isGroupActive = activeGroupConfigId === group.id;
+                      return (
+                        <DropdownMenu.Item
+                          key={group.id}
+                          onSelect={() => handleGroupChange(group)}
+                          className={clsx(
+                            "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer outline-none transition-colors text-sm",
+                            isGroupActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-gray-100"
+                          )}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <UsersIcon size={15} className={isGroupActive ? "text-primary" : "text-gray-400"} />
+                            <span className="font-semibold text-gray-800 text-sm">{group.name}</span>
+                          </div>
+                          {isGroupActive && <Check size={16} className="text-primary shrink-0 ml-2" />}
+                        </DropdownMenu.Item>
+                      );
+                    })}
+                  </>
+                )}
+
+                {hasMultipleCampuses && (
+                  <div className="pt-2.5 mt-2.5 border-t border-gray-100">
+                    <div className="text-[10px] font-bold text-text-muted mb-1.5 px-2 uppercase tracking-wider">
+                      Sede de servicio
+                    </div>
+                    <DropdownMenu.Item
+                      onSelect={() => setOnboardingModalOpen(true)}
+                      className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer outline-none transition-all bg-gray-50/80 hover:bg-primary/5 hover:border-primary/20 border border-gray-100 group"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                          <Building2 size={16} />
+                        </div>
+                        <div className="flex flex-col min-w-0 pr-1">
+                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-tight">
+                            Sede actual
+                          </span>
+                          <span className="font-bold text-gray-900 text-xs truncate">
+                            {activeCampusName || 'Sede'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-1 text-[11px] font-bold text-primary bg-white group-hover:bg-primary group-hover:text-white px-2.5 py-1 rounded-lg transition-all shrink-0 ml-1 border border-gray-200/70 group-hover:border-transparent shadow-2xs">
+                        <span>Cambiar</span>
+                        <ChevronRight size={13} />
+                      </div>
+                    </DropdownMenu.Item>
+                  </div>
+                )}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
@@ -353,6 +489,12 @@ const TopBar = () => {
 
       {/* Changelog Drawer */}
       <ChangelogDrawer open={changelogOpen} onOpenChange={setChangelogOpen} />
+
+      {/* Modal para cambiar de sede o grupo manualmente */}
+      <ServiceOnboardingModal
+        forceOpen={onboardingModalOpen}
+        onClose={() => setOnboardingModalOpen(false)}
+      />
     </header>
     </>
   );

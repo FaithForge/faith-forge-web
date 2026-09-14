@@ -57,6 +57,11 @@ const LoginView = () => {
     },
   });
 
+  // Ensure default brand blue theme on login screen
+  useEffect(() => {
+    document.body.className = 'antialiased';
+  }, []);
+
   useEffect(() => {
     let isMounted = true;
     const checkBiometrics = async () => {

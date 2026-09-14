@@ -19,6 +19,7 @@ import printerModeSlice from './slices/church/printerMode.slice';
 import volunteerSlice from './slices/church/volunteer.slice';
 import volunteerApplicationSlice from './slices/church/volunteerApplication.slice';
 import volunteerAttendanceSlice from './slices/church/volunteerAttendance.slice';
+import volunteerContextSlice from './slices/church/volunteerContext.slice';
 import kidGroupRegisteredSlice from './slices/kid-church/kid-group-registered.slice';
 import kidGroupSlice from './slices/kid-church/kid-group.slice';
 import kidGuardianSlice from './slices/kid-church/kid-guardian.slice';
@@ -41,6 +42,7 @@ const reducers = combineReducers({
   volunteerSlice,
   volunteerApplicationSlice,
   volunteerAttendanceSlice,
+  volunteerContextSlice,
   kidGroupSlice,
   kidMedicalConditionSlice,
   kidRegistrationSlice,
@@ -60,6 +62,7 @@ const persistConfig = {
   storage,
   whitelist: [
     'authSlice',
+    'volunteerContextSlice',
     'churchCampusSlice',
     'churchMeetingSlice',
     'churchPrinterSlice',

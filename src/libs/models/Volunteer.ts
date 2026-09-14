@@ -207,3 +207,42 @@ export interface CreateVolunteerPermissionGrantPayload {
   expiresAt?: string;
 }
 
+export interface IVolunteerAreaAssignmentContext {
+  id: string;
+  name: string;
+  scope?: import('./Ministry').MinistryAreaScope;
+  role: VolunteerRole;
+  permissions: string[];
+  serviceAreaGroupId?: string;
+}
+
+export interface IVolunteerGroupConfigContext {
+  id: string;
+  name: string;
+  position: number;
+  areas: IVolunteerAreaAssignmentContext[];
+  groupRole?: VolunteerRole;
+  groupPermissions?: string[];
+}
+
+export interface IVolunteerCampusContext {
+  id: string;
+  name: string;
+  position?: number;
+  groups: IVolunteerGroupConfigContext[];
+  areaCoordinates: IVolunteerAreaAssignmentContext[];
+  ministryCoordinator?: {
+    ministryId: string;
+    ministryName: string;
+    role: VolunteerRole;
+    permissions: string[];
+  } | null;
+}
+
+export interface IVolunteerContextResponse {
+  permissions: string[];
+  isChurchVolunteer: boolean;
+  campuses: IVolunteerCampusContext[];
+}
+
+

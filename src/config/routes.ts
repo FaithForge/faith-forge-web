@@ -32,6 +32,7 @@ export const APP_ROUTES = {
     root: '/kid-church',
     attendance: '/kid-church/attendance',
     report: '/kid-church/report',
+    myTeam: '/kid-church/my-team',
   },
   kidRegistration: {
     root: '/kid-registration',
@@ -43,5 +44,6 @@ export const APP_ROUTES = {
     updateKid: (id: string | number) => `/kid-registration/update-kid/${id}`,
     scanner: '/kid-registration/scanner',
     generateQR: '/kid-registration/generate-guardian-qr',
+    myTeam: '/kid-registration/my-team',
   },
 } as const;

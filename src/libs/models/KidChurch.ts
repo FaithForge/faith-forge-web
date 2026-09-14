@@ -244,6 +244,7 @@ export interface IKidMedicalCondition {
 export interface IAuth extends ReduxDefaultStateWithoutData {
   user?: IUser;
   currentRole?: AppRole;
+  userMsRoles?: AppRole[];
   token: string;
   refreshToken?: string;
 }

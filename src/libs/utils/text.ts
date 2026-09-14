@@ -72,6 +72,21 @@ export const formatPersonShortName = (firstName?: string, lastName?: string): st
   return cleanFirst || firstLastName || '';
 };
 
+/**
+ * Formats a person's name to show only their first given name and their full last name(s),
+ * formatted in Title Case (e.g., "Carlos Toro Cortina" from firstName: "Carlos Andres", lastName: "Toro Cortina").
+ *
+ * @param {string} [firstName] - The first name(s).
+ * @param {string} [lastName] - The last name(s).
+ * @returns {string} The formatted name.
+ */
+export const formatPersonFirstAndLastNames = (firstName?: string, lastName?: string): string => {
+  const firstFirstName = firstName?.trim()?.split(/\s+/)?.[0] || '';
+  const fullLastName = lastName?.trim() || '';
+  const combined = [firstFirstName, fullLastName].filter(Boolean).join(' ');
+  return capitalizeWords(combined);
+};
+
 export interface EntitySearchParams {
   filterByFirstName?: string;
   filterByLastName?: string;

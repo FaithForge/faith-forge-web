@@ -14,6 +14,7 @@ import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
 import { toast } from 'sonner';
+import ServiceOnboardingModal from '../modal/ServiceOnboardingModal';
 
 // Global map to store scroll positions across route transitions
 const routeScrollPositions = new Map<string, number>();
@@ -252,6 +253,9 @@ const MainLayoutContent = () => {
           <Outlet />
         </div>
       </main>
+
+      {/* Modal de onboarding / selección de contexto de servicio */}
+      <ServiceOnboardingModal />
 
       {/* Fixed bottom navigation */}
       <BottomNav />

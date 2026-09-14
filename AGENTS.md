@@ -44,6 +44,10 @@
 - **Component hierarchy**: Custom UI components → Tailwind utilities.
 - **Mobile First**: Optimize for touch. Use Vaul for bottom sheets with drag gestures. Intercept `popstate` to prevent accidental back navigations. Use full-width forms.
 - **Consistent Form Field Placeholder Colors**: ALL form inputs (`<input>`, `<textarea>`, `<select>`, `Input.tsx`, `Select.tsx`, `SelectSearch.tsx`, `PhoneInput.tsx`, `DatePickerWheel.tsx`, etc.) MUST use the exact same placeholder tone: `placeholder:text-gray-400` (Tailwind Gray 400 / `#9ca3af`). NEVER use darker placeholder tones like `gray-500` or `gray-600` on input fields.
+- **Iconografía Consistente por Contexto**: Mantener estrictamente los mismos íconos según el contexto en todas las pantallas y vistas de la aplicación:
+  - **WhatsApp**: Toda acción, enlace o botón relacionado con WhatsApp DEBE usar obligatoriamente `FaWhatsapp` de `react-icons/fa6`. Queda estrictamente PROHIBIDO usar íconos de mensajería genéricos (`MessageCircle`, `MessageSquare`, etc.) de Lucide para representar WhatsApp.
+  - **Llamadas telefónicas**: Usar consistentemente `Phone` de `lucide-react`.
+  - **Niños y niñas**: Usar `FaChild` y `FaChildDress` de `react-icons/fa6` para género masculino/femenino.
 
 ## Build And Test
 

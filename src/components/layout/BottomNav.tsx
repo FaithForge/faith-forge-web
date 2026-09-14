@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Home, UserPlus, QrCode, Settings, FileText, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, LucideIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import SettingsDrawer from '@/components/modal/SettingsDrawer';
@@ -26,12 +26,39 @@ const BottomNav = () => {
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
 
-  React.useEffect(() => {
-    // Only force configuration if not an admin role
-    if (!isAdminRole && !isConfigured && !openSettings) {
+  const {
+    isChurchVolunteer,
+    isOnboardingCompleted,
+    campuses: volunteerCampuses,
+    activeCampusId,
+    userMsRoles = [],
+  } = useAppSelector((state) => state.volunteerContextSlice);
+
+  const isUserMsRole = currentRole && userMsRoles.includes(currentRole);
+  const isChurchRole = isChurchVolunteer && !isUserMsRole;
+
+  // Si requiere onboarding de sede/grupo, NO debe abrir configuración todavía.
+  // Una vez completada la elección de sede/grupo, sí debe abrir la configuración para seleccionar el servicio e impresora.
+  const needsOnboardingFirst =
+    isChurchRole && volunteerCampuses.length > 0 && (!isOnboardingCompleted || !activeCampusId);
+
+  // Escuchar evento personalizado de apertura tras completar onboarding
+  useEffect(() => {
+    const handleOpenSettings = () => {
+      setOpenSettings(true);
+    };
+    window.addEventListener('open-settings-drawer', handleOpenSettings);
+    return () => {
+      window.removeEventListener('open-settings-drawer', handleOpenSettings);
+    };
+  }, []);
+
+  // Apertura automática de configuración inicial cuando no está configurado y ya se completó el onboarding de sede
+  useEffect(() => {
+    if (!isAdminRole && !isConfigured && !needsOnboardingFirst && !openSettings) {
       setOpenSettings(true);
     }
-  }, [isConfigured, openSettings, isAdminRole]);
+  }, [isAdminRole, isConfigured, needsOnboardingFirst, openSettings]);
 
   // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
   if (isAdminRole) {
@@ -40,6 +67,12 @@ const BottomNav = () => {
 
   // Determine if the current role is a "Servidor" (USER) role
   const isServidor = currentRole === 'KID_REGISTER_USER' || currentRole === 'KID_GROUP_USER';
+  const canViewTeam =
+    currentRole === 'KID_GROUP_SUPERVISOR' ||
+    currentRole === 'KID_REGISTER_SUPERVISOR' ||
+    currentRole === 'KID_GROUP_ADMIN' ||
+    currentRole === 'KID_REGISTER_ADMIN' ||
+    currentRole === 'MINISTRY_ADMIN';
   
   const isKidChurchRole =
     currentRole === 'MINISTRY_ADMIN' ||
@@ -47,7 +80,14 @@ const BottomNav = () => {
     currentRole === 'KID_GROUP_SUPERVISOR' ||
     currentRole === 'KID_GROUP_USER';
 
-  let navItems = [];
+  interface BottomNavItem {
+    path: string;
+    icon: LucideIcon;
+    label: string;
+    action: 'link' | 'settings' | 'report';
+  }
+
+  let navItems: BottomNavItem[] = [];
 
   if (isKidChurchRole) {
     // Tabs for Iglekids (KidChurchLayout)
@@ -57,6 +97,9 @@ const BottomNav = () => {
     ];
     if (!isServidor) {
       navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
+    }
+    if (canViewTeam) {
+      navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: 'Mi Equipo', action: 'link' });
     }
   } else {
     // Tabs for Regikids (KidRegistrationLayout)
@@ -68,6 +111,9 @@ const BottomNav = () => {
     ];
     if (!isServidor) {
       navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
+    }
+    if (canViewTeam) {
+      navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: 'Mi Equipo', action: 'link' });
     }
   }
 
@@ -84,6 +130,11 @@ const BottomNav = () => {
               e.preventDefault();
               if (isBlocked) {
                 toast.error(meetingErrorMsg || 'El servicio se encuentra fuera del horario de registro.');
+                return;
+              }
+              if (!isConfigured && (item.label === 'Crear Niño' || item.label === 'Escanear QR')) {
+                setOpenSettings(true);
+                toast.info('Por favor selecciona el servicio a registrar antes de continuar.');
                 return;
               }
               if (item.action === 'settings') { setOpenSettings(true); return; }

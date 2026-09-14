@@ -15,6 +15,7 @@ const initialState: IAuth = {
   token: '',
   refreshToken: undefined,
   currentRole: undefined,
+  userMsRoles: [],
   error: undefined,
   loading: false,
 };
@@ -61,6 +62,7 @@ const AuthSlice = createSlice({
         token: string;
         refreshToken?: string;
         currentRole?: AppRole;
+        userMsRoles?: AppRole[];
       }>
     ) => {
       state.user = {
@@ -69,6 +71,7 @@ const AuthSlice = createSlice({
       };
       state.currentRole =
         action.payload.currentRole || getMainUserRole(action.payload.user?.roles);
+      state.userMsRoles = action.payload.userMsRoles || [];
       state.token = action.payload.token;
       if (action.payload.refreshToken) {
         state.refreshToken = action.payload.refreshToken;
@@ -90,8 +93,12 @@ const AuthSlice = createSlice({
       state.token = '';
       state.refreshToken = undefined;
       state.currentRole = undefined;
+      state.userMsRoles = [];
       state.error = undefined;
       state.loading = false;
+      if (typeof document !== 'undefined') {
+        document.body.className = 'antialiased';
+      }
     },
   },
   extraReducers(builder) {
@@ -105,6 +112,7 @@ const AuthSlice = createSlice({
         roles: sortUserRolesByPriority(action.payload.user?.roles),
       };
       state.currentRole = getMainUserRole(action.payload.user?.roles);
+      state.userMsRoles = action.payload.userMsRoles || [];
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
       state.error = undefined;
