@@ -12,6 +12,7 @@ import UserProfileModal from '@/components/modal/UserProfileModal';
 import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
 import { APP_VERSION } from '@/constants/version';
 import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
+import { isRoleEnabled } from '@/config/roles';
 import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
 
@@ -128,15 +129,20 @@ const TopBar = () => {
   const userRoles = (user?.roles as AppRole[]) || [];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
 
-  // Filter out USER so base account role is never treated as a selectable operational role in the switcher
+  // Filter out USER and inactive roles so base account or unfinished roles are never selectable in the switcher
   const operationalRoles = userRoles.filter(
-    (role: AppRole) => role !== UserRole.USER && userRolesNavBarConfig[role] !== undefined
+    (role: AppRole) =>
+      role !== UserRole.USER &&
+      userRolesNavBarConfig[role] !== undefined &&
+      isRoleEnabled(role)
   );
 
-  // Super Admin can view and switch to ALL configured system roles.
-  // Other users only see their operational roles.
+  // Super Admin can view and switch to all ENABLED system roles.
+  // Other users only see their active operational roles.
   const availableRoles: ThemeRole[] = isSuperAdmin
-    ? (ALL_SYSTEM_ROLES_ORDER.map((role) => userRolesNavBarConfig[role]).filter(Boolean) as ThemeRole[])
+    ? (ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
+        .map((role) => userRolesNavBarConfig[role])
+        .filter(Boolean) as ThemeRole[])
     : operationalRoles.map((role: AppRole) => userRolesNavBarConfig[role]!);
 
   // Safe fallback if user has no operational roles (only regular USER or unmapped)
@@ -146,8 +152,9 @@ const TopBar = () => {
 
   // Find the active visual role based on Redux currentRole
   let activeVisualRole = availableRoles[0];
-  if (currentRole && availableRoles.some(r => r.id === currentRole)) {
-    activeVisualRole = availableRoles.find(r => r.id === currentRole) || activeVisualRole;
+  if (currentRole && availableRoles.some((r) => r.id === currentRole)) {
+    activeVisualRole =
+      availableRoles.find((r) => r.id === currentRole) || activeVisualRole;
   }
 
   /** Derives the user's initials from first and last name, fallback 'US'. */
@@ -176,6 +183,13 @@ const TopBar = () => {
     // Restore Tailwind v4 class injection on body
     document.body.className = `${activeVisualRole.themeClass} antialiased`;
   }, [activeVisualRole]);
+
+  React.useEffect(() => {
+    if (currentRole && !isRoleEnabled(currentRole) && availableRoles.length > 0) {
+      dispatch(changeCurrentRole(availableRoles[0].id));
+      navigate(availableRoles[0].dashboardUrl, { replace: true });
+    }
+  }, [currentRole, availableRoles, dispatch, navigate]);
 
   const hasMultipleRoles = availableRoles.length > 1;
 

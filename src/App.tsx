@@ -14,6 +14,8 @@ import { logout, updateTokens } from '@/libs/state/redux/slices/user/auth.slice'
 import { setHttpAuthHandlers } from '@/libs/utils/http';
 import { store } from '@/libs/state/redux/store';
 import { userRolesNavBarConfig } from '@/components/layout/TopBar';
+import { useScreenWakeLock } from '@/libs/hooks/useScreenWakeLock';
+import { isRoleEnabled } from '@/config/roles';
 
 // Lazy-loaded route views for optimal code-splitting and reduced initial bundle size
 const LoginView = lazy(() => import('@/views/auth/LoginView'));
@@ -54,9 +56,10 @@ const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashbo
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
-  // Find the base dashboard URL for the current role
+  // Find the base dashboard URL for the current role if enabled
+  const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
   const dashboardUrl =
-    currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
+    isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
       ? userRolesNavBarConfig[currentRole]!.dashboardUrl
       : APP_ROUTES.kidRegistration.root;
 
@@ -71,6 +74,7 @@ const IndexRedirect = () => {
  */
 function App() {
   const dispatch = useAppDispatch();
+  useScreenWakeLock();
 
   useEffect(() => {
     setHttpAuthHandlers({

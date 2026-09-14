@@ -1,5 +1,18 @@
 [
   {
+    "version": "3.2.1",
+    "type": "patch",
+    "timestamp": "2026-09-14T01:39:12.214Z",
+    "dateFormatted": "13/09/2026 08:39 PM",
+    "title": "Pantalla siempre activa, control de acceso y mejoras de uso",
+    "changes": [
+      "La pantalla ahora se mantiene siempre encendida mientras usas la aplicación.",
+      "Mayor seguridad y control de acceso indicando a cuentas sin roles asignados que contacten a su coordinación.",
+      "Selector de roles optimizado para mostrar únicamente los módulos y funciones activas.",
+      "Mayor comodidad y continuidad de uso en estaciones de registro y salones."
+    ]
+  },
+  {
     "version": "3.2.0",
     "type": "minor",
     "timestamp": "2026-09-12T05:10:00.000Z",

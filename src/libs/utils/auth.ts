@@ -204,6 +204,20 @@ export const getMainUserRole = (roles: UserRole[]): UserRole | undefined => {
   return _.minBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER);
 };
 
+/**
+ * Checks whether a user only has the base USER role or has no operational system roles assigned.
+ *
+ * @param {(UserRole | ChurchRole | string)[]} [roles] - Array of user roles to evaluate.
+ * @returns {boolean} True if the user has no operational roles assigned.
+ */
+export const hasOnlyBaseUserRole = (roles?: (UserRole | ChurchRole | string)[]): boolean => {
+  if (!roles || roles.length === 0) return true;
+  const operationalRoles = roles.filter(
+    (role) => role !== UserRole.USER && (role as string) !== 'USER'
+  );
+  return operationalRoles.length === 0;
+};
+
 export interface RoleMetadata {
   id: AppRole;
   name: string;
