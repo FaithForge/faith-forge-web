@@ -12,9 +12,10 @@ import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
 import { triggerSilentRefresh } from '@/libs/utils/http';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { ChurchMeetingStateEnum } from '@/libs/models';
+import { VolunteerRole } from '@/libs/models/Volunteer';
 import { APP_ROUTES } from '@/config/routes';
 import { toast } from 'sonner';
-import ServiceOnboardingModal from '../modal/ServiceOnboardingModal';
+
 
 // Global map to store scroll positions across route transitions
 const routeScrollPositions = new Map<string, number>();
@@ -41,6 +42,7 @@ const MainLayoutContent = () => {
 
   const { token, refreshToken } = useAppSelector((state) => state.authSlice);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const activeVolunteerRole = useAppSelector((state) => state.volunteerContextSlice.activeVolunteerRole);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
 
@@ -107,17 +109,22 @@ const MainLayoutContent = () => {
     const config = userRolesNavBarConfig[currentRole];
     if (!config) return;
 
+    const isActiveIglekidsContext =
+      activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
+      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR;
     const isIglekidsRole =
+      isActiveIglekidsContext ||
       currentRole === 'MINISTRY_ADMIN' ||
       currentRole === 'KID_GROUP_ADMIN' ||
       currentRole === 'KID_GROUP_SUPERVISOR' ||
       currentRole === 'KID_GROUP_USER';
 
     const isRegikidsRole =
-      currentRole === 'KID_REGISTER_ADMIN' ||
-      currentRole === 'KID_REGISTER_SUPERVISOR' ||
-      currentRole === 'KID_REGISTER_USER' ||
-      currentRole === 'USER';
+      !isActiveIglekidsContext &&
+      (currentRole === 'KID_REGISTER_ADMIN' ||
+        currentRole === 'KID_REGISTER_SUPERVISOR' ||
+        currentRole === 'KID_REGISTER_USER' ||
+        currentRole === 'USER');
 
     let isMismatch = false;
     if (isIglekidsRole && (pathname.startsWith('/kid-registration') || pathname.startsWith('/admin'))) {
@@ -131,7 +138,7 @@ const MainLayoutContent = () => {
     if (isMismatch) {
       navigate(config.dashboardUrl, { replace: true });
     }
-  }, [pathname, currentRole, navigate, isAdminRole]);
+  }, [pathname, currentRole, activeVolunteerRole, navigate, isAdminRole]);
 
   // Restore scroll position when returning to a previous route, or scroll to top for singular views
   useEffect(() => {
@@ -254,8 +261,6 @@ const MainLayoutContent = () => {
         </div>
       </main>
 
-      {/* Modal de onboarding / selección de contexto de servicio */}
-      <ServiceOnboardingModal />
 
       {/* Fixed bottom navigation */}
       <BottomNav />

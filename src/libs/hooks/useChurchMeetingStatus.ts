@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import dayjs from 'dayjs';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch } from '@/libs/utils/auth';
+import { VolunteerRole } from '@/libs/models/Volunteer';
 import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
@@ -87,6 +88,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const activeVolunteerRole = useAppSelector((state) => state.volunteerContextSlice.activeVolunteerRole);
 
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
@@ -100,6 +102,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   }, []);
 
   const isKidChurchRole =
+    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
+    activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR ||
     currentRole === 'MINISTRY_ADMIN' ||
     currentRole === 'KID_GROUP_ADMIN' ||
     currentRole === 'KID_GROUP_SUPERVISOR' ||

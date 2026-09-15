@@ -1,5 +1,27 @@
 [
   {
+    "version": "3.3.1",
+    "type": "patch",
+    "timestamp": "2026-09-15T03:54:16.959Z",
+    "dateFormatted": "14/09/2026 10:54 PM",
+    "title": "Corrección de visibilidad de impresoras",
+    "changes": [
+      "Corrección: La sección de impresoras ya no aparece al iniciar sesión por primera vez para coordinadores de Iglekids."
+    ]
+  },
+  {
+    "version": "3.3.0",
+    "type": "minor",
+    "timestamp": "2026-09-15T03:48:09.399Z",
+    "dateFormatted": "14/09/2026 10:48 PM",
+    "title": "Configuración inicial unificada",
+    "changes": [
+      "La pantalla de inicio de sesión ahora guía la configuración de sede, grupo y servicio en un solo flujo continuo, sin ventanas adicionales.",
+      "Corrección: Los coordinadores de Iglekids ya no ven la sección de impresoras, que no aplica a su función.",
+      "Ajustes menores de interfaz en la pantalla de configuración."
+    ]
+  },
+  {
     "version": "3.2.1",
     "type": "patch",
     "timestamp": "2026-09-14T01:39:12.214Z",

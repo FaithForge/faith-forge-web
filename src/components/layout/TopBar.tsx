@@ -4,11 +4,9 @@ import {
   User,
   LogOut,
   ChevronDown,
-  ChevronRight,
   Check,
   Search,
   Sparkles,
-  Building2,
   Users as UsersIcon,
   Crown,
   Shield,
@@ -26,7 +24,7 @@ import { VolunteerRole, IVolunteerGroupConfigContext } from '@/libs/models/Volun
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import UserProfileModal from '@/components/modal/UserProfileModal';
 import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
-import ServiceOnboardingModal from '@/components/modal/ServiceOnboardingModal';
+import SettingsDrawer from '@/components/modal/SettingsDrawer';
 import { APP_VERSION } from '@/constants/version';
 import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
@@ -144,7 +142,7 @@ const TopBar = () => {
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
-  const [onboardingModalOpen, setOnboardingModalOpen] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
 
   const {
     isChurchVolunteer,
@@ -174,7 +172,6 @@ const TopBar = () => {
   const hasAreaCoordinatorRole = userRoles.includes(UserRole.KID_REGISTER_ADMIN);
 
   const hasMultipleGroups = availableGroups.length > 1;
-  const hasMultipleCampuses = campuses.length > 1;
   const hasAreaCoordinatorOption = hasAreaCoordinatorAssignment || hasAreaCoordinatorRole;
 
   // Check if active role originates from church vs fixed user ms role
@@ -200,13 +197,17 @@ const TopBar = () => {
     dispatch(setActiveVolunteerRole(primaryRole));
 
     const isRegikids =
-      !primaryArea?.scope ||
-      primaryArea.scope === 'KID_REGISTRATION' ||
+      primaryArea?.scope === 'KID_REGISTRATION' ||
       (primaryArea.name || '').toLowerCase().includes('regi');
 
     let targetRole: AppRole;
-    if (primaryArea?.permissions?.[0]) {
-      targetRole = primaryArea.permissions[0] as AppRole;
+    const isCurrentRegistrationRole =
+      currentRole === UserRole.KID_REGISTER_ADMIN ||
+      currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
+      currentRole === UserRole.KID_REGISTER_USER;
+
+    if (isCurrentRegistrationRole) {
+      targetRole = currentRole;
     } else if (primaryRole === VolunteerRole.SUPERVISOR) {
       targetRole = isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
     } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
@@ -390,8 +391,7 @@ const TopBar = () => {
   const canOpenContextDropdown =
     isAdminUser ||
     hasMultipleRoles ||
-    availableGroups.length > 0 ||
-    hasMultipleCampuses ||
+    availableGroups.length > 1 ||
     hasAreaCoordinatorOption;
 
   const appTitleDisplay = currentCampusName
@@ -447,7 +447,7 @@ const TopBar = () => {
                       <Sparkles size={12} />
                     </div>
                     <span className="text-[10.5px] font-bold text-gray-700 uppercase tracking-wider">
-                      {availableGroups.length > 0 ? 'Grupos de Servicio' : 'Cambiar Rol'}
+                      {availableGroups.length > 1 ? 'Grupos de Servicio' : 'Cambiar Rol'}
                     </span>
                   </div>
                   {currentCampusName && (
@@ -502,7 +502,7 @@ const TopBar = () => {
                 )}
 
                 {/* 2. Grupos de Servicio (cada grupo con su rol correspondiente vinculado) */}
-                {availableGroups.length > 0 && (
+                {availableGroups.length > 1 && (
                   <div className="mb-1">
                     <div className="flex flex-col gap-1.5">
                       {availableGroups.map((group) => {
@@ -584,9 +584,9 @@ const TopBar = () => {
                 )}
 
                 {/* 3. Funciones del Sistema / Admin o fallback sin grupos */}
-                {(availableGroups.length === 0 || isAdminUser) && (
-                  <div className={clsx(availableGroups.length > 0 && "pt-2 mt-1.5 border-t border-gray-100")}>
-                    {availableGroups.length > 0 && (
+                {(availableGroups.length <= 1 || isAdminUser) && (
+                  <div className={clsx(availableGroups.length > 1 && "pt-2 mt-1.5 border-t border-gray-100")}>
+                    {availableGroups.length > 1 && (
                       <div className="text-[10px] font-bold text-gray-400 mb-1 px-2 uppercase tracking-wider">
                         {isAdminUser ? 'Funciones de Administrador' : 'Cambiar Rol'}
                       </div>
@@ -594,30 +594,78 @@ const TopBar = () => {
                     <div className="flex flex-col gap-0.5">
                       {availableRoles.map((role) => {
                         const isRoleActive = currentRole === role.id;
+                        const isRegikidsRole = role.appTitle === 'Regikids';
+                        const isCoordinatorRole =
+                          role.label === 'Coordinador' ||
+                          role.id === ChurchRole.MINISTRY_ADMIN;
+                        const isSupervisorRole = role.label === 'Supervisor';
+                        const RoleIcon = isCoordinatorRole
+                          ? Crown
+                          : isSupervisorRole
+                          ? Shield
+                          : UsersIcon;
+                        const roleGroup = availableGroups.find((group) => {
+                          const primaryArea = group.areas[0];
+                          const primaryRole =
+                            primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
+                          const isGroupRegikids =
+                            primaryArea?.scope === 'KID_REGISTRATION' ||
+                            (primaryArea?.name || '').toLowerCase().includes('regi');
+                          const groupRoleId =
+                            primaryRole === VolunteerRole.GROUP_COORDINATOR
+                              ? isGroupRegikids
+                                ? UserRole.KID_REGISTER_ADMIN
+                                : UserRole.KID_GROUP_ADMIN
+                              : primaryRole === VolunteerRole.SUPERVISOR
+                              ? isGroupRegikids
+                                ? UserRole.KID_REGISTER_SUPERVISOR
+                                : UserRole.KID_GROUP_SUPERVISOR
+                              : isGroupRegikids
+                              ? UserRole.KID_REGISTER_USER
+                              : UserRole.KID_GROUP_USER;
+                          return groupRoleId === role.id;
+                        });
+                        const roleContextLabel = roleGroup?.name
+                          || (role.id === UserRole.KID_REGISTER_ADMIN
+                            ? 'Todos los grupos'
+                            : activeGroupConfigName || 'Asignación provisional');
                         return (
                           <DropdownMenu.Item
                             key={role.id}
                             onSelect={() => handleRoleChange(role)}
                             className={clsx(
-                              "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer outline-none transition-colors text-sm",
+                              "flex items-center justify-between px-3 py-2.5 rounded-xl cursor-pointer outline-none transition-all text-sm border",
                               isRoleActive
-                                ? "bg-primary/10 text-primary font-bold"
-                                : "text-gray-700 hover:bg-gray-50"
+                                ? isRegikidsRole
+                                  ? "bg-emerald-50 border-emerald-200 text-emerald-800 font-bold shadow-2xs ring-1 ring-emerald-100"
+                                  : "bg-pink-50 border-pink-200 text-pink-800 font-bold shadow-2xs ring-1 ring-pink-100"
+                                : isRegikidsRole
+                                  ? "border-gray-100 text-gray-700 hover:bg-emerald-50/70 hover:border-emerald-200"
+                                  : "border-gray-100 text-gray-700 hover:bg-pink-50/70 hover:border-pink-200"
                             )}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
-                              <span
+                              <div
                                 className={clsx(
-                                  "w-2 h-2 rounded-full shrink-0",
-                                  isRoleActive ? "bg-primary ring-2 ring-primary/20" : "bg-gray-300"
+                                  "w-8 h-8 rounded-lg flex items-center justify-center shrink-0",
+                                  isRegikidsRole
+                                    ? "bg-emerald-100 text-emerald-700"
+                                    : "bg-pink-100 text-pink-700",
                                 )}
-                              />
+                              >
+                                <RoleIcon size={16} />
+                              </div>
                               <div className="flex flex-col min-w-0">
-                                <span className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">
-                                  {role.appTitle}
+                                <span
+                                  className={clsx(
+                                    "text-[10px] font-extrabold uppercase tracking-wide leading-none mb-1",
+                                    isRegikidsRole ? "text-emerald-600" : "text-pink-600",
+                                  )}
+                                >
+                                  {role.appTitle} · {role.label}
                                 </span>
-                                <span className="text-sm font-semibold leading-tight truncate">
-                                  {role.label}
+                                <span className="text-sm font-bold leading-tight truncate text-gray-800">
+                                  {roleContextLabel}
                                 </span>
                               </div>
                             </div>
@@ -631,37 +679,6 @@ const TopBar = () => {
                   </div>
                 )}
 
-                {/* 4. Sede de servicio (si tiene múltiples sedes) */}
-                {hasMultipleCampuses && (
-                  <div className="pt-2 mt-1 border-t border-gray-100">
-                    <div className="text-[10px] font-bold text-gray-400 mb-1.5 px-2 uppercase tracking-wider">
-                      Sede de servicio
-                    </div>
-                    <DropdownMenu.Item
-                      onSelect={() => setOnboardingModalOpen(true)}
-                      className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer outline-none transition-all bg-gray-50/80 hover:bg-primary/5 hover:border-primary/20 border border-gray-100 group"
-                    >
-                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
-                          <Building2 size={16} />
-                        </div>
-                        <div className="flex flex-col min-w-0 pr-1">
-                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wide leading-tight">
-                            Sede actual
-                          </span>
-                          <span className="font-bold text-gray-900 text-xs truncate">
-                            {activeCampusName || 'Sede'}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-1 text-[11px] font-bold text-primary bg-white group-hover:bg-primary group-hover:text-white px-2.5 py-1 rounded-lg transition-all shrink-0 ml-1 border border-gray-200/70 group-hover:border-transparent shadow-2xs">
-                        <span>Cambiar</span>
-                        <ChevronRight size={13} />
-                      </div>
-                    </DropdownMenu.Item>
-                  </div>
-                )}
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
@@ -765,10 +782,12 @@ const TopBar = () => {
       {/* Changelog Drawer */}
       <ChangelogDrawer open={changelogOpen} onOpenChange={setChangelogOpen} />
 
-      {/* Modal para cambiar de sede o grupo manualmente */}
-      <ServiceOnboardingModal
-        forceOpen={onboardingModalOpen}
-        onClose={() => setOnboardingModalOpen(false)}
+      {/* Drawer para cambiar de sede o grupo manualmente */}
+      <SettingsDrawer
+        open={settingsDrawerOpen}
+        onOpenChange={(v) => {
+          setSettingsDrawerOpen(v);
+        }}
       />
 
     </header>

@@ -20,6 +20,7 @@ const BottomNav = () => {
   const { requestNavigation } = useNavigationGuard();
   
   const [openSettings, setOpenSettings] = useState(false);
+  const [sessionWizard, setSessionWizard] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
@@ -39,28 +40,15 @@ const BottomNav = () => {
   const isUserMsRole = currentRole && userMsRoles.includes(currentRole);
   const isChurchRole = isChurchVolunteer && !isUserMsRole;
 
-  // Si requiere onboarding de sede/grupo, NO debe abrir configuración todavía.
-  // Una vez completada la elección de sede/grupo, sí debe abrir la configuración para seleccionar el servicio e impresora.
-  const needsOnboardingFirst =
-    isChurchRole && volunteerCampuses.length > 0 && (!isOnboardingCompleted || !activeCampusId);
 
-  // Escuchar evento personalizado de apertura tras completar onboarding
-  useEffect(() => {
-    const handleOpenSettings = () => {
-      setOpenSettings(true);
-    };
-    window.addEventListener('open-settings-drawer', handleOpenSettings);
-    return () => {
-      window.removeEventListener('open-settings-drawer', handleOpenSettings);
-    };
-  }, []);
 
-  // Apertura automática de configuración inicial cuando no está configurado y ya se completó el onboarding de sede
+  // Apertura automática de configuración inicial cuando no está configurado
   useEffect(() => {
-    if (!isAdminRole && !isConfigured && !needsOnboardingFirst && !openSettings) {
+    if (!isAdminRole && !isConfigured && !openSettings) {
+      setSessionWizard(true);
       setOpenSettings(true);
     }
-  }, [isAdminRole, isConfigured, needsOnboardingFirst, openSettings]);
+  }, [isAdminRole, isConfigured, openSettings]);
 
   // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
   if (isAdminRole) {
@@ -86,6 +74,8 @@ const BottomNav = () => {
       activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR);
   
   const isKidChurchRole =
+    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
+    activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR ||
     currentRole === 'MINISTRY_ADMIN' ||
     currentRole === 'KID_GROUP_ADMIN' ||
     currentRole === 'KID_GROUP_SUPERVISOR' ||
@@ -144,11 +134,16 @@ const BottomNav = () => {
                 return;
               }
               if (!isConfigured && (item.label === 'Crear Niño' || item.label === 'Escanear QR')) {
+                setSessionWizard(true);
                 setOpenSettings(true);
                 toast.info('Por favor selecciona el servicio a registrar antes de continuar.');
                 return;
               }
-              if (item.action === 'settings') { setOpenSettings(true); return; }
+              if (item.action === 'settings') {
+                setSessionWizard(false);
+                setOpenSettings(true);
+                return;
+              }
               if (item.action === 'report') { setOpenReport(true); return; }
 
               const isRegikidsHomeClick = item.label === 'Inicio' || item.path === APP_ROUTES.kidRegistration.root;
@@ -232,7 +227,14 @@ const BottomNav = () => {
       </div>
 
       {/* Drawer Modals */}
-      <SettingsDrawer open={openSettings} onOpenChange={setOpenSettings} />
+      <SettingsDrawer
+        open={openSettings}
+        onOpenChange={(open) => {
+          setOpenSettings(open);
+          if (!open) setSessionWizard(false);
+        }}
+        sessionWizard={sessionWizard}
+      />
       {isKidChurchRole ? (
         <KidChurchReportDrawer open={openReport} onOpenChange={setOpenReport} />
       ) : (
