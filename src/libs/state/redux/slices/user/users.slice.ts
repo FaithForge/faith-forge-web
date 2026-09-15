@@ -1,4 +1,5 @@
 import { IApiErrorResponse, IUpdateUser, IUser, IUsers } from '@/libs/models';
+import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import {
   AssignUserRole,
@@ -46,11 +47,16 @@ const userSlice = createSlice({
       state.loading = true;
     });
     builder.addCase(GetUsers.fulfilled, (state, action) => {
-      state.data = action.payload.data;
+      const items = action.payload.data || [];
+      state.data = items;
       state.error = undefined;
       state.loading = false;
-      state.currentPage = action.payload.currentPage;
-      state.totalPages = action.payload.totalPages;
+      state.currentPage = action.payload.currentPage || 1;
+      if (items.length < PAGINATION_REGISTRATION_LIMIT) {
+        state.totalPages = state.currentPage;
+      } else {
+        state.totalPages = action.payload.totalPages || state.currentPage;
+      }
       state.needsRefresh = false;
     });
     builder.addCase(GetUsers.rejected, (state, action) => {
@@ -64,14 +70,20 @@ const userSlice = createSlice({
       state.loading = false;
     });
     builder.addCase(GetMoreUsers.fulfilled, (state, action) => {
-      state.data = Array.from(state.data).concat(action.payload.data);
+      const newItems = action.payload.data || [];
+      state.data = Array.from(state.data).concat(newItems);
       state.loading = false;
       state.currentPage = state.currentPage + 1;
-      state.totalPages = action.payload.totalPages;
+      if (newItems.length < PAGINATION_REGISTRATION_LIMIT) {
+        state.totalPages = state.currentPage;
+      } else {
+        state.totalPages = action.payload.totalPages || state.currentPage;
+      }
     });
     builder.addCase(GetMoreUsers.rejected, (state, action) => {
       state.error = action.error.message;
       state.loading = false;
+      state.totalPages = state.currentPage;
     });
     builder.addCase(GetUser.pending, (state) => {
       state.loading = true;

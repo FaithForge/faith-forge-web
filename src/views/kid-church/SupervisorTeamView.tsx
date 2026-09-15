@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetVolunteerAssignments } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { IVolunteerAssignment, VolunteerRole } from '@/libs/models/Volunteer';
@@ -16,6 +17,8 @@ import {
 import { FaWhatsapp } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { EntityState } from '@/libs/models/Church';
+import { toast } from 'sonner';
+import { APP_ROUTES } from '@/config/routes';
 
 const ROLE_LABEL: Record<VolunteerRole, string> = {
   [VolunteerRole.VOLUNTEER]: 'Servidor(a)',
@@ -91,16 +94,17 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
 
   if (asg.role === VolunteerRole.SUPERVISOR) {
     if (isRegikids) {
+      // Regikids Supervisor - Green-700 / Forest green (#15803d) - Deeper, authoritative green tone
       return {
-        badge: 'bg-emerald-100 text-emerald-800',
-        avatar: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-300',
-        photoRing: 'ring-2 ring-emerald-500 ring-offset-1',
-        highlightBg: 'bg-emerald-50/30 hover:bg-emerald-50/50',
-        tagBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        badge: 'bg-green-200/90 text-green-900 border border-green-400/80 font-bold',
+        avatar: 'bg-green-100 text-green-900 border-2 border-green-600',
+        photoRing: 'ring-2 ring-green-600 ring-offset-1',
+        highlightBg: 'bg-green-50/40 hover:bg-green-50/60',
+        tagBg: 'bg-green-200 text-green-900 border-green-400',
       };
     }
     return {
-      badge: 'bg-purple-100 text-purple-700',
+      badge: 'bg-purple-100 text-purple-700 border border-purple-200/70 font-bold',
       avatar: 'bg-purple-100 text-purple-700 border-2 border-purple-200',
       photoRing: 'ring-2 ring-purple-400 ring-offset-1',
       highlightBg: 'bg-purple-50/25 hover:bg-purple-50/40',
@@ -108,14 +112,15 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
     };
   }
 
-  // VOLUNTEER
+  // VOLUNTEER (Servidor)
   if (isRegikids) {
+    // Regikids Servidor - Green-600 / Emerald / Mint (#16a34a) - Fresh, lighter green tone
     return {
-      badge: 'bg-emerald-100 text-emerald-800',
-      avatar: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-300',
-      photoRing: 'ring-2 ring-emerald-500 ring-offset-1',
+      badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-semibold',
+      avatar: 'bg-emerald-50 text-emerald-700 border-2 border-emerald-300',
+      photoRing: 'ring-2 ring-emerald-400 ring-offset-1',
       highlightBg: 'bg-emerald-50/20 hover:bg-emerald-50/40',
-      tagBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+      tagBg: 'bg-emerald-50 text-emerald-700 border-emerald-300',
     };
   }
 
@@ -135,6 +140,7 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
  * @returns {JSX.Element} Rendered supervisor team view.
  */
 export const SupervisorTeamView: React.FC = () => {
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -150,13 +156,48 @@ export const SupervisorTeamView: React.FC = () => {
     campuses,
   } = useAppSelector((state) => state.volunteerContextSlice);
 
-  const isCoordinator =
-    currentRole === 'KID_GROUP_ADMIN' ||
+  const isSuperAdmin = currentRole === 'SUPER_ADMIN' || currentRole === 'ADMIN';
+
+  const isServidor =
+    currentRole === 'KID_REGISTER_USER' ||
+    currentRole === 'KID_GROUP_USER' ||
+    activeVolunteerRole === VolunteerRole.VOLUNTEER;
+
+  const isAreaCoordinator =
     currentRole === 'KID_REGISTER_ADMIN' ||
-    currentRole === 'MINISTRY_ADMIN' ||
-    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
-    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR ||
-    activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR;
+    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
+
+  const isGroupCoordinator =
+    currentRole === 'KID_GROUP_ADMIN' ||
+    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR;
+
+  const isSupervisor =
+    currentRole === 'KID_REGISTER_SUPERVISOR' ||
+    currentRole === 'KID_GROUP_SUPERVISOR' ||
+    activeVolunteerRole === VolunteerRole.SUPERVISOR;
+
+  const isCoordinator = isAreaCoordinator || isGroupCoordinator || currentRole === 'MINISTRY_ADMIN';
+
+  const canAccessTeam =
+    !isServidor &&
+    (isSuperAdmin ||
+      isCoordinator ||
+      isSupervisor ||
+      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR);
+
+  useEffect(() => {
+    if (!canAccessTeam) {
+      toast.error('No tienes permisos para acceder al equipo de supervisión.');
+      const fallbackUrl = currentRole?.includes('REGISTER')
+        ? APP_ROUTES.kidRegistration.root
+        : APP_ROUTES.kidChurch.root;
+      navigate(fallbackUrl, { replace: true });
+    }
+  }, [canAccessTeam, currentRole, navigate]);
+
+  if (!canAccessTeam) {
+    return null;
+  }
 
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const effectiveCampusId = activeCampusId || currentCampus?.id;
@@ -176,9 +217,34 @@ export const SupervisorTeamView: React.FC = () => {
   const activeAreaId = primaryArea?.id;
   const areaName = primaryArea?.name || 'Mi Área';
 
-  const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('ALL');
+  // Area Coordinator context: find the specific Area (e.g. Regikids)
+  const areaCoord = activeCampusData?.areaCoordinates?.find((a) => {
+    const n = a.name.toLowerCase();
+    return n.includes('regi') || n.includes('registro');
+  }) || activeCampusData?.areaCoordinates?.[0];
 
-  const partitionKey = `my-team-${effectiveCampusId}-${activeGroupConfigId || 'all'}-${isCoordinator ? 'all' : (activeAreaId || 'all')}`;
+  const fallbackArea = activeCampusData?.groups
+    .flatMap((g) => g.areas)
+    .find((a) => {
+      const n = a.name.toLowerCase();
+      return n.includes('regi') || n.includes('registro');
+    });
+
+  const effectiveAreaId = isAreaCoordinator
+    ? (areaCoord?.id || fallbackArea?.id || activeAreaId)
+    : activeAreaId;
+
+  const effectiveAreaName = isAreaCoordinator
+    ? (areaCoord?.name || fallbackArea?.name || 'Regikids')
+    : areaName;
+
+  const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('ALL');
+  const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>('ALL');
+
+  const partitionKey = isAreaCoordinator
+    ? `my-team-area-${effectiveCampusId}-${effectiveAreaId || 'all'}`
+    : `my-team-${effectiveCampusId}-${activeGroupConfigId || 'all'}-${isGroupCoordinator ? 'all' : (activeAreaId || 'all')}`;
+
   const assignments = useAppSelector(
     (state) => state.volunteerSlice.assignmentsByPartition[partitionKey] || [],
   );
@@ -189,21 +255,60 @@ export const SupervisorTeamView: React.FC = () => {
   const loadTeamData = React.useCallback(() => {
     if (!effectiveCampusId) return;
 
-    dispatch(
-      GetVolunteerAssignments({
-        churchCampusId: effectiveCampusId,
-        ministryGroupConfigId: activeGroupConfigId || undefined,
-        ministryAreaId: isCoordinator ? undefined : (activeAreaId || undefined),
-        state: EntityState.ACTIVE,
-        partitionKey,
-        force: true,
-      }),
-    );
-  }, [dispatch, effectiveCampusId, activeGroupConfigId, isCoordinator, activeAreaId, partitionKey]);
+    if (isAreaCoordinator) {
+      dispatch(
+        GetVolunteerAssignments({
+          churchCampusId: effectiveCampusId,
+          ministryAreaId: effectiveAreaId || undefined,
+          ministryGroupConfigId: undefined,
+          state: EntityState.ACTIVE,
+          partitionKey,
+          force: true,
+        }),
+      );
+    } else {
+      dispatch(
+        GetVolunteerAssignments({
+          churchCampusId: effectiveCampusId,
+          ministryGroupConfigId: activeGroupConfigId || undefined,
+          ministryAreaId: isGroupCoordinator ? undefined : (activeAreaId || undefined),
+          state: EntityState.ACTIVE,
+          partitionKey,
+          force: true,
+        }),
+      );
+    }
+  }, [
+    dispatch,
+    effectiveCampusId,
+    isAreaCoordinator,
+    effectiveAreaId,
+    activeGroupConfigId,
+    isGroupCoordinator,
+    activeAreaId,
+    partitionKey,
+  ]);
 
   useEffect(() => {
     loadTeamData();
   }, [loadTeamData]);
+
+  // Available groups for filtering when in Area Coordinator mode
+  const availableGroups = useMemo(() => {
+    const groupMap = new Map<string, string>();
+    activeCampusData?.groups.forEach((g) => {
+      if (g.id && g.name) groupMap.set(g.id, g.name);
+    });
+    assignments.forEach((asg: IVolunteerAssignment) => {
+      const g = asg.ministryGroupConfig || asg.serviceAreaGroup?.ministryGroupConfig;
+      if (g?.id && g?.name) {
+        groupMap.set(g.id, g.name);
+      }
+    });
+    return Array.from(groupMap.entries())
+      .map(([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'es', { numeric: true }));
+  }, [activeCampusData, assignments]);
 
   // List of distinct areas available in this group
   const availableAreas = useMemo(() => {
@@ -237,13 +342,39 @@ export const SupervisorTeamView: React.FC = () => {
   };
 
   // Filter assignments:
-  // For Coordinators: show Coordinators, Supervisors and Servidores in the group (with role & area tab filter)
+  // For Area Coordinators: show only Supervisors and Servidores of their area, filterable by group
+  // For Group Coordinators: show Coordinators, Supervisors and Servidores in the group
   // For Supervisors: show only Supervisor and Servidores in their specific area
   const filteredAssignments = useMemo(() => {
     const list = assignments.filter((asg: IVolunteerAssignment) => {
       if (asg.state === EntityState.DELETED) return false;
 
-      if (isCoordinator) {
+      if (isAreaCoordinator) {
+        // Area Coordinator strictly sees supervisors and volunteers of their area
+        const isAllowedRole =
+          asg.role === VolunteerRole.SUPERVISOR || asg.role === VolunteerRole.VOLUNTEER;
+        if (!isAllowedRole) return false;
+
+        if (effectiveAreaId) {
+          const asgAreaId =
+            asg.ministryAreaId ||
+            asg.serviceAreaGroup?.ministryAreaId ||
+            asg.serviceAreaGroup?.ministryArea?.id;
+          if (asgAreaId && asgAreaId !== effectiveAreaId) {
+            return false;
+          }
+        }
+
+        if (selectedGroupFilter !== 'ALL') {
+          const asgGroupId =
+            asg.ministryGroupConfigId ||
+            asg.serviceAreaGroup?.ministryGroupConfigId ||
+            asg.serviceAreaGroup?.ministryGroupConfig?.id;
+          if (asgGroupId !== selectedGroupFilter) {
+            return false;
+          }
+        }
+      } else if (isGroupCoordinator) {
         const isAllowedRole =
           asg.role === VolunteerRole.GROUP_COORDINATOR ||
           asg.role === VolunteerRole.SUPERVISOR ||
@@ -311,22 +442,31 @@ export const SupervisorTeamView: React.FC = () => {
       const nameB = `${userB?.firstName || ''} ${userB?.lastName || ''}`.trim().toLowerCase();
       return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
     });
-  }, [assignments, isCoordinator, selectedAreaFilter, supervisorAreaIds, supervisorSagIds, searchTerm]);
+  }, [
+    assignments,
+    isAreaCoordinator,
+    effectiveAreaId,
+    selectedGroupFilter,
+    isGroupCoordinator,
+    selectedAreaFilter,
+    supervisorAreaIds,
+    supervisorSagIds,
+    searchTerm,
+  ]);
 
   const isRegikidsUser =
     currentRole === 'KID_REGISTER_ADMIN' ||
-    currentRole === 'KID_REGISTER_SUPERVISOR' ||
-    currentRole === 'KID_REGISTER_USER';
+    currentRole === 'KID_REGISTER_SUPERVISOR';
 
   const headerBadgeStyle = useMemo(() => {
-    if (isRegikidsUser) {
+    if (isRegikidsUser || isAreaCoordinator) {
       return 'bg-emerald-100 text-emerald-800';
     }
     if (isCoordinator) {
       return 'bg-pink-100 text-pink-700';
     }
     return 'bg-purple-100 text-purple-700';
-  }, [isRegikidsUser, isCoordinator]);
+  }, [isRegikidsUser, isAreaCoordinator, isCoordinator]);
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-5 pb-28 sm:pb-32">
@@ -341,14 +481,23 @@ export const SupervisorTeamView: React.FC = () => {
               )}
             >
               <UserCheck size={13} />
-              {isCoordinator ? 'Coordinador(a) de Grupo' : 'Supervisor(a)'}
+              {isAreaCoordinator
+                ? 'Coordinador(a) de Área'
+                : isGroupCoordinator
+                ? 'Coordinador(a) de Grupo'
+                : 'Supervisor(a)'}
             </span>
-            {activeGroupConfigName && (
+            {isAreaCoordinator ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
+                <Sparkles size={13} />
+                {effectiveAreaName}
+              </span>
+            ) : activeGroupConfigName ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
                 <Calendar size={13} />
                 {activeGroupConfigName}
               </span>
-            )}
+            ) : null}
             {activeCampusName && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
                 <Building2 size={13} />
@@ -357,12 +506,16 @@ export const SupervisorTeamView: React.FC = () => {
             )}
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
-            {isCoordinator
+            {isAreaCoordinator
+              ? `Mi Equipo — ${effectiveAreaName}`
+              : isGroupCoordinator
               ? `Mi Equipo — ${activeGroupConfigName || 'Grupo'}`
               : `Mi Equipo — ${areaName}`}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 font-medium">
-            {isCoordinator
+            {isAreaCoordinator
+              ? `Supervisores y servidores de ${effectiveAreaName} asignados a todos los grupos de esta sede`
+              : isGroupCoordinator
               ? 'Supervisores y servidores asignados a las áreas de este grupo'
               : 'Servidores asignados bajo tu supervisión para esta jornada'}
           </p>
@@ -402,8 +555,81 @@ export const SupervisorTeamView: React.FC = () => {
         </div>
       </div>
 
-      {/* Area & Role filter tabs for Coordinators */}
-      {isCoordinator && (availableAreas.length > 0 || coordinatorCount > 0) && (
+      {/* Group filter tabs for Area Coordinator */}
+      {isAreaCoordinator && availableGroups.length > 0 && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedGroupFilter('ALL')}
+            className={clsx(
+              'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
+              selectedGroupFilter === 'ALL'
+                ? 'bg-primary text-white shadow-xs'
+                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
+            )}
+          >
+            <span>Todos los grupos</span>
+            <span
+              className={clsx(
+                'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                selectedGroupFilter === 'ALL'
+                  ? 'bg-white/25 text-white'
+                  : 'bg-gray-100 text-gray-600',
+              )}
+            >
+              {
+                assignments.filter(
+                  (asg) =>
+                    asg.state !== EntityState.DELETED &&
+                    (asg.role === VolunteerRole.SUPERVISOR || asg.role === VolunteerRole.VOLUNTEER),
+                ).length
+              }
+            </span>
+          </button>
+
+          {availableGroups.map((group) => {
+            const count = assignments.filter((asg: IVolunteerAssignment) => {
+              if (asg.state === EntityState.DELETED) return false;
+              if (asg.role !== VolunteerRole.SUPERVISOR && asg.role !== VolunteerRole.VOLUNTEER)
+                return false;
+              const asgGroupId =
+                asg.ministryGroupConfigId ||
+                asg.serviceAreaGroup?.ministryGroupConfigId ||
+                asg.serviceAreaGroup?.ministryGroupConfig?.id;
+              return asgGroupId === group.id;
+            }).length;
+
+            return (
+              <button
+                key={group.id}
+                type="button"
+                onClick={() => setSelectedGroupFilter(group.id)}
+                className={clsx(
+                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
+                  selectedGroupFilter === group.id
+                    ? 'bg-primary text-white shadow-xs'
+                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
+                )}
+              >
+                <span>{group.name}</span>
+                <span
+                  className={clsx(
+                    'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                    selectedGroupFilter === group.id
+                      ? 'bg-white/25 text-white'
+                      : 'bg-gray-100 text-gray-600',
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Area & Role filter tabs for Group Coordinators */}
+      {!isAreaCoordinator && isGroupCoordinator && (availableAreas.length > 0 || coordinatorCount > 0) && (
         <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
           <button
             type="button"
@@ -592,8 +818,20 @@ export const SupervisorTeamView: React.FC = () => {
                       >
                         {roleName}
                       </span>
-                      <span className="text-[11px] text-gray-400 font-medium">
-                        · {asg.ministryArea?.name || asg.serviceAreaGroup?.ministryArea?.name || areaName}
+                      <span className="text-[11px] text-gray-500 font-medium">
+                        {isAreaCoordinator
+                          ? (() => {
+                              const gName =
+                                asg.ministryGroupConfig?.name ||
+                                asg.serviceAreaGroup?.ministryGroupConfig?.name ||
+                                availableGroups.find(
+                                  (g) =>
+                                    g.id === asg.ministryGroupConfigId ||
+                                    g.id === asg.serviceAreaGroup?.ministryGroupConfigId,
+                                )?.name;
+                              return gName ? `· ${gName}` : '· Sin grupo asignado';
+                            })()
+                          : `· ${asg.ministryArea?.name || asg.serviceAreaGroup?.ministryArea?.name || areaName}`}
                       </span>
                       {phone && (
                         <span className="text-xs text-gray-500 font-medium hidden sm:inline">

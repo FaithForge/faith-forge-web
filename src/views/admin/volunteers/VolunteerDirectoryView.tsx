@@ -15,6 +15,7 @@ import {
   Loader2,
   X,
   Shield,
+  ChevronDown,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
@@ -22,6 +23,7 @@ import Input from '@/components/ui/Input';
 import AppDrawer from '@/components/ui/AppDrawer';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
@@ -41,6 +43,7 @@ import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
 import VolunteerDetailDrawer from './components/VolunteerDetailDrawer';
 import { VolunteerApplicationsTab } from './components/VolunteerApplicationsTab';
+import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 import clsx from 'clsx';
 
 const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
@@ -82,7 +85,7 @@ const VolunteerDirectoryView: React.FC = () => {
   const { ministries, areasByMinistry } = useAppSelector((state) => state.ministrySlice);
   const campuses = useAppSelector((state) => state.churchCampusSlice.data);
   const {
-    volunteers: { data: volunteers, currentPage, totalPages, loading, loadingMore },
+    volunteers: { data: volunteers, currentPage, totalPages, loading },
     assignments,
   } = useAppSelector((state) => state.volunteerSlice);
 
@@ -107,8 +110,6 @@ const VolunteerDirectoryView: React.FC = () => {
     (selectedCampusFilter !== 'ALL' ? 1 : 0) +
     (selectedRoleFilter !== 'ALL' ? 1 : 0) +
     (selectedStatusFilter !== 'ALL' ? 1 : 0);
-
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   // Debounce search input by 400ms
   useEffect(() => {
@@ -167,28 +168,20 @@ const VolunteerDirectoryView: React.FC = () => {
     ]);
   };
 
-  // Infinite Scroll: Load more volunteers when sentinel enters viewport
+  const hasMore = currentPage < totalPages;
+
+  // Infinite Scroll: Load more volunteers when user scrolls down
   const handleLoadMore = useCallback(() => {
-    if (loading || loadingMore || currentPage >= totalPages) return;
     dispatch(GetMoreVolunteers(getFilterPayload(currentPage + 1)));
-  }, [loading, loadingMore, currentPage, totalPages, dispatch, getFilterPayload]);
+  }, [currentPage, dispatch, getFilterPayload]);
 
-  useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && currentPage < totalPages && !loading && !loadingMore) {
-          handleLoadMore();
-        }
-      },
-      { rootMargin: '250px' },
-    );
-
-    observer.observe(target);
-    return () => observer.disconnect();
-  }, [handleLoadMore, currentPage, totalPages, loading, loadingMore]);
+  const { sentinelRef, loadingMore, triggerLoadMore } = useInfiniteScroll({
+    onLoadMore: handleLoadMore,
+    hasMore,
+    isLoading: loading,
+    threshold: 250,
+    cooldownMs: 800,
+  });
 
   // Reset all filters to default
   const handleResetFilters = () => {
@@ -604,47 +597,47 @@ const VolunteerDirectoryView: React.FC = () => {
 
         {/* Volunteers List */}
         <PullToRefresh onRefresh={handleRefresh}>
-          <div className="flex flex-col gap-3">
-            {loading && volunteers.length === 0 ? (
-              <CellListSkeleton count={5} />
-            ) : volunteers.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
-                  <Inbox size={24} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-gray-800">
-                    {hasActiveFilters
-                      ? 'No se encontraron servidores con los filtros aplicados'
-                      : 'Sin servidores registrados'}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {hasActiveFilters
-                      ? 'Prueba modificando o limpiando los criterios de búsqueda.'
-                      : 'Registra usuarios existentes para asignarles responsabilidades.'}
-                  </p>
-                </div>
-                {hasActiveFilters ? (
-                  <Button
-                    onClick={handleResetFilters}
-                    size="sm"
-                    variant="secondary"
-                    className="mt-2 text-xs gap-1.5"
-                  >
-                    <RotateCcw size={14} /> Limpiar filtros
-                  </Button>
-                ) : (
-                  <Button
-                    onClick={() => setRegisterModalOpen(true)}
-                    size="sm"
-                    className="mt-2 text-xs"
-                  >
-                    <Plus size={14} /> Registrar Servidor
-                  </Button>
-                )}
+          {loading && volunteers.length === 0 ? (
+            <CellListSkeleton count={5} />
+          ) : volunteers.length === 0 ? (
+            <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
+                <Inbox size={24} />
               </div>
-            ) : (
-              volunteers.map((volunteer) => {
+              <div>
+                <h3 className="text-sm font-bold text-gray-800">
+                  {hasActiveFilters
+                    ? 'No se encontraron servidores con los filtros aplicados'
+                    : 'Sin servidores registrados'}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {hasActiveFilters
+                    ? 'Prueba modificando o limpiando los criterios de búsqueda.'
+                    : 'Registra usuarios existentes para asignarles responsabilidades.'}
+                </p>
+              </div>
+              {hasActiveFilters ? (
+                <Button
+                  onClick={handleResetFilters}
+                  size="sm"
+                  variant="secondary"
+                  className="mt-2 text-xs gap-1.5"
+                >
+                  <RotateCcw size={14} /> Limpiar filtros
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => setRegisterModalOpen(true)}
+                  size="sm"
+                  className="mt-2 text-xs"
+                >
+                  <Plus size={14} /> Registrar Servidor
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
+              {volunteers.map((volunteer) => {
                 const user = volunteer.user;
                 const name =
                   user && (user.firstName || user.lastName)
@@ -659,7 +652,7 @@ const VolunteerDirectoryView: React.FC = () => {
                   <div
                     key={volunteer.id}
                     onClick={() => handleOpenDetail(volunteer)}
-                    className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs hover:border-primary/40 hover:shadow-sm cursor-pointer transition-all active:scale-[0.99] flex items-center justify-between gap-3 group"
+                    className="p-3.5 sm:p-4 hover:bg-gray-50/80 cursor-pointer transition-colors active:bg-gray-100/70 flex items-center justify-between gap-3 group"
                   >
                     <div className="flex items-start gap-3 min-w-0">
                       <div className="w-11 h-11 rounded-full bg-slate-100 border border-gray-200 text-gray-600 flex items-center justify-center font-bold text-sm shrink-0 overflow-hidden mt-0.5">
@@ -767,26 +760,37 @@ const VolunteerDirectoryView: React.FC = () => {
                     </div>
                   </div>
                 );
-              })
-            )}
+              })}
+            </div>
+          )}
 
-            {/* Infinite Scroll Sentinel & Load More Spinner */}
-            {!loading && volunteers.length > 0 && (
-              <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
-                {loadingMore && (
-                  <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
-                    <Loader2 size={18} className="animate-spin text-primary" />
-                    <span>Cargando más servidores...</span>
-                  </div>
-                )}
-                {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
-                  <p className="text-xs font-medium text-gray-400 py-3">
-                    Hemos llegado al final de la lista
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
+          {/* Infinite Scroll Sentinel & Load More Spinner */}
+          {!loading && volunteers.length > 0 && (
+            <div ref={sentinelRef} className="py-4 flex flex-col items-center justify-center">
+              {loadingMore && (
+                <div className="flex items-center gap-2 py-2 px-4 bg-white rounded-full border border-gray-100 shadow-2xs text-xs font-semibold text-gray-500">
+                  <Loader2 size={16} className="animate-spin text-primary" />
+                  <span>Cargando más servidores...</span>
+                </div>
+              )}
+              {!loadingMore && hasMore && (
+                <button
+                  type="button"
+                  onClick={() => triggerLoadMore()}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-full shadow-2xs transition-all active:scale-95 cursor-pointer"
+                >
+                  <ChevronDown size={14} />
+                  <span>Cargar más servidores</span>
+                </button>
+              )}
+              {!loadingMore && !hasMore && (
+                <EndOfListFunnyBadge type="volunteers" />
+              )}
+            </div>
+          )}
+
+          {/* Safe spacer so end indicator sits comfortably above bottom */}
+          <div className="h-20 sm:h-24 shrink-0 pointer-events-none" aria-hidden="true" />
         </PullToRefresh>
           </>
         )}

@@ -86,7 +86,7 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
         />
         <Drawer.Content
           className={clsx(
-            'bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 outline-none mt-20',
+            'bg-gray-50 flex flex-col rounded-t-[24px] fixed bottom-0 left-0 right-0 sm:max-w-xl sm:mx-auto outline-none mt-20 sm:shadow-2xl sm:border sm:border-b-0 sm:border-gray-200/80',
             maxHeight,
             contentZIndex,
             contentClassName

@@ -413,7 +413,7 @@ const NewKidView = () => {
       <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
       <StepProgress currentStep={step} steps={NEW_KID_STEPS} />
 
-      <div className="p-4 pb-36">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full pb-36">
         {step === 1 && (
           <form onSubmit={handleKidSubmit(onKidSubmit)} className="animate-in fade-in slide-in-from-right-4 duration-300">
             {/* Foto de Perfil */}
@@ -661,11 +661,13 @@ const NewKidView = () => {
               type="submit"
               block
               variant="primary"
-              className="mb-8"
+              className="mb-3"
               disabled={isUploading || isUnderThreeMonths}
             >
               {isUploading ? 'Guardando...' : <>Guardar Niño y Continuar <ChevronRight size={18} className="ml-2 inline" /></>}
             </Button>
+            {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+            <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </form>
         )}
 
@@ -874,11 +876,13 @@ const NewKidView = () => {
               type="submit"
               block
               variant="primary"
-              className="mb-8"
+              className="mb-3"
               disabled={isUploading}
             >
               {isUploading ? 'Guardando...' : <>Guardar Acudiente <Check size={18} className="ml-2 inline" /></>}
             </Button>
+            {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+            <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </form>
         )}
       </div>

@@ -34,19 +34,13 @@ const Cell = ({
     <div 
       onClick={onClick}
       className={clsx(
-        "flex items-center gap-3 p-3 rounded-xl border shadow-sm transition-colors",
+        "flex items-center gap-3 p-3.5 sm:p-4 transition-colors",
         isRegistered 
-          ? "bg-slate-100 border-slate-200" 
+          ? "bg-slate-50/60 hover:bg-slate-100/80" 
           : isOverage 
-            ? "bg-red-50 border-red-200 text-red-900" 
-            : "bg-surface border-gray-100",
-        onClick && (
-          isRegistered 
-            ? "cursor-pointer active:scale-[0.98] hover:bg-slate-200/80" 
-            : isOverage 
-              ? "cursor-pointer active:scale-[0.98] hover:bg-red-100" 
-              : "cursor-pointer active:scale-[0.98] active:bg-gray-50 hover:bg-gray-50"
-        ),
+            ? "bg-red-50/60 hover:bg-red-100/60 text-red-900" 
+            : "bg-white hover:bg-gray-50/80",
+        onClick && "cursor-pointer active:bg-gray-100/60",
         className
       )}
     >

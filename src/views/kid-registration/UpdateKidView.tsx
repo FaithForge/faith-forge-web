@@ -221,7 +221,7 @@ const UpdateKidView: React.FC = () => {
       {kidLoading && !kid ? (
         <UpdateKidSkeleton />
       ) : (
-        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-16 flex flex-col gap-4 max-w-lg mx-auto">
+        <form onSubmit={handleSubmit(onSubmit)} className="p-4 pb-16 flex flex-col gap-4 max-w-lg mx-auto w-full">
           {/* Foto de Perfil */}
           <div className="flex flex-col items-center justify-center my-3">
             <label htmlFor="profilePhoto" className="relative cursor-pointer group block">
@@ -425,13 +425,15 @@ const UpdateKidView: React.FC = () => {
             type="submit"
             block
             variant="primary"
-            className="mb-8"
+            className="mb-3"
             disabled={isUnderThreeMonths}
             loading={isSubmitting}
             loadingText="Guardando cambios..."
           >
             Guardar Cambios
           </Button>
+          {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+          <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
         </form>
       )}
     </div>

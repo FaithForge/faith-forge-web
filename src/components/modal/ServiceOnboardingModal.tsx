@@ -3,8 +3,10 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   setActiveCampus,
   setActiveGroupConfig,
+  setActiveVolunteerRole,
   setOnboardingCompleted,
 } from '@/libs/state/redux/slices/church/volunteerContext.slice';
+import { changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
 import {
   IVolunteerCampusContext,
@@ -14,6 +16,7 @@ import {
 import { Building2, Users, ChevronRight, Sparkles, Check } from 'lucide-react';
 import clsx from 'clsx';
 import { capitalizeWords, formatPersonFirstAndLastNames } from '@/libs/utils/text';
+import { AppRole, UserRole } from '@/libs/utils/auth';
 
 interface ServiceOnboardingModalProps {
   /** If true, force opens the modal as a selector (e.g., from TopBar) */
@@ -76,6 +79,10 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
   const [selectedCampus, setSelectedCampus] = useState<IVolunteerCampusContext | null>(null);
   const [step, setStep] = useState<'AUTO_CONNECTING' | 'SELECT_CAMPUS' | 'SELECT_GROUP'>('SELECT_CAMPUS');
 
+  const isAreaCoordinator =
+    currentRole === 'KID_REGISTER_ADMIN' ||
+    (user?.roles as string[])?.includes('KID_REGISTER_ADMIN');
+
   // Initialize state based on current campuses
   useEffect(() => {
     if (!needsOnboarding) return;
@@ -94,6 +101,21 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
       // Show the connecting transition screen
       setStep('AUTO_CONNECTING');
       const timer = setTimeout(() => {
+        // If Area Coordinator, no single group applies
+        if (isAreaCoordinator) {
+          dispatch(
+            setActiveGroupConfig({
+              groupConfigId: '',
+              groupConfigName: '',
+              role: VolunteerRole.AREA_GENERAL_COORDINATOR,
+            }),
+          );
+          dispatch(setOnboardingCompleted(true));
+          window.dispatchEvent(new CustomEvent('open-settings-drawer'));
+          if (onClose) onClose();
+          return;
+        }
+
         // If single campus has >1 groups, ask for group. Otherwise auto-select and complete
         if (singleCampus.groups.length > 1) {
           setStep('SELECT_GROUP');
@@ -125,9 +147,13 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
       setStep('SELECT_CAMPUS');
     } else if (sortedCampuses.length === 1 && forceOpen) {
       setSelectedCampus(sortedCampuses[0]);
-      setStep('SELECT_GROUP');
+      if (isAreaCoordinator) {
+        if (onClose) onClose();
+      } else {
+        setStep('SELECT_GROUP');
+      }
     }
-  }, [needsOnboarding, sortedCampuses, activeCampusId, forceOpen, dispatch, onClose]);
+  }, [needsOnboarding, sortedCampuses, activeCampusId, forceOpen, dispatch, onClose, isAreaCoordinator]);
 
   if (!needsOnboarding) return null;
 
@@ -141,6 +167,21 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
     );
     dispatch(updateCurrentChurchCampus(campus.id));
 
+    // Area Coordinators have no single group
+    if (isAreaCoordinator) {
+      dispatch(
+        setActiveGroupConfig({
+          groupConfigId: '',
+          groupConfigName: '',
+          role: VolunteerRole.AREA_GENERAL_COORDINATOR,
+        }),
+      );
+      dispatch(setOnboardingCompleted(true));
+      window.dispatchEvent(new CustomEvent('open-settings-drawer'));
+      if (onClose) onClose();
+      return;
+    }
+
     // Check if group selection is required
     const isCrossCoordinator =
       campus.areaCoordinates.length > 0 || !!campus.ministryCoordinator;
@@ -150,7 +191,7 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
     } else {
       if (campus.groups.length === 1) {
         const singleGroup = campus.groups[0];
-        const primaryRole = singleGroup.areas[0]?.role || singleGroup.groupRole || null;
+        const primaryRole = singleGroup.areas[0]?.role || singleGroup.groupRole || VolunteerRole.VOLUNTEER;
         dispatch(
           setActiveGroupConfig({
             groupConfigId: singleGroup.id,
@@ -158,15 +199,38 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
             role: primaryRole,
           }),
         );
+        dispatch(setActiveVolunteerRole(primaryRole));
+
+        const primaryArea = singleGroup.areas[0];
+        const isRegikids =
+          !primaryArea?.scope ||
+          primaryArea.scope === 'KID_REGISTRATION' ||
+          (primaryArea.name || '').toLowerCase().includes('regi');
+        let targetRole: AppRole;
+        if (primaryArea?.permissions?.[0]) {
+          targetRole = primaryArea.permissions[0] as AppRole;
+        } else if (primaryRole === VolunteerRole.SUPERVISOR) {
+          targetRole = isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+        } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
+          targetRole = isRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+        } else {
+          targetRole = isRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+        }
+        if (targetRole) {
+          dispatch(changeCurrentRole(targetRole));
+        }
       } else if (isCrossCoordinator) {
         // Cross-cutting role with no specific group
+        const coordRole = campus.ministryCoordinator?.role || campus.areaCoordinates[0]?.role || VolunteerRole.AREA_GENERAL_COORDINATOR;
         dispatch(
           setActiveGroupConfig({
             groupConfigId: '',
             groupConfigName: '',
-            role: campus.ministryCoordinator?.role || campus.areaCoordinates[0]?.role || null,
+            role: coordRole,
           }),
         );
+        dispatch(setActiveVolunteerRole(coordRole));
+        dispatch(changeCurrentRole(UserRole.KID_REGISTER_ADMIN));
       }
       dispatch(setOnboardingCompleted(true));
       window.dispatchEvent(new CustomEvent('open-settings-drawer'));
@@ -175,7 +239,7 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
   };
 
   const handleSelectGroup = (group: IVolunteerGroupConfigContext) => {
-    const primaryRole = group.areas[0]?.role || group.groupRole || null;
+    const primaryRole = group.areas[0]?.role || group.groupRole || VolunteerRole.VOLUNTEER;
     dispatch(
       setActiveGroupConfig({
         groupConfigId: group.id,
@@ -183,6 +247,28 @@ export const ServiceOnboardingModal: React.FC<ServiceOnboardingModalProps> = ({
         role: primaryRole,
       }),
     );
+    dispatch(setActiveVolunteerRole(primaryRole));
+
+    const primaryArea = group.areas[0];
+    const isRegikids =
+      !primaryArea?.scope ||
+      primaryArea.scope === 'KID_REGISTRATION' ||
+      (primaryArea.name || '').toLowerCase().includes('regi');
+
+    let targetRole: AppRole;
+    if (primaryArea?.permissions?.[0]) {
+      targetRole = primaryArea.permissions[0] as AppRole;
+    } else if (primaryRole === VolunteerRole.SUPERVISOR) {
+      targetRole = isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+    } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
+      targetRole = isRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+    } else {
+      targetRole = isRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+    }
+    if (targetRole) {
+      dispatch(changeCurrentRole(targetRole));
+    }
+
     dispatch(setOnboardingCompleted(true));
     window.dispatchEvent(new CustomEvent('open-settings-drawer'));
     if (onClose) onClose();

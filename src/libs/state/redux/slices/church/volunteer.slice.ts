@@ -140,12 +140,16 @@ export const volunteerSlice = createSlice({
           const existingIds = new Set(state.volunteers.data.map((v) => v.id));
           const newVolunteers = action.payload.data.filter((v) => !existingIds.has(v.id));
           state.volunteers.data.push(...newVolunteers);
-          state.volunteers.currentPage = action.payload.currentPage;
-          state.volunteers.totalPages = action.payload.totalPages;
+          if (newVolunteers.length === 0) {
+            state.volunteers.totalPages = state.volunteers.currentPage;
+          } else {
+            state.volunteers.totalPages = action.payload.totalPages || state.volunteers.currentPage;
+          }
         },
       )
       .addCase(GetMoreVolunteers.rejected, (state) => {
         state.volunteers.loadingMore = false;
+        state.volunteers.totalPages = state.volunteers.currentPage;
       });
 
     builder

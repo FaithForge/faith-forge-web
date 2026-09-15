@@ -7,7 +7,7 @@ import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb, Sparkles } from 'lucide-react';
+import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb, Sparkles, ChevronDown } from 'lucide-react';
 import dayjs from 'dayjs';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -18,15 +18,14 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 
 const RegistrationDashboard = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchText, setSearchText] = useState('');
-  const [loadingMore, setLoadingMore] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
@@ -143,38 +142,24 @@ const RegistrationDashboard = () => {
     }
   };
 
-  // Infinite Scroll logic via IntersectionObserver
+  const hasMore = currentPage < totalPages;
+
   const handleLoadMore = React.useCallback(async () => {
-    if (loading || loadingMore || currentPage >= totalPages) return;
-    setLoadingMore(true);
+    if (!isConfigured || shouldBlockKids) return;
     try {
       await dispatch(GetMoreKids({ findText: searchText })).unwrap();
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoadingMore(false);
     }
-  }, [loading, loadingMore, currentPage, totalPages, dispatch, searchText]);
+  }, [isConfigured, shouldBlockKids, dispatch, searchText]);
 
-  useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target || !isConfigured || shouldBlockKids) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && currentPage < totalPages && !loading && !loadingMore) {
-          handleLoadMore();
-        }
-      },
-      { rootMargin: '250px' }
-    );
-
-    observer.observe(target);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [handleLoadMore, currentPage, totalPages, loading, loadingMore, isConfigured, shouldBlockKids]);
+  const { sentinelRef, loadingMore, triggerLoadMore } = useInfiniteScroll({
+    onLoadMore: handleLoadMore,
+    hasMore,
+    isLoading: loading,
+    threshold: 250,
+    cooldownMs: 800,
+  });
 
   // Register search availability and focus handler with SearchScrollContext
   useEffect(() => {
@@ -190,7 +175,7 @@ const RegistrationDashboard = () => {
   }, [setSearchAvailable, registerSearchFocusHandler]);
 
   return (
-    <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-6">
+    <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto w-full flex flex-col gap-3 min-h-full flex-1 pb-6">
       {/* Search Bar (scrolls with content, revealed as lupa in TopBar on scroll) */}
       <div className="py-1">
         <Input 
@@ -257,8 +242,8 @@ const RegistrationDashboard = () => {
 
       {/* Lista de Niños */}
       {!shouldBlockKids && (
-        <PullToRefresh onRefresh={handleRefreshKids} disabled={loading} className="flex-1 flex flex-col min-h-0">
-          <div className="flex flex-col gap-2 mt-1 flex-1 min-h-0">
+        <PullToRefresh onRefresh={handleRefreshKids} disabled={loading} className="w-full flex-1 flex flex-col">
+          <div className="flex flex-col gap-2 mt-1 w-full flex-1">
             {loading && isConfigured && <CellListSkeleton count={7} />}
             
             {!loading && kids.length === 0 && isConfigured && (
@@ -332,74 +317,88 @@ const RegistrationDashboard = () => {
               </div>
             )}
 
-            {!loading && kids.map((kid) => {
-              const isRegistered = !!kid.currentKidRegistration;
-              const overage = isKidOverage(kid);
-              const isBday = isDateToday(kid.birthday);
+            {!loading && kids.length > 0 && (
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
+                {kids.map((kid) => {
+                  const isRegistered = !!kid.currentKidRegistration;
+                  const overage = isKidOverage(kid);
+                  const isBday = isDateToday(kid.birthday);
 
-              let subtitleText = `Código: ${kid.faithForgeId || kid.id}`;
-              let showOverageStyle = false;
+                  let subtitleText = `Código: ${kid.faithForgeId || kid.id}`;
+                  let showOverageStyle = false;
 
-              if (isRegistered) {
-                subtitleText = `Código: ${kid.faithForgeId || kid.id}${
-                  kid.currentKidRegistration?.date ? ` • a las ${dayjs(kid.currentKidRegistration.date).format('h:mm:ss A')}` : ''
-                }`;
-              } else if (overage) {
-                subtitleText = KID_AGE_COPY.maxAgeDashboardSubtitle;
-                showOverageStyle = true;
-              }
+                  if (isRegistered) {
+                    subtitleText = `Código: ${kid.faithForgeId || kid.id}${
+                      kid.currentKidRegistration?.date ? ` • a las ${dayjs(kid.currentKidRegistration.date).format('h:mm:ss A')}` : ''
+                    }`;
+                  } else if (overage) {
+                    subtitleText = KID_AGE_COPY.maxAgeDashboardSubtitle;
+                    showOverageStyle = true;
+                  }
 
-              const badgeElement = (
-                <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                  {isBday && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
-                      🎂 Hoy
-                    </span>
-                  )}
-                  {overage && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
-                      {KID_AGE_COPY.maxAgeBadge}
-                    </span>
-                  )}
-                  {isRegistered && (
-                    <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                      Registrado
-                    </span>
-                  )}
-                </div>
-              );
+                  const badgeElement = (
+                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                      {isBday && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
+                          🎂 Hoy
+                        </span>
+                      )}
+                      {overage && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-red-100 text-red-800 rounded-full border border-red-200">
+                          {KID_AGE_COPY.maxAgeBadge}
+                        </span>
+                      )}
+                      {isRegistered && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                          Registrado
+                        </span>
+                      )}
+                    </div>
+                  );
 
-              return (
-                <Cell 
-                  key={kid.id}
-                  title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
-                  subtitle={subtitleText}
-                  gender={kid.gender === 'F' ? 'F' : 'M'}
-                  photoUrl={kid.photoUrl}
-                  isRegistered={isRegistered}
-                  isOverage={showOverageStyle}
-                  badge={badgeElement}
-                  onClick={() => {
-                    if (isRegistered || !overage || isAdmin) {
-                      dispatch(updateCurrentKid(kid));
-                      navigate(APP_ROUTES.kidRegistration.checkIn(kid.id));
-                    }
-                  }}
-                />
-              );
-            })}
+                  return (
+                    <Cell 
+                      key={kid.id}
+                      title={capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
+                      subtitle={subtitleText}
+                      gender={kid.gender === 'F' ? 'F' : 'M'}
+                      photoUrl={kid.photoUrl}
+                      isRegistered={isRegistered}
+                      isOverage={showOverageStyle}
+                      badge={badgeElement}
+                      onClick={() => {
+                        if (isRegistered || !overage || isAdmin) {
+                          dispatch(updateCurrentKid(kid));
+                          navigate(APP_ROUTES.kidRegistration.checkIn(kid.id));
+                        }
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             {/* Infinite Scroll Sentinel & Load More Spinner */}
             {!loading && kids.length > 0 && (
-              <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
+              <div ref={sentinelRef} className="py-4 flex flex-col items-center justify-center">
                 {loadingMore && (
-                  <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
-                    <Loader2 size={18} className="animate-spin text-primary" />
+                  <div className="flex items-center gap-2 py-2 px-4 bg-white rounded-full border border-gray-100 shadow-2xs text-xs font-semibold text-gray-500">
+                    <Loader2 size={16} className="animate-spin text-primary" />
                     <span>Cargando más niños...</span>
                   </div>
                 )}
-                {!loadingMore && currentPage >= totalPages && (
-                  <EndOfListFunnyBadge />
+                {!loadingMore && hasMore && (
+                  <button
+                    type="button"
+                    onClick={() => triggerLoadMore()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-full shadow-2xs transition-all active:scale-95 cursor-pointer"
+                  >
+                    <ChevronDown size={14} />
+                    <span>Cargar más niños</span>
+                  </button>
+                )}
+                {!loadingMore && !hasMore && (
+                  <EndOfListFunnyBadge type="kids" />
                 )}
               </div>
             )}

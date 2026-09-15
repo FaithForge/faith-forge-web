@@ -30,19 +30,21 @@ const StepProgress: React.FC<StepProgressProps> = ({
 
   return (
     <div className={clsx('bg-white px-4 py-3.5 border-b border-gray-100 shadow-xs transition-all', className)}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-bold uppercase tracking-wider text-primary truncate pr-2">
-          Paso {currentStep}: {stepTitle}
-        </span>
-        <span className="text-xs font-semibold text-gray-400 shrink-0">
-          {currentStep} / {totalSteps}
-        </span>
-      </div>
-      <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
-        <div
-          className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
-          style={{ width: `${progressPercent}%` }}
-        />
+      <div className="max-w-4xl mx-auto w-full">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-xs font-bold uppercase tracking-wider text-primary truncate pr-2">
+            Paso {currentStep}: {stepTitle}
+          </span>
+          <span className="text-xs font-semibold text-gray-400 shrink-0">
+            {currentStep} / {totalSteps}
+          </span>
+        </div>
+        <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+          <div
+            className="bg-primary h-2 rounded-full transition-all duration-500 ease-out"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
       </div>
     </div>
   );

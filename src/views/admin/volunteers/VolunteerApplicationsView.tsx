@@ -20,7 +20,7 @@ const VolunteerApplicationsView: React.FC = () => {
         onBack={() => navigate(APP_ROUTES.admin.root)}
       />
 
-      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full min-h-0">
+      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full">
         <VolunteerApplicationsTab />
       </div>
     </div>

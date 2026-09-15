@@ -129,11 +129,11 @@ export const UpdateKidSkeleton: React.FC = () => {
  */
 export const CellListSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) => {
   return (
-    <div className="flex flex-col gap-2 mt-1 animate-pulse">
+    <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden animate-pulse">
       {Array.from({ length: count }).map((_, i) => (
         <div
           key={i}
-          className="flex items-center gap-3 p-3 rounded-xl border border-gray-100 bg-white shadow-xs"
+          className="flex items-center gap-3 p-3.5 sm:p-4 bg-white"
         >
           <div className="w-10 h-10 rounded-full bg-gray-200 shrink-0" />
           <div className="flex-1 min-w-0 flex flex-col gap-2">

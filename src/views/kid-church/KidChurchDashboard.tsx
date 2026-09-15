@@ -170,7 +170,7 @@ const KidChurchDashboard: React.FC = () => {
   };
 
   return (
-    <div className="p-3 flex flex-col gap-3 min-h-full flex-1 pb-6 relative">
+    <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto w-full flex flex-col gap-3 min-h-full flex-1 pb-6 relative">
       {/* Service Info Banner */}
       {isConfigured && currentMeeting ? (
         <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
@@ -317,9 +317,9 @@ const KidChurchDashboard: React.FC = () => {
           <PullToRefresh
             onRefresh={handleRefresh}
             disabled={loading || isRefreshing}
-            className="flex-1 flex flex-col min-h-0"
+            className="w-full flex-1 flex flex-col"
           >
-            <div className="flex flex-col gap-2 mt-1 flex-1 min-h-0">
+            <div className="flex flex-col gap-2 mt-1 w-full flex-1">
               {loading && <CellListSkeleton count={6} />}
 
               {!loading && filteredKids.length === 0 && (
@@ -336,36 +336,39 @@ const KidChurchDashboard: React.FC = () => {
                 </div>
               )}
 
-              {!loading &&
-                filteredKids.map((kid: IKid) => {
-                  const ageYears = Math.floor(kid.age ?? 0);
-                  const ageMonths = kid.ageInMonths ? kid.ageInMonths - ageYears * 12 : 0;
-                  const subtitleText = `Salón: ${kid.kidGroup?.name || 'Sin salón'} • ${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`;
+              {!loading && filteredKids.length > 0 && (
+                <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
+                  {filteredKids.map((kid: IKid) => {
+                    const ageYears = Math.floor(kid.age ?? 0);
+                    const ageMonths = kid.ageInMonths ? kid.ageInMonths - ageYears * 12 : 0;
+                    const subtitleText = `Salón: ${kid.kidGroup?.name || 'Sin salón'} • ${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`;
 
-                  const badgeElement = (
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                        En Salón
-                      </span>
-                    </div>
-                  );
+                    const badgeElement = (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
+                          En Salón
+                        </span>
+                      </div>
+                    );
 
-                  return (
-                    <Cell
-                      key={kid.id || kid.faithForgeId}
-                      title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
-                      subtitle={subtitleText}
-                      gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}
-                      photoUrl={kid.photoUrl}
-                      isRegistered={true}
-                      badge={badgeElement}
-                      onClick={() => handleKidClick(kid)}
-                    />
-                  );
-                })}
+                    return (
+                      <Cell
+                        key={kid.id || kid.faithForgeId}
+                        title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
+                        subtitle={subtitleText}
+                        gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}
+                        photoUrl={kid.photoUrl}
+                        isRegistered={true}
+                        badge={badgeElement}
+                        onClick={() => handleKidClick(kid)}
+                      />
+                    );
+                  })}
+                </div>
+              )}
 
               {/* Safe spacer so last card never collides with floating BottomNav */}
-              <div className="h-12 shrink-0 pointer-events-none" aria-hidden="true" />
+              <div className="h-20 sm:h-24 shrink-0 pointer-events-none" aria-hidden="true" />
             </div>
           </PullToRefresh>
 

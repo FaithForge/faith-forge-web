@@ -10,6 +10,7 @@ import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { VolunteerRole } from '@/libs/models/Volunteer';
 import { toast } from 'sonner';
 
 const BottomNav = () => {
@@ -31,6 +32,7 @@ const BottomNav = () => {
     isOnboardingCompleted,
     campuses: volunteerCampuses,
     activeCampusId,
+    activeVolunteerRole,
     userMsRoles = [],
   } = useAppSelector((state) => state.volunteerContextSlice);
 
@@ -66,13 +68,22 @@ const BottomNav = () => {
   }
 
   // Determine if the current role is a "Servidor" (USER) role
-  const isServidor = currentRole === 'KID_REGISTER_USER' || currentRole === 'KID_GROUP_USER';
+  const isServidor =
+    currentRole === 'KID_REGISTER_USER' ||
+    currentRole === 'KID_GROUP_USER' ||
+    activeVolunteerRole === VolunteerRole.VOLUNTEER;
+
   const canViewTeam =
-    currentRole === 'KID_GROUP_SUPERVISOR' ||
-    currentRole === 'KID_REGISTER_SUPERVISOR' ||
-    currentRole === 'KID_GROUP_ADMIN' ||
-    currentRole === 'KID_REGISTER_ADMIN' ||
-    currentRole === 'MINISTRY_ADMIN';
+    !isServidor &&
+    (currentRole === 'KID_GROUP_SUPERVISOR' ||
+      currentRole === 'KID_REGISTER_SUPERVISOR' ||
+      currentRole === 'KID_GROUP_ADMIN' ||
+      currentRole === 'KID_REGISTER_ADMIN' ||
+      currentRole === 'MINISTRY_ADMIN' ||
+      activeVolunteerRole === VolunteerRole.SUPERVISOR ||
+      activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
+      activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR ||
+      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR);
   
   const isKidChurchRole =
     currentRole === 'MINISTRY_ADMIN' ||

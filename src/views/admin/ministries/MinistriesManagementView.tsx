@@ -289,32 +289,32 @@ const MinistriesManagementView: React.FC = () => {
 
         {/* Content list with PullToRefresh */}
         <PullToRefresh onRefresh={handleRefresh}>
-          <div className="flex flex-col gap-2.5">
-            {loadingMinistries && ministries.length === 0 ? (
-              <CellListSkeleton count={4} />
-            ) : filteredMinistries.length === 0 ? (
-              <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-2xs">
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
-                  <Inbox size={24} />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-gray-800">
-                    {searchText ? 'No se encontraron ministerios' : 'Sin ministerios registrados'}
-                  </h3>
-                  <p className="text-xs text-gray-500 mt-0.5">
-                    {searchText
-                      ? 'Intenta con otro término de búsqueda.'
-                      : 'Comienza creando el primer ministerio de la iglesia.'}
-                  </p>
-                </div>
-                {!searchText && (
-                  <Button onClick={handleOpenCreate} size="sm" className="mt-2 text-xs">
-                    <Plus size={14} /> Crear Primer Ministerio
-                  </Button>
-                )}
+          {loadingMinistries && ministries.length === 0 ? (
+            <CellListSkeleton count={4} />
+          ) : filteredMinistries.length === 0 ? (
+            <div className="bg-white rounded-3xl p-10 border border-gray-100 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+              <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
+                <Inbox size={24} />
               </div>
-            ) : (
-              filteredMinistries.map((ministry) => {
+              <div>
+                <h3 className="text-sm font-bold text-gray-800">
+                  {searchText ? 'No se encontraron ministerios' : 'Sin ministerios registrados'}
+                </h3>
+                <p className="text-xs text-gray-500 mt-0.5">
+                  {searchText
+                    ? 'Intenta con otro término de búsqueda.'
+                    : 'Comienza creando el primer ministerio de la iglesia.'}
+                </p>
+              </div>
+              {!searchText && (
+                <Button onClick={handleOpenCreate} size="sm" className="mt-2 text-xs">
+                  <Plus size={14} /> Crear Primer Ministerio
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
+              {filteredMinistries.map((ministry) => {
                 const ministryCampusName =
                   ministry.churchCampus?.name ||
                   campuses.data.find((c) => c.id === ministry.churchCampusId)?.name ||
@@ -347,7 +347,7 @@ const MinistriesManagementView: React.FC = () => {
                   <div
                     key={ministry.id}
                     onClick={() => handleOpenMinistry(ministry.id)}
-                    className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-200/80 shadow-2xs hover:border-primary/40 hover:shadow-xs transition-all flex items-center justify-between gap-3 cursor-pointer group active:scale-[0.99]"
+                    className="p-3.5 sm:p-4 hover:bg-gray-50/80 transition-colors flex items-center justify-between gap-3 cursor-pointer group"
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
                       <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-50 to-indigo-100/70 text-indigo-700 border border-indigo-200/80 flex items-center justify-center shrink-0 shadow-2xs group-hover:scale-105 transition-transform">
@@ -432,9 +432,9 @@ const MinistriesManagementView: React.FC = () => {
                     </div>
                   </div>
                 );
-              })
-            )}
-          </div>
+              })}
+            </div>
+          )}
         </PullToRefresh>
       </div>
 

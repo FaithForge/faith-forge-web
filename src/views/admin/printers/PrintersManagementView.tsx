@@ -227,11 +227,9 @@ const PrintersManagementView: React.FC = () => {
 
           {/* Printers List */}
           {loadingPrinters && campusPrinters.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-4 shadow-xs">
-              <CellListSkeleton count={3} />
-            </div>
+            <CellListSkeleton count={3} />
           ) : filteredPrinters.length === 0 ? (
-            <div className="bg-white rounded-2xl border border-gray-200/80 p-12 text-center shadow-xs flex flex-col items-center">
+            <div className="bg-white rounded-3xl border border-gray-100 p-12 text-center shadow-xs flex flex-col items-center">
               <div className="w-14 h-14 rounded-2xl bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 mb-3">
                 <Inbox size={26} />
               </div>
@@ -256,13 +254,13 @@ const PrintersManagementView: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-3">
+            <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
               {filteredPrinters.map((printer) => {
                 const isActive = printer.state === ChurchPrinterStateEnum.ACTIVE;
                 return (
                   <div
                     key={printer.id}
-                    className="bg-white rounded-2xl border border-gray-200/80 p-4 sm:p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-all hover:border-gray-300"
+                    className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-gray-50/80 transition-colors"
                   >
                     <div className="flex items-start gap-3.5 min-w-0">
                       <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center shrink-0 mt-0.5">

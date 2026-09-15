@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, UserPlus, Users, Sparkles, Award } from 'lucide-react';
+import { Loader2, UserPlus, Users, Sparkles, Award, ChevronDown } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Cell from '@/components/ui/Cell';
 import Button from '@/components/ui/Button';
@@ -16,6 +16,7 @@ import { formatPhoneDisplay } from '@/libs/utils/phone';
 import { UserState } from '@/libs/models';
 import { UserRole } from '@/libs/utils/auth';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 
 /**
@@ -29,9 +30,7 @@ const UserManagementView: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const [searchText, setSearchText] = useState('');
-  const [loadingMore, setLoadingMore] = useState(false);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const loadMoreRef = useRef<HTMLDivElement | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
@@ -119,52 +118,26 @@ const UserManagementView: React.FC = () => {
     }
   };
 
-  const lastLoadMoreTimeRef = useRef<number>(0);
+  const hasMore = currentPage < totalPages;
 
   /**
    * Loads the next page of users for infinite scroll.
    */
   const handleLoadMore = useCallback(async () => {
-    const now = Date.now();
-    if (
-      loading ||
-      loadingMore ||
-      currentPage >= totalPages ||
-      now - lastLoadMoreTimeRef.current < 1000
-    ) {
-      return;
-    }
-    lastLoadMoreTimeRef.current = now;
-    setLoadingMore(true);
     try {
       await dispatch(GetMoreUsers({ findText: searchText })).unwrap();
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoadingMore(false);
     }
-  }, [loading, loadingMore, currentPage, totalPages, dispatch, searchText]);
+  }, [dispatch, searchText]);
 
-  // IntersectionObserver for infinite scrolling
-  useEffect(() => {
-    const target = loadMoreRef.current;
-    if (!target) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && currentPage < totalPages && !loading && !loadingMore) {
-          handleLoadMore();
-        }
-      },
-      { rootMargin: '250px' }
-    );
-
-    observer.observe(target);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, [handleLoadMore, currentPage, totalPages, loading, loadingMore]);
+  const { sentinelRef, loadingMore, triggerLoadMore } = useInfiniteScroll({
+    onLoadMore: handleLoadMore,
+    hasMore,
+    isLoading: loading,
+    threshold: 250,
+    cooldownMs: 800,
+  });
 
   const rightHeaderAction = (
     <button
@@ -185,7 +158,7 @@ const UserManagementView: React.FC = () => {
         rightAction={rightHeaderAction}
       />
 
-      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full min-h-0">
+      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full">
         {/* Search Bar (scrolls with content, revealed as lupa in TopBar on scroll) */}
         <div className="py-1">
           <Input
@@ -201,8 +174,8 @@ const UserManagementView: React.FC = () => {
         </div>
 
         {/* User List */}
-        <PullToRefresh onRefresh={handleRefreshUsers} disabled={loading} className="flex-1 flex flex-col min-h-0">
-          <div className="flex flex-col gap-2 mt-1 flex-1 min-h-0">
+        <PullToRefresh onRefresh={handleRefreshUsers} disabled={loading} className="w-full flex-1 flex flex-col">
+          <div className="flex flex-col gap-2 mt-1 w-full flex-1">
             {loading && <CellListSkeleton count={6} />}
 
             {!loading && users.length === 0 && (
@@ -229,89 +202,104 @@ const UserManagementView: React.FC = () => {
               </div>
             )}
 
-            {!loading &&
-              users.map((user) => {
-                const rolesCount =
-                  user.roles?.filter((r) => r !== UserRole.USER && (r as string) !== 'USER').length || 0;
-                const isVolunteer = user.roles?.some(
-                  (r) => (r as string) === 'VOLUNTEER' || r.startsWith('KID_'),
-                );
-                const isInactive = user.state === UserState.DISABLE || user.state === UserState.INACTIVE;
+            {!loading && users.length > 0 && (
+              <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
+                {users.map((user) => {
+                  const rolesCount =
+                    user.roles?.filter((r) => r !== UserRole.USER && (r as string) !== 'USER').length || 0;
+                  const isVolunteer = user.roles?.some(
+                    (r) => (r as string) === 'VOLUNTEER' || r.startsWith('KID_'),
+                  );
+                  const isInactive = user.state === UserState.DISABLE || user.state === UserState.INACTIVE;
 
-                const badgeElement = (
-                  <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
-                    {user.state && (
-                      <span
-                        className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
-                          user.state === UserState.ACTIVE
-                            ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                  const badgeElement = (
+                    <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
+                      {user.state && (
+                        <span
+                          className={`px-2 py-0.5 text-[10px] font-bold rounded-full border ${
+                            user.state === UserState.ACTIVE
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
+                              : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
+                              ? 'bg-rose-100 text-rose-800 border-rose-200'
+                              : user.state === UserState.DELETED
+                              ? 'bg-gray-100 text-gray-800 border-gray-200'
+                              : 'bg-amber-100 text-amber-800 border-amber-200'
+                          }`}
+                        >
+                          {user.state === UserState.ACTIVE
+                            ? 'Activo'
                             : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
-                            ? 'bg-rose-100 text-rose-800 border-rose-200'
+                            ? 'Inactivo'
                             : user.state === UserState.DELETED
-                            ? 'bg-gray-100 text-gray-800 border-gray-200'
-                            : 'bg-amber-100 text-amber-800 border-amber-200'
-                        }`}
-                      >
-                        {user.state === UserState.ACTIVE
-                          ? 'Activo'
-                          : user.state === UserState.DISABLE || user.state === UserState.INACTIVE
-                          ? 'Inactivo'
-                          : user.state === UserState.DELETED
-                          ? 'Eliminado'
-                          : 'Pendiente'}
-                      </span>
-                    )}
-                    {isVolunteer && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-violet-50 text-violet-700 rounded-full border border-violet-200 flex items-center gap-0.5">
-                        <Award size={10} /> Servidor
-                      </span>
-                    )}
-                    {rolesCount > 0 && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
-                        {rolesCount} {rolesCount === 1 ? 'rol' : 'roles'}
-                      </span>
-                    )}
-                  </div>
-                );
+                            ? 'Eliminado'
+                            : 'Pendiente'}
+                        </span>
+                      )}
+                      {isVolunteer && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-violet-50 text-violet-700 rounded-full border border-violet-200 flex items-center gap-0.5">
+                          <Award size={10} /> Servidor
+                        </span>
+                      )}
+                      {rolesCount > 0 && (
+                        <span className="px-2 py-0.5 text-[10px] font-bold bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
+                          {rolesCount} {rolesCount === 1 ? 'rol' : 'roles'}
+                        </span>
+                      )}
+                    </div>
+                  );
 
-                const subtitleText = `ID: #${user.faithForgeId || user.id.slice(0, 8)} • ${
-                  user.nationalIdType || 'CC'
-                }: ${user.nationalId || 'Sin documento'}${
-                  user.phone ? ` • Tel: ${formatPhoneDisplay(user.phone, user.dialCodePhone)}` : ''
-                }`;
+                  const subtitleText = `ID: #${user.faithForgeId || user.id.slice(0, 8)} • ${
+                    user.nationalIdType || 'CC'
+                  }: ${user.nationalId || 'Sin documento'}${
+                    user.phone ? ` • Tel: ${formatPhoneDisplay(user.phone, user.dialCodePhone)}` : ''
+                  }`;
 
-                return (
-                  <Cell
-                    key={user.id}
-                    title={capitalizeWords(`${user.firstName} ${user.lastName}`)}
-                    subtitle={subtitleText}
-                    gender={user.gender === 'F' ? 'F' : 'M'}
-                    iconType="user"
-                    photoUrl={user.photoUrl}
-                    className="bg-white border-gray-200/80 hover:bg-slate-50/80"
-                    badge={badgeElement}
-                    onClick={() => {
-                      dispatch(updateCurrentUser(user));
-                      navigate(APP_ROUTES.admin.userDetail(user.id));
-                    }}
-                  />
-                );
-              })}
+                  return (
+                    <Cell
+                      key={user.id}
+                      title={capitalizeWords(`${user.firstName} ${user.lastName}`)}
+                      subtitle={subtitleText}
+                      gender={user.gender === 'F' ? 'F' : 'M'}
+                      iconType="user"
+                      photoUrl={user.photoUrl}
+                      badge={badgeElement}
+                      onClick={() => {
+                        dispatch(updateCurrentUser(user));
+                        navigate(APP_ROUTES.admin.userDetail(user.id));
+                      }}
+                    />
+                  );
+                })}
+              </div>
+            )}
 
             {/* Infinite Scroll Sentinel & Load More Spinner */}
             {!loading && users.length > 0 && (
-              <div ref={loadMoreRef} className="py-2 flex flex-col items-center justify-center">
+              <div ref={sentinelRef} className="py-4 flex flex-col items-center justify-center">
                 {loadingMore && (
-                  <div className="flex items-center gap-2 py-3 text-xs font-semibold text-gray-500">
-                    <Loader2 size={18} className="animate-spin text-primary" />
+                  <div className="flex items-center gap-2 py-2 px-4 bg-white rounded-full border border-gray-100 shadow-2xs text-xs font-semibold text-gray-500">
+                    <Loader2 size={16} className="animate-spin text-primary" />
                     <span>Cargando más usuarios...</span>
                   </div>
                 )}
-                {!loadingMore && currentPage >= totalPages && totalPages > 1 && (
+                {!loadingMore && hasMore && (
+                  <button
+                    type="button"
+                    onClick={() => triggerLoadMore()}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-full shadow-2xs transition-all active:scale-95 cursor-pointer"
+                  >
+                    <ChevronDown size={14} />
+                    <span>Cargar más usuarios</span>
+                  </button>
+                )}
+                {!loadingMore && !hasMore && (
                   <EndOfListFunnyBadge type="users" />
                 )}
               </div>
             )}
+
+            {/* Safe spacer so end indicator sits comfortably above bottom */}
+            <div className="h-20 sm:h-24 shrink-0 pointer-events-none" aria-hidden="true" />
           </div>
         </PullToRefresh>
       </div>

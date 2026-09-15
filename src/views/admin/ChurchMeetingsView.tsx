@@ -22,6 +22,7 @@ import { toast } from 'sonner';
 import clsx from 'clsx';
 import PageHeader from '@/components/ui/PageHeader';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { 
   GetChurchCampuses, 
@@ -197,10 +198,8 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   return (
     <div
       className={clsx(
-        'bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 shadow-xs flex flex-col gap-3.5',
-        isModified
-          ? 'border-primary/60 bg-primary/2 shadow-primary/5 ring-1 ring-primary/20'
-          : 'border-gray-200/80 hover:border-gray-300'
+        'p-4 sm:p-5 transition-colors flex flex-col gap-3.5 hover:bg-gray-50/60',
+        isModified && 'bg-primary/5'
       )}
     >
       {/* Meeting Header */}
@@ -572,12 +571,9 @@ const ChurchMeetingsView: React.FC = () => {
         {selectedCampusId && (
           <div className="flex flex-col gap-5">
             {loadingMeetings ? (
-              <div className="bg-white rounded-2xl p-12 border border-gray-200/80 shadow-xs text-center flex flex-col items-center justify-center gap-3">
-                <Loader2 size={32} className="animate-spin text-primary" />
-                <p className="text-sm font-medium text-gray-500">Cargando servicios de la sede...</p>
-              </div>
+              <CellListSkeleton count={3} />
             ) : meetings.length === 0 ? (
-              <div className="bg-white rounded-2xl p-12 border border-gray-200/80 shadow-xs text-center flex flex-col items-center justify-center gap-2">
+              <div className="bg-white rounded-3xl p-12 border border-gray-100 shadow-xs text-center flex flex-col items-center justify-center gap-2">
                 <CalendarClock size={40} className="text-gray-300" />
                 <h3 className="font-bold text-gray-800 text-base mt-2">No hay servicios registrados</h3>
                 <p className="text-xs text-gray-500 max-w-sm">
@@ -782,7 +778,7 @@ const ChurchMeetingsView: React.FC = () => {
                                 </div>
 
                                 {/* Cards in original DB order */}
-                                <div className="flex flex-col gap-3">
+                                <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
                                   {catMeetings.map((meeting) => {
                                     const effectiveState =
                                       pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;

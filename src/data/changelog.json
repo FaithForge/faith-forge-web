@@ -15,7 +15,16 @@
       "Selector de roles optimizado para mostrar únicamente los módulos y funciones activas.",
       "Ordenamiento de sedes respetando el orden configurado en el sistema para facilitar la selección.",
       "Filtros optimizados en Mi Equipo para consultar coordinadores de grupo por separado y filtrar cada área sin mezclar funciones.",
-      "Visualización detallada de sede, área y rol en la barra superior, junto a mejoras en los colores oficiales de la aplicación."
+      "Visualización detallada de sede, área y rol en la barra superior, junto a mejoras en los colores oficiales de la aplicación.",
+      "Sincronización automática de funciones y grupos de servicio desde la barra superior, vinculando directamente el rol real a cada grupo.",
+      "Protección y control de acceso seguro a la sección Mi Equipo exclusivo para supervisión y coordinación.",
+      "Optimización visual y de espacio para pantallas de escritorio, y margen cómodo en la navegación inferior para evitar cubrir botones de acción.",
+      "Diseño visual unificado en todos los listados y directorios de la aplicación con estructura agrupada y esquinas redondeadas.",
+      "Mayor fluidez y corrección en la carga continua de listados para evitar bloqueos al consultar registros.",
+      "Selector de roles simplificado y sobrio en la barra superior con acceso completo para administración.",
+      "Configuración de sede y grupo de servicio integrada en la ventana de ajustes con selección automática si solo existe un grupo.",
+      "Menú de perfil simplificado para separar las opciones personales de la configuración de jornada de servicio.",
+      "Visualización limpia del grupo de servicio asignado directamente en la sede cuando solo existe una opción, eliminando pasos redundantes."
     ]
   },
   {

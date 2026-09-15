@@ -465,7 +465,7 @@ const KidCheckInView = () => {
         rightAction={rightMenuAction}
       />
 
-      <div className="p-4 pb-16 animate-in fade-in slide-in-from-right-4 duration-300">
+      <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full pb-16 animate-in fade-in slide-in-from-right-4 duration-300">
         {(!kid || kid.id !== id || (loading && !kid.relations)) && <KidCheckInSkeleton />}
 
         {kid && kid.id === id && (!loading || !!kid.relations) && (
@@ -943,13 +943,15 @@ const KidCheckInView = () => {
                   onClick={handleCheckIn} 
                   block 
                   variant="primary"
-                  className="mb-8"
+                  className="mb-3"
                   loading={isProcessing}
                   loadingText={processingStep}
                   disabled={shouldBlockKids || loading || isProcessing || relationsList.length === 0 || (isOverage && !isAdmin) || isSelectedGuardianPhoneInvalid}
                 >
                   <Printer size={20} className="mr-2 shrink-0" /> Registrar e Imprimir Etiqueta
                 </Button>
+                {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+                <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
               </>
             )}
           </>

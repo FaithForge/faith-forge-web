@@ -25,25 +25,27 @@ const PageHeader: React.FC<PageHeaderProps> = ({
   return (
     <div
       className={clsx(
-        'bg-primary text-primary-foreground px-4 py-2 sticky top-0 z-30 flex items-center justify-between border-0 shadow-none',
+        'bg-primary text-primary-foreground px-4 py-2 sticky top-0 z-30 border-0 shadow-none',
         className
       )}
     >
-      <button
-        type="button"
-        onClick={onBack}
-        className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/15 active:scale-95 transition-all text-primary-foreground shrink-0 outline-none"
-        title="Volver"
-      >
-        <ArrowLeft size={20} />
-      </button>
+      <div className="max-w-4xl mx-auto w-full flex items-center justify-between">
+        <button
+          type="button"
+          onClick={onBack}
+          className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-white/15 active:scale-95 transition-all text-primary-foreground shrink-0 outline-none"
+          title="Volver"
+        >
+          <ArrowLeft size={20} />
+        </button>
 
-      <h1 className="text-sm sm:text-base font-bold text-center truncate flex-1 px-2 pointer-events-none">
-        {title}
-      </h1>
+        <h1 className="text-sm sm:text-base font-bold text-center truncate flex-1 px-2 pointer-events-none">
+          {title}
+        </h1>
 
-      <div className="w-8 flex items-center justify-end shrink-0">
-        {rightAction ? rightAction : <div className="w-8 h-8" />}
+        <div className="w-8 flex items-center justify-end shrink-0">
+          {rightAction ? rightAction : <div className="w-8 h-8" />}
+        </div>
       </div>
     </div>
   );

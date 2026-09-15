@@ -1,13 +1,28 @@
 import React, { useState } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { User, LogOut, Settings, ChevronDown, ChevronRight, Check, Search, Sparkles, Building2, Users as UsersIcon } from 'lucide-react';
+import {
+  User,
+  LogOut,
+  ChevronDown,
+  ChevronRight,
+  Check,
+  Search,
+  Sparkles,
+  Building2,
+  Users as UsersIcon,
+  Crown,
+  Shield,
+} from 'lucide-react';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
-import { setActiveGroupConfig } from '@/libs/state/redux/slices/church/volunteerContext.slice';
-import { IVolunteerGroupConfigContext } from '@/libs/models/Volunteer';
+import {
+  setActiveGroupConfig,
+  setActiveVolunteerRole,
+} from '@/libs/state/redux/slices/church/volunteerContext.slice';
+import { VolunteerRole, IVolunteerGroupConfigContext } from '@/libs/models/Volunteer';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import UserProfileModal from '@/components/modal/UserProfileModal';
 import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
@@ -120,6 +135,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
 
 const TopBar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useAppDispatch();
   const [profileOpen, setProfileOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
@@ -137,12 +153,13 @@ const TopBar = () => {
     activeCampusName,
     activeGroupConfigId,
     activeGroupConfigName,
+    activeVolunteerRole,
     isOnboardingCompleted,
     userMsRoles,
   } = useAppSelector((state) => state.volunteerContextSlice);
 
   const currentMasterCampus = useAppSelector((state) => state.churchCampusSlice.current);
-  const currentVolunteerCampus = campuses.find((c) => c.id === activeCampusId);
+  const currentVolunteerCampus = campuses.find((c) => c.id === activeCampusId) || campuses[0];
   const currentCampusName =
     activeCampusName ||
     currentVolunteerCampus?.name ||
@@ -150,16 +167,29 @@ const TopBar = () => {
     '';
 
   const availableGroups = currentVolunteerCampus?.groups || [];
+  const areaCoordinates = currentVolunteerCampus?.areaCoordinates || [];
+  const hasAreaCoordinatorAssignment = areaCoordinates.length > 0;
+  const userRoles = (user?.roles as AppRole[]) || [];
+  const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
+  const hasAreaCoordinatorRole = userRoles.includes(UserRole.KID_REGISTER_ADMIN);
+
   const hasMultipleGroups = availableGroups.length > 1;
   const hasMultipleCampuses = campuses.length > 1;
+  const hasAreaCoordinatorOption = hasAreaCoordinatorAssignment || hasAreaCoordinatorRole;
 
   // Check if active role originates from church vs fixed user ms role
   const isChurchRole =
     isChurchVolunteer &&
     (!currentRole || !userMsRoles.includes(currentRole));
 
+  const isAreaCoordinatorActive =
+    currentRole === UserRole.KID_REGISTER_ADMIN ||
+    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
+
   const handleGroupChange = (group: IVolunteerGroupConfigContext) => {
-    const primaryRole = group.areas[0]?.role || group.groupRole || null;
+    const primaryArea = group.areas[0];
+    const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
+
     dispatch(
       setActiveGroupConfig({
         groupConfigId: group.id,
@@ -167,17 +197,63 @@ const TopBar = () => {
         role: primaryRole,
       })
     );
-    if (group.areas[0]?.permissions?.[0]) {
-      const targetRole = group.areas[0].permissions[0] as AppRole;
-      if (isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
-        dispatch(changeCurrentRole(targetRole));
-      }
+    dispatch(setActiveVolunteerRole(primaryRole));
+
+    const isRegikids =
+      !primaryArea?.scope ||
+      primaryArea.scope === 'KID_REGISTRATION' ||
+      (primaryArea.name || '').toLowerCase().includes('regi');
+
+    let targetRole: AppRole;
+    if (primaryArea?.permissions?.[0]) {
+      targetRole = primaryArea.permissions[0] as AppRole;
+    } else if (primaryRole === VolunteerRole.SUPERVISOR) {
+      targetRole = isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+    } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
+      targetRole = isRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+    } else {
+      targetRole = isRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
     }
-    toast.success(`Cambiado a ${group.name}`);
+
+    if (targetRole && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
+      dispatch(changeCurrentRole(targetRole));
+    }
+
+    if (location.pathname.includes('/my-team') && primaryRole === VolunteerRole.VOLUNTEER) {
+      const fallbackUrl = userRolesNavBarConfig[targetRole]?.dashboardUrl || APP_ROUTES.kidRegistration.root;
+      navigate(fallbackUrl, { replace: true });
+    }
+
+    const roleLabel =
+      primaryRole === VolunteerRole.SUPERVISOR
+        ? 'Supervisor'
+        : primaryRole === VolunteerRole.GROUP_COORDINATOR
+          ? 'Coordinador'
+          : 'Servidor';
+
+    toast.success(`Cambiado a ${group.name} (${roleLabel})`);
   };
 
-  const userRoles = (user?.roles as AppRole[]) || [];
-  const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
+  const handleAreaCoordinatorSelect = () => {
+    const targetRole = UserRole.KID_REGISTER_ADMIN;
+    dispatch(changeCurrentRole(targetRole));
+    dispatch(setActiveVolunteerRole(VolunteerRole.AREA_GENERAL_COORDINATOR));
+    dispatch(
+      setActiveGroupConfig({
+        groupConfigId: '',
+        groupConfigName: '',
+        role: VolunteerRole.AREA_GENERAL_COORDINATOR,
+      })
+    );
+    navigate(APP_ROUTES.kidRegistration.root, { replace: true });
+    toast.success('Cambiado a Coordinación de Área (Regikids)');
+  };
+
+  const isAdminUser =
+    isSuperAdmin ||
+    userRoles.includes(UserRole.ADMIN) ||
+    currentRole === UserRole.SUPER_ADMIN ||
+    currentRole === UserRole.ADMIN;
 
   // Filter out USER and inactive roles so base account or unfinished roles are never selectable in the switcher
   const operationalRoles = userRoles.filter(
@@ -187,9 +263,9 @@ const TopBar = () => {
       isRoleEnabled(role)
   );
 
-  // Super Admin can view and switch to all ENABLED system roles.
+  // Super Admin and Admin can view and switch to all ENABLED system roles.
   // Other users only see their active operational roles.
-  const availableRoles: ThemeRole[] = isSuperAdmin
+  const availableRoles: ThemeRole[] = isAdminUser
     ? (ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
         .map((role) => userRolesNavBarConfig[role])
         .filter(Boolean) as ThemeRole[])
@@ -216,8 +292,61 @@ const TopBar = () => {
   const userEmail = user?.email ?? '';
 
   const handleRoleChange = (roleItem: ThemeRole) => {
-    dispatch(changeCurrentRole(roleItem.id));
+    const roleId = roleItem.id;
+    dispatch(changeCurrentRole(roleId));
+
+    // 1. Determine corresponding VolunteerRole
+    let newVolunteerRole: VolunteerRole | null = null;
+    if (roleId === UserRole.KID_REGISTER_ADMIN) {
+      newVolunteerRole = VolunteerRole.AREA_GENERAL_COORDINATOR;
+    } else if (roleId === UserRole.KID_GROUP_ADMIN) {
+      newVolunteerRole = VolunteerRole.GROUP_COORDINATOR;
+    } else if (
+      roleId === UserRole.KID_REGISTER_SUPERVISOR ||
+      roleId === UserRole.KID_GROUP_SUPERVISOR
+    ) {
+      newVolunteerRole = VolunteerRole.SUPERVISOR;
+    } else if (
+      roleId === UserRole.KID_REGISTER_USER ||
+      roleId === UserRole.KID_GROUP_USER
+    ) {
+      newVolunteerRole = VolunteerRole.VOLUNTEER;
+    } else if (roleId === ChurchRole.MINISTRY_ADMIN) {
+      newVolunteerRole = VolunteerRole.MINISTRY_GENERAL_COORDINATOR;
+    }
+    dispatch(setActiveVolunteerRole(newVolunteerRole));
+
+    // 2. Manage group context
+    const isNewRoleAreaCoordinator = roleId === UserRole.KID_REGISTER_ADMIN;
+
+    if (isNewRoleAreaCoordinator) {
+      // Area Coordinators have no single group
+      dispatch(
+        setActiveGroupConfig({
+          groupConfigId: '',
+          groupConfigName: '',
+          role: newVolunteerRole,
+        }),
+      );
+    } else {
+      // Roles that operate in a group (Supervisor, Servidor, Coordinador de Grupo)
+      // If currently without a group, auto-assign default group from current campus
+      if (!activeGroupConfigId && availableGroups.length > 0) {
+        const defaultGroup = availableGroups[0];
+        const primaryRole =
+          defaultGroup.areas[0]?.role || defaultGroup.groupRole || newVolunteerRole;
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: defaultGroup.id,
+            groupConfigName: defaultGroup.name,
+            role: primaryRole,
+          }),
+        );
+      }
+    }
+
     navigate(roleItem.dashboardUrl, { replace: true });
+    toast.success(`Cambiado a ${roleItem.label} (${roleItem.appTitle})`);
   };
 
   /** Dispatches logout action and redirects to login page. */
@@ -253,15 +382,24 @@ const TopBar = () => {
     }
   }, [currentRole, availableRoles, dispatch, navigate]);
 
+  const isAreaCoordinator =
+    currentRole === UserRole.KID_REGISTER_ADMIN ||
+    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
+
   const hasMultipleRoles = availableRoles.length > 1;
-  const canOpenContextDropdown = hasMultipleRoles || hasMultipleGroups || hasMultipleCampuses;
+  const canOpenContextDropdown =
+    isAdminUser ||
+    hasMultipleRoles ||
+    availableGroups.length > 0 ||
+    hasMultipleCampuses ||
+    hasAreaCoordinatorOption;
 
   const appTitleDisplay = currentCampusName
     ? `${activeVisualRole.appTitle} - ${currentCampusName}`
     : activeVisualRole.appTitle;
 
-  let roleLabelDisplay = activeVisualRole.label;
-  if (activeGroupConfigName) {
+  let roleLabelDisplay = isAreaCoordinator ? 'Coordinador' : activeVisualRole.label;
+  if (activeGroupConfigName && !isAreaCoordinator) {
     roleLabelDisplay = `${activeVisualRole.label} - ${activeGroupConfigName}`;
   }
 
@@ -298,68 +436,205 @@ const TopBar = () => {
 
             <DropdownMenu.Portal>
               <DropdownMenu.Content 
-                className="bg-surface text-text-main rounded-2xl shadow-xl border border-gray-100 p-2.5 min-w-[270px] sm:min-w-[300px] max-h-[75vh] overflow-y-auto z-[250] pointer-events-auto animate-in fade-in duration-150"
+                className="bg-white text-gray-900 rounded-3xl shadow-2xl border border-gray-100/90 p-2 sm:p-2.5 min-w-[285px] sm:min-w-[320px] max-h-[75vh] overflow-y-auto z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-150"
                 sideOffset={8}
                 align="start"
               >
-                {hasMultipleRoles && (
-                  <>
-                    <div className="text-[10px] font-bold text-text-muted mb-2 px-2 pt-1 uppercase tracking-wider">Cambiar Rol</div>
-                    {availableRoles.map(role => (
-                      <DropdownMenu.Item
-                        key={role.id}
-                        onSelect={() => handleRoleChange(role)}
-                        className={clsx(
-                          "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer outline-none transition-colors text-sm",
-                          activeVisualRole.id === role.id ? "bg-primary/10 text-primary font-medium" : "hover:bg-gray-100"
-                        )}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className="w-2.5 h-2.5 rounded-full shrink-0 shadow-xs ring-1 ring-black/10"
-                            style={{ backgroundColor: role.color }}
-                          />
-                          <div className="flex flex-col">
-                            <span className="font-bold text-[10px] text-gray-400 uppercase tracking-wider">{role.appTitle}</span>
-                            <span className="font-semibold text-gray-800 text-sm leading-tight">{role.label}</span>
-                          </div>
-                        </div>
-                        {activeVisualRole.id === role.id && <Check size={16} className="text-primary shrink-0 ml-2" />}
-                      </DropdownMenu.Item>
-                    ))}
-                  </>
-                )}
-
-                {hasMultipleGroups && (
-                  <>
-                    <div className="text-[10px] font-bold text-text-muted mb-1.5 px-2 pt-2.5 border-t border-gray-100 uppercase tracking-wider">
-                      Cambiar Grupo
+                {/* Header informativo del menú */}
+                <div className="flex items-center justify-between px-2 pt-1 pb-2 mb-1.5 border-b border-gray-100">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-5 h-5 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+                      <Sparkles size={12} />
                     </div>
-                    {availableGroups.map((group) => {
-                      const isGroupActive = activeGroupConfigId === group.id;
-                      return (
-                        <DropdownMenu.Item
-                          key={group.id}
-                          onSelect={() => handleGroupChange(group)}
-                          className={clsx(
-                            "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer outline-none transition-colors text-sm",
-                            isGroupActive ? "bg-primary/10 text-primary font-medium" : "hover:bg-gray-100"
-                          )}
-                        >
-                          <div className="flex items-center gap-2.5">
-                            <UsersIcon size={15} className={isGroupActive ? "text-primary" : "text-gray-400"} />
-                            <span className="font-semibold text-gray-800 text-sm">{group.name}</span>
+                    <span className="text-[10.5px] font-bold text-gray-700 uppercase tracking-wider">
+                      {availableGroups.length > 0 ? 'Grupos de Servicio' : 'Cambiar Rol'}
+                    </span>
+                  </div>
+                  {currentCampusName && (
+                    <span className="text-[10px] font-semibold text-gray-500 bg-gray-100 px-2 py-0.5 rounded-full truncate max-w-[130px]">
+                      {currentCampusName}
+                    </span>
+                  )}
+                </div>
+
+                {/* 1. Coordinación de Área (si aplica) */}
+                {hasAreaCoordinatorOption && (
+                  <div className="mb-2">
+                    <DropdownMenu.Item
+                      onSelect={handleAreaCoordinatorSelect}
+                      className={clsx(
+                        "flex items-center justify-between p-2 sm:p-2.5 rounded-2xl cursor-pointer outline-none transition-all text-sm border",
+                        isAreaCoordinatorActive
+                          ? "bg-primary/10 border-primary/30 text-primary font-bold shadow-2xs"
+                          : "bg-white hover:bg-gray-50 border-transparent hover:border-gray-200/80 text-gray-800"
+                      )}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                        <div className={clsx(
+                          "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-transform",
+                          isAreaCoordinatorActive
+                            ? "bg-primary text-white border-primary shadow-xs"
+                            : "bg-indigo-50 text-indigo-700 border-indigo-200/80"
+                        )}>
+                          <Crown size={16} />
+                        </div>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="font-bold text-sm leading-tight truncate">
+                              Coordinación de Área
+                            </span>
+                            <span className="text-[10px] font-extrabold px-1.5 py-0.2 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200/70">
+                              Coordinador
+                            </span>
                           </div>
-                          {isGroupActive && <Check size={16} className="text-primary shrink-0 ml-2" />}
-                        </DropdownMenu.Item>
-                      );
-                    })}
-                  </>
+                          <span className="font-medium text-[11px] text-gray-400 leading-tight mt-0.5 truncate">
+                            Regikids · Todos los grupos
+                          </span>
+                        </div>
+                      </div>
+                      {isAreaCoordinatorActive && (
+                        <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0 ml-2 shadow-2xs">
+                          <Check size={12} strokeWidth={3} />
+                        </div>
+                      )}
+                    </DropdownMenu.Item>
+                  </div>
                 )}
 
+                {/* 2. Grupos de Servicio (cada grupo con su rol correspondiente vinculado) */}
+                {availableGroups.length > 0 && (
+                  <div className="mb-1">
+                    <div className="flex flex-col gap-1.5">
+                      {availableGroups.map((group) => {
+                        const primaryArea = group.areas[0];
+                        const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
+                        const isSupervisor = primaryRole === VolunteerRole.SUPERVISOR;
+                        const isCoordinator = primaryRole === VolunteerRole.GROUP_COORDINATOR;
+                        const roleLabel = isSupervisor
+                          ? 'Supervisor'
+                          : isCoordinator
+                            ? 'Coordinador'
+                            : 'Servidor';
+                        const areaName = primaryArea?.name || 'Regikids';
+                        const isGroupActive = !isAreaCoordinatorActive && activeGroupConfigId === group.id;
+
+                        return (
+                          <DropdownMenu.Item
+                            key={group.id}
+                            onSelect={() => handleGroupChange(group)}
+                            className={clsx(
+                              "flex items-center justify-between p-2 sm:p-2.5 rounded-2xl cursor-pointer outline-none transition-all text-sm border",
+                              isGroupActive
+                                ? "bg-primary/10 border-primary/30 text-primary font-bold shadow-2xs"
+                                : "bg-white hover:bg-gray-50 border-transparent hover:border-gray-200/80 text-gray-800"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div className={clsx(
+                                "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 border transition-transform",
+                                isGroupActive
+                                  ? "bg-primary text-white border-primary shadow-xs"
+                                  : isSupervisor
+                                    ? "bg-purple-50 text-purple-700 border-purple-200/80"
+                                    : isCoordinator
+                                      ? "bg-pink-50 text-pink-700 border-pink-200/80"
+                                      : "bg-emerald-50 text-emerald-700 border-emerald-200/80"
+                              )}>
+                                {isSupervisor ? (
+                                  <Shield size={16} />
+                                ) : isCoordinator ? (
+                                  <Crown size={16} />
+                                ) : (
+                                  <UsersIcon size={16} />
+                                )}
+                              </div>
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <div className="flex items-center gap-1.5 flex-wrap">
+                                  <span className="font-bold text-sm leading-tight text-gray-900 truncate">
+                                    {group.name}
+                                  </span>
+                                  <span
+                                    className={clsx(
+                                      "text-[10px] font-extrabold px-1.5 py-0.2 rounded-md border",
+                                      isSupervisor
+                                        ? "bg-purple-100 text-purple-700 border-purple-200/80"
+                                        : isCoordinator
+                                          ? "bg-pink-100 text-pink-700 border-pink-200/80"
+                                          : "bg-emerald-100 text-emerald-800 border-emerald-200/80"
+                                    )}
+                                  >
+                                    {roleLabel}
+                                  </span>
+                                </div>
+                                <span className="font-medium text-[11px] text-gray-400 leading-tight mt-0.5 truncate">
+                                  {areaName}
+                                </span>
+                              </div>
+                            </div>
+                            {isGroupActive && (
+                              <div className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center shrink-0 ml-2 shadow-2xs">
+                                <Check size={12} strokeWidth={3} />
+                              </div>
+                            )}
+                          </DropdownMenu.Item>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 3. Funciones del Sistema / Admin o fallback sin grupos */}
+                {(availableGroups.length === 0 || isAdminUser) && (
+                  <div className={clsx(availableGroups.length > 0 && "pt-2 mt-1.5 border-t border-gray-100")}>
+                    {availableGroups.length > 0 && (
+                      <div className="text-[10px] font-bold text-gray-400 mb-1 px-2 uppercase tracking-wider">
+                        {isAdminUser ? 'Funciones de Administrador' : 'Cambiar Rol'}
+                      </div>
+                    )}
+                    <div className="flex flex-col gap-0.5">
+                      {availableRoles.map((role) => {
+                        const isRoleActive = currentRole === role.id;
+                        return (
+                          <DropdownMenu.Item
+                            key={role.id}
+                            onSelect={() => handleRoleChange(role)}
+                            className={clsx(
+                              "flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer outline-none transition-colors text-sm",
+                              isRoleActive
+                                ? "bg-primary/10 text-primary font-bold"
+                                : "text-gray-700 hover:bg-gray-50"
+                            )}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <span
+                                className={clsx(
+                                  "w-2 h-2 rounded-full shrink-0",
+                                  isRoleActive ? "bg-primary ring-2 ring-primary/20" : "bg-gray-300"
+                                )}
+                              />
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] text-gray-400 font-medium leading-none mb-0.5">
+                                  {role.appTitle}
+                                </span>
+                                <span className="text-sm font-semibold leading-tight truncate">
+                                  {role.label}
+                                </span>
+                              </div>
+                            </div>
+                            {isRoleActive && (
+                              <Check size={16} className="text-primary shrink-0 ml-2" />
+                            )}
+                          </DropdownMenu.Item>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Sede de servicio (si tiene múltiples sedes) */}
                 {hasMultipleCampuses && (
-                  <div className="pt-2.5 mt-2.5 border-t border-gray-100">
-                    <div className="text-[10px] font-bold text-text-muted mb-1.5 px-2 uppercase tracking-wider">
+                  <div className="pt-2 mt-1 border-t border-gray-100">
+                    <div className="text-[10px] font-bold text-gray-400 mb-1.5 px-2 uppercase tracking-wider">
                       Sede de servicio
                     </div>
                     <DropdownMenu.Item
@@ -495,6 +770,7 @@ const TopBar = () => {
         forceOpen={onboardingModalOpen}
         onClose={() => setOnboardingModalOpen(false)}
       />
+
     </header>
     </>
   );

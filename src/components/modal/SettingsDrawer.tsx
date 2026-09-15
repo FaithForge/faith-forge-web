@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { Settings, MapPin, CalendarClock, Printer, X, Loader2, Bluetooth, Check, RefreshCw, LogOut } from 'lucide-react';
+import { Settings, MapPin, CalendarClock, Printer, X, Loader2, Bluetooth, Check, RefreshCw, LogOut, Users } from 'lucide-react';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import Button from '@/components/ui/Button';
@@ -12,11 +12,18 @@ import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/chur
 import { updateCurrentChurchMeeting } from '@/libs/state/redux/slices/church/churchMeeting.slice';
 import { updateCurrentChurchPrinter } from '@/libs/state/redux/slices/church/churchPrinter.slice';
 import { setPrinterMode, setBluetoothStatus, PrinterModeType } from '@/libs/state/redux/slices/church/printerMode.slice';
-import { logout } from '@/libs/state/redux/slices/user/auth.slice';
+import { logout, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
+import {
+  setActiveCampus,
+  setActiveGroupConfig,
+  setActiveVolunteerRole,
+} from '@/libs/state/redux/slices/church/volunteerContext.slice';
 import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurchPrinter } from '@/libs/models';
+import { VolunteerRole } from '@/libs/models/Volunteer';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-import { ChurchRole, IsAdmin, UserRole } from '@/libs/utils/auth';
+import { AppRole, ChurchRole, IsAdmin, UserRole } from '@/libs/utils/auth';
+import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 
 interface SettingsDrawerProps {
@@ -82,6 +89,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
     userMsRoles = [],
   } = useAppSelector((state) => state.volunteerContextSlice);
 
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>('');
   const [selectedPrinterId, setSelectedPrinterId] = useState<string>('');
@@ -92,15 +100,15 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
-  const isChurchRole =
-    isChurchVolunteer &&
-    (!currentRole || !userMsRoles.includes(currentRole));
-
   const userRoles = (user?.roles as UserRole[]) || [];
   const isUserAdmin =
     IsAdmin(userRoles) ||
     currentRole === UserRole.SUPER_ADMIN ||
     currentRole === UserRole.ADMIN;
+
+  const isChurchRole =
+    isChurchVolunteer &&
+    (!currentRole || !userMsRoles.includes(currentRole));
 
   const isKidChurchRole =
     currentRole === ChurchRole.MINISTRY_ADMIN ||
@@ -118,22 +126,63 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       currentRole === UserRole.KID_GROUP_SUPERVISOR ||
       currentRole === UserRole.KID_GROUP_USER);
 
+  const { campuses: volunteerCampuses = [], activeGroupConfigId } = useAppSelector(
+    (state) => state.volunteerContextSlice
+  );
+
+  // Sedes disponibles: Administradores ven todas; voluntarios ven sus sedes asignadas (o catálogo completo si está vacío)
+  const availableCampuses = useMemo(() => {
+    if (isUserAdmin) {
+      return campuses.data;
+    }
+    if (volunteerCampuses && volunteerCampuses.length > 0) {
+      return volunteerCampuses;
+    }
+    return campuses.data;
+  }, [isUserAdmin, volunteerCampuses, campuses.data]);
+
+  // Grupos disponibles para la sede seleccionada
+  const availableGroups = useMemo(() => {
+    if (!selectedCampusId) return [];
+    const volCampus = volunteerCampuses.find((c) => c.id === selectedCampusId);
+    return volCampus?.groups || [];
+  }, [volunteerCampuses, selectedCampusId]);
+
   // Initial load
   useEffect(() => {
     if (open) {
       dispatch(GetChurchCampuses({ force: true }));
       const effectiveCampusId =
-        volunteerActiveCampusId || campuses.current?.id || '';
+        volunteerActiveCampusId || campuses.current?.id || (availableCampuses[0]?.id || '');
       setSelectedCampusId(effectiveCampusId);
       if (effectiveCampusId && campuses.current?.id !== effectiveCampusId) {
         dispatch(updateCurrentChurchCampus(effectiveCampusId));
       }
+      setSelectedGroupId(activeGroupConfigId || '');
       const isCurrentPrinterActive =
         printers.current?.state === ChurchPrinterStateEnum.ACTIVE;
       setSelectedPrinterId(isCurrentPrinterActive ? printers.current?.id || '' : '');
       setSelectedMode(printerModeSlice?.mode || 'NETWORK');
     }
-  }, [open, volunteerActiveCampusId]);
+  }, [open, volunteerActiveCampusId, activeGroupConfigId]);
+
+  // Auto-seleccionar grupo si solo existe 1 para la sede seleccionada
+  useEffect(() => {
+    if (!open) return;
+    if (availableGroups.length === 1) {
+      if (selectedGroupId !== availableGroups[0].id) {
+        setSelectedGroupId(availableGroups[0].id);
+      }
+    } else if (availableGroups.length > 1) {
+      const isCurrentValid = availableGroups.some((g) => g.id === selectedGroupId);
+      if (!isCurrentValid) {
+        const match = availableGroups.find((g) => g.id === activeGroupConfigId);
+        setSelectedGroupId(match ? match.id : availableGroups[0].id);
+      }
+    } else {
+      setSelectedGroupId('');
+    }
+  }, [open, availableGroups, selectedGroupId, activeGroupConfigId]);
 
   // Subscribe to Bluetooth printer events
   useEffect(() => {
@@ -198,8 +247,57 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   };
 
   const handleSave = () => {
-    if (selectedCampusId) dispatch(updateCurrentChurchCampus(selectedCampusId));
+    // 1. Guardar Sede
+    if (selectedCampusId) {
+      dispatch(updateCurrentChurchCampus(selectedCampusId));
+      const campusName =
+        availableCampuses.find((c) => c.id === selectedCampusId)?.name ||
+        campuses.data.find((c) => c.id === selectedCampusId)?.name ||
+        '';
+      dispatch(setActiveCampus({ campusId: selectedCampusId, campusName }));
+    }
+
+    // 2. Guardar Grupo de Servicio si aplica
+    if (selectedGroupId && availableGroups.length > 0) {
+      const chosenGroup = availableGroups.find((g) => g.id === selectedGroupId);
+      if (chosenGroup) {
+        const primaryArea = chosenGroup.areas[0];
+        const primaryRole = primaryArea?.role || chosenGroup.groupRole || VolunteerRole.VOLUNTEER;
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: chosenGroup.id,
+            groupConfigName: chosenGroup.name,
+            role: primaryRole,
+          })
+        );
+        dispatch(setActiveVolunteerRole(primaryRole));
+
+        if (!isUserAdmin) {
+          const isRegikids =
+            !primaryArea?.scope ||
+            primaryArea.scope === 'KID_REGISTRATION' ||
+            (primaryArea.name || '').toLowerCase().includes('regi');
+          let targetRole: AppRole;
+          if (primaryArea?.permissions?.[0]) {
+            targetRole = primaryArea.permissions[0] as AppRole;
+          } else if (primaryRole === VolunteerRole.SUPERVISOR) {
+            targetRole = isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+          } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
+            targetRole = isRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+          } else {
+            targetRole = isRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+          }
+          if (targetRole && isRoleEnabled(targetRole)) {
+            dispatch(changeCurrentRole(targetRole));
+          }
+        }
+      }
+    }
+
+    // 3. Guardar Reunión / Servicio
     if (selectedMeetingId) dispatch(updateCurrentChurchMeeting(selectedMeetingId));
+
+    // 4. Guardar Impresora
     if (!isKidChurchRole) {
       dispatch(setPrinterMode(selectedMode));
       if (selectedMode === 'NETWORK' && selectedPrinterId) {
@@ -256,14 +354,6 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
         (p as any).active === true,
     );
   }, [printers, selectedCampusId]);
-
-  const selectedCampusName = useMemo(() => {
-    if (volunteerActiveCampusName && volunteerActiveCampusId === selectedCampusId) {
-      return volunteerActiveCampusName;
-    }
-    const found = campuses.data.find((c) => c.id === selectedCampusId);
-    return found?.name || campuses.current?.name || volunteerActiveCampusName || 'Sede asignada';
-  }, [campuses.data, campuses.current, selectedCampusId, volunteerActiveCampusId, volunteerActiveCampusName]);
 
   // Auto-select or align meeting when availableMeetings change
   useEffect(() => {
@@ -327,6 +417,18 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const handleCampusChange = (campusId: string) => {
     setSelectedCampusId(campusId);
     setSelectedMeetingId('');
+
+    // Ajustar grupos de la nueva sede
+    const volCampus = volunteerCampuses.find((c) => c.id === campusId);
+    const newGroups = volCampus?.groups || [];
+    if (newGroups.length === 1) {
+      setSelectedGroupId(newGroups[0].id);
+    } else if (newGroups.length > 1) {
+      setSelectedGroupId(newGroups[0].id);
+    } else {
+      setSelectedGroupId('');
+    }
+
     const rawCampusPrinters: IChurchPrinter[] =
       (printers as any).printersByCampus?.[campusId] || [];
     const activePrinters = rawCampusPrinters.filter(
@@ -360,6 +462,7 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
   const isSaveDisabled =
     !selectedCampusId ||
     !selectedMeetingId ||
+    (availableGroups.length > 0 && !selectedGroupId) ||
     (!isKidChurchRole && !isBluetoothMode && !selectedPrinterId) ||
     (!isKidChurchRole && isBluetoothMode && !isBluetoothConnected);
 
@@ -391,40 +494,74 @@ const SettingsDrawer = ({ open, onOpenChange }: SettingsDrawerProps) => {
       }}
     >
             
-            {/* Sede: Fija e informativa si el servidor ya tiene sede elegida / asignada por Church */}
-            {isChurchRole || volunteerActiveCampusId ? (
-              <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 flex items-center justify-between">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                    <MapPin size={20} />
-                  </div>
-                  <div className="min-w-0">
-                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">
-                      Sede de servicio
-                    </span>
-                    <p className="text-base font-bold text-gray-900 truncate">
-                      {selectedCampusName}
-                    </p>
-                  </div>
+            {/* Sede a registrar */}
+            <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+              <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
+                <MapPin size={16} className="text-primary" /> Sede a registrar
+              </label>
+              <div className="relative">
+                <select 
+                  className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
+                  value={selectedCampusId}
+                  onChange={(e) => handleCampusChange(e.target.value)}
+                  disabled={availableCampuses.length <= 1}
+                >
+                  {availableCampuses.length === 0 ? (
+                    <option value="" disabled>No hay sedes disponibles</option>
+                  ) : (
+                    <>
+                      {availableCampuses.length > 1 && (
+                        <option value="" disabled>Seleccione sede...</option>
+                      )}
+                      {availableCampuses.map((campus: any) => (
+                        <option key={campus.id} value={campus.id}>{campus.name}</option>
+                      ))}
+                    </>
+                  )}
+                </select>
+                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
+                  <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
                 </div>
-                <span className="px-2.5 py-1 rounded-full text-[11px] font-semibold bg-primary/10 text-primary shrink-0">
-                  Sede elegida
-                </span>
               </div>
-            ) : (
+
+              {/* Badge o información atractiva de grupo único asignado */}
+              {availableGroups.length === 1 && (
+                <div className="mt-2.5 flex items-center justify-between px-3 py-2 rounded-xl bg-primary/5 border border-primary/15">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <div className="w-6 h-6 rounded-lg bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <Users size={13} />
+                    </div>
+                    <div className="min-w-0">
+                      <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider leading-tight">
+                        Grupo asignado
+                      </span>
+                      <span className="text-xs font-bold text-gray-800 truncate block">
+                        {availableGroups[0].name}
+                      </span>
+                    </div>
+                  </div>
+                  <span className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full shrink-0">
+                    Único grupo
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {/* Grupo de servicio (solo si la sede tiene MÁS de 1 grupo asignado para elegir) */}
+            {availableGroups.length > 1 && (
               <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                 <label className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-2 uppercase tracking-wide">
-                  <MapPin size={16} className="text-primary" /> Sede a registrar
+                  <Users size={16} className="text-primary" /> Grupo de servicio
                 </label>
                 <div className="relative">
                   <select 
-                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium disabled:bg-gray-50 disabled:text-gray-400 disabled:cursor-not-allowed"
-                    value={selectedCampusId}
-                    onChange={(e) => handleCampusChange(e.target.value)}
+                    className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-3 px-4 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm appearance-none font-medium"
+                    value={selectedGroupId}
+                    onChange={(e) => setSelectedGroupId(e.target.value)}
                   >
-                    <option value="" disabled>Seleccione sede...</option>
-                    {campuses.data.map((campus) => (
-                      <option key={campus.id} value={campus.id}>{campus.name}</option>
+                    <option value="" disabled>Seleccione grupo de servicio...</option>
+                    {availableGroups.map((group: any) => (
+                      <option key={group.id} value={group.id}>{group.name}</option>
                     ))}
                   </select>
                   <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">

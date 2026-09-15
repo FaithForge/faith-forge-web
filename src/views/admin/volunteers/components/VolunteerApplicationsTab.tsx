@@ -236,7 +236,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
       {loading && applications.length === 0 ? (
         <CellListSkeleton count={4} />
       ) : applications.length === 0 ? (
-        <div className="text-center py-12 px-4 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-12 px-4 bg-white rounded-3xl border border-gray-100 shadow-xs">
           <Inbox size={44} className="mx-auto text-gray-300 mb-2" />
           <h3 className="text-base font-bold text-gray-700">No hay postulaciones registradas</h3>
           <p className="text-xs text-gray-400 mt-1 max-w-sm mx-auto">
@@ -246,7 +246,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
           {applications.map((app) => {
             const applicantUser = app.user;
             const applicantName = applicantUser
@@ -259,12 +259,8 @@ export const VolunteerApplicationsTab: React.FC = () => {
               <div
                 key={app.id}
                 className={clsx(
-                  'bg-white rounded-2xl p-4 sm:p-5 shadow-xs border transition-all space-y-3',
-                  app.status === VolunteerApplicationStatus.PENDING
-                    ? 'border-amber-200/70 bg-amber-50/20'
-                    : app.status === VolunteerApplicationStatus.APPROVED
-                    ? 'border-emerald-200/70'
-                    : 'border-rose-200/70'
+                  'p-4 sm:p-5 transition-colors space-y-3 hover:bg-gray-50/60',
+                  app.status === VolunteerApplicationStatus.PENDING && 'bg-amber-50/20'
                 )}
               >
                 {/* Header: Name, Age, Status */}
