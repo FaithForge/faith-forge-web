@@ -1,6 +1,6 @@
-import { IChurchCampus, IChurchCampuses } from '@/libs/models';
+import { IChurch, IChurchCampus, IChurchCampuses } from '@/libs/models';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GetChurchCampuses } from '../../thunks/church/church.thunk';
+import { GetChurchCampuses, UpdateChurch } from '../../thunks/church/church.thunk';
 
 const initialState: IChurchCampuses = {
   data: [],
@@ -19,9 +19,24 @@ const churchCampusSlice = createSlice({
           (churchCampus: IChurchCampus) => churchCampus.id === action.payload,
         ) ?? state.current;
     },
+    updateChurchTerminology: (state, action: PayloadAction<Record<string, string>>) => {
+      state.churchTerminologyOverrides = {
+        ...state.churchTerminologyOverrides,
+        ...action.payload,
+      };
+      if (state.church) {
+        state.church.terminologyOverrides = state.churchTerminologyOverrides;
+      }
+    },
+    setChurch: (state, action: PayloadAction<IChurch>) => {
+      state.church = action.payload;
+      state.churchTerminologyOverrides = action.payload.terminologyOverrides || {};
+    },
     resetChurchCampusState: (state) => {
       state.data = initialState.data;
       state.current = initialState.current;
+      state.church = undefined;
+      state.churchTerminologyOverrides = undefined;
       state.error = initialState.error;
       state.loading = initialState.loading;
     },
@@ -55,6 +70,13 @@ const churchCampusSlice = createSlice({
       state.current = undefined;
     });
 
+    builder.addCase(UpdateChurch.fulfilled, (state, action) => {
+      if (action.payload) {
+        state.church = action.payload;
+        state.churchTerminologyOverrides = action.payload.terminologyOverrides || {};
+      }
+    });
+
     builder.addCase(GetChurchCampuses.rejected, (state, action) => {
       state.data = initialState.data;
       state.error = action.error.message;
@@ -63,6 +85,10 @@ const churchCampusSlice = createSlice({
   },
 });
 
-export const { updateCurrentChurchCampus, resetChurchCampusState } =
-  churchCampusSlice.actions;
+export const {
+  updateCurrentChurchCampus,
+  updateChurchTerminology,
+  setChurch,
+  resetChurchCampusState,
+} = churchCampusSlice.actions;
 export default churchCampusSlice.reducer;

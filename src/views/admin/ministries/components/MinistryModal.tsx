@@ -2,12 +2,18 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IMinistry, MinistryStateEnum } from '@/libs/models';
+import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateMinistry, UpdateMinistry } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import {
+  KIDS_TERMINOLOGY_FIELDS,
+  GENERAL_MINISTRY_TERMINOLOGY_FIELDS,
+} from '@/libs/constants/defaultTerminology';
 import { toast } from 'sonner';
-import { Layers, Loader2, MapPin, Sparkles } from 'lucide-react';
+import { Layers, MapPin, Sparkles, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { FaChild } from 'react-icons/fa6';
+import clsx from 'clsx';
 
 interface MinistryModalProps {
   open: boolean;
@@ -18,7 +24,7 @@ interface MinistryModalProps {
 }
 
 /**
- * Drawer modal to create or edit a Ministry.
+ * Drawer modal to create or edit a Ministry, including its MinistryType and Terminology.
  *
  * @param {MinistryModalProps} props - Component properties.
  * @returns {JSX.Element} The rendered modal drawer.
@@ -38,6 +44,9 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [type, setType] = useState<MinistryType>(MinistryType.GENERAL);
+  const [terminologyOverrides, setTerminologyOverrides] = useState<Record<string, string>>({});
+  const [showTerminology, setShowTerminology] = useState(false);
   const [active, setActive] = useState(true);
   const [nameError, setNameError] = useState('');
 
@@ -50,15 +59,35 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       if (ministryToEdit) {
         setName(ministryToEdit.name);
         setDescription(ministryToEdit.description || '');
+        setType(ministryToEdit.type || MinistryType.GENERAL);
+        setTerminologyOverrides(ministryToEdit.terminologyOverrides || {});
         setActive(ministryToEdit.state === MinistryStateEnum.ACTIVE);
       } else {
         setName('');
         setDescription('');
+        setType(MinistryType.GENERAL);
+        setTerminologyOverrides({});
         setActive(true);
       }
       setNameError('');
+      setShowTerminology(false);
     }
   }, [open, ministryToEdit]);
+
+  const handleTermChange = (key: string, value: string) => {
+    setTerminologyOverrides((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+
+  const handleResetTerm = (key: string) => {
+    setTerminologyOverrides((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +96,12 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       return;
     }
 
+    // Clean empty terminology overrides
+    const cleanTerms: Record<string, string> = {};
+    Object.entries(terminologyOverrides).forEach(([k, v]) => {
+      if (v && v.trim()) cleanTerms[k] = v.trim();
+    });
+
     try {
       if (isEditing && ministryToEdit) {
         await dispatch(
@@ -74,6 +109,8 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
             id: ministryToEdit.id,
             name: name.trim(),
             description: description.trim() || undefined,
+            type,
+            terminologyOverrides: cleanTerms,
             state: active ? MinistryStateEnum.ACTIVE : MinistryStateEnum.INACTIVE,
           }),
         ).unwrap();
@@ -89,6 +126,8 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
             churchId: import.meta.env.VITE_CHURCH_ID,
             name: name.trim(),
             description: description.trim() || undefined,
+            type,
+            terminologyOverrides: cleanTerms,
           }),
         ).unwrap();
         toast.success('Ministerio creado exitosamente');
@@ -103,6 +142,11 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       toast.error(errMsg);
     }
   };
+
+  const activeFields =
+    type === MinistryType.KIDS
+      ? KIDS_TERMINOLOGY_FIELDS
+      : GENERAL_MINISTRY_TERMINOLOGY_FIELDS;
 
   return (
     <AppDrawer
@@ -121,6 +165,70 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
           </div>
         )}
 
+        {/* Tipo de Ministerio (Selector interactivo) */}
+        <div>
+          <label className="text-xs font-semibold text-gray-700 block mb-1.5">
+            Tipo de Ministerio <span className="text-rose-500">*</span>
+          </label>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setType(MinistryType.GENERAL)}
+              className={clsx(
+                'flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all cursor-pointer select-none',
+                type === MinistryType.GENERAL
+                  ? 'bg-indigo-50/80 border-indigo-300 text-indigo-950 shadow-2xs'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300',
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className={clsx(
+                    'w-6 h-6 rounded-lg flex items-center justify-center',
+                    type === MinistryType.GENERAL
+                      ? 'bg-indigo-600 text-white'
+                      : 'bg-gray-100 text-gray-500',
+                  )}
+                >
+                  <Layers size={13} />
+                </div>
+                <span className="text-xs font-bold">General</span>
+              </div>
+              <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                Alabanza, logística, ujieres, bienvenida, etc.
+              </p>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setType(MinistryType.KIDS)}
+              className={clsx(
+                'flex flex-col items-start gap-1 p-3 rounded-xl border text-left transition-all cursor-pointer select-none',
+                type === MinistryType.KIDS
+                  ? 'bg-emerald-50/80 border-emerald-300 text-emerald-950 shadow-2xs'
+                  : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300',
+              )}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className={clsx(
+                    'w-6 h-6 rounded-lg flex items-center justify-center',
+                    type === MinistryType.KIDS
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-100 text-gray-500',
+                  )}
+                >
+                  <FaChild className="w-3 h-3" />
+                </div>
+                <span className="text-xs font-bold">Infantil (Niños)</span>
+              </div>
+              <p className="text-[11px] text-gray-500 leading-snug mt-0.5">
+                Escuela de niños, salones por edad, tutores y check-in.
+              </p>
+            </button>
+          </div>
+        </div>
+
         <div>
           <label className="text-xs font-semibold text-gray-700 block mb-1">
             Nombre del Ministerio <span className="text-rose-500">*</span>
@@ -131,7 +239,11 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
               setName(e.target.value);
               if (nameError) setNameError('');
             }}
-            placeholder="Ej. Iglekids, Consolidación, Alabanza..."
+            placeholder={
+              type === MinistryType.KIDS
+                ? 'Ej. Ministerio de Niños, Iglekids...'
+                : 'Ej. Alabanza, Logística, Consolidación...'
+            }
             error={nameError}
             autoFocus
           />
@@ -145,9 +257,100 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Breve descripción del propósito de este ministerio..."
-            rows={3}
-            className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none"
+            rows={2}
+            className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-xl outline-none focus:border-primary focus:ring-1 focus:ring-primary transition-all resize-none placeholder:text-gray-400"
           />
+        </div>
+
+        {/* Sección de Nomenclatura del Ministerio */}
+        <div className="border border-indigo-100 rounded-2xl bg-indigo-50/30 overflow-hidden transition-all">
+          <button
+            type="button"
+            onClick={() => setShowTerminology(!showTerminology)}
+            className="w-full flex items-center justify-between p-3.5 text-left hover:bg-indigo-50/60 transition-colors cursor-pointer select-none"
+          >
+            <div className="flex items-center gap-2">
+              <Sparkles size={15} className="text-indigo-600" />
+              <div>
+                <p className="text-xs font-bold text-gray-900">
+                  Vocabulario y Nomenclatura de este Ministerio
+                </p>
+                <p className="text-[11px] text-gray-500">
+                  {Object.keys(terminologyOverrides).length > 0
+                    ? `${Object.keys(terminologyOverrides).length} término(s) personalizado(s)`
+                    : 'Usa los términos predeterminados'}
+                </p>
+              </div>
+            </div>
+            {showTerminology ? (
+              <ChevronUp size={16} className="text-gray-400" />
+            ) : (
+              <ChevronDown size={16} className="text-gray-400" />
+            )}
+          </button>
+
+          {showTerminology && (
+            <div className="p-3.5 pt-1 space-y-3 border-t border-indigo-100/70 bg-white">
+              <p className="text-[11px] text-gray-500 leading-snug">
+                Personaliza cómo se llamarán los roles y estaciones operativas dentro de este ministerio:
+              </p>
+
+              {activeFields.map((field) => {
+                const currentValue = terminologyOverrides[field.key] || '';
+                const isOverridden = !!terminologyOverrides[field.key];
+
+                return (
+                  <div
+                    key={field.key}
+                    className="p-3 bg-slate-50/70 border border-gray-100 rounded-xl space-y-2"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11.5px] font-bold text-gray-800">
+                        {field.label}
+                      </span>
+                      {isOverridden && (
+                        <button
+                          type="button"
+                          onClick={() => handleResetTerm(field.key)}
+                          className="text-[10px] text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
+                        >
+                          <RotateCcw className="w-2.5 h-2.5" />
+                          <span>Por defecto</span>
+                        </button>
+                      )}
+                    </div>
+
+                    {field.suggestedOptions && (
+                      <div className="flex flex-wrap gap-1">
+                        {field.suggestedOptions.map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => handleTermChange(field.key, opt)}
+                            className={clsx(
+                              'text-[10.5px] px-2 py-0.5 rounded-md border transition-all',
+                              (currentValue || field.defaultValue) === opt
+                                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-semibold'
+                                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100',
+                            )}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    <Input
+                      value={currentValue}
+                      onChange={(e) => handleTermChange(field.key, e.target.value)}
+                      placeholder={`Por defecto: "${field.defaultValue}"`}
+                      className="text-xs placeholder:text-gray-400"
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {isEditing && (

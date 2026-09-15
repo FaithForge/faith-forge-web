@@ -30,6 +30,15 @@ export const ChurchMeetingStateEnum = {
 export type ChurchMeetingStateEnum =
   (typeof ChurchMeetingStateEnum)[keyof typeof ChurchMeetingStateEnum];
 
+export interface IChurch {
+  id: string;
+  name: string;
+  description?: string;
+  state?: EntityState;
+  terminologyOverrides?: Record<string, string>;
+  campuses?: IChurchCampus[];
+}
+
 export interface IChurchCampus {
   id: string;
   name: string;
@@ -63,7 +72,10 @@ export interface IChurchPrinter {
   state?: ChurchPrinterStateEnum;
 }
 
-export interface IChurchCampuses extends ReduxDefaultState<IChurchCampus> {}
+export interface IChurchCampuses extends ReduxDefaultState<IChurchCampus> {
+  church?: IChurch;
+  churchTerminologyOverrides?: Record<string, string>;
+}
 export interface IChurchMeetings extends ReduxDefaultState<IChurchMeeting> {}
 export interface IChurchPrinters extends ReduxDefaultState<IChurchPrinter> {}
 

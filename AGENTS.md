@@ -18,8 +18,12 @@
 - Prefer small, focused components and hooks over large multi-purpose files.
 - Preserve the existing naming patterns in `src/components`, `src/libs`, `src/services`, and `src/views`.
 - **Route and URL Naming**: All routes, paths, and URLs MUST be strictly in English (e.g. `/kid-registration/generate-guardian-qr`, `/kid-church/attendance`, `/admin/church-meetings`). NEVER mix Spanish and English in route names or URL paths.
-- **Brand Name in User-Facing Copy**: The user-facing app name presented to the end user in UI texts, modals, alerts, and messages is strictly **Iglekids** (and its sub-modules Regikids/Iglekids). NEVER use "Faith Forge" in user-facing copy or modals. "Faith Forge" is only the internal/project codebase name.
-- **Role Terminology: Use STRICTLY 'Servidor' (NEVER 'Maestro')**: In all user-facing texts, labels, badges, modals, descriptions, and messages, the role name to use is strictly **Servidor** (or 'Servidor(a)'). NEVER use the words 'Maestro', 'Maestro(a)', or 'Maestro / Servidor' anywhere in the application copy or UI.
+- **Brand Name in User-Facing Copy**: En la interfaz, cada módulo presenta el nombre que le corresponde según el contexto y la configuración de la iglesia/ministerio (por defecto "Ministerio de Niños" con alias sugerido "Iglekids"). NEVER use "Faith Forge" in user-facing copy or modals. "Faith Forge" is only the internal/project codebase name.
+- **Jerarquía y Motor de Nomenclatura Adaptable**:
+  - Toda etiqueta, rol y término visible debe resolverse a través del motor de nomenclatura (`useChurchTerm` / `useMinistryTerm`), permitiendo que cada iglesia personalice su vocabulario.
+  - **Nivel Iglesia**: Términos institucionales (`meeting`, `campus`, `volunteer`, `small_group`).
+  - **Nivel Ministerio**: Scoped por `MinistryType` (`GENERAL` vs `KIDS`). En el contexto de niños, el término predeterminado es `Maestro(a)` (o configurable por la iglesia a `Servidor(a)`, `Tía/Tío`, etc.), y la estación de registro es configurable (ej. `Regikids` / `Registro de niños`). En ministerios generales se usa `Servidor`.
+  - **Nivel Área de Servicio**: Scoped por `MinistryAreaScope`.
 
 ## Architecture
 

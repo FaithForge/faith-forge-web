@@ -9,6 +9,7 @@ import {
   MinistryAreaStateEnum,
   MinistryGroupConfigStateEnum,
   ServiceAreaGroupStateEnum,
+  MinistryType,
 } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
@@ -71,7 +72,14 @@ export const GetMinistries = createAsyncThunk(
 export const CreateMinistry = createAsyncThunk(
   'church/CreateMinistry',
   async (
-    payload: { churchCampusId: string; churchId: string; name: string; description?: string },
+    payload: {
+      churchCampusId: string;
+      churchId: string;
+      name: string;
+      description?: string;
+      type?: MinistryType;
+      terminologyOverrides?: Record<string, string>;
+    },
     { getState, rejectWithValue },
   ) => {
     const state = getState() as RootState;
@@ -115,6 +123,8 @@ export const UpdateMinistry = createAsyncThunk(
       id: string;
       name?: string;
       description?: string;
+      type?: MinistryType;
+      terminologyOverrides?: Record<string, string>;
       state?: MinistryStateEnum;
     },
     { getState, rejectWithValue },

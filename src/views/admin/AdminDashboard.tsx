@@ -21,6 +21,7 @@ import {
 import { APP_ROUTES } from '@/config/routes';
 import clsx from 'clsx';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { TerminologyDrawer } from '@/components/modal/TerminologyDrawer';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CleanCache } from '@/libs/state/redux/thunks/admin/admin.thunk';
 import { toast } from 'sonner';
@@ -136,6 +137,15 @@ const ADMIN_CATEGORIES: AdminCategory[] = [
     icon: Database,
     items: [
       {
+        id: 'terminology-settings',
+        title: 'Vocabulario y Nomenclatura',
+        description: 'Personaliza los nombres de reuniones, sedes, roles y áreas según los conceptos de tu congregación.',
+        icon: Sparkles,
+        route: '',
+        iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+        iconColor: 'text-indigo-600',
+      },
+      {
         id: 'clear-cache',
         title: 'Borrar Caché',
         description: 'Limpia la caché del servidor para sincronizar datos modificados o forzar actualizaciones.',
@@ -155,6 +165,7 @@ const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [terminologyOpen, setTerminologyOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
 
   /**
@@ -221,6 +232,8 @@ const AdminDashboard: React.FC = () => {
                           if (isClearing) return;
                           if (item.id === 'clear-cache') {
                             setConfirmOpen(true);
+                          } else if (item.id === 'terminology-settings') {
+                            setTerminologyOpen(true);
                           } else {
                             navigate(item.route);
                           }
@@ -281,6 +294,12 @@ const AdminDashboard: React.FC = () => {
         cancelText="Cancelar"
         onConfirm={handleClearCache}
         type="warning"
+      />
+
+      {/* Drawer for Church and Ministry Terminology Customization */}
+      <TerminologyDrawer
+        open={terminologyOpen}
+        onOpenChange={setTerminologyOpen}
       />
     </div>
   );

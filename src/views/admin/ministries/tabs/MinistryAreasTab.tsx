@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetMinistryAreas } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
 import { IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum } from '@/libs/models';
+import { useMinistryTerm } from '@/libs/hooks/useTerm';
 import MinistryAreaModal from '../components/MinistryAreaModal';
 import clsx from 'clsx';
 
@@ -23,6 +24,9 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
   const dispatch = useAppDispatch();
   const { areasByMinistry, loadingAreas } = useAppSelector((state) => state.ministrySlice);
   const kidGroups = useAppSelector((state) => state.kidGroupSlice.data);
+
+  const regTerm = useMinistryTerm(ministryId, 'registration', 'Registro de Niños');
+  const moduleAlias = useMinistryTerm(ministryId, 'module_alias', 'Iglekids');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [areaToEdit, setAreaToEdit] = useState<IMinistryArea | null>(null);
@@ -173,12 +177,12 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
                       {/* Scope Badge */}
                       {area.scope === MinistryAreaScope.KID_REGISTRATION && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/80 shrink-0">
-                          <ShieldCheck size={10} /> Regikids (Check-in)
+                          <ShieldCheck size={10} /> {regTerm} (Check-in)
                         </span>
                       )}
                       {area.scope === MinistryAreaScope.KID_GROUP_MANAGEMENT && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
-                          <ShieldCheck size={10} /> Iglekids (Salones)
+                          <ShieldCheck size={10} /> {moduleAlias} (Salones)
                         </span>
                       )}
 

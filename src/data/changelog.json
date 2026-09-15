@@ -1,12 +1,27 @@
 [
   {
+    "version": "3.4.0",
+    "type": "minor",
+    "timestamp": "2026-09-15T14:55:33.488Z",
+    "dateFormatted": "15/09/2026 09:55 AM",
+    "title": "Personalización de vocabulario y nomenclatura",
+    "changes": [
+      "Configuración adaptable de nombres para reuniones, sedes y ministerios",
+      "Panel administrativo para ajustar la terminología de la iglesia"
+    ]
+  },
+  {
     "version": "3.3.1",
     "type": "patch",
-    "timestamp": "2026-09-15T03:54:16.959Z",
-    "dateFormatted": "14/09/2026 10:54 PM",
-    "title": "Corrección de visibilidad de impresoras",
+    "timestamp": "2026-09-15T08:48:00.000Z",
+    "dateFormatted": "15/09/2026 08:48 AM",
+    "title": "Diseño renovado de configuración de sesión y selector de roles",
     "changes": [
-      "Corrección: La sección de impresoras ya no aparece al iniciar sesión por primera vez para coordinadores de Iglekids."
+      "Diseño renovado, limpio y organizado para el selector de roles y grupos, agrupando funciones por módulos y mejorando la visualización del grupo asignado.",
+      "Rediseño más claro e intuitivo del panel de configuración de sesión, con selección limpia y sin etiquetas redundantes.",
+      "Cuando existen múltiples grupos, servicios o impresoras disponibles, la aplicación ahora solicita elegir explícitamente la opción deseada en lugar de preseleccionar una por defecto.",
+      "Corrección en el guardado de configuración para mantener siempre activo el rol y módulo seleccionado por el servidor sin cambios inesperados.",
+      "Optimización en la experiencia de inicio para servidores de Iglesia de Niños y Registro."
     ]
   },
   {

@@ -20,7 +20,6 @@ const BottomNav = () => {
   const { requestNavigation } = useNavigationGuard();
   
   const [openSettings, setOpenSettings] = useState(false);
-  const [sessionWizard, setSessionWizard] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
@@ -45,7 +44,6 @@ const BottomNav = () => {
   // Apertura automática de configuración inicial cuando no está configurado
   useEffect(() => {
     if (!isAdminRole && !isConfigured && !openSettings) {
-      setSessionWizard(true);
       setOpenSettings(true);
     }
   }, [isAdminRole, isConfigured, openSettings]);
@@ -134,13 +132,11 @@ const BottomNav = () => {
                 return;
               }
               if (!isConfigured && (item.label === 'Crear Niño' || item.label === 'Escanear QR')) {
-                setSessionWizard(true);
                 setOpenSettings(true);
                 toast.info('Por favor selecciona el servicio a registrar antes de continuar.');
                 return;
               }
               if (item.action === 'settings') {
-                setSessionWizard(false);
                 setOpenSettings(true);
                 return;
               }
@@ -229,11 +225,7 @@ const BottomNav = () => {
       {/* Drawer Modals */}
       <SettingsDrawer
         open={openSettings}
-        onOpenChange={(open) => {
-          setOpenSettings(open);
-          if (!open) setSessionWizard(false);
-        }}
-        sessionWizard={sessionWizard}
+        onOpenChange={setOpenSettings}
       />
       {isKidChurchRole ? (
         <KidChurchReportDrawer open={openReport} onOpenChange={setOpenReport} />

@@ -30,7 +30,9 @@ import {
   MinistryAreaStateEnum,
   MinistryGroupConfigStateEnum,
   MinistryStateEnum,
+  MinistryType,
 } from '@/libs/models';
+import { FaChild } from 'react-icons/fa6';
 import { APP_ROUTES } from '@/config/routes';
 import MinistryModal from './components/MinistryModal';
 import clsx from 'clsx';
@@ -358,6 +360,15 @@ const MinistriesManagementView: React.FC = () => {
                           <h2 className="text-sm sm:text-base font-bold text-gray-900 group-hover:text-primary transition-colors truncate">
                             {ministry.name}
                           </h2>
+                          {ministry.type === MinistryType.KIDS ? (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 shrink-0 shadow-2xs">
+                              <FaChild className="w-2.5 h-2.5" /> Infantil
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 shadow-2xs">
+                              <Layers size={9.5} /> General
+                            </span>
+                          )}
                           <span
                             className={clsx(
                               'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9.5px] font-bold shrink-0',

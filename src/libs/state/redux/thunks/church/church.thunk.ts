@@ -1,5 +1,5 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { ChurchMeetingStateEnum, ChurchPrinterStateEnum } from '@/libs/models';
+import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurch } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
@@ -569,4 +569,49 @@ export const DeleteChurchMeeting = createAsyncThunk(
     }
   },
 );
+
+/**
+ * Updates church details and terminology overrides via PATCH /church/:id.
+ *
+ * @param {object} payload - Target church id and fields to update.
+ * @returns {Promise<IChurch>} Updated church object.
+ */
+export const UpdateChurch = createAsyncThunk(
+  'church/UpdateChurch',
+  async (
+    payload: {
+      id: string;
+      name?: string;
+      description?: string;
+      terminologyOverrides?: Record<string, string>;
+    },
+    { getState, rejectWithValue },
+  ) => {
+    const { id, ...data } = payload;
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.PATCH,
+          url: `/church/${id}`,
+          options: {
+            data,
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response as IChurch;
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data ?? 'Error al actualizar la iglesia');
+      }
+      return rejectWithValue('Error desconocido');
+    }
+  },
+);
+
 

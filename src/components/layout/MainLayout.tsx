@@ -5,6 +5,7 @@ import BottomNav from './BottomNav';
 import TopBar, { userRolesNavBarConfig } from './TopBar';
 import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { SearchScrollProvider, useSearchScroll } from '@/libs/context/SearchScrollContext';
+import { RoleTransitionProvider } from '@/libs/context/RoleTransitionContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
@@ -277,7 +278,9 @@ const MainLayout = () => {
   return (
     <NavigationGuardProvider>
       <SearchScrollProvider>
-        <MainLayoutContent />
+        <RoleTransitionProvider>
+          <MainLayoutContent />
+        </RoleTransitionProvider>
       </SearchScrollProvider>
     </NavigationGuardProvider>
   );

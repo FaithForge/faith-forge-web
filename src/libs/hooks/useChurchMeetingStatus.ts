@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import dayjs from 'dayjs';
-import { useAppSelector } from '@/libs/state/redux/hooks';
-import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch } from '@/libs/utils/auth';
-import { VolunteerRole } from '@/libs/models/Volunteer';
 import {
   REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING,
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
 } from '@/libs/common-types/constants/copy';
+import { VolunteerRole } from '@/libs/models/Volunteer';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch } from '@/libs/utils/auth';
+import dayjs from 'dayjs';
+import { useEffect, useState } from 'react';
 
 const DAYS_MAP: Record<string, number> = {
   SUNDAY: 0,
@@ -88,7 +88,9 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const activeVolunteerRole = useAppSelector((state) => state.volunteerContextSlice.activeVolunteerRole);
+  const activeVolunteerRole = useAppSelector(
+    (state) => state.volunteerContextSlice.activeVolunteerRole,
+  );
 
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
@@ -114,7 +116,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
 
   const userRoles = (user?.roles as any[]) || [];
   const activeRoles = currentRole ? Array.from(new Set([...userRoles, currentRole])) : userRoles;
-  const isAdmin = IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
+  const isAdmin =
+    IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
 
   let isMeetingValid = true;
   let meetingErrorMsg = '';
@@ -129,19 +132,17 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
       meetingErrorMsg = REGISTRATION_CONFIRM_COPY_DIFFERENT_DAY_MEETING.message;
     } else {
       const currentTimeStr = currentTime.format('HH:mm:ss');
-      
+
       // Specifically use registration hour fields (initialRegistrationHour / finalRegistrationHour)
       const m = currentMeeting as any;
-      const initRaw = 
-        m.initialRegistrationHour ?? 
-        m.initial_registration_hour ?? 
-        m.registrationInitialHour;
-        
-      const finalRaw = 
-        m.finalRegistrationHour ?? 
-        m.final_registration_hour ?? 
-        m.registrationFinalHour ?? 
-        m.finalHour ?? 
+      const initRaw =
+        m.initialRegistrationHour ?? m.initial_registration_hour ?? m.registrationInitialHour;
+
+      const finalRaw =
+        m.finalRegistrationHour ??
+        m.final_registration_hour ??
+        m.registrationFinalHour ??
+        m.finalHour ??
         m.final_hour;
 
       const initTimeStr = normalizeTime(initRaw);
@@ -161,9 +162,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
 
   const isPrinterConfigured =
     printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
-  const isConfigured = isKidChurchRole
-    ? !!currentMeeting
-    : !!currentMeeting && isPrinterConfigured;
+  const isConfigured = isKidChurchRole ? !!currentMeeting : !!currentMeeting && isPrinterConfigured;
 
   const shouldBlockKids = !isAdmin && !isMeetingValid && isConfigured;
 

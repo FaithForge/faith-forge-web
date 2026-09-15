@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { IKidGroup, IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum } from '@/libs/models';
+import { IKidGroup, IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum, MinistryType } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   CreateMinistryArea,
@@ -41,6 +41,13 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
   const dispatch = useAppDispatch();
   const { loadingAction } = useAppSelector((state) => state.ministrySlice);
   const availableKidGroups = useAppSelector((state) => state.kidGroupSlice.data);
+  const parentMinistry = useAppSelector((state) =>
+    state.ministrySlice.ministries.find((m) => m.id === ministryId),
+  );
+  const isKidsMinistry = parentMinistry?.type === MinistryType.KIDS;
+  const regTerm = parentMinistry?.terminologyOverrides?.registration || 'Registro de niños';
+  const modAlias = parentMinistry?.terminologyOverrides?.module_alias || 'Iglekids';
+  const classroomTerm = parentMinistry?.terminologyOverrides?.classroom || 'Salón';
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -208,83 +215,100 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
         </div>
 
         {/* Functional Scope (Permissions) Selector */}
-        <div className="flex flex-col gap-1.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
-              <Shield size={14} className="text-primary" />
-              Alcance Ministerial / Permisos del Sistema
-            </label>
-          </div>
-          <p className="text-[11px] text-gray-500 leading-relaxed mb-1">
-            Determina qué permisos y módulos (Regikids, Iglekids, etc.) recibirán automáticamente los voluntarios asignados a esta área (Coordinadores, Supervisores y Servidores).
-          </p>
+        {isKidsMinistry ? (
+          <div className="flex flex-col gap-1.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                <Shield size={14} className="text-primary" />
+                Alcance Ministerial / Módulos Infantiles
+              </label>
+            </div>
+            <p className="text-[11px] text-gray-500 leading-relaxed mb-1">
+              Determina a qué módulos del ministerio infantil accederán automáticamente los servidores de esta área:
+            </p>
 
-          <div className="grid grid-cols-1 gap-2 pt-1">
-            {[
-              {
-                id: null,
-                label: 'Sin alcance específico (General)',
-                desc: 'Área estándar sin permisos automáticos de módulos infantiles.',
-                badge: 'General',
-              },
-              {
-                id: MinistryAreaScope.KID_REGISTRATION,
-                label: 'Registro y Check-in de Niños (Regikids)',
-                desc: 'Otorga permisos de Check-in, escáner QR y creación de niños.',
-                badge: 'Regikids',
-              },
-              {
-                id: MinistryAreaScope.KID_GROUP_MANAGEMENT,
-                label: 'Gestión de Salones y Asistencia (Iglekids)',
-                desc: 'Otorga permisos de pase de lista en salones y reporte de asistencia.',
-                badge: 'Iglekids',
-              },
-            ].map((option) => {
-              const isSelected = scope === option.id;
-              return (
-                <div
-                  key={option.id ?? 'none'}
-                  onClick={() => {
-                    const newScope = option.id as any;
-                    setScope(newScope);
-                    if (newScope !== MinistryAreaScope.KID_GROUP_MANAGEMENT) {
-                      setSelectedKidGroupIds([]);
-                    }
-                  }}
-                  className={clsx(
-                    'p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-3 select-none',
-                    isSelected
-                      ? 'bg-primary/5 border-primary shadow-2xs'
-                      : 'bg-white border-gray-200 hover:border-gray-300',
-                  )}
-                >
+            <div className="grid grid-cols-1 gap-2 pt-1">
+              {[
+                {
+                  id: null,
+                  label: 'Sin módulo específico (Apoyo general)',
+                  desc: 'Área de soporte y logística infantil sin pase de lista ni estación de check-in.',
+                  badge: 'Apoyo',
+                },
+                {
+                  id: MinistryAreaScope.KID_REGISTRATION,
+                  label: `Registro y Check-in (${regTerm})`,
+                  desc: 'Permisos para mesas de entrada, escáner QR de tutores e inscripción de niños.',
+                  badge: regTerm,
+                },
+                {
+                  id: MinistryAreaScope.KID_GROUP_MANAGEMENT,
+                  label: `Gestión de ${classroomTerm}es y Asistencia (${modAlias})`,
+                  desc: `Permisos para pase de lista en ${classroomTerm.toLowerCase()}es y reporte de asistencia.`,
+                  badge: modAlias,
+                },
+              ].map((option) => {
+                const isSelected = scope === option.id;
+                return (
                   <div
+                    key={option.id ?? 'none'}
+                    onClick={() => {
+                      const newScope = option.id as any;
+                      setScope(newScope);
+                      if (newScope !== MinistryAreaScope.KID_GROUP_MANAGEMENT) {
+                        setSelectedKidGroupIds([]);
+                      }
+                    }}
                     className={clsx(
-                      'w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all',
-                      isSelected ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white',
+                      'p-2.5 rounded-xl border text-left cursor-pointer transition-all flex items-start gap-3 select-none',
+                      isSelected
+                        ? 'bg-primary/5 border-primary shadow-2xs'
+                        : 'bg-white border-gray-200 hover:border-gray-300',
                     )}
                   >
-                    {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center justify-between gap-2">
-                      <p className={clsx('text-xs font-bold', isSelected ? 'text-primary' : 'text-gray-900')}>
-                        {option.label}
-                      </p>
-                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-gray-600">
-                        {option.badge}
-                      </span>
+                    <div
+                      className={clsx(
+                        'w-4 h-4 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all',
+                        isSelected ? 'border-primary bg-primary text-white' : 'border-gray-300 bg-white',
+                      )}
+                    >
+                      {isSelected && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                     </div>
-                    <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{option.desc}</p>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center justify-between gap-2">
+                        <p className={clsx('text-xs font-bold', isSelected ? 'text-primary' : 'text-gray-900')}>
+                          {option.label}
+                        </p>
+                        <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 text-gray-600">
+                          {option.badge}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-0.5 leading-snug">{option.desc}</p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-1.5 p-3.5 bg-slate-50 border border-slate-200/80 rounded-2xl">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
+                <Shield size={14} className="text-primary" />
+                Alcance Operativo de Servicio
+              </label>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-200">
+                Ministerio General
+              </span>
+            </div>
+            <p className="text-[11px] text-gray-500 leading-relaxed">
+              Esta área pertenece al ministerio <strong>{parentMinistry?.name || 'General'}</strong>. Los servidores asignados recibirán responsabilidades y gestión de turnos operativas sin vincularse a módulos infantiles.
+            </p>
+          </div>
+        )}
 
         {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) - Only shown for Iglekids */}
-        {scope === MinistryAreaScope.KID_GROUP_MANAGEMENT && availableKidGroups && availableKidGroups.length > 0 && (
+        {isKidsMinistry && scope === MinistryAreaScope.KID_GROUP_MANAGEMENT && availableKidGroups && availableKidGroups.length > 0 && (
           <div className="flex flex-col gap-1.5 p-3 bg-slate-50 border border-gray-100 rounded-xl">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">

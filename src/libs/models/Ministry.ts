@@ -31,12 +31,20 @@ export const ServiceAreaGroupStateEnum = {
 export type ServiceAreaGroupStateEnum =
   (typeof ServiceAreaGroupStateEnum)[keyof typeof ServiceAreaGroupStateEnum];
 
+export const MinistryType = {
+  GENERAL: 'GENERAL',
+  KIDS: 'KIDS',
+} as const;
+export type MinistryType = (typeof MinistryType)[keyof typeof MinistryType];
+
 export interface IMinistry {
   id: string;
   churchCampusId: string;
   churchId: string;
   name: string;
   description?: string;
+  type?: MinistryType;
+  terminologyOverrides?: Record<string, string>;
   state?: MinistryStateEnum;
   createdAt?: string;
   updatedAt?: string;

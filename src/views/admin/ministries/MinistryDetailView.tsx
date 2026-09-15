@@ -21,7 +21,8 @@ import {
   GetServiceAreaGroups,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { APP_ROUTES } from '@/config/routes';
-import { MinistryStateEnum } from '@/libs/models';
+import { MinistryStateEnum, MinistryType } from '@/libs/models';
+import { FaChild } from 'react-icons/fa6';
 import MinistryTeamsSection from './views/MinistryTeamsSection';
 import MinistryLeadershipSection from './views/MinistryLeadershipSection';
 import MinistryOrganigramSection from './views/MinistryOrganigramSection';
@@ -180,6 +181,15 @@ const MinistryDetailView: React.FC = () => {
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200 shrink-0 shadow-2xs">
                   <MapPin size={11} className="text-indigo-600" />
                   <span>{campusName}</span>
+                </span>
+              )}
+              {currentMinistry.type === MinistryType.KIDS ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 shrink-0 shadow-2xs">
+                  <FaChild className="w-2.5 h-2.5" /> Infantil
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 shrink-0 shadow-2xs">
+                  <Settings size={11} className="text-indigo-600" /> General
                 </span>
               )}
               <span
