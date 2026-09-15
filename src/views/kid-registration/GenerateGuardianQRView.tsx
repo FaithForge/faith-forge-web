@@ -24,6 +24,7 @@ import {
 } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
 import { cleanCurrentKidGuardian } from '@/libs/state/redux/slices/kid-church/kid-guardian.slice';
 import { capitalizeWords } from '@/libs/utils/text';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/ui/PageHeader';
 import { APP_ROUTES } from '@/config/routes';
@@ -31,6 +32,8 @@ import { APP_ROUTES } from '@/config/routes';
 const GenerateGuardianQRView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const kidsModuleName = useKidsTerm('module_alias');
+  const guardianTerm = useKidsTerm('guardian');
 
   const [nationalIdQuery, setNationalIdQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
@@ -50,7 +53,7 @@ const GenerateGuardianQRView: React.FC = () => {
     if (e) e.preventDefault();
     const cleanId = nationalIdQuery.trim();
     if (!cleanId) {
-      toast.error('Ingresa el número de documento del acudiente');
+      toast.error(`Ingresa el número de documento de ${guardianTerm.toLowerCase()}`);
       return;
     }
     setHasSearched(true);
@@ -86,11 +89,11 @@ const GenerateGuardianQRView: React.FC = () => {
 
             // Full message for WhatsApp Share button
             const fullMessage = `¡Hola *${fullName}*!
-Desde Iglekids te enviamos este enlace para descargar tu código QR personal, el cual podrás mostrar cada vez que registres a tu(s) niño(s) para agilizar el proceso:
+Desde ${kidsModuleName} te enviamos este enlace para descargar tu código QR personal, el cual podrás mostrar cada vez que registres a tu(s) niño(s) para agilizar el proceso:
 
 *URL de imagen:* ${photoUrl}
         
-Este código es personal, solo lo puede presentar el acudiente registrado.`;
+Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} registrado(a).`;
 
             const fullUrl = `https://api.whatsapp.com/send?phone=${dialDigits}${phoneDigits}&text=${encodeURIComponent(
               fullMessage
@@ -98,7 +101,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
             setWhatsappUrl(fullUrl);
 
             // Short optimized message for on-screen QR code (drastically reduces QR density para lectura instantánea)
-            const qrShortMessage = `¡Hola *${fullName}*! Tu código QR de Iglekids:\n${photoUrl}`;
+            const qrShortMessage = `¡Hola *${fullName}*! Tu código QR de ${kidsModuleName}:\n${photoUrl}`;
             const qrScanUrl = `https://wa.me/${dialDigits}${phoneDigits}?text=${encodeURIComponent(qrShortMessage)}`;
             setQrCodeUrl(qrScanUrl);
           }
@@ -152,7 +155,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
         {/* Buscador de Documento */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-            Cédula o Documento del Acudiente
+            Cédula o Documento de {guardianTerm}
           </label>
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1 flex items-center">
@@ -201,7 +204,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
           <div className="flex flex-col items-center justify-center p-8 gap-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <Loader2 className="animate-spin text-primary" size={36} />
             <p className="text-sm font-medium text-gray-500">
-              {guardianLoading ? 'Buscando acudiente...' : 'Generando enlace QR...'}
+              {guardianLoading ? `Buscando ${guardianTerm.toLowerCase()}...` : 'Generando enlace QR...'}
             </p>
           </div>
         )}
@@ -257,7 +260,7 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
               </div>
 
               <p className="text-xs text-gray-500 font-medium px-2 leading-relaxed">
-                Pide al acudiente que escanee este código con su celular para abrir su mensaje de WhatsApp, o compárteselo directamente abajo.
+                Pide a {guardianTerm.toLowerCase()} que escanee este código con su celular para abrir su mensaje de WhatsApp, o compárteselo directamente abajo.
               </p>
             </div>
 
@@ -301,12 +304,12 @@ Este código es personal, solo lo puede presentar el acudiente registrado.`;
             </div>
             <div>
               <h4 className="font-bold text-gray-700 text-base">
-                {hasSearched ? 'Acudiente no encontrado' : 'Buscar acudiente'}
+                {hasSearched ? `${guardianTerm} no encontrado(a)` : `Buscar ${guardianTerm.toLowerCase()}`}
               </h4>
               <p className="text-xs text-gray-500 mt-1 max-w-xs leading-relaxed">
                 {hasSearched
-                  ? 'No se encontró ningún acudiente con la cédula ingresada. Verifica el número e intenta nuevamente.'
-                  : 'Ingresa la cédula o número de documento del acudiente para generar su código QR personal.'}
+                  ? `No se encontró ningún(a) ${guardianTerm.toLowerCase()} con la cédula ingresada. Verifica el número e intenta nuevamente.`
+                  : `Ingresa la cédula o número de documento de ${guardianTerm.toLowerCase()} para generar su código QR personal.`}
               </p>
             </div>
           </div>

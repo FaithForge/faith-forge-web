@@ -9,6 +9,10 @@ export const DEFAULT_CHURCH_TERMINOLOGY = {
   campuses: 'Sedes',
   volunteer: 'Servidor',
   volunteers: 'Servidores',
+  coordinator: 'Coordinador(a)',
+  coordinators: 'Coordinadores',
+  supervisor: 'Supervisor(a)',
+  supervisors: 'Supervisores',
   small_group: 'Grupo de conexión',
   small_groups: 'Grupos de conexión',
 } as const;
@@ -23,12 +27,16 @@ export const DEFAULT_MINISTRY_TERMINOLOGY = {
   KIDS: {
     module_alias: 'Ministerio de Niños',
     registration: 'Registro de niños',
-    teacher: 'Maestro(a)',
-    teachers: 'Maestros(as)',
+    teacher: 'Servidor(a)',
+    teachers: 'Servidores',
     guardian: 'Tutor(a)',
     guardians: 'Tutores',
     classroom: 'Salón',
     classrooms: 'Salones',
+    coordinator: 'Coordinador(a)',
+    coordinators: 'Coordinadores',
+    supervisor: 'Supervisor(a)',
+    supervisors: 'Supervisores',
   },
   GENERAL: {
     module_alias: 'Ministerio',
@@ -36,6 +44,10 @@ export const DEFAULT_MINISTRY_TERMINOLOGY = {
     volunteers: 'Servidores',
     service_group: 'Grupo de servicio',
     service_groups: 'Grupos de servicio',
+    coordinator: 'Coordinador(a)',
+    coordinators: 'Coordinadores',
+    supervisor: 'Supervisor(a)',
+    supervisors: 'Supervisores',
   },
 } as const;
 
@@ -76,6 +88,20 @@ export const CHURCH_TERMINOLOGY_FIELDS: TerminologyFieldMeta[] = [
     suggestedOptions: ['Servidor', 'Voluntario', 'Líder', 'Obrero'],
   },
   {
+    key: 'coordinator',
+    label: 'Coordinador(a)',
+    description: 'Denominación institucional para coordinadores de área o equipo.',
+    defaultValue: DEFAULT_CHURCH_TERMINOLOGY.coordinator,
+    suggestedOptions: ['Coordinador(a)', 'Líder Principal', 'Director(a)', 'Encargado(a)'],
+  },
+  {
+    key: 'supervisor',
+    label: 'Supervisor(a)',
+    description: 'Denominación institucional para supervisores de grupo o turno.',
+    defaultValue: DEFAULT_CHURCH_TERMINOLOGY.supervisor,
+    suggestedOptions: ['Supervisor(a)', 'Sublíder', 'Guía', 'Capitán(a)'],
+  },
+  {
     key: 'small_group',
     label: 'Grupos Pequeños / Células',
     description: 'Nombre para las células, grupos pequeños o comunidades de hogar.',
@@ -90,21 +116,21 @@ export const KIDS_TERMINOLOGY_FIELDS: TerminologyFieldMeta[] = [
     label: 'Nombre del Ministerio de Niños',
     description: 'Nombre público y alias del ministerio infantil en la aplicación.',
     defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.KIDS.module_alias,
-    suggestedOptions: ['Ministerio de Niños', 'Iglekids', 'Escuela Dominical', 'Iglesia Infantil'],
+    suggestedOptions: ['Ministerio de Niños', 'Iglesia Infantil', 'Escuela Dominical', 'Iglekids'],
   },
   {
     key: 'registration',
     label: 'Estación de Entrada / Check-in',
     description: 'Término para la mesa o punto de bienvenida y check-in de niños.',
     defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.KIDS.registration,
-    suggestedOptions: ['Registro de niños', 'Regikids', 'Check-in infantil', 'Mesa de entrada'],
+    suggestedOptions: ['Registro de niños', 'Check-in infantil', 'Mesa de entrada', 'Regikids'],
   },
   {
     key: 'teacher',
     label: 'Encargado(a) de Clase',
-    description: 'Rol de los servidores o maestros que atienden en las aulas.',
+    description: 'Rol de las personas que sirven en las aulas con los niños.',
     defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.KIDS.teacher,
-    suggestedOptions: ['Maestro(a)', 'Servidor(a)', 'Profesor(a)', 'Tía / Tío', 'Monitor(a)'],
+    suggestedOptions: ['Servidor(a)', 'Maestro(a)', 'Profesor(a)', 'Tía / Tío', 'Monitor(a)'],
   },
   {
     key: 'guardian',
@@ -119,6 +145,20 @@ export const KIDS_TERMINOLOGY_FIELDS: TerminologyFieldMeta[] = [
     description: 'Denominación para las aulas o salones divididos por edad.',
     defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.KIDS.classroom,
     suggestedOptions: ['Salón', 'Aula', 'Clase', 'Nivel'],
+  },
+  {
+    key: 'coordinator',
+    label: 'Coordinador(a) Infantil',
+    description: 'Término para coordinadores de áreas o salones de niños.',
+    defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.KIDS.coordinator,
+    suggestedOptions: ['Coordinador(a)', 'Director(a)', 'Líder Infantil', 'Encargado(a)'],
+  },
+  {
+    key: 'supervisor',
+    label: 'Supervisor(a) de Salones',
+    description: 'Término para supervisores de salones y asistencia infantil.',
+    defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.KIDS.supervisor,
+    suggestedOptions: ['Supervisor(a)', 'Subcoordinador(a)', 'Guía de Salón'],
   },
 ];
 
@@ -143,6 +183,20 @@ export const GENERAL_MINISTRY_TERMINOLOGY_FIELDS: TerminologyFieldMeta[] = [
     description: 'Denominación para los equipos o turnos operativos.',
     defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.GENERAL.service_group,
     suggestedOptions: ['Equipo de servicio', 'Banda', 'Turno', 'Grupo'],
+  },
+  {
+    key: 'coordinator',
+    label: 'Coordinador(a) del Ministerio',
+    description: 'Término para el coordinador(a) del ministerio o área.',
+    defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.GENERAL.coordinator,
+    suggestedOptions: ['Coordinador(a)', 'Líder', 'Director(a)'],
+  },
+  {
+    key: 'supervisor',
+    label: 'Supervisor(a) de Equipo',
+    description: 'Término para supervisores de turno o grupo de servicio.',
+    defaultValue: DEFAULT_MINISTRY_TERMINOLOGY.GENERAL.supervisor,
+    suggestedOptions: ['Supervisor(a)', 'Sublíder', 'Capitán(a)'],
   },
 ];
 

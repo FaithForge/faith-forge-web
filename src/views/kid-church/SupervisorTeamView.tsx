@@ -16,9 +16,10 @@ import {
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import clsx from 'clsx';
-import { EntityState } from '@/libs/models/Church';
+import { EntityState, MinistryType, MinistryAreaScope } from '@/libs/models';
 import { toast } from 'sonner';
 import { APP_ROUTES } from '@/config/routes';
+import { useChurchTerm, useKidsTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 
 const ROLE_LABEL: Record<VolunteerRole, string> = {
   [VolunteerRole.VOLUNTEER]: 'Servidor(a)',
@@ -39,19 +40,19 @@ interface RoleThemeStyle {
 /**
  * Resolves the visual theme (badge, avatar initials, photo border, and row highlight)
  * according to the exact role and area colors defined across the application interface:
- * - Regikids (Supervisor / Servidor) -> Emerald/Green (#15803d, #16a34a)
- * - Iglekids Supervisor -> Purple (#9333ea)
- * - Iglekids Servidor -> Amber/Yellow (#fbbf24)
+ * - Registro (Supervisor / Servidor) -> Emerald/Green (#15803d, #16a34a)
+ * - Niños Supervisor -> Purple (#9333ea)
+ * - Niños Servidor -> Amber/Yellow (#fbbf24)
  * - Coordinador de Grupo -> Pink (#db2777)
  * - Coordinador General -> Amber (#d97706)
  */
 const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
   const asgArea = asg.ministryArea || asg.serviceAreaGroup?.ministryArea;
   const areaName = (asgArea?.name || '').toLowerCase();
-  const isRegikids =
+  const isRegistrationArea =
     asgArea?.scope === 'KID_REGISTRATION' ||
-    areaName.includes('regikids') ||
-    areaName.includes('registro');
+    areaName.includes('registro') ||
+    areaName.includes('regikids');
 
   if (asg.role === VolunteerRole.GROUP_COORDINATOR) {
     return {
@@ -74,7 +75,7 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
   }
 
   if (asg.role === VolunteerRole.AREA_GENERAL_COORDINATOR) {
-    if (isRegikids) {
+    if (isRegistrationArea) {
       return {
         badge: 'bg-emerald-100 text-emerald-800',
         avatar: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-300',
@@ -93,8 +94,8 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
   }
 
   if (asg.role === VolunteerRole.SUPERVISOR) {
-    if (isRegikids) {
-      // Regikids Supervisor - Green-700 / Forest green (#15803d) - Deeper, authoritative green tone
+    if (isRegistrationArea) {
+      // Registro Supervisor - Green-700 / Forest green (#15803d)
       return {
         badge: 'bg-green-200/90 text-green-900 border border-green-400/80 font-bold',
         avatar: 'bg-green-100 text-green-900 border-2 border-green-600',
@@ -113,8 +114,8 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
   }
 
   // VOLUNTEER (Servidor)
-  if (isRegikids) {
-    // Regikids Servidor - Green-600 / Emerald / Mint (#16a34a) - Fresh, lighter green tone
+  if (isRegistrationArea) {
+    // Registro Servidor - Green-600 / Emerald / Mint (#16a34a)
     return {
       badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-semibold',
       avatar: 'bg-emerald-50 text-emerald-700 border-2 border-emerald-300',
@@ -199,6 +200,10 @@ export const SupervisorTeamView: React.FC = () => {
     return null;
   }
 
+  const churchVolunteersTerm = useChurchTerm('volunteers');
+  const kidsRegistrationName = useKidsTerm('registration');
+  const kidsModuleName = useKidsTerm('module_alias');
+
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const effectiveCampusId = activeCampusId || currentCampus?.id;
 
@@ -217,7 +222,7 @@ export const SupervisorTeamView: React.FC = () => {
   const activeAreaId = primaryArea?.id;
   const areaName = primaryArea?.name || 'Mi Área';
 
-  // Area Coordinator context: find the specific Area (e.g. Regikids)
+  // Area Coordinator context: find the specific Area (e.g. Registro de Niños)
   const areaCoord = activeCampusData?.areaCoordinates?.find((a) => {
     const n = a.name.toLowerCase();
     return n.includes('regi') || n.includes('registro');
@@ -235,15 +240,20 @@ export const SupervisorTeamView: React.FC = () => {
     : activeAreaId;
 
   const effectiveAreaName = isAreaCoordinator
-    ? (areaCoord?.name || fallbackArea?.name || 'Regikids')
+    ? (areaCoord?.name || fallbackArea?.name || kidsRegistrationName)
     : areaName;
 
   const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('ALL');
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>('ALL');
 
+  const effectiveGroupId =
+    activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP'
+      ? activeGroupConfigId
+      : undefined;
+
   const partitionKey = isAreaCoordinator
     ? `my-team-area-${effectiveCampusId}-${effectiveAreaId || 'all'}`
-    : `my-team-${effectiveCampusId}-${activeGroupConfigId || 'all'}-${isGroupCoordinator ? 'all' : (activeAreaId || 'all')}`;
+    : `my-team-${effectiveCampusId}-${effectiveGroupId || 'all'}-${isGroupCoordinator ? 'all' : (activeAreaId || 'all')}`;
 
   const assignments = useAppSelector(
     (state) => state.volunteerSlice.assignmentsByPartition[partitionKey] || [],
@@ -270,7 +280,7 @@ export const SupervisorTeamView: React.FC = () => {
       dispatch(
         GetVolunteerAssignments({
           churchCampusId: effectiveCampusId,
-          ministryGroupConfigId: activeGroupConfigId || undefined,
+          ministryGroupConfigId: effectiveGroupId,
           ministryAreaId: isGroupCoordinator ? undefined : (activeAreaId || undefined),
           state: EntityState.ACTIVE,
           partitionKey,
@@ -283,7 +293,7 @@ export const SupervisorTeamView: React.FC = () => {
     effectiveCampusId,
     isAreaCoordinator,
     effectiveAreaId,
-    activeGroupConfigId,
+    effectiveGroupId,
     isGroupCoordinator,
     activeAreaId,
     partitionKey,
@@ -454,19 +464,19 @@ export const SupervisorTeamView: React.FC = () => {
     searchTerm,
   ]);
 
-  const isRegikidsUser =
+  const isRegistrationUser =
     currentRole === 'KID_REGISTER_ADMIN' ||
     currentRole === 'KID_REGISTER_SUPERVISOR';
 
   const headerBadgeStyle = useMemo(() => {
-    if (isRegikidsUser || isAreaCoordinator) {
+    if (isRegistrationUser || isAreaCoordinator) {
       return 'bg-emerald-100 text-emerald-800';
     }
     if (isCoordinator) {
       return 'bg-pink-100 text-pink-700';
     }
     return 'bg-purple-100 text-purple-700';
-  }, [isRegikidsUser, isAreaCoordinator, isCoordinator]);
+  }, [isRegistrationUser, isAreaCoordinator, isCoordinator]);
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-5 pb-28 sm:pb-32">
@@ -736,12 +746,12 @@ export const SupervisorTeamView: React.FC = () => {
             <Users size={28} />
           </div>
           <h3 className="text-base font-bold text-gray-800">
-            {searchTerm ? 'No se encontraron miembros' : 'No hay servidores en tu equipo'}
+            {searchTerm ? 'No se encontraron miembros' : `No hay ${churchVolunteersTerm.toLowerCase()} en tu equipo`}
           </h3>
           <p className="text-xs text-gray-400 max-w-sm">
             {searchTerm
               ? 'Intenta con otro término de búsqueda o verifica que esté bien escrito.'
-              : 'Los servidores asignados a tu área y grupo aparecerán aquí listados.'}
+              : `Los ${churchVolunteersTerm.toLowerCase()} asignados a tu área y grupo aparecerán aquí listados.`}
           </p>
         </div>
       ) : (
@@ -756,7 +766,14 @@ export const SupervisorTeamView: React.FC = () => {
               (asg.volunteer?.userId && asg.volunteer.userId === currentUser?.id);
             const isCoordinatorRole = asg.role === VolunteerRole.GROUP_COORDINATOR;
             const isSupervisorRole = asg.role === VolunteerRole.SUPERVISOR;
-            const roleName = ROLE_LABEL[asg.role] || 'Servidor(a)';
+            const asgArea = asg.ministryArea || asg.serviceAreaGroup?.ministryArea;
+            const isKids =
+              asg.ministry?.type === MinistryType.KIDS ||
+              (!asg.ministry && asgArea?.scope === MinistryAreaScope.KID_GROUP_MANAGEMENT);
+            const roleName = getVolunteerRoleLabel(asg.role, {
+              ministryType: isKids ? MinistryType.KIDS : MinistryType.GENERAL,
+              ministryOverrides: asg.ministry?.terminologyOverrides,
+            });
             const phone = user?.phone;
             const dialCode = user?.dialCodePhone || '+57';
             const cleanPhone = phone ? phone.replace(/\D/g, '') : '';
@@ -852,7 +869,7 @@ export const SupervisorTeamView: React.FC = () => {
                             currentUser?.firstName
                               ? capitalizeWords(currentUser.firstName.split(' ')[0])
                               : 'tu supervisor'
-                          } de Iglekids.`,
+                          } de ${kidsModuleName}.`,
                         )}`}
                         target="_blank"
                         rel="noopener noreferrer"

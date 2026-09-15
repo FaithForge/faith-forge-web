@@ -34,7 +34,7 @@ export const checkAppVersion = async (): Promise<boolean> => {
 
     if (data && data.buildTime && currentBuild && data.buildTime > currentBuild) {
       isUpdating = true;
-      toast.info('✨ Actualizando Iglekids a la última versión...', {
+      toast.info('✨ Actualizando la aplicación a la última versión...', {
         duration: 2000,
       });
 

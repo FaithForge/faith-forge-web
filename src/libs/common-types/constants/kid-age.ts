@@ -4,12 +4,12 @@ import utc from 'dayjs/plugin/utc';
 dayjs.extend(utc);
 
 /**
- * Minimum age allowed for registering a kid in Iglekids (in months).
+ * Minimum age allowed for registering a kid in the kids ministry (in months).
  */
 export const KID_MIN_AGE_MONTHS = 3;
 
 /**
- * Maximum age allowed for registering a kid in Iglekids (in years).
+ * Maximum age allowed for registering a kid in the kids ministry (in years).
  * Kids who have reached this age or older cannot be registered (except by admins).
  */
 export const KID_MAX_AGE_YEARS = 12;
@@ -34,7 +34,7 @@ export const KID_AGE_COPY = {
   maxAgeSubtitle: `Cumplió la edad máxima (${KID_MAX_AGE_PLUS_LABEL})`,
   maxAgeDashboardSubtitle: 'El niño ya cumplió la edad máxima',
   maxAgeToastError: `El niño ya cumplió la edad máxima (${KID_MAX_AGE_PLUS_LABEL})`,
-  maxAgeAlertMessage: `El niño ya cumplió la edad máxima (${KID_MAX_AGE_PLUS_LABEL}). No puede ser registrado en Iglekids.`,
+  maxAgeAlertMessage: `El niño ya cumplió la edad máxima (${KID_MAX_AGE_PLUS_LABEL}). No puede ser registrado en el ministerio de niños.`,
 };
 
 /**

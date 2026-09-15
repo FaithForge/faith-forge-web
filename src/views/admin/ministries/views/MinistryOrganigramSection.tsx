@@ -344,12 +344,13 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
       doc.setTextColor(255, 255, 255);
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(13);
-      doc.text('IGLEKIDS • REPORTE OFICIAL DE ESTRUCTURA Y ORGANIGRAMA', marginX, 10.5);
+      const ministryTitle = (ministry?.name || 'MINISTERIO').toUpperCase();
+      doc.text(`${ministryTitle} • REPORTE OFICIAL DE ESTRUCTURA Y ORGANIGRAMA`, marginX, 10.5);
 
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(8);
       doc.text(
-        `Ministerio: ${ministry?.name || 'Iglekids'} | Sede: ${campusName} | Filtro: ${activeFilterTitle}`,
+        `Ministerio: ${ministry?.name || 'General'} | Sede: ${campusName} | Filtro: ${activeFilterTitle}`,
         marginX,
         17,
       );
@@ -808,7 +809,7 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
         doc.setTextColor(148, 163, 184);
         const privacyText = maskSensitiveData ? ' • [Datos personales protegidos]' : '';
         doc.text(
-          `Iglekids • Reporte Filtrado: ${activeFilterTitle}${privacyText} • Página ${i} de ${pageCount}`,
+          `${ministry?.name || 'Ministerio'} • Reporte Filtrado: ${activeFilterTitle}${privacyText} • Página ${i} de ${pageCount}`,
           105,
           290,
           { align: 'center' },
@@ -816,7 +817,7 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
       }
 
       // Filename reflects active filter
-      const safeMinistry = (ministry?.name || 'Iglekids').replace(/\s+/g, '_');
+      const safeMinistry = (ministry?.name || 'Ministerio').replace(/\s+/g, '_');
       const safeFilter = activeFilterTitle.replace(/[^a-zA-Z0-9]/g, '_').slice(0, 30);
       const privacySuffix = maskSensitiveData ? '_Protegido' : '';
       doc.save(`Organigrama_${safeMinistry}_${safeFilter}${privacySuffix}.pdf`);
@@ -1043,7 +1044,7 @@ export const MinistryOrganigramSection: React.FC<MinistryOrganigramSectionProps>
               Coordinación General del Ministerio
             </span>
             <h3 className="text-sm font-extrabold text-gray-900 mt-0.5">
-              {ministry?.name || 'Iglekids'}
+              {ministry?.name || 'Ministerio'}
             </h3>
           </div>
 

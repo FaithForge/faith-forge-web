@@ -8,6 +8,8 @@ import {
   IVolunteerAssignment,
   VolunteerRole,
 } from '@/libs/models';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import { getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { formatPhoneWithDialCode, capitalizeWords } from '@/libs/utils/text';
 import {
@@ -57,6 +59,30 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
   useModalBackClose(open, () => onOpenChange(false));
 
   const [searchText, setSearchText] = useState('');
+
+  const ministry = useAppSelector((state) =>
+    team?.ministryArea?.ministryId
+      ? state.ministrySlice.ministries.find((m) => m.id === team.ministryArea?.ministryId)
+      : undefined,
+  );
+  const churchOverrides = useAppSelector(
+    (state) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
+  const volunteerRoleLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+    ministryType: ministry?.type || team?.ministryArea?.ministry?.type,
+    ministryOverrides:
+      ministry?.terminologyOverrides || team?.ministryArea?.ministry?.terminologyOverrides,
+    churchOverrides,
+  });
+  const volunteersRoleLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+    ministryType: ministry?.type || team?.ministryArea?.ministry?.type,
+    ministryOverrides:
+      ministry?.terminologyOverrides || team?.ministryArea?.ministry?.terminologyOverrides,
+    churchOverrides,
+    plural: true,
+  });
 
   // Reset search when opening
   React.useEffect(() => {
@@ -251,13 +277,13 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
           )}
         </div>
 
-        {/* SECTION 2: SERVIDORES */}
+        {/* SECTION 2: VOLUNTEERS / TEACHERS */}
         <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wide">
               <Award size={15} />
               <span>
-                Servidores ({volunteers.length})
+                {volunteersRoleLabel} ({volunteers.length})
               </span>
             </div>
             <Button
@@ -265,7 +291,7 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
               size="sm"
               className="text-xs py-1 px-2.5 gap-1"
             >
-              <Plus size={14} /> Agregar Servidor
+              <Plus size={14} /> Agregar {volunteerRoleLabel}
             </Button>
           </div>
 
@@ -287,23 +313,23 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
                 <Inbox size={20} />
               </div>
               <p className="text-xs text-gray-500 font-medium">
-                Sin servidores asignados a este equipo.
+                Sin {volunteersRoleLabel.toLowerCase()} asignados a este equipo.
               </p>
               <Button
                 onClick={() => onAssignClick(VolunteerRole.VOLUNTEER)}
                 size="sm"
                 className="text-xs py-1.5 px-3 gap-1 mt-1"
               >
-                <Plus size={14} /> Asignar Primer Servidor
+                <Plus size={14} /> Asignar Primer(a) {volunteerRoleLabel}
               </Button>
             </div>
           ) : filteredVolunteers.length === 0 ? (
             <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-gray-400">
-              No se encontraron servidores que coincidan con &quot;{searchText}&quot;
+              No se encontraron {volunteersRoleLabel.toLowerCase()} que coincidan con &quot;{searchText}&quot;
             </div>
           ) : (
             <div className="flex flex-col gap-2">
-              {filteredVolunteers.map((v) => renderPersonRow(v, 'Servidor'))}
+              {filteredVolunteers.map((v) => renderPersonRow(v, volunteerRoleLabel))}
             </div>
           )}
         </div>

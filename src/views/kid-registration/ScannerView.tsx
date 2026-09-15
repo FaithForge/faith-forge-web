@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Check, ChevronRight, Info, AlertTriangle, ArrowLeftRight, Printer } from 'lucide-react';
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
@@ -20,6 +20,7 @@ import { isDateToday } from '@/libs/utils/date';
 import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import StepProgress from '@/components/ui/StepProgress';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import ProcessingPrintModal from '@/components/modal/ProcessingPrintModal';
@@ -29,6 +30,7 @@ const SCAN_STEPS = ['Escanear', 'Selección', 'Observaciones'];
 const ScannerView = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const guardianTerm = useKidsTerm('guardian');
   const { kidGuardian, relations, loading } = useAppSelector(state => state.scanQRKidGuardianSlice);
   const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
@@ -129,14 +131,20 @@ const ScannerView = () => {
     );
   };
 
+  const specialGroup = useMemo(
+    () => kidGroupSlice.data?.find((g: any) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroupSlice.data?.[0],
+    [kidGroupSlice.data]
+  );
+  const specialGroupName = specialGroup?.name || 'Servidor Infantil';
+
   const toggleVolunteer = (kid: any) => {
     const isVol = volunteerKids.includes(kid.id);
     if (isVol) {
       setVolunteerKids(prev => prev.filter(id => id !== kid.id));
-      toast.info(`Cambiado a salón habitual (${kid.kidGroup?.name || 'Iglekids'})`, { id: `volunteer-toggle-${kid.id}` });
+      toast.info(`Cambiado a salón habitual (${kid.kidGroup?.name || 'Salón habitual'})`, { id: `volunteer-toggle-${kid.id}` });
     } else {
       setVolunteerKids(prev => [...prev, kid.id]);
-      toast.success(`Cambiado a Yo Soy Iglekids (Servidor)`, { id: `volunteer-toggle-${kid.id}` });
+      toast.success(`Cambiado a ${specialGroupName} (Servidor)`, { id: `volunteer-toggle-${kid.id}` });
     }
   };
 
@@ -150,7 +158,6 @@ const ScannerView = () => {
 
   const executeBatchRegistration = async () => {
     if (!kidGuardian) return;
-    const specialGroup = kidGroupSlice.data?.find((g: any) => g.name === 'Yo Soy Iglekids' || g.type === KidGroupType.SPECIAL) || kidGroupSlice.data?.[0];
 
     try {
       setIsProcessing(true);
@@ -257,7 +264,7 @@ const ScannerView = () => {
                 <div className="text-center mb-4 landscape:mb-0 landscape:order-2 landscape:flex-1 landscape:text-left">
                   <h2 className="text-lg font-bold text-gray-800 mb-1">Escanear Código</h2>
                   <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-0 landscape:mb-4">
-                    Apunta la cámara al código QR del acudiente para buscar a los niños asociados.
+                    Apunta la cámara al código QR de {guardianTerm.toLowerCase()} para buscar a los niños asociados.
                   </p>
 
                   {/* Botón integrado en landscape */}
@@ -268,7 +275,7 @@ const ScannerView = () => {
                       variant="default"
                       className="py-3 font-bold shadow-sm"
                     >
-                      Generar QR Acudiente
+                      Generar QR {guardianTerm}
                     </Button>
                   </div>
                 </div>
@@ -299,7 +306,7 @@ const ScannerView = () => {
                 variant="default"
                 className="py-3 font-bold shadow-sm"
               >
-                Generar QR Acudiente
+                Generar QR {guardianTerm}
               </Button>
             </div>
 
@@ -309,11 +316,11 @@ const ScannerView = () => {
         {step === 2 && kidGuardian && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6 text-center">
-              <h1 className="text-2xl font-black text-gray-800 tracking-tight">Acudiente</h1>
+              <h1 className="text-2xl font-black text-gray-800 tracking-tight">{guardianTerm}</h1>
               <p className="text-xl text-primary font-bold mt-1">
                 {capitalizeWords(`${kidGuardian.firstName || ''} ${kidGuardian.lastName || ''}`.trim())}
               </p>
-              <p className="text-sm text-gray-500 mt-2">Confirme que sea el acudiente y seleccione los niños a registrar hoy.</p>
+              <p className="text-sm text-gray-500 mt-2">Confirme que sea {guardianTerm.toLowerCase()} y seleccione los niños a registrar hoy.</p>
             </div>
 
             <div className="flex flex-col gap-3 mb-6">
@@ -323,7 +330,7 @@ const ScannerView = () => {
                 const isRegistered = !!kid.currentKidRegistration;
                 const isSelected = selectedKids.includes(kid.id);
                 const isKidVolunteer = volunteerKids.includes(kid.id);
-                const displayedGroupName = isKidVolunteer ? 'Yo Soy Iglekids' : (kid.kidGroup?.name || 'Iglekids');
+                const displayedGroupName = isKidVolunteer ? specialGroupName : (kid.kidGroup?.name || 'Sin salón');
                 const isStatic = isKidVolunteer ? false : !!kid.staticGroup;
                 const hasMaxAge = isKidOverage(kid);
                 const isBlockedByAge = hasMaxAge && !isKidVolunteer && !isAdmin;
@@ -380,7 +387,7 @@ const ScannerView = () => {
                                   ? "bg-primary text-white border-primary shadow-xs scale-105" 
                                   : "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 hover:scale-105 active:scale-95"
                               )}
-                              title={isKidVolunteer ? "Cambiar a recibir en su salón habitual" : "Cambiar a Yo Soy Iglekids (Servidor)"}
+                              title={isKidVolunteer ? "Cambiar a recibir en su salón habitual" : `Cambiar a ${specialGroupName} (Servidor)`}
                             >
                               <ArrowLeftRight size={11} />
                             </button>
@@ -428,8 +435,8 @@ const ScannerView = () => {
                   const isExpanded = expandedKid === kid.id;
                   const isKidVolunteer = volunteerKids.includes(kid.id);
                   const displayedGroupName = isKidVolunteer 
-                    ? 'Yo Soy Iglekids' 
-                    : `${kid.kidGroup?.name || 'Iglekids'}${kid.staticGroup ? ' (Estático)' : ''}`;
+                    ? specialGroupName 
+                    : `${kid.kidGroup?.name || 'Sin salón'}${kid.staticGroup ? ' (Estático)' : ''}`;
                   
                   return (
                     <div key={kid.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

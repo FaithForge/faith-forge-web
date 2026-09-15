@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 
 /**
  * Lightweight fallback loader displayed while lazy-loaded views are downloaded.
- * Styled with the Iglekids theme and mobile-first layout.
+ * Styled with the application theme and mobile-first layout.
  */
 const PageLoader: React.FC = () => {
   return (
@@ -14,7 +14,7 @@ const PageLoader: React.FC = () => {
         </div>
       </div>
       <p className="mt-4 text-xs font-semibold text-gray-400 tracking-wider uppercase">
-        Cargando Iglekids...
+        Cargando...
       </p>
     </div>
   );

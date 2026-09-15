@@ -22,7 +22,9 @@ import {
   IMinistryGroupConfig,
   IServiceAreaGroup,
   ServiceAreaGroupStateEnum,
+  MinistryType,
 } from '@/libs/models';
+import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
@@ -36,7 +38,7 @@ interface AssignUserMinistryModalProps {
   onSuccess?: () => void;
 }
 
-const ROLES: Array<{
+const ROLES_BASE: Array<{
   role: VolunteerRole;
   label: string;
   description: string;
@@ -102,6 +104,41 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
   const [selectedGroupId, setSelectedGroupId] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const selectedMinistry = useMemo(
+    () => ministries.find((m) => m.id === selectedMinistryId),
+    [ministries, selectedMinistryId],
+  );
+  const churchOverrides = useAppSelector(
+    (state) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
+  const volunteerTerm = useChurchTerm('volunteer');
+  const campusTerm = useChurchTerm('campus');
+
+  const roleOptions = useMemo(() => {
+    const isKids = selectedMinistry?.type === MinistryType.KIDS;
+    const volunteerLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+      ministryType: selectedMinistry?.type,
+      ministryOverrides: selectedMinistry?.terminologyOverrides,
+      churchOverrides,
+    });
+    const volunteerDesc = isKids
+      ? 'Servidor(a) o encargado(a) en el aula con los niños.'
+      : 'Sirve en una sede, área y horario específico.';
+
+    return ROLES_BASE.map((item) => {
+      if (item.role === VolunteerRole.VOLUNTEER) {
+        return {
+          ...item,
+          label: volunteerLabel,
+          description: volunteerDesc,
+        };
+      }
+      return item;
+    });
+  }, [selectedMinistry, churchOverrides]);
 
   // Initial catalog load
   useEffect(() => {
@@ -312,7 +349,7 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
                 Vincular a Ministerio
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                Servidor:{' '}
+                {volunteerTerm}:{' '}
                 <span className="font-semibold text-gray-700">
                   {user?.firstName} {user?.lastName}
                 </span>
@@ -333,7 +370,7 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
           {/* Sede / Campus Selector */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-gray-700">
-              Sede / Campus <span className="text-rose-500">*</span>
+              {campusTerm} <span className="text-rose-500">*</span>
             </label>
             <SelectSearch
               label="Sede / Campus"
@@ -379,7 +416,7 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
               Rol de Servicio <span className="text-rose-500">*</span>
             </label>
             <div className="flex flex-col gap-1.5">
-              {ROLES.map((r) => {
+              {roleOptions.map((r) => {
                 const Icon = r.icon;
                 const isSelected = selectedRole === r.role;
                 return (

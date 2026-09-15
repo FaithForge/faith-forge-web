@@ -182,21 +182,16 @@ export const generateIglekidsAttendancePdf = (report: IAttendanceReportData): vo
   doc.setFillColor(...COLORS.primary);
   doc.rect(0, 0, pageWidth, 4, 'F');
 
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(16);
-  doc.setTextColor(...COLORS.primary);
-  doc.text('IGLEKIDS', marginX, currentY);
-
   const churchName = report.metadata?.church?.name || 'Comunidad Cristiana';
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
-  doc.setTextColor(...COLORS.textDark);
-  doc.text(toTitleCase(churchName), marginX + 34, currentY);
+  doc.setFontSize(14);
+  doc.setTextColor(...COLORS.primary);
+  doc.text(toTitleCase(churchName), marginX, currentY);
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8.5);
   doc.setTextColor(...COLORS.textMuted);
-  doc.text('Informe Oficial de Asistencia y Metricas de Servicio', marginX + 34, currentY + 4.5);
+  doc.text('Informe Oficial de Asistencia y Métricas de Servicio Infantil', marginX, currentY + 4.5);
 
   currentY += 10;
 
@@ -665,7 +660,7 @@ export const generateIglekidsAttendancePdf = (report: IAttendanceReportData): vo
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(6.5);
     doc.setTextColor(...COLORS.textMuted);
-    doc.text(`Iglekids Cloud  |  Generado el ${nowFormatted}`, marginX, pageHeight - 6);
+    doc.text(`${report.metadata?.church?.name || 'Gestión Infantil'}  |  Generado el ${nowFormatted}`, marginX, pageHeight - 6);
 
     doc.setFont('helvetica', 'bold');
     doc.text(`Pagina ${i} de ${totalPages}`, pageWidth - marginX, pageHeight - 6, { align: 'right' });
@@ -674,7 +669,9 @@ export const generateIglekidsAttendancePdf = (report: IAttendanceReportData): vo
   // Sanitize filename
   const meetingSanitized = (report.metadata?.meeting?.name || 'Servicio').replace(/[^a-zA-Z0-9_-]/g, '_');
   const dateStr = report.metadata?.reportDate || dayjs().format('YYYY-MM-DD');
-  const filename = `${dateStr}-${meetingSanitized}-Asistencia-Iglekids.pdf`;
+  const filename = `${dateStr}-${meetingSanitized}-Asistencia-Ninos.pdf`;
 
   doc.save(filename);
 };
+
+export const generateKidAttendancePdf = generateIglekidsAttendancePdf;

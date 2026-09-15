@@ -6,7 +6,7 @@ import {
   DEFAULT_MINISTRY_TERMINOLOGY,
   KidsTermKey,
 } from '@/libs/constants/defaultTerminology';
-import { MinistryType } from '@/libs/models';
+import { MinistryType, VolunteerRole } from '@/libs/models';
 
 /**
  * Resuelve un término institucional de nivel Iglesia con soporte de personalización por tenant.
@@ -57,7 +57,7 @@ export function useChurchTerm(key: ChurchTermKey): string {
  * Detecta automáticamente el ministerio de tipo KIDS en Redux y aplica sus personalizaciones.
  *
  * @param {KidsTermKey} key - Clave del término de niños (ej. 'teacher', 'registration', 'guardian', 'classroom').
- * @returns {string} Término del ministerio de niños (ej. 'Maestro(a)' o 'Regikids').
+ * @returns {string} Término del ministerio de niños (ej. 'Servidor(a)' o 'Registro de niños').
  */
 export function useKidsTerm(key: KidsTermKey): string {
   const kidsMinistry = useSelector((state: RootState) =>
@@ -104,3 +104,134 @@ export function useMinistryTerm(
 
   return fallback || key;
 }
+
+/**
+ * Opciones para resolver la etiqueta de un rol de voluntario.
+ */
+export interface VolunteerRoleLabelOptions {
+  ministryType?: MinistryType;
+  ministryOverrides?: Record<string, string>;
+  churchOverrides?: Record<string, string>;
+  short?: boolean;
+  plural?: boolean;
+}
+
+/**
+ * Resuelve la etiqueta de un rol de servicio según el contexto del ministerio y la iglesia.
+ * Por ejemplo:
+ * - En un ministerio de niños (KIDS), el rol base VOLUNTEER se resuelve al término configurado (por defecto 'Servidor(a)' o personalizable a 'Maestro(a)').
+ * - En un ministerio general, se resuelve a 'Servidor' (o el término institucional configurado).
+ *
+ * @param {VolunteerRole} role - Rol operativo del voluntario.
+ * @param {VolunteerRoleLabelOptions} [options] - Opciones de contexto (tipo de ministerio, overrides, abreviación, plural).
+ * @returns {string} Etiqueta contextualizada del rol.
+ */
+export function getVolunteerRoleLabel(
+  role: VolunteerRole,
+  options?: VolunteerRoleLabelOptions,
+): string {
+  const isKids = options?.ministryType === MinistryType.KIDS;
+  const isShort = options?.short ?? false;
+  const isPlural = options?.plural ?? false;
+
+  switch (role) {
+    case VolunteerRole.MINISTRY_GENERAL_COORDINATOR:
+      return isShort
+        ? isPlural
+          ? 'Coords. Generales'
+          : 'Coord. General'
+        : isPlural
+          ? 'Coordinadores Generales del Ministerio'
+          : 'Coordinador General del Ministerio';
+
+    case VolunteerRole.AREA_GENERAL_COORDINATOR:
+      return isShort
+        ? isPlural
+          ? 'Coords. Área'
+          : 'Coord. Área'
+        : isPlural
+          ? 'Coordinadores Generales de Área'
+          : 'Coordinador General de Área';
+
+    case VolunteerRole.GROUP_COORDINATOR: {
+      const customCoord = isPlural
+        ? (options?.ministryOverrides?.['coordinators'] || options?.churchOverrides?.['coordinators'])
+        : (options?.ministryOverrides?.['coordinator'] || options?.churchOverrides?.['coordinator']);
+      if (customCoord) {
+        return isShort ? customCoord : (isPlural ? `${customCoord} de Grupo` : `${customCoord} de Grupo`);
+      }
+      return isShort
+        ? isPlural
+          ? 'Coords. Grupo'
+          : 'Coord. Grupo'
+        : isPlural
+          ? 'Coordinadores de Grupo'
+          : 'Coordinador de Grupo';
+    }
+
+    case VolunteerRole.SUPERVISOR: {
+      const customSup = isPlural
+        ? (options?.ministryOverrides?.['supervisors'] || options?.churchOverrides?.['supervisors'])
+        : (options?.ministryOverrides?.['supervisor'] || options?.churchOverrides?.['supervisor']);
+      if (customSup) {
+        return isShort ? customSup : (isPlural ? `${customSup} de Equipo` : `${customSup} de Equipo`);
+      }
+      return isShort
+        ? isPlural
+          ? 'Supervisores'
+          : 'Supervisor'
+        : isPlural
+          ? 'Supervisores de Equipo'
+          : 'Supervisor de Equipo';
+    }
+
+    case VolunteerRole.VOLUNTEER:
+    default:
+      if (isKids) {
+        return getKidsTerm(
+          isPlural ? 'teachers' : 'teacher',
+          options?.ministryOverrides,
+        );
+      }
+      if (options?.ministryOverrides?.['volunteer']) {
+        return options.ministryOverrides['volunteer'];
+      }
+      return getChurchTerm(
+        isPlural ? 'volunteers' : 'volunteer',
+        options?.churchOverrides,
+      );
+  }
+}
+
+/**
+ * Hook reactivo para obtener la etiqueta de un VolunteerRole contextualizado a un ministerio.
+ *
+ * @param {VolunteerRole} role - Rol operativo.
+ * @param {string | undefined} [ministryId] - ID del ministerio para inferir tipo y overrides.
+ * @param {Omit<VolunteerRoleLabelOptions, 'ministryType' | 'ministryOverrides' | 'churchOverrides'>} [options] - Opciones de formato.
+ * @returns {string} Etiqueta contextualizada reactiva.
+ */
+export function useVolunteerRoleLabel(
+  role: VolunteerRole,
+  ministryId?: string,
+  options?: Omit<VolunteerRoleLabelOptions, 'ministryType' | 'ministryOverrides' | 'churchOverrides'>,
+): string {
+  const churchOverrides = useSelector(
+    (state: RootState) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
+  const ministry = useSelector((state: RootState) =>
+    ministryId
+      ? state.ministrySlice.ministries.find((m) => m.id === ministryId)
+      : undefined,
+  );
+
+  return getVolunteerRoleLabel(role, {
+    ...options,
+    ministryType: ministry?.type,
+    ministryOverrides: ministry?.terminologyOverrides,
+    churchOverrides,
+  });
+}
+

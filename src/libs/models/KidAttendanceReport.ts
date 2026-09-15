@@ -1,5 +1,5 @@
 /**
- * Types and models for the Iglekids Service Attendance Report.
+ * Types and models for the Kids Ministry Service Attendance Report.
  */
 
 export interface IAttendanceReportKid {

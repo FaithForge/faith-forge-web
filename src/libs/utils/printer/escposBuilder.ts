@@ -223,7 +223,7 @@ export class EscPosBuilder {
 }
 
 /**
- * Builds standard Iglekids registration label.
+ * Builds standard registration label.
  * @param {KidTicketData} data Information of the registered child.
  * @returns {Uint8Array} Byte buffer ready to print.
  */
@@ -238,14 +238,15 @@ export const buildKidRegistrationTicket = (data: KidTicketData): Uint8Array => {
   });
 
   // Header
+  const headerTitle = (data.campusName || 'REGISTRO DE NINOS').toUpperCase();
   builder
     .align('center')
     .size('large')
     .bold(true)
-    .line('IGLEKIDS')
+    .line(headerTitle)
     .size('normal')
     .bold(false)
-    .line(data.campusName || 'Registro Infantil')
+    .line(data.campusName ? 'Registro Infantil' : '')
     .line(data.meetingName || '')
     .separator('=', 32);
 
@@ -342,10 +343,10 @@ export const buildGuardianVoucherTicket = (data: KidTicketData): Uint8Array => {
     .align('center')
     .size('large')
     .bold(true)
-    .line('IGLEKIDS')
+    .line('COMPROBANTE DE ENTREGA')
     .size('normal')
     .bold(false)
-    .line('COMPROBANTE DE ENTREGA')
+    .line(data.campusName || 'Registro Infantil')
     .separator('=', 32)
     .align('left')
     .line(`Nino: ${data.kidName}`)
@@ -381,10 +382,10 @@ export const buildTestPrintTicket = (printerName = 'Impresora Bluetooth'): Uint8
     .align('center')
     .size('large')
     .bold(true)
-    .line('IGLEKIDS')
+    .line('TEST DE IMPRESION')
     .size('normal')
     .bold(false)
-    .line('TEST DE IMPRESION BLUETOOTH')
+    .line('CONEXION BLUETOOTH')
     .separator('=', 32)
     .align('left')
     .line(`Dispositivo: ${printerName}`)

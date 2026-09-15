@@ -50,7 +50,9 @@ import {
   ID_TYPE_CODE_MAPPER,
   IVolunteerAssignment,
   IVolunteerPermissionGrant,
+  VolunteerRole,
 } from '@/libs/models';
+import { useKidsTerm, useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { AssignUserMinistryModal } from './components/AssignUserMinistryModal';
 import { GrantTemporaryPermissionModal } from './components/GrantTemporaryPermissionModal';
 
@@ -67,6 +69,8 @@ const UserDetailView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const kidsModuleName = useKidsTerm('module_alias');
+  const volunteerTerm = useChurchTerm('volunteer');
 
   const { current: currentUserInSlice, data: usersList, loading } = useAppSelector((state) => state.userSlice);
 
@@ -345,7 +349,7 @@ const UserDetailView: React.FC = () => {
 
                     {activeUserVolunteer && (activeUserVolunteer.assignments?.length || 0) > 0 && (
                       <span className="px-2.5 py-0.5 text-xs font-bold bg-violet-50 text-violet-700 rounded-full border border-violet-200 flex items-center gap-1">
-                        <Award size={13} /> Servidor Activo
+                        <Award size={13} /> {volunteerTerm} Activo(a)
                       </span>
                     )}
 
@@ -697,7 +701,7 @@ const UserDetailView: React.FC = () => {
                   </div>
                   <h4 className="text-xs font-bold text-gray-800">Persona sin servicio ministerial</h4>
                   <p className="text-xs text-gray-500 max-w-sm mt-1 mb-3">
-                    Esta persona no está vinculada como servidora activa en ningún ministerio o sede actualmente.
+                    Esta persona no está vinculada como {volunteerTerm.toLowerCase()} activo(a) en ningún ministerio o sede actualmente.
                   </p>
                   <Button
                     type="button"
@@ -705,23 +709,12 @@ const UserDetailView: React.FC = () => {
                     onClick={() => setShowAssignMinistryModal(true)}
                     className="py-2 px-4 text-xs font-bold flex items-center gap-1.5"
                   >
-                    <Award size={15} /> Habilitar como Servidor
+                    <Award size={15} /> Habilitar como {volunteerTerm}
                   </Button>
                 </div>
               ) : (
                 <div className="flex flex-col gap-2.5">
                   {activeUserVolunteer.assignments.map((asg) => {
-                    const roleLabel =
-                      asg.role === 'MINISTRY_GENERAL_COORDINATOR'
-                        ? 'Coordinador General'
-                        : asg.role === 'AREA_GENERAL_COORDINATOR'
-                        ? 'Coordinador de Área'
-                        : asg.role === 'GROUP_COORDINATOR'
-                        ? 'Coordinador de Grupo'
-                        : asg.role === 'SUPERVISOR'
-                        ? 'Supervisor'
-                        : 'Servidor';
-
                     // 1. Resolve Ministry
                     const resolvedMinistry =
                       asg.ministry ||
@@ -733,7 +726,12 @@ const UserDetailView: React.FC = () => {
                       (asg.ministryGroupConfig?.ministryId ? ministriesMap.get(asg.ministryGroupConfig.ministryId) : undefined) ||
                       (asg.serviceAreaGroup?.ministryAreaId ? areasMap.get(asg.serviceAreaGroup.ministryAreaId)?.ministry : undefined);
 
-                    const ministryName = resolvedMinistry?.name || asg.ministry?.name || 'Iglekids';
+                    const roleLabel = getVolunteerRoleLabel(asg.role as VolunteerRole, {
+                      ministryType: resolvedMinistry?.type,
+                      ministryOverrides: resolvedMinistry?.terminologyOverrides,
+                    });
+
+                    const ministryName = resolvedMinistry?.name || asg.ministry?.name || kidsModuleName;
 
                     // 2. Resolve Campus Name
                     const resolvedCampusId =

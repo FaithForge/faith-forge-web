@@ -26,7 +26,7 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
   const kidGroups = useAppSelector((state) => state.kidGroupSlice.data);
 
   const regTerm = useMinistryTerm(ministryId, 'registration', 'Registro de Niños');
-  const moduleAlias = useMinistryTerm(ministryId, 'module_alias', 'Iglekids');
+  const moduleAlias = useMinistryTerm(ministryId, 'module_alias', 'Ministerio de Niños');
 
   const [modalOpen, setModalOpen] = useState(false);
   const [areaToEdit, setAreaToEdit] = useState<IMinistryArea | null>(null);
@@ -127,7 +127,7 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
           <div>
             <h3 className="text-sm font-bold text-gray-800">No hay áreas de servicio</h3>
             <p className="text-xs text-gray-500 mt-0.5">
-              Crea áreas como Regikids, SaludKids o Alabanza para organizar los equipos.
+              Crea áreas como Registro, Cunas o Alabanza para organizar los equipos.
             </p>
           </div>
           <Button onClick={handleOpenCreate} size="sm" className="mt-2 text-xs">

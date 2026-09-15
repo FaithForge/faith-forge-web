@@ -46,7 +46,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
   );
   const isKidsMinistry = parentMinistry?.type === MinistryType.KIDS;
   const regTerm = parentMinistry?.terminologyOverrides?.registration || 'Registro de niños';
-  const modAlias = parentMinistry?.terminologyOverrides?.module_alias || 'Iglekids';
+  const modAlias = parentMinistry?.terminologyOverrides?.module_alias || 'Ministerio de Niños';
   const classroomTerm = parentMinistry?.terminologyOverrides?.classroom || 'Salón';
 
   const [name, setName] = useState('');
@@ -134,9 +134,9 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
     }
 
     try {
-      const isIglekids = scope === MinistryAreaScope.KID_GROUP_MANAGEMENT;
-      const primaryKidGroupId = isIglekids ? (selectedKidGroupIds[0] || undefined) : undefined;
-      const kidGroupIdsPayload = isIglekids && selectedKidGroupIds.length > 0 ? selectedKidGroupIds : undefined;
+      const isKidsGroupManagement = scope === MinistryAreaScope.KID_GROUP_MANAGEMENT;
+      const primaryKidGroupId = isKidsGroupManagement ? (selectedKidGroupIds[0] || undefined) : undefined;
+      const kidGroupIdsPayload = isKidsGroupManagement && selectedKidGroupIds.length > 0 ? selectedKidGroupIds : undefined;
 
       if (isEditing && areaToEdit) {
         await dispatch(
@@ -195,7 +195,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
               setName(e.target.value);
               if (nameError) setNameError('');
             }}
-            placeholder="Ej. Regikids, SaludKids, Alabanza Kids, Zaqueos..."
+            placeholder="Ej. Registro, Cunas, Alabanza, Logística..."
             error={nameError}
             autoFocus
           />
@@ -307,13 +307,13 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
           </div>
         )}
 
-        {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) - Only shown for Iglekids */}
+        {/* Classrooms Association Section (POST /ministry-area/:id/kid-groups) */}
         {isKidsMinistry && scope === MinistryAreaScope.KID_GROUP_MANAGEMENT && availableKidGroups && availableKidGroups.length > 0 && (
           <div className="flex flex-col gap-1.5 p-3 bg-slate-50 border border-gray-100 rounded-xl">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
                 <Sparkles size={13} className="text-primary" />
-                Salones de Iglekids Asociados (Opcional)
+                Salones Infantiles Asociados (Opcional)
               </label>
               <span className="text-[10px] text-gray-500 font-medium">
                 {selectedKidGroupIds.length} seleccionado(s)

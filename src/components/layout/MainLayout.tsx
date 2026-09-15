@@ -110,27 +110,27 @@ const MainLayoutContent = () => {
     const config = userRolesNavBarConfig[currentRole];
     if (!config) return;
 
-    const isActiveIglekidsContext =
+    const isActiveKidChurchContext =
       activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
       activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR;
-    const isIglekidsRole =
-      isActiveIglekidsContext ||
+    const isKidChurchRole =
+      isActiveKidChurchContext ||
       currentRole === 'MINISTRY_ADMIN' ||
       currentRole === 'KID_GROUP_ADMIN' ||
       currentRole === 'KID_GROUP_SUPERVISOR' ||
       currentRole === 'KID_GROUP_USER';
 
-    const isRegikidsRole =
-      !isActiveIglekidsContext &&
+    const isKidRegistrationRole =
+      !isActiveKidChurchContext &&
       (currentRole === 'KID_REGISTER_ADMIN' ||
         currentRole === 'KID_REGISTER_SUPERVISOR' ||
         currentRole === 'KID_REGISTER_USER' ||
         currentRole === 'USER');
 
     let isMismatch = false;
-    if (isIglekidsRole && (pathname.startsWith('/kid-registration') || pathname.startsWith('/admin'))) {
+    if (isKidChurchRole && (pathname.startsWith('/kid-registration') || pathname.startsWith('/admin'))) {
       isMismatch = true;
-    } else if (isRegikidsRole && (pathname.startsWith('/kid-church') || pathname.startsWith('/admin'))) {
+    } else if (isKidRegistrationRole && (pathname.startsWith('/kid-church') || pathname.startsWith('/admin'))) {
       isMismatch = true;
     } else if (isAdminRole && (pathname.startsWith('/kid-church') || pathname.startsWith('/kid-registration'))) {
       isMismatch = true;

@@ -14,12 +14,14 @@ import {
   KidGuardianRelationCodeEnum,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
+import { parseRegistrationLog } from '@/libs/utils/registrationLog';
 import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday } from '@/libs/utils/date';
 import { isKidOverage, KID_AGE_COPY } from '@/libs/common-types/constants';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { UserRole, ChurchRole, AppRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 
 interface KidDetailsDrawerProps {
   open: boolean;
@@ -28,7 +30,7 @@ interface KidDetailsDrawerProps {
 }
 
 /**
- * Bottom sheet drawer displaying complete details of a registered kid in Iglekids.
+ * Bottom sheet drawer displaying complete details of a registered kid in the kids ministry.
  * Uses the exact design language, styling, and card layout from KidCheckInView.
  *
  * @param {KidDetailsDrawerProps} props - Open state and kid data.
@@ -70,10 +72,18 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
   const isOverage = isKidOverage(kid);
   const isRegistered = !!kid.currentKidRegistration;
 
-  const senderName = user ? capitalizeWords(`${user.firstName || ''} ${user.lastName || ''}`.trim()) : 'un servidor';
-  let roleTitle = 'Servidor(a)';
-  if (currentRole === UserRole.KID_GROUP_USER || currentRole === UserRole.KID_REGISTER_USER) {
-    roleTitle = 'Servidor(a)';
+  const kidsModuleName = useKidsTerm('module_alias');
+  const kidsTeacherTerm = useKidsTerm('teacher');
+  const guardianTerm = useKidsTerm('guardian');
+  const guardiansTerm = useKidsTerm('guardians');
+  const churchVolunteerTerm = useChurchTerm('volunteer');
+
+  const senderName = user ? capitalizeWords(`${user.firstName || ''} ${user.lastName || ''}`.trim()) : `un(a) ${churchVolunteerTerm.toLowerCase()}`;
+  let roleTitle = churchVolunteerTerm;
+  if (currentRole === UserRole.KID_GROUP_USER) {
+    roleTitle = kidsTeacherTerm;
+  } else if (currentRole === UserRole.KID_REGISTER_USER) {
+    roleTitle = churchVolunteerTerm;
   } else if (currentRole === UserRole.KID_GROUP_SUPERVISOR || currentRole === UserRole.KID_REGISTER_SUPERVISOR) {
     roleTitle = 'Supervisor(a)';
   } else if (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN) {
@@ -83,6 +93,16 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
   } else if (currentRole && ALL_SYSTEM_ROLES_METADATA[currentRole as AppRole]?.name) {
     roleTitle = ALL_SYSTEM_ROLES_METADATA[currentRole as AppRole].name;
   }
+
+  // Supervisor+ can see the registration log
+  const isSupervisor =
+    currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
+    currentRole === UserRole.KID_REGISTER_ADMIN ||
+    currentRole === UserRole.KID_GROUP_ADMIN ||
+    currentRole === UserRole.KID_GROUP_SUPERVISOR ||
+    currentRole === UserRole.ADMIN ||
+    currentRole === UserRole.SUPER_ADMIN ||
+    (currentRole as any) === ChurchRole.MINISTRY_ADMIN;
 
   const isBirthdayToday = isDateToday(kid.birthday);
 
@@ -117,7 +137,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     const rawPhone = `${dialCode}${phone}`.replace(/\s+/g, '');
     const cleanWhatsAppDigits = `${dialCode}${phone}`.replace(/\D/g, '');
     const kidName = capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim());
-    const defaultWhatsAppText = `Hola, te hablamos de Iglekids. Mi nombre es *${senderName}* y soy *${roleTitle}* del área de Iglekids. Te escribimos sobre el niño(a) *${kidName}* por: `;
+    const defaultWhatsAppText = `Hola, te hablamos de ${kidsModuleName}. Mi nombre es *${senderName}* y soy *${roleTitle}* de ${kidsModuleName}. Te escribimos sobre el niño(a) *${kidName}* por: `;
     const whatsappUrl = `https://wa.me/${cleanWhatsAppDigits}?text=${encodeURIComponent(defaultWhatsAppText)}`;
 
     return (
@@ -149,7 +169,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
               {phoneFormatted}
             </p>
             {isPhoneErroneous && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200" title="El teléfono registrado para este acudiente tiene un formato errado">
+              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200" title={`El teléfono registrado para este(a) ${guardianTerm.toLowerCase()} tiene un formato errado`}>
                 <AlertTriangle size={10} className="text-amber-600 shrink-0" />
                 <span>Formato errado</span>
               </span>
@@ -171,7 +191,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
             <a
               href={`tel:${rawPhone}`}
               className="w-8 h-8 rounded-full bg-gray-200/80 text-gray-700 hover:bg-gray-300 flex items-center justify-center active:scale-95 transition-all"
-              title="Llamar acudiente"
+              title={`Llamar ${guardianTerm.toLowerCase()}`}
             >
               <Phone size={15} />
             </a>
@@ -363,6 +383,33 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
                       </span>
                     </div>
 
+                      {isSupervisor && kid.currentKidRegistration.log && (() => {
+                        const parsed = parseRegistrationLog(kid.currentKidRegistration.log);
+                        return (
+                          <div className="flex justify-between items-start py-1 border-b border-gray-50 last:border-0">
+                            <span className="font-semibold text-gray-500 shrink-0 pr-2">Log de registro</span>
+                            <span className="font-bold text-gray-800 text-xs leading-snug text-right">
+                              {parsed?.author ? `Registrado por ${parsed.author}` : kid.currentKidRegistration.log}
+                              {parsed?.badgeLabel && (
+                                <span
+                                  className={clsx(
+                                    'inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border align-middle',
+                                    parsed.badgeType === 'group' && 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                    parsed.badgeType === 'support' && 'bg-amber-50 text-amber-800 border-amber-200',
+                                    parsed.badgeType === 'admin' && 'bg-purple-50 text-purple-700 border-purple-200',
+                                    parsed.badgeType === 'coordinator' && 'bg-blue-50 text-blue-700 border-blue-200',
+                                    parsed.badgeType === 'legacy' && 'bg-gray-100 text-gray-600 border-gray-200',
+                                    parsed.badgeType === 'general' && 'bg-slate-50 text-slate-700 border-slate-200',
+                                  )}
+                                >
+                                  {parsed.badgeLabel}
+                                </span>
+                              )}
+                            </span>
+                          </div>
+                        );
+                      })()}
+
                     {registrationObservation && (
                       <div className="flex flex-col py-1 border-b border-gray-50 last:border-0">
                         <span className="font-semibold text-gray-500 mb-1">Observaciones del ingreso</span>
@@ -379,7 +426,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
               {kid.relations && kid.relations.length > 0 && (
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3.5">
                   <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide border-b border-gray-100 pb-2">
-                    Acudientes Autorizados
+                    {guardiansTerm} Autorizados
                   </h2>
 
                   <div className="flex flex-col gap-2.5">
@@ -391,7 +438,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
                       <>
                         {primaryGuardian && (
                           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1 px-1">
-                            Otros acudientes
+                            Otros(as) {guardiansTerm.toLowerCase()}
                           </p>
                         )}
                         {otherGuardians.map((guardian) => renderGuardianCard(guardian, false))}

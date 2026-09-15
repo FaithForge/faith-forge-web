@@ -48,6 +48,7 @@ export const UserLogin = createAsyncThunk(
                 isChurchVolunteer: !!churchPermsResponse.isChurchVolunteer,
                 campuses: churchPermsResponse.campuses || [],
                 userMsRoles,
+                hasActiveGrants: !!churchPermsResponse.hasActiveGrants,
               })
             );
 
@@ -105,6 +106,7 @@ export const FetchMyVolunteerPermissions = createAsyncThunk(
           isChurchVolunteer: !!response.isChurchVolunteer,
           campuses: response.campuses || [],
           userMsRoles: state.authSlice.userMsRoles || [],
+          hasActiveGrants: !!response.hasActiveGrants,
         })
       );
     }

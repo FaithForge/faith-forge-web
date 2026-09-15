@@ -10,6 +10,7 @@ export interface VolunteerContextState {
   isChurchVolunteer: boolean;
   campuses: IVolunteerCampusContext[];
   userMsRoles: AppRole[];
+  hasActiveGrants?: boolean;
   activeCampusId: string | null;
   activeCampusName: string | null;
   activeGroupConfigId: string | null;
@@ -22,6 +23,7 @@ const initialState: VolunteerContextState = {
   isChurchVolunteer: false,
   campuses: [],
   userMsRoles: [],
+  hasActiveGrants: false,
   activeCampusId: null,
   activeCampusName: null,
   activeGroupConfigId: null,
@@ -40,12 +42,16 @@ export const volunteerContextSlice = createSlice({
         isChurchVolunteer: boolean;
         campuses: IVolunteerCampusContext[];
         userMsRoles?: AppRole[];
+        hasActiveGrants?: boolean;
       }>,
     ) => {
       state.isChurchVolunteer = action.payload.isChurchVolunteer;
       state.campuses = action.payload.campuses;
       if (action.payload.userMsRoles) {
         state.userMsRoles = action.payload.userMsRoles;
+      }
+      if (action.payload.hasActiveGrants !== undefined) {
+        state.hasActiveGrants = action.payload.hasActiveGrants;
       }
     },
     setUserMsRoles: (state, action: PayloadAction<AppRole[]>) => {

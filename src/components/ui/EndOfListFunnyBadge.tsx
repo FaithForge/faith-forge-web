@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 
 interface EndOfListFunnyBadgeProps {
   /** Target context for the list: 'kids' for children lists, 'users' for user directory, 'volunteers' for servants */
@@ -21,14 +22,6 @@ const FUNNY_USERS_MESSAGES = [
   '¡Llegaste al final! Todos los usuarios están presentes 👥🚀',
 ];
 
-const FUNNY_VOLUNTEERS_MESSAGES = [
-  '¡Freno de mano! Ya revisaste hasta el último servidor 🛑🤝',
-  '¡Misión cumplida! Todos los servidores están aquí 📋✨',
-  '¡No le des más scroll que todo el equipo de servicio está presente! 🙌💫',
-  '¡Ni buscando con lupa encuentras más servidores! 🔍👥',
-  '¡Llegaste al final! Todo el voluntariado al día 🤝🚀',
-];
-
 /**
  * Fun, playful end-of-list indicator that displays witty phrases tailored to kids, users, or volunteers.
  *
@@ -37,11 +30,22 @@ const FUNNY_VOLUNTEERS_MESSAGES = [
  * @returns {JSX.Element} The rendered funny badge.
  */
 export const EndOfListFunnyBadge: React.FC<EndOfListFunnyBadgeProps> = ({ type = 'kids' }) => {
+  const volunteerTerm = useChurchTerm('volunteer');
+  const volunteersTerm = useChurchTerm('volunteers');
+
+  const funnyVolunteersMessages = useMemo(() => [
+    `¡Freno de mano! Ya revisaste hasta el último ${volunteerTerm.toLowerCase()} 🛑🤝`,
+    `¡Misión cumplida! Todos los ${volunteersTerm.toLowerCase()} están aquí 📋✨`,
+    '¡No le des más scroll que todo el equipo de servicio está presente! 🙌💫',
+    `¡Ni buscando con lupa encuentras más ${volunteersTerm.toLowerCase()}! 🔍👥`,
+    '¡Llegaste al final! Todo el equipo al día 🤝🚀',
+  ], [volunteerTerm, volunteersTerm]);
+
   const messages =
     type === 'kids'
       ? FUNNY_KIDS_MESSAGES
       : type === 'volunteers'
-      ? FUNNY_VOLUNTEERS_MESSAGES
+      ? funnyVolunteersMessages
       : FUNNY_USERS_MESSAGES;
   const [index, setIndex] = useState(() => Math.floor(Math.random() * messages.length));
 

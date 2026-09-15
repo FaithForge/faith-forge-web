@@ -9,8 +9,9 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { ChurchMeetingStateEnum, IAttendanceReportData } from '@/libs/models';
 import { getAttendanceReportDetail } from '@/services/kidChurchReportService';
-import { generateIglekidsAttendancePdf } from '@/services/pdf/iglekidsAttendancePdf';
+import { generateKidAttendancePdf } from '@/services/pdf/iglekidsAttendancePdf';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 
 const DAYS_TO_NUM: Record<string, number> = {
   SUNDAY: 0,
@@ -71,7 +72,7 @@ interface KidChurchReportDrawerProps {
 type ReportData = IAttendanceReportData;
 
 /**
- * Bottom sheet drawer for Iglekids service attendance and statistics reporting.
+ * Bottom sheet drawer for kids ministry service attendance and statistics reporting.
  *
  * @param {KidChurchReportDrawerProps} props - Open state and toggle callback.
  * @returns {JSX.Element}
@@ -86,6 +87,10 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
 
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [selectedMeetingId, setSelectedMeetingId] = useState<string>('');
+
+  const kidsModuleName = useKidsTerm('module_alias');
+  const campusTerm = useChurchTerm('campus');
+  const meetingTerm = useChurchTerm('meeting');
   const todayStr = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
   const minDateStr = useMemo(() => dayjs().subtract(5, 'year').format('YYYY-MM-DD'), []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
@@ -252,14 +257,14 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
       toast.success('Reporte generado exitosamente');
     } catch (err: any) {
       console.error('Error generating report', err);
-      toast.error(err?.response?.data?.message || 'Error al generar el reporte de Iglekids.');
+      toast.error(err?.response?.data?.message || 'Error al generar el reporte de asistencia.');
     } finally {
       setIsLoading(false);
     }
   };
 
   /**
-   * Generates and downloads the official Iglekids PDF report using the currently stored report state without refetching from the API.
+   * Generates and downloads the official service attendance PDF report using the currently stored report state without refetching from the API.
    *
    * @returns {void}
    */
@@ -271,7 +276,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
 
     setIsDownloading(true);
     try {
-      generateIglekidsAttendancePdf(report);
+      generateKidAttendancePdf(report);
       toast.success('Reporte PDF generado y descargado correctamente');
     } catch (err) {
       console.error('Error generating report PDF', err);
@@ -286,7 +291,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
       open={open}
       onOpenChange={onOpenChange}
       icon={<FileText size={18} className="text-primary shrink-0" />}
-      title="Reporte de Asistencia Iglekids"
+      title={`Reporte de Asistencia - ${kidsModuleName}`}
       bodyClassName="p-4 flex flex-col gap-4 pb-12"
     >
             {/* Filter Form Card */}
@@ -294,7 +299,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
               {/* Sede */}
               <div>
                 <label className="flex items-center gap-2 text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  <MapPin size={15} className="text-primary" /> Sede
+                  <MapPin size={15} className="text-primary" /> {campusTerm}
                 </label>
                 <div className="relative">
                   <select
@@ -302,7 +307,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                     value={selectedCampusId}
                     onChange={(e) => handleCampusChange(e.target.value)}
                   >
-                    <option value="" disabled>Seleccione sede...</option>
+                    <option value="" disabled>Seleccione {campusTerm.toLowerCase()}...</option>
                     {campuses.data.map((campus) => (
                       <option key={campus.id} value={campus.id}>{campus.name}</option>
                     ))}
@@ -316,7 +321,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
               {/* Servicio */}
               <div>
                 <label className="flex items-center gap-2 text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  <CalendarClock size={15} className="text-primary" /> Servicio
+                  <CalendarClock size={15} className="text-primary" /> {meetingTerm}
                 </label>
                 <div className="relative">
                   <select
@@ -325,7 +330,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                     onChange={(e) => handleMeetingChange(e.target.value)}
                     disabled={!selectedCampusId || (meetings.loading && availableMeetings.length === 0)}
                   >
-                    <option value="" disabled>Seleccione servicio...</option>
+                    <option value="" disabled>Seleccione {meetingTerm.toLowerCase()}...</option>
                     {availableMeetings.map((meeting: any) => (
                       <option key={meeting.id} value={meeting.id}>{meeting.name}</option>
                     ))}
@@ -339,7 +344,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
               {/* Fecha */}
               <div>
                 <DateCalendarPicker
-                  label="Fecha del Servicio"
+                  label={`Fecha de la ${meetingTerm.toLowerCase()}`}
                   value={selectedDate}
                   minDate={minDateStr}
                   maxDate={todayStr}
@@ -351,8 +356,8 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   }}
                   helpText={
                     selectedMeetingObj?.day
-                      ? `Solo se habilitan los días correspondientes a este servicio (${getTranslatedDay(selectedMeetingObj.day)}).`
-                      : 'Selecciona primero un servicio para habilitar las fechas correspondientes.'
+                      ? `Solo se habilitan los días correspondientes a esta ${meetingTerm.toLowerCase()} (${getTranslatedDay(selectedMeetingObj.day)}).`
+                      : `Selecciona primero una ${meetingTerm.toLowerCase()} para habilitar las fechas correspondientes.`
                   }
                 />
               </div>

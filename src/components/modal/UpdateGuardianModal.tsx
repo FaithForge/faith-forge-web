@@ -10,6 +10,7 @@ import { UpdateKidGuardianPhone } from '@/libs/state/redux/thunks/kid-church/kid
 import { GetKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { kidRelationSelect } from '@/libs/models/KidChurch';
 import { validatePhoneNumber, cleanPhoneDigits, isPhoneValid } from '@/libs/utils/phone';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 
 export interface GuardianToUpdate {
   id: string;
@@ -36,6 +37,7 @@ const sanitizePhoneDigits = (raw: string) => {
 
 const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose, guardian }) => {
   const dispatch = useAppDispatch();
+  const guardianTerm = useKidsTerm('guardian');
   const [isLoading, setIsLoading] = useState(false);
   const [dialCode, setDialCode] = useState('+57');
   const [phone, setPhone] = useState('');
@@ -66,7 +68,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
     e.preventDefault();
 
     if (!guardian || !guardian.id || !guardian.kidId) {
-      toast.error('Información de acudiente incompleta');
+      toast.error(`Información de ${guardianTerm.toLowerCase()} incompleta`);
       return;
     }
 
@@ -106,7 +108,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
       await dispatch(GetKid({ id: guardian.kidId }));
       onClose();
     } catch (err: any) {
-      const errMsg = err?.message || err?.error || err?.response?.data?.message || 'Error al actualizar el acudiente';
+      const errMsg = err?.message || err?.error || err?.response?.data?.message || `Error al actualizar ${guardianTerm.toLowerCase()}`;
       toast.error(errMsg);
     } finally {
       setIsLoading(false);
@@ -119,7 +121,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
         {/* Modal header */}
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
           <div>
-            <h3 className="text-lg font-bold text-gray-800">Actualizar Acudiente</h3>
+            <h3 className="text-lg font-bold text-gray-800">Actualizar {guardianTerm}</h3>
             <p className="text-xs font-medium text-gray-500 mt-0.5">{guardian?.fullName}</p>
           </div>
           <button 
@@ -135,7 +137,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2.5">
             <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
             <span className="leading-relaxed">
-              <strong>Teléfono errado:</strong> Debe preguntarle al acudiente el número correcto para corregirlo y poder registrar la asistencia del niño.
+              <strong>Teléfono errado:</strong> Debe preguntarle a {guardianTerm.toLowerCase()} el número correcto para corregirlo y poder registrar la asistencia del niño.
             </span>
           </div>
         )}

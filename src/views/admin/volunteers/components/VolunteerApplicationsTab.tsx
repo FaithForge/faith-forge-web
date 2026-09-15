@@ -27,6 +27,7 @@ import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import {
   ApproveVolunteerApplication,
   GetVolunteerApplications,
@@ -37,14 +38,6 @@ import {
   VolunteerApplicationStatus,
   VolunteerRole,
 } from '@/libs/models';
-
-const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
-  [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: 'Coord. General',
-  [VolunteerRole.AREA_GENERAL_COORDINATOR]: 'Coord. Área',
-  [VolunteerRole.GROUP_COORDINATOR]: 'Coord. Grupo',
-  [VolunteerRole.SUPERVISOR]: 'Supervisor',
-  [VolunteerRole.VOLUNTEER]: 'Servidor',
-};
 
 const STATUS_TABS: { label: string; value: VolunteerApplicationStatus | 'ALL' }[] = [
   { label: 'Pendientes', value: VolunteerApplicationStatus.PENDING },
@@ -61,6 +54,15 @@ const STATUS_TABS: { label: string; value: VolunteerApplicationStatus | 'ALL' }[
  */
 export const VolunteerApplicationsTab: React.FC = () => {
   const dispatch = useAppDispatch();
+  const volunteerTerm = useChurchTerm('volunteer');
+
+  const roleLabelShort: Record<VolunteerRole, string> = {
+    [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: 'Coord. General',
+    [VolunteerRole.AREA_GENERAL_COORDINATOR]: 'Coord. Área',
+    [VolunteerRole.GROUP_COORDINATOR]: 'Coord. Grupo',
+    [VolunteerRole.SUPERVISOR]: 'Supervisor',
+    [VolunteerRole.VOLUNTEER]: volunteerTerm,
+  };
 
   const {
     applications: { data: applications, loading, currentPage, totalPages },
@@ -123,7 +125,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
     if (!applicationToApprove) return;
     try {
       await dispatch(ApproveVolunteerApplication(applicationToApprove.id)).unwrap();
-      toast.success('Postulación aprobada y servidor asignado correctamente');
+      toast.success(`Postulación aprobada y ${volunteerTerm.toLowerCase()} asignado(a) correctamente`);
       setApplicationToApprove(null);
       fetchApplications(currentPage);
     } catch (err: any) {
@@ -332,7 +334,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
                   <div>
                     <span className="text-gray-400 block text-[10px] font-medium">Rol solicitado</span>
                     <span className="font-bold text-emerald-700 truncate block">
-                      {ROLE_LABEL_SHORT[app.requestedRole] || app.requestedRole}
+                      {roleLabelShort[app.requestedRole] || app.requestedRole}
                     </span>
                   </div>
                 </div>
@@ -342,66 +344,44 @@ export const VolunteerApplicationsTab: React.FC = () => {
                   {applicantUser?.phone && (
                     <a
                       href={`tel:${applicantUser.phone}`}
-                      className="flex items-center gap-1 text-emerald-600 hover:underline"
+                      className="flex items-center gap-1 hover:text-emerald-600 transition-colors"
                     >
-                      <Phone size={12} />
+                      <Phone size={12} className="text-gray-400" />
                       {applicantUser.phone}
                     </a>
                   )}
                   {applicantUser?.email && (
                     <a
                       href={`mailto:${applicantUser.email}`}
-                      className="flex items-center gap-1 text-gray-600 hover:underline"
+                      className="flex items-center gap-1 hover:text-emerald-600 transition-colors"
                     >
-                      <Mail size={12} />
+                      <Mail size={12} className="text-gray-400" />
                       {applicantUser.email}
                     </a>
                   )}
-                  <span className="flex items-center gap-1 text-gray-400 text-[11px] ml-auto">
+                  <span className="flex items-center gap-1 text-gray-400">
                     <Calendar size={12} />
-                    Postulado: {dayjs(app.createdAt).format('DD/MM/YYYY, hh:mm a')}
+                    Postulado: {dayjs(app.createdAt).format('DD MMM YYYY, HH:mm')}
                   </span>
                 </div>
 
-                {/* Audit Trace Info (if approved or rejected) */}
-                {app.status !== VolunteerApplicationStatus.PENDING && (
-                  <div className="text-xs pt-1 border-t border-gray-100 flex flex-wrap justify-between items-center gap-2 text-gray-500">
-                    <div>
-                      {app.status === VolunteerApplicationStatus.APPROVED ? (
-                        <span className="text-emerald-700 font-medium">
-                          Aprobado por:{' '}
-                          <strong className="text-gray-800">
-                            {app.reviewedByUser?.firstName || 'Coordinador'}
-                          </strong>{' '}
-                          el {dayjs(app.reviewedAt).format('DD/MM/YYYY, hh:mm a')}
-                        </span>
-                      ) : (
-                        <span className="text-rose-700 font-medium">
-                          Rechazado por:{' '}
-                          <strong className="text-gray-800">
-                            {app.reviewedByUser?.firstName || 'Coordinador'}
-                          </strong>{' '}
-                          el {dayjs(app.reviewedAt).format('DD/MM/YYYY, hh:mm a')}
-                        </span>
-                      )}
-                    </div>
-                    {app.rejectionReason && (
-                      <div className="w-full text-xs text-rose-600 bg-rose-50 p-2 rounded-lg border border-rose-100">
-                        <span className="font-bold">Motivo:</span> {app.rejectionReason}
-                      </div>
-                    )}
+                {/* Admin notes (rejection reason) */}
+                {app.rejectionReason && (
+                  <div className="p-2.5 rounded-xl bg-rose-50 border border-rose-100 text-xs text-rose-700">
+                    <span className="font-semibold block mb-0.5">Motivo de rechazo:</span>
+                    {app.rejectionReason}
                   </div>
                 )}
 
-                {/* Actions for PENDING */}
+                {/* Quick actions for pending status */}
                 {app.status === VolunteerApplicationStatus.PENDING && (
                   <div className="flex items-center justify-end gap-2 pt-2 border-t border-gray-100">
                     <Button
-                      variant="default"
                       size="sm"
+                      variant="ghost"
                       onClick={() => setApplicationToReject(app)}
                       disabled={isProcessing}
-                      className="text-xs font-semibold text-rose-600 border-rose-200 hover:bg-rose-50"
+                      className="text-xs font-semibold text-rose-600 border border-rose-200 hover:bg-rose-50"
                     >
                       <X size={14} className="mr-1" />
                       Rechazar
@@ -413,7 +393,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
                       className="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs"
                     >
                       <Check size={14} className="mr-1" />
-                      Aprobar Servidor
+                      Aprobar {volunteerTerm}
                     </Button>
                   </div>
                 )}
@@ -431,7 +411,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
         description={`¿Estás seguro de aprobar a ${
           applicationToApprove?.user?.firstName || 'este solicitante'
         } como ${
-          ROLE_LABEL_SHORT[applicationToApprove?.requestedRole as VolunteerRole] ||
+          roleLabelShort[applicationToApprove?.requestedRole as VolunteerRole] ||
           applicationToApprove?.requestedRole
         } en el área ${applicationToApprove?.ministryArea?.name || ''}? Se creará su asignación de servicio inmediatamente.`}
         confirmText="Aprobar y Asignar"

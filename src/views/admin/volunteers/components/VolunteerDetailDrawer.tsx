@@ -8,6 +8,7 @@ import {
   IVolunteerAssignment,
   VolunteerRole,
 } from '@/libs/models';
+import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   DeleteVolunteerAssignment,
@@ -90,6 +91,12 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
   const { currentVolunteerAssignments, loadingCurrentAssignments } = useAppSelector(
     (state) => state.volunteerSlice,
   );
+  const volunteerTerm = useChurchTerm('volunteer');
+  const churchOverrides = useAppSelector(
+    (state) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
 
   const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
@@ -104,7 +111,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
   const name =
     user && (user.firstName || user.lastName)
       ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-      : 'Servidor';
+      : volunteerTerm;
 
   const handleOpenDelete = (asg: IVolunteerAssignment) => {
     setAssignmentToDelete(asg);
@@ -129,7 +136,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Detalle del Servidor"
+      title={`Detalle de ${volunteerTerm}`}
       icon={<UserIcon className="text-primary" size={20} />}
     >
       <div className="flex flex-col gap-5 p-4">
@@ -189,7 +196,9 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
           ) : currentVolunteerAssignments.length === 0 ? (
             <div className="p-6 bg-slate-50 border border-dashed border-gray-200 rounded-2xl text-center flex flex-col items-center gap-2">
               <Inbox size={20} className="text-gray-400" />
-              <p className="text-xs text-gray-500">Este servidor no cuenta con asignaciones activas.</p>
+              <p className="text-xs text-gray-500">
+                Este {volunteerTerm.toLowerCase()} no cuenta con asignaciones activas.
+              </p>
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
@@ -197,6 +206,15 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
                 const roleConfig =
                   ROLE_STYLE_MAP[asg.role] || ROLE_STYLE_MAP[VolunteerRole.VOLUNTEER];
                 const RoleIcon = roleConfig.icon;
+                const asgMinistry =
+                  asg.ministry ||
+                  asg.ministryArea?.ministry ||
+                  asg.serviceAreaGroup?.ministryArea?.ministry;
+                const roleLabel = getVolunteerRoleLabel(asg.role, {
+                  ministryType: asgMinistry?.type,
+                  ministryOverrides: asgMinistry?.terminologyOverrides,
+                  churchOverrides,
+                });
 
                 // Scope description
                 const campus =
@@ -260,7 +278,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
                               roleConfig.badge,
                             )}
                           >
-                            {roleConfig.label}
+                            {roleLabel}
                           </span>
                         </div>
                         <p className="text-xs font-semibold text-gray-800 mt-1 truncate">
@@ -300,7 +318,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
         open={confirmDeleteOpen}
         onOpenChange={setConfirmDeleteOpen}
         title="Remover Asignación"
-        description="¿Estás seguro de que deseas eliminar esta asignación del servidor?"
+        description={`¿Estás seguro de que deseas eliminar esta asignación del ${volunteerTerm.toLowerCase()}?`}
         confirmText="Sí, remover"
         cancelText="Cancelar"
         type="danger"

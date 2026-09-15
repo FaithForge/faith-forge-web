@@ -14,6 +14,7 @@ import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/utils/phone';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import {
   IdType,
   UserIdType,
@@ -48,6 +49,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
   useModalBackClose(open, onClose);
 
   const dispatch = useAppDispatch();
+  const guardianTerm = useKidsTerm('guardian');
   const { current: existingGuardian, loading: guardianLoading } = useAppSelector(
     (state) => state.kidGuardianSlice
   );
@@ -130,7 +132,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
         return;
       }
       if (!firstName.trim()) {
-        toast.error('Por favor ingrese el nombre del acudiente');
+        toast.error(`Por favor ingrese el nombre de ${guardianTerm.toLowerCase()}`);
         return;
       }
       const lastNameValidation = validateTwoLastNames(lastName);
@@ -144,7 +146,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
         return;
       }
       if (!gender) {
-        toast.error('Por favor seleccione el género del acudiente');
+        toast.error(`Por favor seleccione el género de ${guardianTerm.toLowerCase()}`);
         return;
       }
     }
@@ -158,7 +160,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     const dialCodeToValidate = dialCodePhone || existingGuardian?.dialCodePhone || '+57';
     const phoneValidation = validatePhoneNumber(phoneToValidate, dialCodeToValidate);
     if (!phoneValidation.isValid) {
-      toast.error(phoneValidation.error || 'El acudiente tiene un teléfono errado. Debe preguntarle el número correcto y corregirlo.');
+      toast.error(phoneValidation.error || `El/La ${guardianTerm.toLowerCase()} tiene un teléfono errado. Debe preguntarle el número correcto y corregirlo.`);
       return;
     }
 
@@ -178,14 +180,14 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
 
       const response = await dispatch(CreateKidGuardian(payload as any));
       if (!response.payload?.error) {
-        toast.success('¡Acudiente asignado con éxito!');
+        toast.success(`¡${guardianTerm} asignado(a) con éxito!`);
         await dispatch(GetKid({ id: kidId }));
         onClose();
       } else {
-        toast.error(response.payload?.error || 'Error al asignar el acudiente');
+        toast.error(response.payload?.error || `Error al asignar ${guardianTerm.toLowerCase()}`);
       }
     } catch {
-      toast.error('Error de conexión al asignar el acudiente');
+      toast.error(`Error de conexión al asignar ${guardianTerm.toLowerCase()}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -196,7 +198,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
       open={open}
       onOpenChange={(o) => !o && onClose()}
       onClose={onClose}
-      title="Asignar Nuevo Acudiente"
+      title={`Asignar Nuevo(a) ${guardianTerm}`}
       maxHeight="max-h-[90dvh]"
       contentClassName="bg-surface"
       bodyClassName="p-5 flex flex-col gap-4 pb-12"
@@ -207,7 +209,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl flex items-center justify-between text-xs font-semibold">
                 <div className="flex items-center gap-2">
                   <UserCheck size={18} className="text-emerald-600 shrink-0" />
-                  <span>Acudiente encontrado en la base de datos</span>
+                  <span>{guardianTerm} encontrado(a) en la base de datos</span>
                 </div>
                 <button
                   type="button"
@@ -224,8 +226,8 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
                 <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
                 <div className="leading-relaxed">
-                  <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto al acudiente:</strong>
-                  El número registrado para este acudiente ({formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo inferior para poder asignarlo.
+                  <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}:</strong>
+                  El número registrado para este {guardianTerm.toLowerCase()} ({formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo inferior para poder asignarlo.
                 </div>
               </div>
             )}
@@ -335,7 +337,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               loadingText="Asignando..."
               className="mt-2"
             >
-              Asignar Acudiente
+              Asignar {guardianTerm}
             </Button>
           </form>
     </AppDrawer>

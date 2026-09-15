@@ -10,6 +10,7 @@ import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 import { toast } from 'sonner';
 
@@ -22,6 +23,7 @@ const BottomNav = () => {
   const [openSettings, setOpenSettings] = useState(false);
   const [openReport, setOpenReport] = useState(false);
 
+  const meetingTerm = useChurchTerm('meeting');
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
@@ -89,7 +91,7 @@ const BottomNav = () => {
   let navItems: BottomNavItem[] = [];
 
   if (isKidChurchRole) {
-    // Tabs for Iglekids (KidChurchLayout)
+    // Tabs for Kid Church (KidChurchLayout)
     navItems = [
       { path: APP_ROUTES.kidChurch.root, icon: Users, label: 'Niños Registrados', action: 'link' },
       { path: '#', icon: Settings, label: 'Configurar', action: 'settings' },
@@ -101,7 +103,7 @@ const BottomNav = () => {
       navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: 'Mi Equipo', action: 'link' });
     }
   } else {
-    // Tabs for Regikids (KidRegistrationLayout)
+    // Tabs for Kid Registration (KidRegistrationLayout)
     navItems = [
       { path: APP_ROUTES.kidRegistration.root, icon: Home, label: 'Inicio', action: 'link' },
       { path: APP_ROUTES.kidRegistration.new, icon: UserPlus, label: 'Crear Niño', action: 'link' },
@@ -128,12 +130,12 @@ const BottomNav = () => {
             const handleClick = (e: React.MouseEvent) => {
               e.preventDefault();
               if (isBlocked) {
-                toast.error(meetingErrorMsg || 'El servicio se encuentra fuera del horario de registro.');
+                toast.error(meetingErrorMsg || `La ${meetingTerm.toLowerCase()} se encuentra fuera del horario de registro.`);
                 return;
               }
               if (!isConfigured && (item.label === 'Crear Niño' || item.label === 'Escanear QR')) {
                 setOpenSettings(true);
-                toast.info('Por favor selecciona el servicio a registrar antes de continuar.');
+                toast.info(`Por favor selecciona la ${meetingTerm.toLowerCase()} a registrar antes de continuar.`);
                 return;
               }
               if (item.action === 'settings') {
@@ -142,12 +144,12 @@ const BottomNav = () => {
               }
               if (item.action === 'report') { setOpenReport(true); return; }
 
-              const isRegikidsHomeClick = item.label === 'Inicio' || item.path === APP_ROUTES.kidRegistration.root;
+              const isRegistrationHomeClick = item.label === 'Inicio' || item.path === APP_ROUTES.kidRegistration.root;
               const isKidChurchHomeClick = item.label === 'Niños Registrados' || item.path === APP_ROUTES.kidChurch.root;
 
               // If already on the active tab:
               if (pathname === item.path) {
-                if (isRegikidsHomeClick) {
+                if (isRegistrationHomeClick) {
                   dispatch(markKidsNeedsRefresh());
                   window.dispatchEvent(new CustomEvent('reset-registration-dashboard'));
                 } else if (isKidChurchHomeClick) {
@@ -156,7 +158,7 @@ const BottomNav = () => {
                 return;
               }
 
-              if (isRegikidsHomeClick) {
+              if (isRegistrationHomeClick) {
                 dispatch(markKidsNeedsRefresh());
                 window.dispatchEvent(new CustomEvent('reset-registration-dashboard'));
                 navigate(item.path);

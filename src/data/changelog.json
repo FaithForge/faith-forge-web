@@ -1,5 +1,17 @@
 [
   {
+    "version": "3.4.1",
+    "type": "patch",
+    "timestamp": "2026-09-15T22:29:14.318Z",
+    "dateFormatted": "15/09/2026 05:29 PM",
+    "title": "Correcciones en roles y nombres del registro",
+    "changes": [
+      "Los nombres en el log de registro ahora se muestran correctamente en mayúsculas iniciales en lugar de todo en mayúsculas.",
+      "El rol de Coordinador de Grupo ya no aparece incorrectamente como Coordinador de Área en el selector de roles.",
+      "El rol de Servidor sin grupo asignado ahora muestra correctamente la etiqueta de Apoyo en el menú de roles."
+    ]
+  },
+  {
     "version": "3.4.0",
     "type": "minor",
     "timestamp": "2026-09-15T14:55:33.488Z",
@@ -7,7 +19,14 @@
     "title": "Personalización de vocabulario y nomenclatura",
     "changes": [
       "Configuración adaptable de nombres para reuniones, sedes y ministerios",
-      "Panel administrativo para ajustar la terminología de la iglesia"
+      "Panel administrativo para ajustar la terminología de la iglesia",
+      "Visualización adaptable de títulos y roles en directorios y equipos según el área de servicio y la nomenclatura de cada ministerio",
+      "Adaptación integral de la barra de navegación, menús de roles, perfiles, reportes y ventanas a la nomenclatura y vocabulario configurado para cada iglesia y ministerio",
+      "Terminología universal por defecto en toda la plataforma con opciones ampliadas para coordinadores, supervisores y estaciones de atención",
+      "Clarificación visual en el selector de roles: las funciones administrativas no muestran grupos asignados y los accesos especiales por administración se identifican de manera diferenciada",
+      "Generalización dinámica de términos para tutores/acudientes y servidores/voluntarios en todos los flujos de registro, check-in, directorios y administración de equipos",
+      "Identificación precisa del grupo de servicio en los registros de ingreso y reconocimiento de servidores de apoyo con permisos temporales",
+      "Presentación visual mejorada en la consulta de registros con distintivos claros de grupo, apoyo, coordinación y administración"
     ]
   },
   {

@@ -16,7 +16,9 @@ import {
   MinistryVolunteerAssignmentStateEnum,
   ServiceAreaGroupStateEnum,
   VolunteerRole,
+  MinistryType,
 } from '@/libs/models';
+import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import {
@@ -57,7 +59,7 @@ interface AssignVolunteerDrawerProps {
   onSuccess?: () => void;
 }
 
-const ROLE_DEFINITIONS: Array<{
+const ROLE_DEFINITIONS_BASE: Array<{
   role: VolunteerRole;
   label: string;
   description: string;
@@ -127,6 +129,38 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   const dispatch = useAppDispatch();
   const { token } = useAppSelector((state) => state.authSlice);
   const volunteersState = useAppSelector((state) => state.volunteerSlice.volunteers.data);
+  const currentMinistry = useAppSelector((state) =>
+    state.ministrySlice.ministries.find((m) => m.id === ministryId),
+  );
+  const churchOverrides = useAppSelector(
+    (state) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
+  const volunteerTerm = useChurchTerm('volunteer');
+
+  const roleDefinitions = useMemo(() => {
+    const isKids = currentMinistry?.type === MinistryType.KIDS;
+    const volunteerLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+      ministryType: currentMinistry?.type,
+      ministryOverrides: currentMinistry?.terminologyOverrides,
+      churchOverrides,
+    });
+    const volunteerDesc = isKids
+      ? 'Servidor(a) o encargado(a) en el aula con los niños.'
+      : 'Miembro voluntario activo sirviendo en el equipo (Área × Grupo).';
+
+    return ROLE_DEFINITIONS_BASE.map((item) => {
+      if (item.role === VolunteerRole.VOLUNTEER) {
+        return {
+          ...item,
+          label: volunteerLabel,
+          description: volunteerDesc,
+        };
+      }
+      return item;
+    });
+  }, [currentMinistry, churchOverrides]);
 
   /**
    * Retrieves an existing volunteer record by userId directly from Church MS.
@@ -458,11 +492,11 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
       // Refresh assignments
       await dispatch(GetVolunteerAssignments({ ministryId, force: true }));
-      toast.success('Servidor asignado exitosamente');
+      toast.success(`${volunteerTerm} asignado(a) exitosamente`);
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
-      let errMsg = 'Error al guardar la asignación del servidor';
+      let errMsg = `Error al guardar la asignación del ${volunteerTerm.toLowerCase()}`;
       if (typeof err === 'string') {
         errMsg = err;
       } else if (typeof err === 'object' && err !== null) {
@@ -487,7 +521,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Asignar Servidor / Rol"
+      title={`Asignar ${volunteerTerm} / Rol`}
       icon={<ShieldCheck className="text-primary" size={20} />}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-5 p-4">
@@ -595,7 +629,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
             2. Seleccionar Rol Jerárquico <span className="text-rose-500">*</span>
           </label>
           <div className="flex flex-col gap-2">
-            {ROLE_DEFINITIONS.map((item) => {
+            {roleDefinitions.map((item) => {
               const isSelected = selectedRole === item.role;
               const Icon = item.icon;
               return (

@@ -250,50 +250,50 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<AppRole, RoleMetadata> = {
   },
   [ChurchRole.MINISTRY_ADMIN]: {
     id: ChurchRole.MINISTRY_ADMIN,
-    name: 'Iglekids - Admin General',
-    category: 'Iglekids',
-    description: 'Administrador general de iglesia infantil',
+    name: 'Niños - Admin General',
+    category: 'Ministerio de Niños',
+    description: 'Administrador general del ministerio infantil',
     badgeColor: 'bg-amber-100 text-amber-700 border-amber-200',
   },
   [UserRole.KID_REGISTER_ADMIN]: {
     id: UserRole.KID_REGISTER_ADMIN,
-    name: 'Regikids - Coordinador',
-    category: 'Regikids',
+    name: 'Registro - Coordinador',
+    category: 'Registro de Niños',
     description: 'Coordinador del módulo de registro de niños',
     badgeColor: 'bg-sky-100 text-sky-700 border-sky-200',
   },
   [UserRole.KID_REGISTER_SUPERVISOR]: {
     id: UserRole.KID_REGISTER_SUPERVISOR,
-    name: 'Regikids - Supervisor',
-    category: 'Regikids',
+    name: 'Registro - Supervisor',
+    category: 'Registro de Niños',
     description: 'Supervisión y control del flujo de registro',
     badgeColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   },
   [UserRole.KID_REGISTER_USER]: {
     id: UserRole.KID_REGISTER_USER,
-    name: 'Regikids - Servidor',
-    category: 'Regikids',
+    name: 'Registro - Servidor',
+    category: 'Registro de Niños',
     description: 'Atención y registro en mesas de entrada',
     badgeColor: 'bg-teal-100 text-teal-700 border-teal-200',
   },
   [UserRole.KID_GROUP_ADMIN]: {
     id: UserRole.KID_GROUP_ADMIN,
-    name: 'Iglekids - Coordinador',
-    category: 'Iglekids',
+    name: 'Niños - Coordinador',
+    category: 'Ministerio de Niños',
     description: 'Coordinador de actividades y salones infantiles',
     badgeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   },
   [UserRole.KID_GROUP_SUPERVISOR]: {
     id: UserRole.KID_GROUP_SUPERVISOR,
-    name: 'Iglekids - Supervisor',
-    category: 'Iglekids',
+    name: 'Niños - Supervisor',
+    category: 'Ministerio de Niños',
     description: 'Supervisor de salones y asistencia',
     badgeColor: 'bg-green-100 text-green-700 border-green-200',
   },
   [UserRole.KID_GROUP_USER]: {
     id: UserRole.KID_GROUP_USER,
-    name: 'Iglekids - Servidor',
-    category: 'Iglekids',
+    name: 'Niños - Servidor',
+    category: 'Ministerio de Niños',
     description: 'Servidor de salón y pase de lista',
     badgeColor: 'bg-lime-100 text-lime-700 border-lime-200',
   },
@@ -315,8 +315,8 @@ export interface MinistryRoleGroup {
 
 export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
   {
-    id: 'Regikids',
-    label: 'Regikids',
+    id: 'KID_REGISTRATION',
+    label: 'Registro de Niños',
     description: 'Módulo de registro, recepción y acreditación de niños',
     roles: [
       UserRole.KID_REGISTER_USER,
@@ -325,9 +325,9 @@ export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
     ],
   },
   {
-    id: 'Iglekids',
-    label: 'Iglekids',
-    description: 'Módulo de iglesia infantil, salones, clases y actividades',
+    id: 'KID_CHURCH',
+    label: 'Ministerio de Niños',
+    description: 'Módulo de clases infantiles, salones y actividades',
     roles: [
       UserRole.KID_GROUP_USER,
       UserRole.KID_GROUP_SUPERVISOR,
@@ -336,7 +336,7 @@ export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
     ],
   },
   {
-    id: 'Administración General',
+    id: 'ADMINISTRATION',
     label: 'Administración General',
     description: 'Gestión global de la congregación, sedes y personal',
     roles: [

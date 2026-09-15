@@ -5,7 +5,7 @@ import {
 } from '@/libs/common-types/constants/copy';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 import { useAppSelector } from '@/libs/state/redux/hooks';
-import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch } from '@/libs/utils/auth';
+import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
@@ -69,6 +69,8 @@ export interface MeetingStatus {
   meetingErrorMsg: string;
   shouldBlockKids: boolean;
   isAdmin: boolean;
+  /** True when the active role is KID_REGISTER_SUPERVISOR (or above). Supervisor+ can delete registrations and view the registration log. */
+  isSupervisor: boolean;
   currentMeeting: any;
   currentPrinter: any;
   currentCampus: any;
@@ -118,6 +120,9 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const activeRoles = currentRole ? Array.from(new Set([...userRoles, currentRole])) : userRoles;
   const isAdmin =
     IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
+
+  // Supervisor or above: can delete registrations and see the registration log
+  const isSupervisor = isAdmin || IsSupervisorRegisterKidChurch(activeRoles);
 
   let isMeetingValid = true;
   let meetingErrorMsg = '';
@@ -172,6 +177,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     meetingErrorMsg,
     shouldBlockKids,
     isAdmin,
+    isSupervisor,
     currentMeeting,
     currentPrinter,
     currentCampus,

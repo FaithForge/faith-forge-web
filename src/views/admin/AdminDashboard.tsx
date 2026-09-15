@@ -24,8 +24,9 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { TerminologyDrawer } from '@/components/modal/TerminologyDrawer';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CleanCache } from '@/libs/state/redux/thunks/admin/admin.thunk';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { toast } from 'sonner';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 
 interface AdminActionItem {
   id: string;
@@ -45,119 +46,6 @@ interface AdminCategory {
   items: AdminActionItem[];
 }
 
-const ADMIN_CATEGORIES: AdminCategory[] = [
-  {
-    title: 'Gestión de Usuarios',
-    description: 'Administración de cuentas, accesos, datos personales y perfiles del equipo.',
-    icon: Users,
-    items: [
-      {
-        id: 'user-management',
-        title: 'Directorio de Usuarios y Servidores',
-        description: 'Consulta personas y servidores, gestiona datos personales, servicio ministerial, credenciales y roles.',
-        icon: UserCog,
-        route: APP_ROUTES.admin.users,
-        iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
-        iconColor: 'text-blue-600',
-      },
-      {
-        id: 'create-user',
-        title: 'Crear Nuevo Usuario',
-        description: 'Registra un nuevo miembro del equipo o voluntario en la plataforma.',
-        icon: UserPlus,
-        route: APP_ROUTES.admin.createUser,
-        iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-        iconColor: 'text-emerald-600',
-      },
-    ],
-  },
-  {
-    title: 'Gestión de Ministerios y Servidores',
-    description: 'Configuración de ministerios, áreas de servicio, grupos y asignación de servidores.',
-    icon: Layers,
-    items: [
-      {
-        id: 'ministry-management',
-        title: 'Ministerios y Áreas de Servicio',
-        description: 'Administra ministerios, áreas, grupos y sus configuraciones por sede.',
-        icon: Layers,
-        route: APP_ROUTES.admin.ministries,
-        iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
-        iconColor: 'text-indigo-600',
-      },
-      {
-        id: 'volunteer-applications',
-        title: 'Solicitudes de Servidores',
-        description: 'Revisa, aprueba o rechaza postulaciones de personas que desean servir en los ministerios.',
-        icon: UserCheck,
-        route: APP_ROUTES.admin.volunteerApplications,
-        iconBg: 'bg-violet-50 text-violet-600 border border-violet-100',
-        iconColor: 'text-violet-600',
-      },
-    ],
-  },
-  {
-    title: 'Sedes e Instalaciones',
-    description: 'Administración de sedes físicas, cultos, horarios e impresoras térmicas.',
-    icon: Church,
-    items: [
-      {
-        id: 'campuses-management',
-        title: 'Gestión de Sedes',
-        description: 'Crea, edita y organiza las sedes físicas y campus de la iglesia.',
-        icon: MapPin,
-        route: APP_ROUTES.admin.campuses,
-        iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
-        iconColor: 'text-emerald-600',
-      },
-      {
-        id: 'service-status',
-        title: 'Horarios y Servicios por Sede',
-        description: 'Configura reuniones, franjas de culto y apertura de registro, y administra estados.',
-        icon: CalendarClock,
-        route: APP_ROUTES.admin.churchMeetings,
-        iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
-        iconColor: 'text-amber-600',
-      },
-      {
-        id: 'printers-management',
-        title: 'Impresoras Térmicas',
-        description: 'Configura y gestiona las impresoras Bluetooth y de red asignadas por sede.',
-        icon: Printer,
-        route: APP_ROUTES.admin.printers,
-        iconBg: 'bg-cyan-50 text-cyan-600 border border-cyan-100',
-        iconColor: 'text-cyan-600',
-      },
-    ],
-  },
-
-  {
-    title: 'Sistema',
-    description: 'Tareas de mantenimiento, optimización y utilidades del sistema.',
-    icon: Database,
-    items: [
-      {
-        id: 'terminology-settings',
-        title: 'Vocabulario y Nomenclatura',
-        description: 'Personaliza los nombres de reuniones, sedes, roles y áreas según los conceptos de tu congregación.',
-        icon: Sparkles,
-        route: '',
-        iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
-        iconColor: 'text-indigo-600',
-      },
-      {
-        id: 'clear-cache',
-        title: 'Borrar Caché',
-        description: 'Limpia la caché del servidor para sincronizar datos modificados o forzar actualizaciones.',
-        icon: Trash2,
-        route: '',
-        iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
-        iconColor: 'text-rose-600',
-      },
-    ],
-  },
-];
-
 /**
  * Vista Principal del Panel de Administración
  */
@@ -167,6 +55,123 @@ const AdminDashboard: React.FC = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [terminologyOpen, setTerminologyOpen] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
+
+  const volunteersTerm = useChurchTerm('volunteers');
+  const campusesTerm = useChurchTerm('campuses');
+  const campusTerm = useChurchTerm('campus');
+  const meetingsTerm = useChurchTerm('meetings');
+
+  const adminCategories: AdminCategory[] = useMemo(() => [
+    {
+      title: 'Gestión de Usuarios',
+      description: 'Administración de cuentas, accesos, datos personales y perfiles del equipo.',
+      icon: Users,
+      items: [
+        {
+          id: 'user-management',
+          title: `Directorio de Usuarios y ${volunteersTerm}`,
+          description: `Consulta personas y ${volunteersTerm.toLowerCase()}, gestiona datos personales, servicio ministerial, credenciales y roles.`,
+          icon: UserCog,
+          route: APP_ROUTES.admin.users,
+          iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
+          iconColor: 'text-blue-600',
+        },
+        {
+          id: 'create-user',
+          title: 'Crear Nuevo Usuario',
+          description: 'Registra un nuevo miembro del equipo o voluntario en la plataforma.',
+          icon: UserPlus,
+          route: APP_ROUTES.admin.createUser,
+          iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+          iconColor: 'text-emerald-600',
+        },
+      ],
+    },
+    {
+      title: `Gestión de Ministerios y ${volunteersTerm}`,
+      description: `Configuración de ministerios, áreas de servicio, grupos y asignación de ${volunteersTerm.toLowerCase()}.`,
+      icon: Layers,
+      items: [
+        {
+          id: 'ministry-management',
+          title: 'Ministerios y Áreas de Servicio',
+          description: `Administra ministerios, áreas, grupos y sus configuraciones por ${campusTerm.toLowerCase()}.`,
+          icon: Layers,
+          route: APP_ROUTES.admin.ministries,
+          iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+          iconColor: 'text-indigo-600',
+        },
+        {
+          id: 'volunteer-applications',
+          title: `Solicitudes de ${volunteersTerm}`,
+          description: 'Revisa, aprueba o rechaza postulaciones de personas que desean servir en los ministerios.',
+          icon: UserCheck,
+          route: APP_ROUTES.admin.volunteerApplications,
+          iconBg: 'bg-violet-50 text-violet-600 border border-violet-100',
+          iconColor: 'text-violet-600',
+        },
+      ],
+    },
+    {
+      title: `${campusesTerm} e Instalaciones`,
+      description: `Administración de ${campusesTerm.toLowerCase()} físicas, ${meetingsTerm.toLowerCase()}, horarios e impresoras térmicas.`,
+      icon: Church,
+      items: [
+        {
+          id: 'campuses-management',
+          title: `Gestión de ${campusesTerm}`,
+          description: `Crea, edita y organiza las ${campusesTerm.toLowerCase()} físicas de la congregación.`,
+          icon: MapPin,
+          route: APP_ROUTES.admin.campuses,
+          iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
+          iconColor: 'text-emerald-600',
+        },
+        {
+          id: 'service-status',
+          title: `Horarios y ${meetingsTerm} por ${campusTerm}`,
+          description: `Configura ${meetingsTerm.toLowerCase()}, franjas de culto y apertura de registro, y administra estados.`,
+          icon: CalendarClock,
+          route: APP_ROUTES.admin.churchMeetings,
+          iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
+          iconColor: 'text-amber-600',
+        },
+        {
+          id: 'printers-management',
+          title: 'Impresoras Térmicas',
+          description: `Configura y gestiona las impresoras Bluetooth y de red asignadas por ${campusTerm.toLowerCase()}.`,
+          icon: Printer,
+          route: APP_ROUTES.admin.printers,
+          iconBg: 'bg-cyan-50 text-cyan-600 border border-cyan-100',
+          iconColor: 'text-cyan-600',
+        },
+      ],
+    },
+    {
+      title: 'Sistema',
+      description: 'Tareas de mantenimiento, optimización y utilidades del sistema.',
+      icon: Database,
+      items: [
+        {
+          id: 'terminology-settings',
+          title: 'Vocabulario y Nomenclatura',
+          description: `Personaliza los nombres de ${meetingsTerm.toLowerCase()}, ${campusesTerm.toLowerCase()}, roles y áreas según los conceptos de tu congregación.`,
+          icon: Sparkles,
+          route: '',
+          iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
+          iconColor: 'text-indigo-600',
+        },
+        {
+          id: 'clear-cache',
+          title: 'Borrar Caché',
+          description: 'Limpia la caché de la aplicación para sincronizar datos modificados o forzar actualizaciones.',
+          icon: Trash2,
+          route: '',
+          iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
+          iconColor: 'text-rose-600',
+        },
+      ],
+    },
+  ], [volunteersTerm, campusesTerm, campusTerm, meetingsTerm]);
 
   /**
    * Dispatches the CleanCache thunk and handles the response with toast notifications.
@@ -205,7 +210,7 @@ const AdminDashboard: React.FC = () => {
 
         {/* Main Content Area */}
         <div className="flex flex-col gap-6">
-          {ADMIN_CATEGORIES.map((category, catIndex) => {
+          {adminCategories.map((category, catIndex) => {
             const CategoryIcon = category.icon;
             return (
               <section key={catIndex} className="flex flex-col gap-2.5">
@@ -289,7 +294,7 @@ const AdminDashboard: React.FC = () => {
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
         title="Borrar Caché del Sistema"
-        description="¿Estás seguro de que deseas borrar la caché del servidor? Esto podría causar una recarga temporal de la configuración y datos para todos los usuarios conectados."
+        description="¿Estás seguro de que deseas borrar la caché de la aplicación? Esto podría causar una recarga temporal de la configuración y datos para todos los usuarios conectados."
         confirmText="Sí, borrar caché"
         cancelText="Cancelar"
         onConfirm={handleClearCache}

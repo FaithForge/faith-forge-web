@@ -1,5 +1,5 @@
 /**
- * @fileoverview Universal Web Bluetooth Low Energy (BLE) Printer Service for Iglekids.
+ * @fileoverview Universal Web Bluetooth Low Energy (BLE) Printer Service for kids registration.
  * Provides native BLE connectivity for ESC/POS thermal printers and an extensible
  * driver architecture (IBluetoothPrinterDriver) for future Bluetooth printer models.
  */

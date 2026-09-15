@@ -25,6 +25,8 @@ const NoRolesAssignedView: React.FC = () => {
   const user = useAppSelector((state) => state.authSlice.user);
   const [isChecking, setIsChecking] = useState<boolean>(false);
 
+  const churchName = useAppSelector((state) => state.churchCampusSlice.church?.name);
+
   const userName = user
     ? capitalizeWords(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()) || user.username
     : 'Usuario';
@@ -70,9 +72,11 @@ const NoRolesAssignedView: React.FC = () => {
         </div>
 
         {/* Brand identifier */}
-        <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
-          Iglekids
-        </span>
+        {churchName && (
+          <span className="px-3 py-1 bg-slate-100 text-slate-600 rounded-full text-[11px] font-bold uppercase tracking-wider mb-2">
+            {churchName}
+          </span>
+        )}
 
         {/* Title */}
         <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">

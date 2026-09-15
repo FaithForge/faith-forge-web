@@ -21,11 +21,13 @@ import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
 import DeleteKidModal from '@/components/modal/DeleteKidModal';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
+import { parseRegistrationLog } from '@/libs/utils/registrationLog';
 import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday, toDateOnlyInputValue } from '@/libs/utils/date';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Alert from '@/components/ui/Alert';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
@@ -37,13 +39,15 @@ const KidCheckInView = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const guardianTerm = useKidsTerm('guardian');
+  const guardiansTerm = useKidsTerm('guardians');
 
   const { current: kid, loading } = useAppSelector(state => state.kidSlice);
   const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
-  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin } = useChurchMeetingStatus();
+  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor } = useChurchMeetingStatus();
 
   const [selectedGuardian, setSelectedGuardian] = useState<string>('');
   const [observationType, setObservationType] = useState<string>('NONE');
@@ -76,7 +80,7 @@ const KidCheckInView = () => {
   }, [id, dispatch]);
 
   const getTranslatedRelation = (code: string) => {
-    if (!code) return 'Acudiente';
+    if (!code) return guardianTerm;
     return (KID_RELATION_CODE_MAPPER as Record<string, string>)[code] || code;
   };
 
@@ -195,11 +199,11 @@ const KidCheckInView = () => {
       return;
     }
     if (!selectedGuardian) {
-      toast.error("Por favor seleccione un acudiente");
+      toast.error(`Por favor seleccione un(a) ${guardianTerm.toLowerCase()}`);
       return;
     }
     if (isSelectedGuardianPhoneInvalid) {
-      toast.error("El acudiente seleccionado tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo antes de registrar.");
+      toast.error(`El/La ${guardianTerm.toLowerCase()} seleccionado(a) tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo antes de registrar.`);
       return;
     }
     if (!kid?.id || !kid?.kidGroup?.id) {
@@ -207,7 +211,7 @@ const KidCheckInView = () => {
       return;
     }
 
-    const specialGroup = kidGroupSlice.data?.find((g: any) => g.name === 'Yo Soy Iglekids' || g.type === KidGroupType.SPECIAL) || kidGroupSlice.data?.[0];
+    const specialGroup = kidGroupSlice.data?.find((g: any) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroupSlice.data?.[0];
     const targetGroupId = isKidVolunteer && specialGroup?.id ? specialGroup.id : kid.kidGroup.id;
 
     let finalObservation = '';
@@ -258,11 +262,11 @@ const KidCheckInView = () => {
 
   const handleCheckIn = async () => {
     if (!selectedGuardian) {
-      toast.error("Por favor seleccione un acudiente");
+      toast.error(`Por favor seleccione un(a) ${guardianTerm.toLowerCase()}`);
       return;
     }
     if (isSelectedGuardianPhoneInvalid) {
-      toast.error("El acudiente seleccionado tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo antes de registrar.");
+      toast.error(`El/La ${guardianTerm.toLowerCase()} seleccionado(a) tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo antes de registrar.`);
       return;
     }
     if (!kid?.id || !kid?.kidGroup?.id) {
@@ -367,27 +371,28 @@ const KidCheckInView = () => {
       );
 
       if (DeleteKidGuardianRelation.fulfilled.match(actionResult)) {
-        toast.success(`Relación con ${guardianName || 'el acudiente'} eliminada con éxito`);
+        toast.success(`Relación con ${guardianName || `el/la ${guardianTerm.toLowerCase()}`} eliminada con éxito`);
         if (selectedGuardian === targetGuardianId) {
           setSelectedGuardian('');
         }
         await dispatch(GetKid({ id: kid.id }));
       } else {
         const errorPayload: any = actionResult.payload;
-        toast.error(errorPayload?.message || errorPayload?.error || 'Error al eliminar la relación con el acudiente');
+        toast.error(errorPayload?.message || errorPayload?.error || `Error al eliminar la relación con ${guardianTerm.toLowerCase()}`);
       }
     } catch {
-      toast.error('Error de conexión al eliminar la relación con el acudiente');
+      toast.error(`Error de conexión al eliminar la relación con ${guardianTerm.toLowerCase()}`);
     } finally {
       setGuardianRelationToDelete(null);
     }
   };
 
-  const specialGroup = kidGroupSlice.data?.find((g: any) => g.name === 'Yo Soy Iglekids' || g.type === KidGroupType.SPECIAL) || kidGroupSlice.data?.[0];
+  const specialGroup = kidGroupSlice.data?.find((g: any) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroupSlice.data?.[0];
+  const specialGroupName = specialGroup?.name || 'Servidor Infantil';
 
   const displayedGroupName = isRegistered
-    ? (kid?.currentKidRegistration?.groupId !== kid?.kidGroup?.id ? 'Yo Soy Iglekids' : kid?.kidGroup?.name)
-    : (isKidVolunteer ? (specialGroup?.name || 'Yo Soy Iglekids') : (kid?.kidGroup?.name || 'Sin grupo'));
+    ? (kid?.currentKidRegistration?.groupId !== kid?.kidGroup?.id ? specialGroupName : kid?.kidGroup?.name)
+    : (isKidVolunteer ? specialGroupName : (kid?.kidGroup?.name || 'Sin grupo'));
 
   const isStaticGroup = isRegistered
     ? (kid?.currentKidRegistration?.groupId !== kid?.kidGroup?.id ? false : kid?.staticGroup)
@@ -432,7 +437,7 @@ const KidCheckInView = () => {
               className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
             >
               <UserPlus size={17} className="text-gray-500" />
-              <span>Asignar nuevo acudiente</span>
+              <span>Asignar nuevo(a) {guardianTerm.toLowerCase()}</span>
             </button>
 
             {isAdmin && (
@@ -485,7 +490,7 @@ const KidCheckInView = () => {
                 <div className="flex-1">
                   <h4 className="font-bold text-amber-900 text-sm mb-0.5">⚠️ EPS no registrada ("NO SABE")</h4>
                   <p className="text-amber-800">
-                    La EPS del niño se encuentra registrada como <span className="font-bold">"NO SABE"</span>. Por favor, <strong>pregunta al acudiente si ya conoce la EPS actual del niño</strong> y actualízala desde las opciones (<strong>⋮</strong>).
+                    La EPS del niño se encuentra registrada como <span className="font-bold">"NO SABE"</span>. Por favor, <strong>pregunta a {guardianTerm.toLowerCase()} si ya conoce la EPS actual del niño</strong> y actualízala desde las opciones (<strong>⋮</strong>).
                   </p>
                 </div>
               </div>
@@ -568,7 +573,7 @@ const KidCheckInView = () => {
                         type="button"
                         onClick={() => setShowVolunteerConfirmModal(true)}
                         className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all hover:scale-105 active:scale-95 border border-gray-200"
-                        title={isKidVolunteer ? "Cambiar a recibir en su salón habitual" : "Cambiar a Yo Soy Iglekids (Servidor)"}
+                        title={isKidVolunteer ? "Cambiar a recibir en su salón habitual" : `Cambiar a ${specialGroupName} (Servidor)`}
                       >
                         <ArrowLeftRight size={13} />
                       </button>
@@ -651,13 +656,13 @@ const KidCheckInView = () => {
                     </div>
 
                     <div className="flex justify-between items-start py-1.5 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500 shrink-0 pr-2 pt-0.5">Acudiente que registró</span>
+                      <span className="font-semibold text-gray-500 shrink-0 pr-2 pt-0.5">{guardianTerm} que registró</span>
                       <div className="text-right flex flex-col items-end">
                         <span className="font-bold text-gray-800">
                           {registrationGuardian ? (
                             `${registrationGuardian.fullName} (${registrationGuardian.relation})`
                           ) : (
-                            kid?.currentKidRegistration?.additionalInfo?.guardianFullName || "Acudiente registrado"
+                            kid?.currentKidRegistration?.additionalInfo?.guardianFullName || `${guardianTerm} registrado(a)`
                           )}
                         </span>
                         {registrationGuardian?.phone && (
@@ -677,20 +682,38 @@ const KidCheckInView = () => {
                       </div>
                     )}
 
-                    {kid?.currentKidRegistration?.log && (
-                      <div className="flex justify-between items-start py-1.5 border-b border-gray-50 last:border-0">
-                        <span className="font-semibold text-gray-500 shrink-0 pr-2">Log de registro</span>
-                        <span className="font-bold text-gray-800 text-right">
-                          {kid.currentKidRegistration.log}
-                        </span>
-                      </div>
-                    )}
+                    {isSupervisor && kid?.currentKidRegistration?.log && (() => {
+                      const parsed = parseRegistrationLog(kid.currentKidRegistration.log);
+                      return (
+                        <div className="flex justify-between items-start py-1.5 border-b border-gray-50 last:border-0">
+                          <span className="font-semibold text-gray-500 shrink-0 pr-2">Log de registro</span>
+                          <span className="font-bold text-gray-800 text-sm leading-snug text-right">
+                            {parsed?.author ? `Registrado por ${parsed.author}` : kid.currentKidRegistration.log}
+                            {parsed?.badgeLabel && (
+                              <span
+                                className={clsx(
+                                  'inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide border align-middle',
+                                  parsed.badgeType === 'group' && 'bg-emerald-50 text-emerald-700 border-emerald-200',
+                                  parsed.badgeType === 'support' && 'bg-amber-50 text-amber-800 border-amber-200',
+                                  parsed.badgeType === 'admin' && 'bg-purple-50 text-purple-700 border-purple-200',
+                                  parsed.badgeType === 'coordinator' && 'bg-blue-50 text-blue-700 border-blue-200',
+                                  parsed.badgeType === 'legacy' && 'bg-gray-100 text-gray-600 border-gray-200',
+                                  parsed.badgeType === 'general' && 'bg-slate-50 text-slate-700 border-slate-200',
+                                )}
+                              >
+                                {parsed.badgeLabel}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
                 {/* Tabla de Acudientes */}
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
-                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 border-b border-gray-100 pb-2">Acudientes</h2>
+                  <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 border-b border-gray-100 pb-2">{guardiansTerm}</h2>
                   <div className="grid grid-cols-12 gap-x-2 gap-y-3 text-xs items-center">
                     <div className="col-span-4 font-bold text-gray-500 uppercase">Nombre</div>
                     <div className="col-span-3 font-bold text-gray-500 uppercase">Relación</div>
@@ -705,9 +728,9 @@ const KidCheckInView = () => {
                         <div className={clsx(isAdmin ? 'col-span-3' : 'col-span-4', 'text-gray-600 flex items-center gap-1.5 flex-wrap')}>
                           <span>{rel.displayPhone}</span>
                           {rel.isPhoneErroneous && (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-300" title="Formato de teléfono errado. Por favor pregúntele el número correcto al acudiente y corríjalo con el lápiz.">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-50 text-amber-900 text-[10px] font-bold border border-amber-300" title={`Formato de teléfono errado. Por favor pregúntele el número correcto a ${guardianTerm.toLowerCase()} y corríjalo con el lápiz.`}>
                               <AlertTriangle size={11} className="text-amber-600 shrink-0" />
-                              <span>Teléfono errado — Preguntar número correcto al acudiente</span>
+                              <span>Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}</span>
                             </span>
                           )}
                         </div>
@@ -726,7 +749,7 @@ const KidCheckInView = () => {
                               kidId: kid?.id
                             })}
                             className="text-primary p-2 bg-primary/10 rounded-full hover:bg-primary/20 transition-colors"
-                            title="Editar acudiente"
+                            title={`Editar ${guardianTerm.toLowerCase()}`}
                           >
                             <Pencil size={14}/>
                           </button>
@@ -735,7 +758,7 @@ const KidCheckInView = () => {
                               type="button"
                               onClick={() => setGuardianRelationToDelete(rel)}
                               className="text-red-600 p-2 bg-red-50 hover:bg-red-100 rounded-full transition-colors"
-                              title="Eliminar relación con acudiente"
+                              title={`Eliminar relación con ${guardianTerm.toLowerCase()}`}
                             >
                               <Trash2 size={14}/>
                             </button>
@@ -751,9 +774,11 @@ const KidCheckInView = () => {
                     <Printer size={18} className="mr-2 shrink-0" /> Reimprimir registro
                   </Button>
                   
-                  <Button onClick={handleDelete} block variant="danger">
-                    <Trash2 size={18} className="mr-2 inline" /> Eliminar Registro
-                  </Button>
+                  {isSupervisor && (
+                    <Button onClick={handleDelete} block variant="danger">
+                      <Trash2 size={18} className="mr-2 inline" /> Eliminar Registro
+                    </Button>
+                  )}
                 </div>
               </>
             ) : (
@@ -769,10 +794,10 @@ const KidCheckInView = () => {
                             <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
                             <div>
                               <strong className="block font-bold text-amber-950 text-sm mb-0.5">
-                                No hay acudientes registrados
+                                No hay {guardiansTerm.toLowerCase()} registrados(as)
                               </strong>
                               <span className="text-amber-800">
-                                Este niño no tiene acudientes asignados. Por favor, <strong>asigna un acudiente</strong> seleccionando la opción en el menú superior (<strong>⋮</strong>) o con el botón a continuación.
+                                Este niño no tiene {guardiansTerm.toLowerCase()} asignados(as). Por favor, <strong>asigna un(a) {guardianTerm.toLowerCase()}</strong> seleccionando la opción en el menú superior (<strong>⋮</strong>) o con el botón a continuación.
                               </span>
                             </div>
                           </div>
@@ -781,7 +806,7 @@ const KidCheckInView = () => {
                             onClick={() => setShowAssignGuardianModal(true)}
                             className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-xs active:scale-95 self-end sm:self-center"
                           >
-                            <UserPlus size={15} /> Asignar Acudiente
+                            <UserPlus size={15} /> Asignar {guardianTerm}
                           </button>
                         </div>
                       ) : (
@@ -803,7 +828,7 @@ const KidCheckInView = () => {
                                 {rel.isPhoneErroneous && (
                                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-amber-100/90 text-amber-950 text-[10px] font-bold border border-amber-300" title="Teléfono con formato errado. Corregir con el lápiz antes de registrar.">
                                     <AlertTriangle size={11} className="text-amber-700 shrink-0" />
-                                    <span>Teléfono errado — Preguntar número correcto al acudiente</span>
+                                    <span>Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}</span>
                                   </span>
                                 )}
                               </div>
@@ -827,7 +852,7 @@ const KidCheckInView = () => {
                                   });
                                 }}
                                 className="text-primary p-1.5 bg-white rounded-full hover:bg-primary/10 shadow-sm border border-gray-200 transition-colors shrink-0"
-                                title="Editar acudiente"
+                                title={`Editar ${guardianTerm.toLowerCase()}`}
                               >
                                 <Pencil size={13}/>
                               </button>
@@ -835,12 +860,12 @@ const KidCheckInView = () => {
                                 <button
                                   type="button"
                                   onClick={(e) => {
-                                    e.preventDefault();
+                                    e.preventDefault(); 
                                     e.stopPropagation();
                                     setGuardianRelationToDelete(rel);
                                   }}
                                   className="text-red-600 p-1.5 bg-white rounded-full hover:bg-red-50 shadow-sm border border-gray-200 hover:border-red-200 transition-colors shrink-0"
-                                  title="Eliminar relación con acudiente"
+                                  title={`Eliminar relación con ${guardianTerm.toLowerCase()}`}
                                 >
                                   <Trash2 size={13}/>
                                 </button>
@@ -857,7 +882,7 @@ const KidCheckInView = () => {
                           <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
                           <div className="text-xs">
                             <strong className="block font-bold text-amber-950 text-sm mb-0.5">
-                              Teléfono errado — Preguntar número correcto al acudiente
+                              Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}
                             </strong>
                             <span className="text-amber-900 leading-relaxed">
                               El número registrado (<strong>{selectedGuardianObj.displayPhone}</strong>) tiene un formato errado. Por seguridad y comunicación, <strong>debes preguntarle el número correcto</strong> y actualizarlo antes de poder registrar al niño.
@@ -934,7 +959,7 @@ const KidCheckInView = () => {
                   <div className="mb-4 p-3.5 bg-amber-50 border-2 border-amber-300 text-amber-950 text-xs rounded-xl flex items-center gap-2.5 shadow-xs">
                     <AlertTriangle size={18} className="text-amber-600 shrink-0" />
                     <span>
-                      <strong className="text-amber-950">Registro bloqueado:</strong> El acudiente seleccionado tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo para poder registrar.
+                      <strong className="text-amber-950">Registro bloqueado:</strong> El/La {guardianTerm.toLowerCase()} seleccionado(a) tiene un número con formato errado. Debe preguntarle el número correcto y actualizarlo para poder registrar.
                     </span>
                   </div>
                 )}
@@ -997,8 +1022,8 @@ const KidCheckInView = () => {
       <ConfirmModal
         open={showVolunteerConfirmModal}
         onOpenChange={setShowVolunteerConfirmModal}
-        title={`Cambiar niño a ${isKidVolunteer ? (kid?.kidGroup?.name || 'recibir en Iglekids') : 'Yo Soy Iglekids'}`}
-        description={`El niño será registrado ${isKidVolunteer ? `para recibir en su salón habitual (${kid?.kidGroup?.name || 'Iglekids'})` : 'en el área de servidores (Yo Soy Iglekids)'}. Por favor confirma si deseas realizar esta acción.`}
+        title={`Cambiar niño a ${isKidVolunteer ? (kid?.kidGroup?.name || 'salón habitual') : specialGroupName}`}
+        description={`El niño será registrado ${isKidVolunteer ? `para recibir en su salón habitual (${kid?.kidGroup?.name || 'Salón habitual'})` : `en el área de servidores (${specialGroupName})`}. Por favor confirma si deseas realizar esta acción.`}
         confirmText="Confirmar"
         cancelText="Cancelar"
         type="info"
@@ -1012,8 +1037,8 @@ const KidCheckInView = () => {
             setGuardianRelationToDelete(null);
           }
         }}
-        title="¿Eliminar relación de acudiente?"
-        description={`¿Estás seguro de que deseas desvincular a ${guardianRelationToDelete?.fullName || 'este acudiente'} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}
+        title={`¿Eliminar relación de ${guardianTerm.toLowerCase()}?`}
+        description={`¿Estás seguro de que deseas desvincular a ${guardianRelationToDelete?.fullName || `este(a) ${guardianTerm.toLowerCase()}`} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}
         confirmText="Sí, eliminar"
         cancelText="Cancelar"
         type="danger"

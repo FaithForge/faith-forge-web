@@ -33,6 +33,7 @@ import {
   VolunteerRole,
   MinistryAreaStateEnum,
 } from '@/libs/models';
+import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
 import TeamRosterDrawer from '../components/TeamRosterDrawer';
 import { toast } from 'sonner';
@@ -65,6 +66,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
   churchCampusId,
 }) => {
   const dispatch = useAppDispatch();
+  const volunteerTerm = useChurchTerm('volunteer');
+  const volunteersTerm = useChurchTerm('volunteers');
+  const volunteerRoleLabel = useVolunteerRoleLabel(VolunteerRole.VOLUNTEER, ministryId, { short: true });
 
   const campusesState = useAppSelector((state) => state.churchCampusSlice);
   const { areasByMinistry, groupsByMinistry, serviceAreaGroups } = useAppSelector(
@@ -484,7 +488,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
   );
 
   const renderPersonItem = (asg: IVolunteerAssignment, roleLabel?: string) => {
-    const name = getVolunteerName(asg) || 'Servidor asignado';
+    const name = getVolunteerName(asg) || `${volunteerTerm} asignado(a)`;
     const vId = asg.volunteerId || asg.ministryVolunteerId;
     const vol =
       asg.volunteer ||
@@ -540,7 +544,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
           <p className="text-xl sm:text-2xl font-extrabold text-gray-900 mt-1">
             {totalVolunteersInCampusTeams}
           </p>
-          <p className="text-[11px] text-gray-400">Servidores y supervisores</p>
+          <p className="text-[11px] text-gray-400">{volunteersTerm} y supervisores</p>
         </div>
 
         <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-gray-200/80 shadow-xs flex flex-col justify-between">
@@ -660,7 +664,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                   No hay equipos configurados en esta sede
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Genera las combinaciones de Área × Grupo en la pestaña &quot;Equipos&quot; para asignar servidores.
+                  Genera las combinaciones de Área × Grupo en la pestaña &quot;Equipos&quot; para asignar {volunteersTerm.toLowerCase()}.
                 </p>
               </div>
             </div>
@@ -801,7 +805,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
                                   <p className="text-[11px] text-gray-500 mt-1">
                                     👥 {volunteersCount}{' '}
-                                    {volunteersCount === 1 ? 'servidor activo' : 'servidores activos'}
+                                    {volunteersCount === 1 ? `${volunteerTerm.toLowerCase()} activo(a)` : `${volunteersTerm.toLowerCase()} activos(as)`}
                                   </p>
                                 </div>
 
@@ -818,7 +822,7 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                                     onClick={() => handleOpenAssignDrawer(VolunteerRole.VOLUNTEER, team.id)}
                                     size="sm"
                                     className="text-xs py-1.5 px-2.5 gap-1"
-                                    title="Agregar servidor"
+                                    title={`Agregar ${volunteerRoleLabel.toLowerCase()}`}
                                   >
                                     <Plus size={13} />
                                   </Button>

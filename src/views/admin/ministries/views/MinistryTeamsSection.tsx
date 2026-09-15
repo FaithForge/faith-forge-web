@@ -36,6 +36,7 @@ import {
   MinistryGroupConfigStateEnum,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
+import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
 import TeamRosterDrawer from '../components/TeamRosterDrawer';
 import { toast } from 'sonner';
@@ -206,6 +207,12 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   /**
    * Resolves volunteer user profile details.
    */
+  const volunteerTerm = useChurchTerm('volunteer');
+  const volunteersTerm = useChurchTerm('volunteers');
+  const supervisorRoleLabel = useVolunteerRoleLabel(VolunteerRole.SUPERVISOR, ministryId, { short: true });
+  const volunteerRoleLabel = useVolunteerRoleLabel(VolunteerRole.VOLUNTEER, ministryId, { short: true });
+
+  // Helper to extract user display information from an assignment
   const getVolunteerDetails = useCallback(
     (asg: IVolunteerAssignment) => {
       const vId = asg.volunteerId || asg.ministryVolunteerId;
@@ -217,7 +224,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
       const rawName = user && (user.firstName || user.lastName)
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-        : 'Servidor asignado';
+        : `${volunteerTerm} asignado(a)`;
       const fullName = capitalizeWords(rawName);
 
       return {
@@ -228,7 +235,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
         email: user?.email,
       };
     },
-    [volunteersList],
+    [volunteersList, volunteerTerm],
   );
 
   // Filter Teams by selected Area and Group
@@ -420,7 +427,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
               type="text"
               value={searchMemberTerm}
               onChange={(e) => setSearchMemberTerm(e.target.value)}
-              placeholder="Buscar servidor o supervisor por nombre..."
+              placeholder={`Buscar ${volunteerTerm.toLowerCase()} o supervisor por nombre...`}
               className="w-full pl-8 pr-8 py-2 bg-slate-50 border border-gray-200/90 rounded-xl text-xs text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
             {searchMemberTerm && (
@@ -685,7 +692,8 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                       <p className="text-[11px] font-medium text-gray-500 mt-0.5">
                         <span className="font-bold text-gray-700">{teams.length}</span>{' '}
                         {teams.length === 1 ? 'área / equipo' : 'áreas / equipos'} •{' '}
-                        <span className="font-bold text-teal-700">{groupVolunteers.length}</span> servidores •{' '}
+                        <span className="font-bold text-teal-700">{groupVolunteers.length}</span>{' '}
+                        {groupVolunteers.length === 1 ? volunteerTerm.toLowerCase() : volunteersTerm.toLowerCase()} •{' '}
                         <span className="font-bold text-indigo-700">{groupSupervisors.length}</span> supervisores
                       </p>
                     </div>
@@ -856,9 +864,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                           handleOpenAssignDrawer(VolunteerRole.VOLUNTEER, team.id)
                                         }
                                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 hover:bg-teal-100 active:scale-95 transition-all cursor-pointer"
-                                        title="Agregar Servidor al equipo"
+                                        title={`Agregar ${volunteerRoleLabel} al equipo`}
                                       >
-                                        <Plus size={11} /> Servidor
+                                        <Plus size={11} /> {volunteerRoleLabel}
                                       </button>
                                     </div>
 

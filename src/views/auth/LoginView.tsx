@@ -106,7 +106,7 @@ const LoginView = () => {
       };
       setRegisteredBioData(updatedData);
       try {
-        localStorage.setItem('iglekids_biometric_session', JSON.stringify(updatedData));
+        localStorage.setItem('app_biometric_session', JSON.stringify(updatedData));
       } catch (e) {
         console.warn('Could not sync photo to biometric session:', e);
       }
@@ -126,7 +126,7 @@ const LoginView = () => {
       setRegisteredBioData(normalizedData);
       setValue('username', registeredBioData.user.username);
       try {
-        localStorage.setItem('iglekids_biometric_session', JSON.stringify(normalizedData));
+        localStorage.setItem('app_biometric_session', JSON.stringify(normalizedData));
       } catch (e) {
         console.warn('Could not normalize biometric username:', e);
       }
@@ -340,7 +340,7 @@ const LoginView = () => {
       <div className="w-full max-w-sm flex flex-col items-center z-10">
         {/* Logo */}
         <div className="mb-8 flex flex-col items-center">
-          <img src="/logo-iglekids.png" alt="Iglekids Logo" className="w-60 h-auto drop-shadow-sm" />
+          <img src="/logo-iglekids.png" alt="Logo" className="w-60 h-auto drop-shadow-sm" />
         </div>
 
         <div className="w-full bg-white p-7 rounded-3xl shadow-sm border border-gray-100/90 flex flex-col gap-5">
@@ -483,7 +483,7 @@ const LoginView = () => {
           )}
         </div>
 
-        <p className="text-center mt-6 text-xs text-gray-400 font-medium">Iglekids • v{APP_VERSION}</p>
+        <p className="text-center mt-6 text-xs text-gray-400 font-medium">Versión {APP_VERSION}</p>
       </div>
 
       {/* Modal suggesting biometric registration on first login */}

@@ -2,7 +2,7 @@ import { IAccount } from '@/libs/models';
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState: IAccount = {
-  churchGroup: 'Grupo X',
+  churchGroup: undefined,
   error: undefined,
   loading: false,
 };

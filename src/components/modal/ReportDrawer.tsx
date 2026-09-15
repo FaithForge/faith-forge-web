@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import { churchGroupOptions } from '@/libs/common-types/constants/church';
 import { useAppSelector } from '@/libs/state/redux/hooks';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import dayjs from 'dayjs';
 
 interface ReportDrawerProps {
@@ -84,6 +85,7 @@ const ReportDrawer = ({ open, onOpenChange }: ReportDrawerProps) => {
   const [state, setState] = useState(defaultState);
   const [isFinished, setIsFinished] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
+  const kidsRegistrationName = useKidsTerm('registration');
 
   const hasData = Boolean(
     state.group ||
@@ -189,7 +191,7 @@ ${state.observationGeneral}`;
         onOpenChange={(o) => !o && handleRequestClose()}
         onClose={handleRequestClose}
         icon={<FileText size={18} className="text-primary shrink-0" />}
-        title="Reporte Regikids"
+        title={`Reporte ${kidsRegistrationName}`}
         bodyClassName="p-4 flex flex-col gap-4 pb-8 z-10"
         onPointerDownOutside={(e) => {
           e.preventDefault();
@@ -200,7 +202,7 @@ ${state.observationGeneral}`;
               <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 text-center flex flex-col items-center">
                 <h2 className="text-xl font-bold text-gray-800 mb-2">¡Reporte generado!</h2>
                 <p className="text-sm text-gray-500 mb-6 leading-relaxed">
-                  Elige si deseas compartir por WhatsApp (se abrirá el selector y elige el grupo de Supervisores Regikids) o copia el texto y pégalo en el grupo. Una vez terminado, cierra esta ventana.
+                  Elige si deseas compartir por WhatsApp (se abrirá el selector y elige el grupo de Supervisores de {kidsRegistrationName}) o copia el texto y pégalo en el grupo. Una vez terminado, cierra esta ventana.
                 </p>
                 <div className="w-full flex flex-col gap-3">
                   <Button onClick={shareReport} block className="flex items-center justify-center gap-2">
@@ -297,7 +299,7 @@ ${state.observationGeneral}`;
       open={showCancelModal}
       onOpenChange={setShowCancelModal}
       title="¿Descartar reporte?"
-      description="Se perderán todos los datos que has ingresado en este reporte de Regikids."
+      description={`Se perderán todos los datos que has ingresado en este reporte de ${kidsRegistrationName}.`}
       confirmText="Descartar reporte"
       cancelText="Continuar editando"
       type="danger"

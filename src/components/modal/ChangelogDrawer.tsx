@@ -82,7 +82,7 @@ export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenCh
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Novedades de Iglekids"
+      title="Novedades de la Aplicación"
       icon={<Sparkles size={18} className="text-amber-500" />}
       maxHeight="max-h-[85dvh]"
       contentClassName="max-w-xl mx-auto"

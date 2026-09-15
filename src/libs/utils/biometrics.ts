@@ -1,7 +1,8 @@
 import { isTokenExpired } from './jwt';
 import { formatPersonShortName } from './text';
 
-const BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
+const BIOMETRIC_STORAGE_KEY = 'app_biometric_session';
+const LEGACY_BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
 
 export interface BiometricSessionData {
   username: string;
@@ -146,26 +147,36 @@ export const isBiometricsAvailable = async (): Promise<boolean> => {
  * @returns {boolean} True if biometric data is saved locally.
  */
 export const hasRegisteredBiometrics = (): boolean => {
-  try {
-    const data = localStorage.getItem(BIOMETRIC_STORAGE_KEY);
-    if (!data) return false;
-    const parsed: BiometricSessionData = JSON.parse(data);
-    return Boolean(parsed && parsed.credentialId && parsed.username);
-  } catch {
-    return false;
-  }
+  const data = getRegisteredBiometricData();
+  return Boolean(data && data.credentialId && data.username);
 };
 
 /**
  * Returns the saved biometric session metadata (like user name).
+ * If a legacy session key is found, automatically migrates it to the new key and purges the legacy one.
  *
  * @returns {BiometricSessionData | null} The saved session metadata or null if not found.
  */
 export const getRegisteredBiometricData = (): BiometricSessionData | null => {
   try {
-    const data = localStorage.getItem(BIOMETRIC_STORAGE_KEY);
-    if (!data) return null;
-    return JSON.parse(data);
+    const current = localStorage.getItem(BIOMETRIC_STORAGE_KEY);
+    if (current) {
+      return JSON.parse(current);
+    }
+
+    const legacy = localStorage.getItem(LEGACY_BIOMETRIC_STORAGE_KEY);
+    if (legacy) {
+      // Migración automática inmediata: copiamos a la nueva clave y eliminamos la obsoleta
+      try {
+        localStorage.setItem(BIOMETRIC_STORAGE_KEY, legacy);
+        localStorage.removeItem(LEGACY_BIOMETRIC_STORAGE_KEY);
+      } catch (migrateErr) {
+        console.warn('Could not auto-migrate legacy biometric session:', migrateErr);
+      }
+      return JSON.parse(legacy);
+    }
+
+    return null;
   } catch {
     return null;
   }
@@ -217,7 +228,7 @@ export const registerBiometrics = async ({
       publicKey: {
         challenge,
         rp: {
-          name: 'Iglekids',
+          name: window.document.title || 'App',
           id: window.location.hostname,
         },
         user: {
@@ -422,4 +433,5 @@ export const authenticateWithBiometrics = async (): Promise<BiometricAuthResult 
  */
 export const clearBiometricSession = (): void => {
   localStorage.removeItem(BIOMETRIC_STORAGE_KEY);
+  localStorage.removeItem(LEGACY_BIOMETRIC_STORAGE_KEY);
 };

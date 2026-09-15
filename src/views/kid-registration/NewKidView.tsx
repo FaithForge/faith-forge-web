@@ -41,14 +41,15 @@ import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/utils/phone';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Alert from '@/components/ui/Alert';
 import StepProgress from '@/components/ui/StepProgress';
-
-const NEW_KID_STEPS = ['Datos del Niño', 'Acudiente Responsable'];
 
 const NewKidView = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const guardianTerm = useKidsTerm('guardian');
+  const newKidSteps = useMemo(() => ['Datos del Niño', `${guardianTerm} Responsable`], [guardianTerm]);
   const { registerGuard } = useNavigationGuard();
   const { shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
 
@@ -320,7 +321,7 @@ const NewKidView = () => {
     const guardianDialCode = values.dialCodePhone || kidGuardianSlice.current?.dialCodePhone || '+57';
     const phoneVal = validatePhoneNumber(guardianPhone, guardianDialCode);
     if (!phoneVal.isValid) {
-      toast.error(phoneVal.error || 'El número de teléfono del acudiente no es válido. Debe preguntarle el número correcto y actualizarlo.');
+      toast.error(phoneVal.error || `El número de teléfono de ${guardianTerm.toLowerCase()} no es válido. Debe preguntarle el número correcto y actualizarlo.`);
       return;
     }
 
@@ -341,15 +342,15 @@ const NewKidView = () => {
        const resultAction = await dispatch(CreateKidGuardian(guardianPayload as any));
        if (CreateKidGuardian.fulfilled.match(resultAction)) {
           if (!resultAction.payload.error) {
-             toast.success("¡Niño y Acudiente guardados!");
+             toast.success(`¡Niño y ${guardianTerm} guardados!`);
              window.scrollTo({ top: 0, behavior: 'smooth' });
              // Ir a check-in
              navigate(APP_ROUTES.kidRegistration.checkIn(kidSlice.current.id), { replace: true });
           } else {
-             toast.error(resultAction.payload.error || "Error al guardar el acudiente");
+             toast.error(resultAction.payload.error || `Error al guardar ${guardianTerm.toLowerCase()}`);
           }
        } else {
-          toast.error("Error al guardar el acudiente");
+          toast.error(`Error al guardar ${guardianTerm.toLowerCase()}`);
        }
     } catch(e) {
        toast.error("Error inesperado");
@@ -411,7 +412,7 @@ const NewKidView = () => {
   return (
     <div className="min-h-full bg-background flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
-      <StepProgress currentStep={step} steps={NEW_KID_STEPS} />
+      <StepProgress currentStep={step} steps={newKidSteps} />
 
       <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full pb-36">
         {step === 1 && (
@@ -674,14 +675,14 @@ const NewKidView = () => {
         {step === 2 && (
           <form onSubmit={handleGuardianSubmit(onGuardianSubmit)} className="animate-in fade-in slide-in-from-right-4 duration-300">
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6 flex flex-col gap-4">
-              <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2">Información del Acudiente</h3>
+              <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2">Información de {guardianTerm}</h3>
 
               {/* Banner if already exists in database */}
               {kidGuardianSlice.current && (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl flex items-center justify-between text-xs font-semibold">
                   <div className="flex items-center gap-2">
                     <UserCheck size={18} className="text-emerald-600 shrink-0" />
-                    <span>Acudiente encontrado en la base de datos</span>
+                    <span>{guardianTerm} encontrado(a) en la base de datos</span>
                   </div>
                   <button
                     type="button"
@@ -773,7 +774,7 @@ const NewKidView = () => {
               <Input
                 label="Nombre"
                 required={!kidGuardianSlice.current}
-                placeholder="Nombres del acudiente"
+                placeholder={`Nombres de ${guardianTerm.toLowerCase()}`}
                 disabled={!!kidGuardianSlice.current}
                 {...registerGuardian('firstName', { required: !kidGuardianSlice.current ? 'Requerido' : false })}
                 error={guardianErrors.firstName?.message as string}
@@ -783,7 +784,7 @@ const NewKidView = () => {
               <Input
                 label="Apellidos"
                 required={!kidGuardianSlice.current}
-                placeholder="Apellidos del acudiente"
+                placeholder={`Apellidos de ${guardianTerm.toLowerCase()}`}
                 disabled={!!kidGuardianSlice.current}
                 {...registerGuardian('lastName', { 
                   required: !kidGuardianSlice.current ? 'Los apellidos son requeridos' : false,
@@ -823,8 +824,8 @@ const NewKidView = () => {
                 <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
                   <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
-                    <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto al acudiente:</strong>
-                    El número registrado para este acudiente ({formatPhoneDisplay(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo de teléfono antes de continuar.
+                    <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}:</strong>
+                    El número registrado para este {guardianTerm.toLowerCase()} ({formatPhoneDisplay(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo de teléfono antes de continuar.
                   </div>
                 </div>
               )}
@@ -879,7 +880,7 @@ const NewKidView = () => {
               className="mb-3"
               disabled={isUploading}
             >
-              {isUploading ? 'Guardando...' : <>Guardar Acudiente <Check size={18} className="ml-2 inline" /></>}
+              {isUploading ? 'Guardando...' : <>Guardar {guardianTerm} <Check size={18} className="ml-2 inline" /></>}
             </Button>
             {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
             <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />

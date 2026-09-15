@@ -38,6 +38,7 @@ import {
   VolunteerRole,
   MinistryVolunteerStateEnum,
 } from '@/libs/models';
+import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { APP_ROUTES } from '@/config/routes';
 import { formatPhoneWithDialCode } from '@/libs/utils/text';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
@@ -45,23 +46,6 @@ import VolunteerDetailDrawer from './components/VolunteerDetailDrawer';
 import { VolunteerApplicationsTab } from './components/VolunteerApplicationsTab';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 import clsx from 'clsx';
-
-const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
-  [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: 'Coord. General',
-  [VolunteerRole.AREA_GENERAL_COORDINATOR]: 'Coord. Área',
-  [VolunteerRole.GROUP_COORDINATOR]: 'Coord. Grupo',
-  [VolunteerRole.SUPERVISOR]: 'Supervisor',
-  [VolunteerRole.VOLUNTEER]: 'Servidor',
-};
-
-const ROLE_FILTERS: { label: string; value: VolunteerRole | 'ALL' }[] = [
-  { label: 'Todos los roles', value: 'ALL' },
-  { label: 'Coordinadores Generales', value: VolunteerRole.MINISTRY_GENERAL_COORDINATOR },
-  { label: 'Coordinadores de Área', value: VolunteerRole.AREA_GENERAL_COORDINATOR },
-  { label: 'Coordinadores de Grupo', value: VolunteerRole.GROUP_COORDINATOR },
-  { label: 'Supervisores', value: VolunteerRole.SUPERVISOR },
-  { label: 'Servidores', value: VolunteerRole.VOLUNTEER },
-];
 
 const STATUS_FILTERS: { label: string; value: 'ALL' | 'ACTIVE' | 'INACTIVE' }[] = [
   { label: 'Todos los estados', value: 'ALL' },
@@ -110,6 +94,73 @@ const VolunteerDirectoryView: React.FC = () => {
     (selectedCampusFilter !== 'ALL' ? 1 : 0) +
     (selectedRoleFilter !== 'ALL' ? 1 : 0) +
     (selectedStatusFilter !== 'ALL' ? 1 : 0);
+
+  const volunteerTerm = useChurchTerm('volunteer');
+  const volunteersTerm = useChurchTerm('volunteers');
+  const campusTerm = useChurchTerm('campus');
+  const campusesTerm = useChurchTerm('campuses');
+  const churchOverrides = useAppSelector(
+    (state) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
+
+  const selectedMinistry = useMemo(
+    () => ministries.find((m) => m.id === selectedMinistryFilter),
+    [ministries, selectedMinistryFilter],
+  );
+
+  const roleFilters = useMemo(
+    () => [
+      { label: 'Todos los roles', value: 'ALL' as const },
+      {
+        label: getVolunteerRoleLabel(VolunteerRole.MINISTRY_GENERAL_COORDINATOR, {
+          ministryType: selectedMinistry?.type,
+          ministryOverrides: selectedMinistry?.terminologyOverrides,
+          churchOverrides,
+          plural: true,
+        }),
+        value: VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
+      },
+      {
+        label: getVolunteerRoleLabel(VolunteerRole.AREA_GENERAL_COORDINATOR, {
+          ministryType: selectedMinistry?.type,
+          ministryOverrides: selectedMinistry?.terminologyOverrides,
+          churchOverrides,
+          plural: true,
+        }),
+        value: VolunteerRole.AREA_GENERAL_COORDINATOR,
+      },
+      {
+        label: getVolunteerRoleLabel(VolunteerRole.GROUP_COORDINATOR, {
+          ministryType: selectedMinistry?.type,
+          ministryOverrides: selectedMinistry?.terminologyOverrides,
+          churchOverrides,
+          plural: true,
+        }),
+        value: VolunteerRole.GROUP_COORDINATOR,
+      },
+      {
+        label: getVolunteerRoleLabel(VolunteerRole.SUPERVISOR, {
+          ministryType: selectedMinistry?.type,
+          ministryOverrides: selectedMinistry?.terminologyOverrides,
+          churchOverrides,
+          plural: true,
+        }),
+        value: VolunteerRole.SUPERVISOR,
+      },
+      {
+        label: getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+          ministryType: selectedMinistry?.type,
+          ministryOverrides: selectedMinistry?.terminologyOverrides,
+          churchOverrides,
+          plural: true,
+        }),
+        value: VolunteerRole.VOLUNTEER,
+      },
+    ],
+    [selectedMinistry, churchOverrides],
+  );
 
   // Debounce search input by 400ms
   useEffect(() => {
@@ -227,14 +278,14 @@ const VolunteerDirectoryView: React.FC = () => {
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
       <PageHeader
-        title="Directorio de Servidores"
+        title={`Directorio de ${volunteersTerm}`}
         onBack={() => navigate(APP_ROUTES.admin.root)}
         rightAction={
           <button
             type="button"
             onClick={() => setRegisterModalOpen(true)}
             className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 text-white transition-all"
-            title="Registrar Servidor"
+            title={`Registrar ${volunteerTerm}`}
           >
             <Plus size={18} />
           </button>
@@ -246,27 +297,27 @@ const VolunteerDirectoryView: React.FC = () => {
         <div className="bg-white rounded-2xl p-5 border border-gray-200/80 shadow-xs">
           <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-1">
             <Sparkles size={14} />
-            <span>Módulo de Servidores</span>
+            <span>Módulo de {volunteersTerm}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-            Directorio Global de Servidores
+            Directorio Global de {volunteersTerm}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Visualiza todos los servidores de la iglesia, sus asignaciones entre ministerios y roles
+            Visualiza todos los {volunteersTerm.toLowerCase()} de la iglesia, sus asignaciones entre ministerios y roles
             activos.
           </p>
 
           <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
             <span className="text-xs font-semibold text-gray-600">
               Total cargados: {volunteers.length}{' '}
-              {volunteers.length === 1 ? 'servidor' : 'servidores'}
+              {volunteers.length === 1 ? volunteerTerm.toLowerCase() : volunteersTerm.toLowerCase()}
             </span>
             <Button
               onClick={() => setRegisterModalOpen(true)}
               size="sm"
               className="text-xs gap-1 py-1.5"
             >
-              <Plus size={14} /> Registrar Servidor
+              <Plus size={14} /> Registrar {volunteerTerm}
             </Button>
           </div>
         </div>
@@ -284,7 +335,7 @@ const VolunteerDirectoryView: React.FC = () => {
             )}
           >
             <UserIcon size={15} />
-            <span>Directorio de Servidores</span>
+            <span>Directorio de {volunteersTerm}</span>
           </button>
           <button
             type="button"
@@ -297,7 +348,7 @@ const VolunteerDirectoryView: React.FC = () => {
             )}
           >
             <Sparkles size={15} className={activeMainTab === 'APPLICATIONS' ? 'text-emerald-600' : ''} />
-            <span>Registros de Servidores</span>
+            <span>Registros de {volunteersTerm}</span>
           </button>
         </div>
 
@@ -349,7 +400,7 @@ const VolunteerDirectoryView: React.FC = () => {
         <AppDrawer
           open={filterDrawerOpen}
           onOpenChange={setFilterDrawerOpen}
-          title="Filtros de Servidores"
+          title={`Filtros de ${volunteersTerm}`}
           icon={<SlidersHorizontal className="text-primary" size={20} />}
         >
           <div className="flex flex-col gap-4 p-4 max-h-[75vh] overflow-y-auto">
@@ -395,7 +446,7 @@ const VolunteerDirectoryView: React.FC = () => {
             {/* Campus Filter */}
             <div className="flex flex-col gap-1.5 pt-3 border-t border-gray-100">
               <span className="text-xs font-bold text-gray-700 uppercase tracking-wider">
-                Sede
+                {campusTerm}
               </span>
               <div className="flex flex-wrap gap-1.5">
                 <button
@@ -409,7 +460,7 @@ const VolunteerDirectoryView: React.FC = () => {
                   )}
                 >
                   <MapPin size={12} />
-                  Todas las Sedes
+                  Todas las {campusesTerm}
                 </button>
                 {campuses.map((c) => {
                   const isSelected = selectedCampusFilter === c.id;
@@ -439,7 +490,7 @@ const VolunteerDirectoryView: React.FC = () => {
                 Rol de Servicio
               </span>
               <div className="flex flex-wrap gap-1.5">
-                {ROLE_FILTERS.map((rf) => {
+                {roleFilters.map((rf) => {
                   const isSelected = selectedRoleFilter === rf.value;
                   return (
                     <button
@@ -560,7 +611,12 @@ const VolunteerDirectoryView: React.FC = () => {
               )}
               {selectedRoleFilter !== 'ALL' && (
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white border border-gray-200 text-gray-700 shadow-2xs">
-                  {ROLE_LABEL_SHORT[selectedRoleFilter] || selectedRoleFilter}
+                  {getVolunteerRoleLabel(selectedRoleFilter, {
+                    ministryType: selectedMinistry?.type,
+                    ministryOverrides: selectedMinistry?.terminologyOverrides,
+                    churchOverrides,
+                    short: true,
+                  })}
                   <button
                     type="button"
                     onClick={() => setSelectedRoleFilter('ALL')}
@@ -607,8 +663,8 @@ const VolunteerDirectoryView: React.FC = () => {
               <div>
                 <h3 className="text-sm font-bold text-gray-800">
                   {hasActiveFilters
-                    ? 'No se encontraron servidores con los filtros aplicados'
-                    : 'Sin servidores registrados'}
+                    ? `No se encontraron ${volunteersTerm.toLowerCase()} con los filtros aplicados`
+                    : `Sin ${volunteersTerm.toLowerCase()} registrados`}
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
                   {hasActiveFilters
@@ -631,7 +687,7 @@ const VolunteerDirectoryView: React.FC = () => {
                   size="sm"
                   className="mt-2 text-xs"
                 >
-                  <Plus size={14} /> Registrar Servidor
+                  <Plus size={14} /> Registrar {volunteerTerm}
                 </Button>
               )}
             </div>
@@ -642,7 +698,7 @@ const VolunteerDirectoryView: React.FC = () => {
                 const name =
                   user && (user.firstName || user.lastName)
                     ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-                    : 'Servidor';
+                    : volunteerTerm;
                 const userAssignments =
                   assignmentsByVolunteerId[volunteer.id] ||
                   (volunteer.userId ? assignmentsByVolunteerId[volunteer.userId] : []) ||
@@ -714,7 +770,12 @@ const VolunteerDirectoryView: React.FC = () => {
                               const campusName =
                                 a.serviceAreaGroup?.churchCampus?.name ||
                                 campuses.find((c) => c.id === campusId)?.name;
-                              const roleLabel = ROLE_LABEL_SHORT[a.role] || a.role;
+                              const roleLabel = getVolunteerRoleLabel(a.role, {
+                                ministryType: matchedMinistry?.type,
+                                ministryOverrides: matchedMinistry?.terminologyOverrides,
+                                churchOverrides,
+                                short: true,
+                              });
 
                               const targetAreaId = a.ministryAreaId || a.serviceAreaGroup?.ministryAreaId;
                               const fallbackArea = targetAreaId
@@ -770,7 +831,7 @@ const VolunteerDirectoryView: React.FC = () => {
               {loadingMore && (
                 <div className="flex items-center gap-2 py-2 px-4 bg-white rounded-full border border-gray-100 shadow-2xs text-xs font-semibold text-gray-500">
                   <Loader2 size={16} className="animate-spin text-primary" />
-                  <span>Cargando más servidores...</span>
+                  <span>Cargando más {volunteersTerm.toLowerCase()}...</span>
                 </div>
               )}
               {!loadingMore && hasMore && (
@@ -780,7 +841,7 @@ const VolunteerDirectoryView: React.FC = () => {
                   className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-full shadow-2xs transition-all active:scale-95 cursor-pointer"
                 >
                   <ChevronDown size={14} />
-                  <span>Cargar más servidores</span>
+                  <span>Cargar más {volunteersTerm.toLowerCase()}</span>
                 </button>
               )}
               {!loadingMore && !hasMore && (

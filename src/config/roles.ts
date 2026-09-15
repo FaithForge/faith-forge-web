@@ -14,16 +14,16 @@ export const ROLE_VISIBILITY_CONFIG: Record<AppRole, boolean> = {
   [UserRole.ADMIN]: false,
   [UserRole.STAFF]: false,
 
-  // Iglekids (Salones y grupos)
-  [ChurchRole.MINISTRY_ADMIN]: false,      // Iglekids - Admin General
-  [UserRole.KID_GROUP_ADMIN]: true,         // Iglekids - Coordinador
-  [UserRole.KID_GROUP_SUPERVISOR]: true,    // Iglekids - Supervisor
-  [UserRole.KID_GROUP_USER]: false,         // Iglekids - Servidor
+  // Ministerio de Niños (Salones y grupos)
+  [ChurchRole.MINISTRY_ADMIN]: false,      // Niños - Admin General
+  [UserRole.KID_GROUP_ADMIN]: true,         // Niños - Coordinador
+  [UserRole.KID_GROUP_SUPERVISOR]: true,    // Niños - Supervisor
+  [UserRole.KID_GROUP_USER]: false,         // Niños - Servidor
 
-  // Regikids (Registro y acreditación)
-  [UserRole.KID_REGISTER_ADMIN]: true,      // Regikids - Coordinador
-  [UserRole.KID_REGISTER_SUPERVISOR]: true, // Regikids - Supervisor
-  [UserRole.KID_REGISTER_USER]: true,       // Regikids - Servidor
+  // Registro de Niños (Registro y acreditación)
+  [UserRole.KID_REGISTER_ADMIN]: true,      // Registro - Coordinador
+  [UserRole.KID_REGISTER_SUPERVISOR]: true, // Registro - Supervisor
+  [UserRole.KID_REGISTER_USER]: true,       // Registro - Servidor
 
   // Rol base de usuario
   [UserRole.USER]: false,

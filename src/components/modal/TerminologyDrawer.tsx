@@ -25,6 +25,8 @@ import {
   BookOpen,
   HeartHandshake,
   School,
+  UserCheck,
+  Compass,
   LucideIcon,
 } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
@@ -39,12 +41,15 @@ const FIELD_ICONS: Record<string, LucideIcon | React.ComponentType<{ size?: numb
   meeting: CalendarClock,
   campus: MapPin,
   volunteer: Users,
+  coordinator: UserCheck,
+  supervisor: Compass,
   small_group: Sparkles,
   module_alias: Layers,
   registration: ShieldCheck,
   teacher: BookOpen,
   guardian: HeartHandshake,
   classroom: School,
+  service_group: Users,
 };
 
 /**

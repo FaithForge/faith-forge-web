@@ -32,6 +32,7 @@ import { isRoleEnabled } from '@/config/roles';
 import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useRoleTransition } from '@/libs/context/RoleTransitionContext';
+import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 
 export type ThemeRole = {
   id: AppRole;
@@ -69,7 +70,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [ChurchRole.MINISTRY_ADMIN]: {
     id: ChurchRole.MINISTRY_ADMIN,
-    appTitle: 'Iglekids',
+    appTitle: 'KidChurch',
     label: 'Admin General',
     themeClass: 'theme-MINISTRY_ADMIN',
     color: '#d97706',
@@ -77,7 +78,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.KID_GROUP_ADMIN]: {
     id: UserRole.KID_GROUP_ADMIN,
-    appTitle: 'Iglekids',
+    appTitle: 'KidChurch',
     label: 'Coordinador de Grupo',
     themeClass: 'theme-KID_GROUP_ADMIN',
     color: '#db2777',
@@ -85,7 +86,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.KID_GROUP_SUPERVISOR]: {
     id: UserRole.KID_GROUP_SUPERVISOR,
-    appTitle: 'Iglekids',
+    appTitle: 'KidChurch',
     label: 'Supervisor',
     themeClass: 'theme-KID_GROUP_SUPERVISOR',
     color: '#9333ea',
@@ -93,7 +94,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.KID_GROUP_USER]: {
     id: UserRole.KID_GROUP_USER,
-    appTitle: 'Iglekids',
+    appTitle: 'KidChurch',
     label: 'Servidor',
     themeClass: 'theme-KID_GROUP_USER',
     color: '#fbbf24',
@@ -101,7 +102,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.KID_REGISTER_ADMIN]: {
     id: UserRole.KID_REGISTER_ADMIN,
-    appTitle: 'Regikids',
+    appTitle: 'KidRegistration',
     label: 'Coordinador de Área',
     themeClass: 'theme-KID_REGISTER_ADMIN',
     color: '#166534',
@@ -109,7 +110,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.KID_REGISTER_SUPERVISOR]: {
     id: UserRole.KID_REGISTER_SUPERVISOR,
-    appTitle: 'Regikids',
+    appTitle: 'KidRegistration',
     label: 'Supervisor',
     themeClass: 'theme-KID_REGISTER_SUPERVISOR',
     color: '#15803d',
@@ -117,7 +118,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.KID_REGISTER_USER]: {
     id: UserRole.KID_REGISTER_USER,
-    appTitle: 'Regikids',
+    appTitle: 'KidRegistration',
     label: 'Servidor',
     themeClass: 'theme-KID_REGISTER_USER',
     color: '#16a34a',
@@ -125,7 +126,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [UserRole.USER]: {
     id: UserRole.USER,
-    appTitle: 'Iglekids',
+    appTitle: 'KidChurch',
     label: 'Usuario',
     themeClass: 'theme-USER',
     color: '#003963',
@@ -149,6 +150,74 @@ export const getRoleIcon = (roleId?: string, label?: string, appTitle?: string) 
     roleId === UserRole.KID_REGISTER_SUPERVISOR;
   if (isSupervisor) return Shield;
   return UsersIcon;
+};
+
+/** Checks if a service area belongs to registration */
+const isAreaRegistration = (area?: { scope?: string; name?: string }) => {
+  if (!area) return false;
+  return (
+    area.scope === 'KID_REGISTRATION' ||
+    (area.name || '').toLowerCase().includes('regi')
+  );
+};
+
+/** Checks if a role is a system-level admin role (which never belongs to a group) */
+const isSystemAdminRole = (roleId?: string, appTitle?: string) => {
+  return (
+    appTitle === 'Admin' ||
+    roleId === UserRole.SUPER_ADMIN ||
+    roleId === UserRole.ADMIN ||
+    roleId === UserRole.STAFF
+  );
+};
+
+/**
+ * Finds if the user has a real volunteer assignment to a group for the specified role.
+ * Admins may see all system roles, but only groups where they have an actual assignment match.
+ */
+const findAssignedGroupForRole = (
+  roleId: AppRole,
+  groups: IVolunteerGroupConfigContext[],
+  preferredGroupId?: string | null
+): IVolunteerGroupConfigContext | null => {
+  if (!groups || groups.length === 0) return null;
+  const matches = groups.filter((group) => {
+    if (roleId === UserRole.KID_GROUP_ADMIN) {
+      if (group.groupRole === VolunteerRole.GROUP_COORDINATOR) return true;
+      return group.areas?.some(
+        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.GROUP_COORDINATOR
+      );
+    }
+    if (roleId === UserRole.KID_GROUP_SUPERVISOR) {
+      if (group.groupRole === VolunteerRole.SUPERVISOR) return true;
+      return group.areas?.some(
+        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR
+      );
+    }
+    if (roleId === UserRole.KID_GROUP_USER) {
+      return group.areas?.some(
+        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER
+      );
+    }
+    if (roleId === UserRole.KID_REGISTER_SUPERVISOR) {
+      return group.areas?.some(
+        (a) => isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR
+      );
+    }
+    if (roleId === UserRole.KID_REGISTER_USER) {
+      return group.areas?.some(
+        (a) => isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER
+      );
+    }
+    return false;
+  });
+
+  if (matches.length === 0) return null;
+  if (preferredGroupId) {
+    const found = matches.find((g) => g.id === preferredGroupId);
+    if (found) return found;
+  }
+  return matches[0];
 };
 
 const TopBar = () => {
@@ -185,6 +254,14 @@ const TopBar = () => {
     currentMasterCampus?.name ||
     '';
 
+  const kidsModuleName = useKidsTerm('module_alias');
+  const kidsRegistrationName = useKidsTerm('registration');
+  const kidsClassroomsName = useKidsTerm('classrooms');
+  const kidsTeacherName = useKidsTerm('teacher');
+  const churchVolunteerName = useChurchTerm('volunteer');
+  const churchCampusTerm = useChurchTerm('campus');
+  const activeChurch = useAppSelector((state) => state.churchCampusSlice.church);
+
   const availableGroups = currentVolunteerCampus?.groups || [];
   const areaCoordinates = currentVolunteerCampus?.areaCoordinates || [];
   const hasAreaCoordinatorAssignment = areaCoordinates.length > 0;
@@ -215,9 +292,9 @@ const TopBar = () => {
     );
     dispatch(setActiveVolunteerRole(primaryRole));
 
-    const isRegikids =
+    const isKidRegistration =
       primaryArea?.scope === 'KID_REGISTRATION' ||
-      (primaryArea.name || '').toLowerCase().includes('regi');
+      (primaryArea?.name || '').toLowerCase().includes('regi');
 
     let targetRole: AppRole;
     const isCurrentRegistrationRole =
@@ -228,11 +305,12 @@ const TopBar = () => {
     if (isCurrentRegistrationRole) {
       targetRole = currentRole;
     } else if (primaryRole === VolunteerRole.SUPERVISOR) {
-      targetRole = isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+      targetRole = isKidRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
     } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-      targetRole = isRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+      // GROUP_COORDINATOR manages a specific group, never the full area → always KID_GROUP_ADMIN
+      targetRole = UserRole.KID_GROUP_ADMIN;
     } else {
-      targetRole = isRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+      targetRole = isKidRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
     }
 
     if (targetRole && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
@@ -244,15 +322,19 @@ const TopBar = () => {
         ? 'Supervisor'
         : primaryRole === VolunteerRole.GROUP_COORDINATOR
           ? 'Coordinador'
-          : 'Servidor';
+          : isKidRegistration
+            ? churchVolunteerName
+            : kidsTeacherName;
+
+    const moduleName = isKidRegistration ? kidsRegistrationName : kidsModuleName;
 
     startTransition(
       {
         roleTitle: roleLabel,
-        moduleName: isRegikids ? 'Regikids' : 'Iglekids',
+        moduleName,
         groupName: group.name,
         themeClass: userRolesNavBarConfig[targetRole]?.themeClass,
-        icon: getRoleIcon(targetRole, roleLabel, isRegikids ? 'Regikids' : 'Iglekids'),
+        icon: getRoleIcon(targetRole, roleLabel, moduleName),
       },
       () => {
         if (location.pathname.includes('/my-team') && primaryRole === VolunteerRole.VOLUNTEER) {
@@ -277,7 +359,7 @@ const TopBar = () => {
     startTransition(
       {
         roleTitle: 'Coordinador de Área',
-        moduleName: 'Regikids',
+        moduleName: kidsRegistrationName,
         themeClass: 'theme-KID_REGISTER_ADMIN',
         icon: Crown,
       },
@@ -307,16 +389,17 @@ const TopBar = () => {
     currentVolunteerCampus?.groups?.forEach((group) => {
       const primaryArea = group.areas?.[0];
       const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
-      const isGroupRegikids =
+      const isGroupRegistration =
         primaryArea?.scope === 'KID_REGISTRATION' ||
         (primaryArea?.name || '').toLowerCase().includes('regi');
       let targetRole: AppRole;
       if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-        targetRole = isGroupRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+        // GROUP_COORDINATOR manages a specific group, never the full area → always KID_GROUP_ADMIN
+        targetRole = UserRole.KID_GROUP_ADMIN;
       } else if (primaryRole === VolunteerRole.SUPERVISOR) {
-        targetRole = isGroupRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+        targetRole = isGroupRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
       } else {
-        targetRole = isGroupRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+        targetRole = isGroupRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
       }
       if (!roles.includes(targetRole) && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
         roles.push(targetRole);
@@ -390,11 +473,23 @@ const TopBar = () => {
     dispatch(setActiveVolunteerRole(newVolunteerRole));
 
     // 2. Manage group context
+    const isNewRoleAdmin = isSystemAdminRole(roleId, roleItem.appTitle);
     const isNewRoleAreaCoordinator = roleId === UserRole.KID_REGISTER_ADMIN;
     let targetGroupName = '';
 
-    if (isNewRoleAreaCoordinator) {
+    if (isNewRoleAdmin) {
+      // Admins do not have groups
+      targetGroupName = '';
+      dispatch(
+        setActiveGroupConfig({
+          groupConfigId: '',
+          groupConfigName: '',
+          role: null,
+        }),
+      );
+    } else if (isNewRoleAreaCoordinator) {
       // Area Coordinators have no single group
+      targetGroupName = '';
       dispatch(
         setActiveGroupConfig({
           groupConfigId: '',
@@ -404,51 +499,59 @@ const TopBar = () => {
       );
     } else {
       // Roles that operate in a group (Supervisor, Servidor, Coordinador de Grupo)
-      const matchedGroup = availableGroups.find((group) => {
-        const primaryArea = group.areas[0];
-        const primaryRole =
-          primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
-        const isGroupRegikids =
-          primaryArea?.scope === 'KID_REGISTRATION' ||
-          (primaryArea?.name || '').toLowerCase().includes('regi');
-        const groupRoleId =
-          primaryRole === VolunteerRole.GROUP_COORDINATOR
-            ? isGroupRegikids
-              ? UserRole.KID_REGISTER_ADMIN
-              : UserRole.KID_GROUP_ADMIN
-            : primaryRole === VolunteerRole.SUPERVISOR
-            ? isGroupRegikids
-              ? UserRole.KID_REGISTER_SUPERVISOR
-              : UserRole.KID_GROUP_SUPERVISOR
-            : isGroupRegikids
-            ? UserRole.KID_REGISTER_USER
-            : UserRole.KID_GROUP_USER;
-        return groupRoleId === roleId;
-      });
+      const assignedGroup = findAssignedGroupForRole(
+        roleId,
+        availableGroups,
+        activeGroupConfigId,
+      );
 
-      const targetGroup = matchedGroup || (!activeGroupConfigId && availableGroups.length > 0 ? availableGroups[0] : null);
-
-      if (targetGroup) {
-        targetGroupName = targetGroup.name;
+      if (assignedGroup) {
+        targetGroupName = assignedGroup.name;
         const primaryRole =
-          targetGroup.areas[0]?.role || targetGroup.groupRole || newVolunteerRole;
+          assignedGroup.areas[0]?.role || assignedGroup.groupRole || newVolunteerRole;
         dispatch(
           setActiveGroupConfig({
-            groupConfigId: targetGroup.id,
-            groupConfigName: targetGroup.name,
+            groupConfigId: assignedGroup.id,
+            groupConfigName: assignedGroup.name,
             role: primaryRole,
+          }),
+        );
+      } else if (isAdminUser) {
+        // Powers acquired by admin: assign to Grupo Admin context
+        targetGroupName = 'Grupo Admin';
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: 'ADMIN_GROUP',
+            groupConfigName: 'Grupo Admin',
+            role: newVolunteerRole,
+          }),
+        );
+      } else {
+        targetGroupName = '';
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: '',
+            groupConfigName: '',
+            role: newVolunteerRole,
           }),
         );
       }
     }
 
+    const resolvedRoleModuleName =
+      roleItem.appTitle === 'KidRegistration'
+        ? kidsRegistrationName
+        : roleItem.appTitle === 'KidChurch'
+        ? kidsModuleName
+        : roleItem.appTitle;
+
     startTransition(
       {
         roleTitle: roleItem.label,
-        moduleName: roleItem.appTitle,
+        moduleName: resolvedRoleModuleName,
         groupName: targetGroupName || activeGroupConfigName,
         themeClass: roleItem.themeClass,
-        icon: getRoleIcon(roleItem.id, roleItem.label, roleItem.appTitle),
+        icon: getRoleIcon(roleItem.id, roleItem.label, resolvedRoleModuleName),
       },
       () => {
         navigate(roleItem.dashboardUrl, { replace: true });
@@ -486,7 +589,106 @@ const TopBar = () => {
     }
   }, [currentRole, availableRoles, dispatch]);
 
+  // Synchronize and clean group context when role or campus changes
+  React.useEffect(() => {
+    const isCurrentAdmin = isSystemAdminRole(currentRole, activeVisualRole.appTitle);
+    const isCurrentAreaCoord = currentRole === UserRole.KID_REGISTER_ADMIN;
+
+    if (isCurrentAdmin) {
+      // Admins do not have groups
+      if (activeGroupConfigId || activeGroupConfigName) {
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: '',
+            groupConfigName: '',
+            role: null,
+          }),
+        );
+      }
+    } else if (isCurrentAreaCoord) {
+      // Area Coordinator does not belong to an individual group
+      if (activeGroupConfigId || activeGroupConfigName) {
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: '',
+            groupConfigName: '',
+            role: VolunteerRole.AREA_GENERAL_COORDINATOR,
+          }),
+        );
+      }
+    } else if (currentRole && isAdminUser) {
+      const assignedGroup = findAssignedGroupForRole(
+        currentRole,
+        availableGroups,
+        activeGroupConfigId,
+      );
+      if (!assignedGroup) {
+        if (
+          activeGroupConfigId !== 'ADMIN_GROUP' ||
+          activeGroupConfigName !== 'Grupo Admin'
+        ) {
+          dispatch(
+            setActiveGroupConfig({
+              groupConfigId: 'ADMIN_GROUP',
+              groupConfigName: 'Grupo Admin',
+              role: activeVolunteerRole,
+            }),
+          );
+        }
+      } else if (activeGroupConfigId !== assignedGroup.id) {
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: assignedGroup.id,
+            groupConfigName: assignedGroup.name,
+            role:
+              assignedGroup.areas[0]?.role ||
+              assignedGroup.groupRole ||
+              activeVolunteerRole,
+          }),
+        );
+      }
+    } else if (currentRole && !isAdminUser) {
+      const assignedGroup = findAssignedGroupForRole(
+        currentRole,
+        availableGroups,
+        activeGroupConfigId,
+      );
+      if (assignedGroup) {
+        if (activeGroupConfigId !== assignedGroup.id) {
+          dispatch(
+            setActiveGroupConfig({
+              groupConfigId: assignedGroup.id,
+              groupConfigName: assignedGroup.name,
+              role:
+                assignedGroup.areas[0]?.role ||
+                assignedGroup.groupRole ||
+                activeVolunteerRole,
+            }),
+          );
+        }
+      } else if (activeGroupConfigId || activeGroupConfigName) {
+        dispatch(
+          setActiveGroupConfig({
+            groupConfigId: '',
+            groupConfigName: '',
+            role: activeVolunteerRole,
+          }),
+        );
+      }
+    }
+  }, [
+    currentRole,
+    isAdminUser,
+    activeVisualRole.appTitle,
+    activeGroupConfigId,
+    activeGroupConfigName,
+    availableGroups,
+    activeVolunteerRole,
+    dispatch,
+  ]);
+
   const isAreaCoordinator = currentRole === UserRole.KID_REGISTER_ADMIN;
+  const isCurrentVisualRoleAdmin = isSystemAdminRole(activeVisualRole.id, activeVisualRole.appTitle);
 
   const hasMultipleRoles = availableRoles.length > 1;
   const canOpenContextDropdown =
@@ -495,40 +697,71 @@ const TopBar = () => {
     availableGroups.length > 1 ||
     hasAreaCoordinatorOption;
 
-  const appTitleDisplay = currentCampusName
-    ? `${activeVisualRole.appTitle} - ${currentCampusName}`
-    : activeVisualRole.appTitle;
+  const getDynamicAppTitle = (roleId: AppRole) => {
+    if (
+      roleId === UserRole.SUPER_ADMIN ||
+      roleId === UserRole.ADMIN ||
+      roleId === UserRole.STAFF
+    ) {
+      return 'Administración';
+    }
+    if (
+      roleId === UserRole.KID_REGISTER_ADMIN ||
+      roleId === UserRole.KID_REGISTER_SUPERVISOR ||
+      roleId === UserRole.KID_REGISTER_USER
+    ) {
+      return kidsRegistrationName;
+    }
+    return kidsModuleName;
+  };
 
-  let roleLabelDisplay = activeVisualRole.label;
-  if (activeGroupConfigName && !isAreaCoordinator) {
-    roleLabelDisplay = `${activeVisualRole.label} - ${activeGroupConfigName}`;
+  const currentAppTitle = getDynamicAppTitle(activeVisualRole.id);
+  const appTitleDisplay = currentCampusName
+    ? `${currentAppTitle} - ${currentCampusName}`
+    : currentAppTitle;
+
+  const getDynamicRoleLabel = (roleId: AppRole) => {
+    if (roleId === UserRole.KID_GROUP_USER) {
+      return kidsTeacherName;
+    }
+    if (roleId === UserRole.KID_REGISTER_USER) {
+      return churchVolunteerName;
+    }
+    return activeVisualRole.label;
+  };
+
+  let roleLabelDisplay = getDynamicRoleLabel(activeVisualRole.id);
+  if (activeGroupConfigName && !isAreaCoordinator && !isCurrentVisualRoleAdmin) {
+    roleLabelDisplay = `${roleLabelDisplay} - ${activeGroupConfigName}`;
+  } else if (!isAreaCoordinator && !isCurrentVisualRoleAdmin) {
+    roleLabelDisplay = `${roleLabelDisplay} - Apoyo`;
   }
 
   const roleSections = useMemo(() => {
     const sections: { title: string; roles: ThemeRole[] }[] = [];
     const adminRoles = availableRoles.filter((r) => r.appTitle === 'Admin');
-    const iglekidsRoles = availableRoles.filter((r) => r.appTitle === 'Iglekids');
-    const regikidsRoles = availableRoles.filter((r) => r.appTitle === 'Regikids');
+    const kidChurchRoles = availableRoles.filter((r) => r.appTitle === 'KidChurch');
+    const kidRegistrationRoles = availableRoles.filter((r) => r.appTitle === 'KidRegistration');
 
     if (adminRoles.length > 0) {
       sections.push({ title: 'Administración', roles: adminRoles });
     }
-    if (iglekidsRoles.length > 0) {
-      sections.push({ title: 'Iglekids · Iglesia de Niños', roles: iglekidsRoles });
+    if (kidChurchRoles.length > 0) {
+      sections.push({ title: `${kidsModuleName} · ${kidsClassroomsName}`, roles: kidChurchRoles });
     }
-    if (regikidsRoles.length > 0) {
-      sections.push({ title: 'Regikids · Registro e Ingreso de Niños', roles: regikidsRoles });
+    if (kidRegistrationRoles.length > 0) {
+      sections.push({ title: `${kidsRegistrationName} · Punto de Entrada`, roles: kidRegistrationRoles });
     }
 
     const otherRoles = availableRoles.filter(
-      (r) => r.appTitle !== 'Admin' && r.appTitle !== 'Iglekids' && r.appTitle !== 'Regikids'
+      (r) => r.appTitle !== 'Admin' && r.appTitle !== 'KidChurch' && r.appTitle !== 'KidRegistration'
     );
     if (otherRoles.length > 0) {
       sections.push({ title: 'Roles Disponibles', roles: otherRoles });
     }
 
     return sections;
-  }, [availableRoles]);
+  }, [availableRoles, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
 
   const roleTriggerContent = (
     <div className={clsx(
@@ -536,7 +769,7 @@ const TopBar = () => {
       canOpenContextDropdown ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
     )}>
       <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white p-1 shadow-xs shrink-0 self-center">
-         <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain drop-shadow-xs" />
+         <img src="/logo-iglekids.png" alt={kidsModuleName} className="w-full h-full object-contain drop-shadow-xs" />
       </div>
       <div className="flex flex-col justify-center text-left min-w-0">
         <h1 className="font-extrabold text-[13px] sm:text-[15px] leading-snug tracking-tight truncate max-w-[200px] sm:max-w-xs md:max-w-sm">
@@ -618,7 +851,7 @@ const TopBar = () => {
                             </span>
                           </div>
                           <span className="text-[11px] text-gray-400 leading-tight mt-0.5 truncate">
-                            Regikids · Todos los grupos
+                            {kidsRegistrationName} · Todos los grupos
                           </span>
                         </div>
                       </div>
@@ -643,12 +876,17 @@ const TopBar = () => {
                         const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
                         const isSupervisor = primaryRole === VolunteerRole.SUPERVISOR;
                         const isCoordinator = primaryRole === VolunteerRole.GROUP_COORDINATOR;
+                        const isGroupRegistration =
+                          primaryArea?.scope === 'KID_REGISTRATION' ||
+                          (primaryArea?.name || '').toLowerCase().includes('regi');
                         const roleLabel = isSupervisor
                           ? 'Supervisor'
                           : isCoordinator
                             ? 'Coordinador'
-                            : 'Servidor';
-                        const areaName = primaryArea?.name || 'Regikids';
+                            : isGroupRegistration
+                              ? churchVolunteerName
+                              : kidsTeacherName;
+                        const areaName = primaryArea?.name || (isGroupRegistration ? kidsRegistrationName : kidsModuleName);
                         const isGroupActive = !isAreaCoordinatorActive && activeGroupConfigId === group.id;
 
                         return (
@@ -724,6 +962,8 @@ const TopBar = () => {
                         <div className="flex flex-col gap-0.5">
                           {section.roles.map((role) => {
                             const isRoleActive = activeVisualRole.id === role.id;
+                            const isRoleAdmin = isSystemAdminRole(role.id, role.appTitle);
+                            const isRegistrationAreaCoord = role.id === UserRole.KID_REGISTER_ADMIN;
                             const isCoordinatorRole =
                               role.label.includes('Coordinador') ||
                               role.id === ChurchRole.MINISTRY_ADMIN ||
@@ -738,69 +978,64 @@ const TopBar = () => {
                               ? Shield
                               : UsersIcon;
 
-                            const roleTitle = role.label;
+                            let roleTitle = role.label;
+                            if (role.id === UserRole.KID_GROUP_USER) {
+                              roleTitle = kidsTeacherName;
+                            } else if (role.id === UserRole.KID_REGISTER_USER) {
+                              roleTitle = churchVolunteerName;
+                            }
 
-                            const roleGroup = availableGroups.find((group) => {
-                              if (isRoleActive && activeGroupConfigId && group.id === activeGroupConfigId) {
-                                return true;
-                              }
-                              if (
-                                role.id === UserRole.KID_GROUP_ADMIN &&
-                                group.groupRole === VolunteerRole.GROUP_COORDINATOR
-                              ) {
-                                return true;
-                              }
-                              if (
-                                role.id === UserRole.KID_GROUP_SUPERVISOR &&
-                                group.groupRole === VolunteerRole.SUPERVISOR
-                              ) {
-                                return true;
-                              }
-                              return group.areas.some((area) => {
-                                const isAreaRegikids =
-                                  area.scope === 'KID_REGISTRATION' ||
-                                  (area.name || '').toLowerCase().includes('regi');
-                                if (role.id === UserRole.KID_GROUP_ADMIN) {
-                                  return !isAreaRegikids && area.role === VolunteerRole.GROUP_COORDINATOR;
-                                }
-                                if (role.id === UserRole.KID_GROUP_SUPERVISOR) {
-                                  return !isAreaRegikids && area.role === VolunteerRole.SUPERVISOR;
-                                }
-                                if (role.id === UserRole.KID_GROUP_USER) {
-                                  return !isAreaRegikids && area.role === VolunteerRole.VOLUNTEER;
-                                }
-                                if (role.id === UserRole.KID_REGISTER_ADMIN) {
-                                  return isAreaRegikids && area.role === VolunteerRole.AREA_GENERAL_COORDINATOR;
-                                }
-                                if (role.id === UserRole.KID_REGISTER_SUPERVISOR) {
-                                  return isAreaRegikids && area.role === VolunteerRole.SUPERVISOR;
-                                }
-                                if (role.id === UserRole.KID_REGISTER_USER) {
-                                  return isAreaRegikids && area.role === VolunteerRole.VOLUNTEER;
-                                }
-                                return false;
-                              });
-                            });
+                            // Determine group badge and status
+                            let assignedGroupName: string | null = null;
+                            let isRoleAdminAcquired = false;
+                            let isApoyoBadge = false;
 
-                            const isRegikidsAreaCoord = role.id === UserRole.KID_REGISTER_ADMIN;
-                            const assignedGroupName = !isRegikidsAreaCoord
-                              ? (isRoleActive ? activeGroupConfigName : null) ||
-                                roleGroup?.name ||
-                                (availableGroups.length === 1 ? availableGroups[0]?.name : null)
-                              : null;
+                            if (isRoleAdmin || isRegistrationAreaCoord) {
+                              assignedGroupName = null;
+                              isRoleAdminAcquired = false;
+                            } else {
+                              const assignedGroup = findAssignedGroupForRole(
+                                role.id,
+                                availableGroups,
+                                isRoleActive ? activeGroupConfigId : null,
+                              );
+
+                              if (assignedGroup) {
+                                assignedGroupName = assignedGroup.name;
+                                isRoleAdminAcquired = false;
+                              } else if (isAdminUser) {
+                                assignedGroupName = 'Grupo Admin';
+                                isRoleAdminAcquired = true;
+                              } else {
+                                // No group assigned → Apoyo (temporary support / active grants)
+                                assignedGroupName = 'Apoyo';
+                                isApoyoBadge = true;
+                              }
+                            }
 
                             let subtitle = '';
                             if (role.id === UserRole.SUPER_ADMIN) {
                               subtitle = 'Control global del sistema';
                             } else if (role.id === UserRole.ADMIN) {
-                              subtitle = 'Administración de sede y usuarios';
+                              subtitle = `Administración de ${churchCampusTerm.toLowerCase()} y usuarios`;
                             } else if (role.id === UserRole.KID_REGISTER_ADMIN) {
-                              subtitle = 'Todos los grupos de registro';
+                              subtitle = `Todos los grupos de ${kidsRegistrationName.toLowerCase()}`;
+                            } else if (isRoleAdminAcquired) {
+                              subtitle = 'Poderes de administración';
                             } else if (assignedGroupName) {
-                              subtitle = assignedGroupName;
-                            } else if (role.appTitle === 'Iglekids') {
-                              subtitle = isCoordinatorRole ? 'Gestión general de salones' : 'Supervisión de salones';
-                            } else if (role.appTitle === 'Regikids') {
+                              // Show "Grupo #1 · Regikids" or "Apoyo · Regikids"
+                              const moduleSuffix =
+                                role.appTitle === 'KidRegistration'
+                                  ? kidsRegistrationName
+                                  : role.appTitle === 'KidChurch'
+                                  ? kidsModuleName
+                                  : null;
+                              subtitle = moduleSuffix
+                                ? `${assignedGroupName} · ${moduleSuffix}`
+                                : assignedGroupName;
+                            } else if (role.appTitle === 'KidChurch') {
+                              subtitle = isCoordinatorRole ? `Gestión general de ${kidsClassroomsName.toLowerCase()}` : `Supervisión de ${kidsClassroomsName.toLowerCase()}`;
+                            } else if (role.appTitle === 'KidRegistration') {
                               subtitle = isSupervisorRole ? 'Supervisión de estaciones' : 'Atención en estaciones';
                             } else {
                               subtitle = role.appTitle;
@@ -810,7 +1045,7 @@ const TopBar = () => {
                               ? "bg-primary text-white shadow-xs"
                               : role.appTitle === 'Admin'
                               ? "bg-slate-100 text-slate-700"
-                              : role.appTitle === 'Iglekids'
+                              : role.appTitle === 'KidChurch'
                               ? "bg-indigo-50 text-indigo-700"
                               : "bg-emerald-50 text-emerald-700";
 
@@ -846,7 +1081,11 @@ const TopBar = () => {
                                             "text-[10px] font-semibold px-1.5 py-0.2 rounded-md shrink-0 border",
                                             isRoleActive
                                               ? "bg-white/80 text-primary border-primary/20 shadow-2xs"
-                                              : role.appTitle === 'Iglekids'
+                                              : isApoyoBadge
+                                              ? "bg-amber-50 text-amber-700 border-amber-200/60"
+                                              : isRoleAdminAcquired
+                                              ? "bg-amber-50 text-amber-800 border-amber-200/60"
+                                              : role.appTitle === 'KidChurch'
                                               ? "bg-purple-50 text-purple-700 border-purple-200/60"
                                               : "bg-emerald-50 text-emerald-700 border-emerald-200/60"
                                           )}
@@ -963,7 +1202,7 @@ const TopBar = () => {
                   onClick={() => setChangelogOpen(true)}
                   className="text-[10px] font-semibold text-gray-400 hover:text-primary transition-colors cursor-pointer"
                 >
-                  Iglekids v{APP_VERSION}
+                  {activeChurch?.name ? `${activeChurch.name} · v${APP_VERSION}` : `${kidsModuleName} v${APP_VERSION}`}
                 </button>
               </div>
             </DropdownMenu.Content>

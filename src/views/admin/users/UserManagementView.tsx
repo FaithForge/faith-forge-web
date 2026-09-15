@@ -17,6 +17,7 @@ import { UserState } from '@/libs/models';
 import { UserRole } from '@/libs/utils/auth';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 
 /**
@@ -28,6 +29,7 @@ import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 const UserManagementView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const volunteerTerm = useChurchTerm('volunteer');
 
   const [searchText, setSearchText] = useState('');
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -237,7 +239,7 @@ const UserManagementView: React.FC = () => {
                       )}
                       {isVolunteer && (
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-violet-50 text-violet-700 rounded-full border border-violet-200 flex items-center gap-0.5">
-                          <Award size={10} /> Servidor
+                          <Award size={10} /> {volunteerTerm}
                         </span>
                       )}
                       {rolesCount > 0 && (

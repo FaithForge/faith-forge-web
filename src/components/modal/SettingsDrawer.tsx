@@ -40,7 +40,7 @@ import {
   setActiveVolunteerRole,
   setOnboardingCompleted,
 } from '@/libs/state/redux/slices/church/volunteerContext.slice';
-import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurchPrinter } from '@/libs/models';
+import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurchPrinter, MinistryType } from '@/libs/models';
 import {
   IVolunteerCampusContext,
   IVolunteerGroupConfigContext,
@@ -52,6 +52,7 @@ import { AppRole, ChurchRole, IsAdmin, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 import { formatPersonShortName } from '@/libs/utils/text';
+import { useChurchTerm, useKidsTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -113,17 +114,17 @@ const inferRoleFromGroup = (group: IVolunteerGroupConfigContext): AppRole | null
   const primaryArea = group.areas[0];
   const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
 
-  const isRegikids =
+  const isRegistration =
     primaryArea?.scope === 'KID_REGISTRATION' ||
-    (primaryArea.name || '').toLowerCase().includes('regi');
+    (primaryArea?.name || '').toLowerCase().includes('regi');
 
   if (primaryRole === VolunteerRole.SUPERVISOR) {
-    return isRegikids ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+    return isRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
   }
   if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-    return isRegikids ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+    return isRegistration ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
   }
-  return isRegikids ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+  return isRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
 };
 
 /**
@@ -172,11 +173,21 @@ const SettingsDrawer = ({
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
+  const campusTerm = useChurchTerm('campus');
+  const campusesTerm = useChurchTerm('campuses');
+  const meetingTerm = useChurchTerm('meeting');
+  const meetingsTerm = useChurchTerm('meetings');
+
   const userRoles = (user?.roles as UserRole[]) || [];
   const isUserAdmin =
     IsAdmin(userRoles) ||
     currentRole === UserRole.SUPER_ADMIN ||
     currentRole === UserRole.ADMIN;
+
+  const isCurrentRoleAdmin =
+    currentRole === UserRole.SUPER_ADMIN ||
+    currentRole === UserRole.ADMIN ||
+    currentRole === UserRole.STAFF;
 
   const isChurchRole =
     isChurchVolunteer &&
@@ -237,7 +248,7 @@ const SettingsDrawer = ({
     return availableGroups.length === 1 ? availableGroups[0] : null;
   }, [availableGroups, selectedGroupId]);
 
-  // Resolve whether effective role is Iglekids (Kid Church) vs Regikids (Registration)
+  // Resolve whether effective role is Kid Church vs Registration
   const isKidChurchRole = useMemo(() => {
     if (isActiveKidChurchVolunteerRole) return true;
     if (currentRole) {
@@ -295,11 +306,15 @@ const SettingsDrawer = ({
     // 3. Group selection
     const volCampus = sortedVolunteerCampuses.find((c) => c.id === initCampusId);
     const groups = volCampus?.groups || [];
-    if (groups.length === 1) {
-      setSelectedGroupId(groups[0].id);
-    } else if (groups.length > 1) {
-      const matching = groups.find((g) => g.id === activeGroupConfigId);
-      setSelectedGroupId(matching ? matching.id : '');
+    if (!isCurrentRoleAdmin) {
+      if (groups.length === 1) {
+        setSelectedGroupId(groups[0].id);
+      } else if (groups.length > 1) {
+        const matching = groups.find((g) => g.id === activeGroupConfigId);
+        setSelectedGroupId(matching ? matching.id : '');
+      } else {
+        setSelectedGroupId('');
+      }
     } else {
       setSelectedGroupId('');
     }
@@ -458,7 +473,16 @@ const SettingsDrawer = ({
     }
 
     // 2. Group context & inferred role
-    if (currentSelectedGroup) {
+    if (isCurrentRoleAdmin) {
+      dispatch(
+        setActiveGroupConfig({
+          groupConfigId: '',
+          groupConfigName: '',
+          role: null,
+        }),
+      );
+      dispatch(setActiveVolunteerRole(null));
+    } else if (currentSelectedGroup) {
       const effectiveVolunteerRole =
         activeVolunteerRole ||
         (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN
@@ -490,7 +514,7 @@ const SettingsDrawer = ({
       dispatch(updateCurrentChurchMeeting(selectedMeetingId));
     }
 
-    // 4. Printer (only if Regikids)
+    // 4. Printer (only if Registration)
     if (!isKidChurchRole) {
       dispatch(setPrinterMode(selectedMode));
       if (selectedMode === 'NETWORK' && selectedPrinterId) {
@@ -571,7 +595,7 @@ const SettingsDrawer = ({
             ¡Hola, {userName}!
           </h2>
           <p className="text-xs text-gray-500 font-medium truncate">
-            Verifica tu sede y servicio asignado para hoy
+            Verifica tu {campusTerm.toLowerCase()} y {meetingTerm.toLowerCase()} asignada para hoy
           </p>
         </div>
       </div>
@@ -579,7 +603,7 @@ const SettingsDrawer = ({
       {/* ===================== CARD 1: Sede de Servicio ===================== */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3">
         <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
-          <Building2 size={16} className="text-primary" /> Sede de Servicio
+          <Building2 size={16} className="text-primary" /> {campusTerm} de Servicio
         </label>
 
         {availableCampuses.length === 1 ? (
@@ -597,10 +621,10 @@ const SettingsDrawer = ({
               onChange={(e) => handleCampusChange(e.target.value)}
             >
               {availableCampuses.length === 0 ? (
-                <option value="" disabled>No hay sedes disponibles</option>
+                <option value="" disabled>No hay {campusesTerm.toLowerCase()} disponibles</option>
               ) : (
                 <>
-                  <option value="" disabled>Seleccione sede...</option>
+                  <option value="" disabled>Seleccione {campusTerm.toLowerCase()}...</option>
                   {availableCampuses.map((campus: any) => (
                     <option key={campus.id} value={campus.id}>
                       {campus.name}
@@ -616,7 +640,7 @@ const SettingsDrawer = ({
         )}
 
         {/* Grupo de servicio: Asignación única */}
-        {availableGroups.length === 1 && (
+        {!isCurrentRoleAdmin && availableGroups.length === 1 && (
           <div className="flex items-center justify-between px-3 py-2 rounded-xl bg-primary/5 border border-primary/15">
             <div className="flex items-center gap-2 min-w-0">
               <Users size={14} className="text-primary shrink-0" />
@@ -630,20 +654,23 @@ const SettingsDrawer = ({
               </div>
             </div>
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary shrink-0">
-              {getVolunteerRoleBadgeLabel(
+              {getVolunteerRoleLabel(
                 activeVolunteerRole ||
                 (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN
                   ? VolunteerRole.GROUP_COORDINATOR
                   : currentRole === UserRole.KID_GROUP_SUPERVISOR || currentRole === UserRole.KID_REGISTER_SUPERVISOR
                   ? VolunteerRole.SUPERVISOR
-                  : availableGroups[0].areas[0]?.role || availableGroups[0].groupRole),
+                  : availableGroups[0].areas[0]?.role || availableGroups[0].groupRole || VolunteerRole.VOLUNTEER),
+                {
+                  ministryType: isKidChurchRole ? MinistryType.KIDS : MinistryType.GENERAL,
+                }
               )}
             </span>
           </div>
         )}
 
         {/* Selector de grupo si el voluntario tiene múltiples grupos en la sede */}
-        {availableGroups.length > 1 && (
+        {!isCurrentRoleAdmin && availableGroups.length > 1 && (
           <div className="pt-1">
             <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
               <Users size={13} className="text-primary" /> Grupo de Servicio
@@ -672,20 +699,20 @@ const SettingsDrawer = ({
       {/* ===================== CARD 2: Servicio o Reunión ===================== */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3">
         <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
-          <CalendarClock size={16} className="text-primary" /> Servicio o Reunión
+          <CalendarClock size={16} className="text-primary" /> {meetingTerm}
         </label>
 
         {isMeetingLoading ? (
           <div className="flex items-center justify-center gap-2 py-4 text-xs font-medium text-gray-500 bg-gray-50 rounded-xl">
             <Loader2 size={16} className="animate-spin text-primary" />
-            Cargando servicios de hoy...
+            Cargando {meetingsTerm.toLowerCase()} de hoy...
           </div>
         ) : hasNoMeetingsToday ? (
           <div className="flex flex-col gap-3">
             <Alert
               type="warning"
-              title="Sin servicios programados hoy"
-              message="No se encontraron servicios activos para el día de hoy en la sede seleccionada."
+              title={`Sin ${meetingsTerm.toLowerCase()} programadas hoy`}
+              message={`No se encontraron ${meetingsTerm.toLowerCase()} activas para el día de hoy en la ${campusTerm.toLowerCase()} seleccionada.`}
             />
             <Button
               type="button"
@@ -705,11 +732,11 @@ const SettingsDrawer = ({
               disabled={isMeetingDisabled}
             >
               {availableMeetings.length === 0 ? (
-                <option value="" disabled>No hay servicios disponibles</option>
+                <option value="" disabled>No hay {meetingsTerm.toLowerCase()} disponibles</option>
               ) : (
                 <>
                   {availableMeetings.length > 1 && (
-                    <option value="" disabled>Seleccione servicio o reunión...</option>
+                    <option value="" disabled>Seleccione {meetingTerm.toLowerCase()}...</option>
                   )}
                   {availableMeetings.map((meeting: any) => (
                     <option key={meeting.id} value={meeting.id}>
@@ -726,7 +753,7 @@ const SettingsDrawer = ({
         )}
       </div>
 
-      {/* ===================== CARD 3: Método de Impresión (Regikids) ===================== */}
+      {/* ===================== CARD 3: Método de Impresión (Registro de Niños) ===================== */}
       {!isKidChurchRole && (
         <div className={clsx(
           'bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3 transition-opacity',
@@ -750,7 +777,7 @@ const SettingsDrawer = ({
                 )}
               >
                 <Printer size={14} />
-                <span>Red / Campus</span>
+                <span>Red / {campusTerm}</span>
               </button>
               <button
                 type="button"
@@ -773,11 +800,11 @@ const SettingsDrawer = ({
               {isPrinterLoading ? (
                 <div className="flex items-center justify-center gap-2 py-4 text-xs font-medium text-gray-500 bg-gray-50 rounded-xl">
                   <Loader2 size={16} className="animate-spin text-primary" />
-                  Cargando impresoras de la sede...
+                  Cargando impresoras de la {campusTerm.toLowerCase()}...
                 </div>
               ) : availablePrinters.length === 0 ? (
                 <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-800 text-xs font-medium">
-                  No hay impresoras de red activas en esta sede.
+                  No hay impresoras de red activas en esta {campusTerm.toLowerCase()}.
                 </div>
               ) : (
                 <div className="relative">

@@ -1,6 +1,7 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { ICreateKidRegistration } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { buildRegistrationLog } from '@/libs/utils/registrationLog';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 
@@ -12,10 +13,17 @@ export const CreateKidRegistration = createAsyncThunk(
     const churchCampusSlice = state.churchCampusSlice;
     const churchMeetingSlice = state.churchMeetingSlice;
     const authSlice = state.authSlice;
-    const accountSlice = state.accountSlice;
+    const volunteerContextSlice = state.volunteerContextSlice;
     const churchPrinterSlice = state.churchPrinterSlice;
     const printerMode = state.printerModeSlice?.mode || 'NETWORK';
     const isBluetooth = printerMode === 'BLUETOOTH';
+
+    const registrationLog = buildRegistrationLog({
+      user: authSlice.user,
+      volunteerContext: volunteerContextSlice,
+      currentRole: authSlice.currentRole,
+      campusId: churchCampusSlice.current?.id,
+    });
 
     const response = (
       await microserviceApiRequest({
@@ -29,7 +37,7 @@ export const CreateKidRegistration = createAsyncThunk(
             churchMeetingId: churchMeetingSlice.current?.id,
             churchPrinterId: isBluetooth ? undefined : churchPrinterSlice.current?.name,
             skipServerPrint: isBluetooth || payload.skipServerPrint || false,
-            log: `Registrado por ${authSlice.user?.firstName} ${authSlice.user?.lastName} del ${accountSlice.churchGroup}`,
+            log: registrationLog,
           },
           headers: { Authorization: `Bearer ${token}` },
         },

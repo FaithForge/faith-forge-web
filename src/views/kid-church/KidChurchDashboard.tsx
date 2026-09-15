@@ -14,11 +14,12 @@ import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
 /**
- * Main dashboard for Iglekids (Coordinators, Supervisors, Teachers).
+ * Main dashboard for the kids ministry (Coordinators, Supervisors, Volunteers).
  * Displays live attendance statistics per classroom and registered kids for today's service.
  *
  * @returns {JSX.Element}
@@ -26,6 +27,8 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 const KidChurchDashboard: React.FC = () => {
   const dispatch = useAppDispatch();
   const { currentMeeting, currentCampus, isConfigured } = useChurchMeetingStatus();
+  const kidsClassroomsName = useKidsTerm('classrooms');
+  const kidsModuleName = useKidsTerm('module_alias');
 
   const { data: kids, loading } = useAppSelector((state) => state.kidGroupRegisteredSlice);
   const { data: kidGroups, loading: loadingKidGroups } = useAppSelector(
@@ -246,7 +249,7 @@ const KidChurchDashboard: React.FC = () => {
             <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2">
               <div className="flex items-center justify-between px-0.5">
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">
-                  Salones de Iglekids
+                  {kidsClassroomsName} de {kidsModuleName}
                 </span>
                 {selectedKidGroupId && (
                   <button

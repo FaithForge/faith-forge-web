@@ -8,6 +8,7 @@ import { IKid } from '@/libs/models';
 import { capitalizeWords, formatPersonShortName } from '@/libs/utils/text';
 import { searchKidsForTransfer } from '@/services/kidService';
 import { useAppSelector } from '@/libs/state/redux/hooks';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 
 interface DeleteKidModalProps {
   open: boolean;
@@ -30,6 +31,7 @@ export const DeleteKidModal: React.FC<DeleteKidModalProps> = ({
   onConfirm,
 }) => {
   useModalBackClose(open, onClose);
+  const guardiansTerm = useKidsTerm('guardians');
 
   const token = useAppSelector((state) => state.authSlice.token);
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
@@ -185,7 +187,7 @@ export const DeleteKidModal: React.FC<DeleteKidModalProps> = ({
                   </div>
                 </div>
                 <p className="text-[11px] sm:text-xs text-gray-500 mt-0.5 leading-snug">
-                  Migra acudientes y registros de asistencia al niño seleccionado antes de eliminar.
+                  Migra {guardiansTerm.toLowerCase()} y registros de asistencia al niño seleccionado antes de eliminar.
                 </p>
               </div>
             </div>

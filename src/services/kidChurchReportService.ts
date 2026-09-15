@@ -127,7 +127,7 @@ export const generatePreviewAttendanceData = (params: IFetchAttendanceReportPara
             }
           : null,
         observations: hasMedical ? 'Cuidado con merienda' : 'Sin observaciones',
-        registeredBy: 'Operador Iglekids',
+        registeredBy: 'Operador de Registro',
       });
 
       kidCounter++;
@@ -252,7 +252,7 @@ export const getAttendanceReportDetail = async (
         metadata: {
           church: {
             id: rawData.metadata?.church?.id || 'default-church',
-            name: rawData.metadata?.church?.name || params.churchName || 'Iglekids',
+            name: rawData.metadata?.church?.name || params.churchName || 'Ministerio de Niños',
           },
           campus: {
             id: rawData.metadata?.campus?.id || 'default-campus',

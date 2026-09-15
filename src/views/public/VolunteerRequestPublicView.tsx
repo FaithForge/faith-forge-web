@@ -96,6 +96,13 @@ const VolunteerRequestPublicView: React.FC = () => {
     dispatch(GetPublicVolunteerCatalog());
   }, [dispatch]);
 
+  const ministryName = useMemo(() => {
+    const target =
+      catalog?.ministryAreas?.find((a) => a.ministry?.name)?.ministry ||
+      catalog?.ministryGroupConfigs?.find((g) => g.ministry?.name)?.ministry;
+    return target?.name || 'el ministerio';
+  }, [catalog]);
+
   // 1. Filtrar grupos que pertenecen a la sede seleccionada
   const filteredGroups = useMemo(() => {
     if (!churchCampusId || !catalog?.ministryGroupConfigs) return [];
@@ -380,7 +387,8 @@ const VolunteerRequestPublicView: React.FC = () => {
               ¡Registro Enviado!
             </h2>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Muchas gracias. Tus datos han sido recibidos para registrar y actualizar el equipo de servidores en <span className="font-bold text-emerald-700">Iglekids</span>.
+              Muchas gracias. Tus datos han sido recibidos para registrar y actualizar el equipo de servidores en{' '}
+              <span className="font-bold text-emerald-700">{ministryName}</span>.
               Tu coordinador confirmará tu asignación en el sistema.
             </p>
           </div>
@@ -465,7 +473,7 @@ const VolunteerRequestPublicView: React.FC = () => {
         {/* Header Branding */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-white p-2 shadow-md border border-gray-100 mx-auto">
-            <img src="/logo-iglekids.png" alt="Iglekids" className="w-full h-full object-contain" />
+            <img src="/logo-iglekids.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
@@ -476,7 +484,8 @@ const VolunteerRequestPublicView: React.FC = () => {
               Registro de Servidores
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto">
-              Diligencia este formulario para confirmar tus datos y registrar el grupo donde sirves actualmente en <span className="font-bold text-gray-800">Iglekids</span>.
+              Diligencia este formulario para confirmar tus datos y registrar el grupo donde sirves actualmente en{' '}
+              <span className="font-bold text-gray-800">{ministryName}</span>.
             </p>
           </div>
 

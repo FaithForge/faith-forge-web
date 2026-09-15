@@ -243,6 +243,7 @@ export interface IVolunteerContextResponse {
   permissions: string[];
   isChurchVolunteer: boolean;
   campuses: IVolunteerCampusContext[];
+  hasActiveGrants?: boolean;
 }
 
 

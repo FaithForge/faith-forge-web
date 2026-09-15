@@ -1,4 +1,5 @@
-const BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
+const BIOMETRIC_STORAGE_KEY = 'app_biometric_session';
+const LEGACY_BIOMETRIC_STORAGE_KEY = 'iglekids_biometric_session';
 
 /**
  * Fast version update reload that purges stale asset caches and refreshes immediately
@@ -58,7 +59,7 @@ export const clearAppCacheAndReload = async (options?: {
 
     // 3. Backup biometric session and auth if preserved
     const savedBio = preserveBiometrics
-      ? localStorage.getItem(BIOMETRIC_STORAGE_KEY)
+      ? (localStorage.getItem(BIOMETRIC_STORAGE_KEY) || localStorage.getItem(LEGACY_BIOMETRIC_STORAGE_KEY))
       : null;
     const savedPersistRoot = preserveAuth
       ? localStorage.getItem('persist:root')

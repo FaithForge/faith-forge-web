@@ -7,6 +7,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import { CreateVolunteer, GetVolunteers } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { toast } from 'sonner';
 import { UserPlus, User as UserIcon, Check } from 'lucide-react';
 
@@ -31,6 +32,8 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
 
   const dispatch = useAppDispatch();
   const existingVolunteers = useAppSelector((state) => state.volunteerSlice.volunteers.data);
+  const volunteerTerm = useChurchTerm('volunteer');
+  const volunteersTerm = useChurchTerm('volunteers');
 
   const [searchText, setSearchText] = useState('');
   const [searchResults, setSearchResults] = useState<IUser[]>([]);
@@ -87,7 +90,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
 
     const alreadyVolunteer = existingVolunteers.some((v) => v.userId === selectedUser.id);
     if (alreadyVolunteer) {
-      toast.info('Este usuario ya está registrado en el directorio de servidores');
+      toast.info(`Este usuario ya está registrado en el directorio de ${volunteersTerm.toLowerCase()}`);
       onOpenChange(false);
       return;
     }
@@ -96,11 +99,14 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
     try {
       await dispatch(CreateVolunteer({ userId: selectedUser.id })).unwrap();
       await dispatch(GetVolunteers({ force: true }));
-      toast.success('Servidor registrado correctamente');
+      toast.success(`${volunteerTerm} registrado(a) correctamente`);
       onOpenChange(false);
       onSuccess?.();
     } catch (err: unknown) {
-      const errMsg = typeof err === 'string' ? err : 'Error al registrar el servidor';
+      const errMsg =
+        typeof err === 'string'
+          ? err
+          : `Error al registrar el ${volunteerTerm.toLowerCase()}`;
       toast.error(errMsg);
     } finally {
       setSubmitting(false);
@@ -111,7 +117,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title="Registrar Servidor"
+      title={`Registrar ${volunteerTerm}`}
       icon={<UserPlus className="text-primary" size={20} />}
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4 p-4">
@@ -226,7 +232,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
             loadingText="Registrando..."
             disabled={!selectedUser}
           >
-            Registrar Servidor
+            Registrar {volunteerTerm}
           </Button>
         </div>
       </form>
