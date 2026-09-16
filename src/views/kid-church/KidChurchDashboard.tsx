@@ -10,13 +10,14 @@ import TagKidGroup from '@/components/ui/TagKidGroup';
 import KidDetailsDrawer from '@/components/modal/KidDetailsDrawer';
 import {
   useGetKidGroupsQuery,
-  useGetKidGroupRegisteredQuery,
+  useGetKidGroupAttendanceQuery,
 } from '@/libs/state/redux/api/kidChurchApi';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
+import { useKidChurchLiveSync } from '@/libs/hooks/useKidChurchLiveSync';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
@@ -46,8 +47,9 @@ const KidChurchDashboard: React.FC = () => {
     refetch: refetchKidGroups,
   } = useGetKidGroupsQuery();
 
-  const activeKidGroupId =
-    kidGroups.length === 1 ? kidGroups[0].id : selectedKidGroupId || undefined;
+  // Always query all kids for the active meeting when multiple classrooms exist,
+  // so all classroom counters remain populated even when filtering by a specific classroom.
+  const activeKidGroupId = kidGroups.length === 1 ? kidGroups[0].id : undefined;
 
   const todayIso = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
 
@@ -56,8 +58,8 @@ const KidChurchDashboard: React.FC = () => {
     data: kids = [],
     isLoading: loadingKids,
     isFetching: fetchingKids,
-    refetch: refetchRegisteredKids,
-  } = useGetKidGroupRegisteredQuery(
+    refetch: refetchAttendance,
+  } = useGetKidGroupAttendanceQuery(
     {
       date: todayIso,
       kidGroupId: activeKidGroupId,
@@ -67,6 +69,12 @@ const KidChurchDashboard: React.FC = () => {
       skip: !currentMeeting?.id,
     },
   );
+
+  // Realtime Live Sync: Receives SSE notifications on check-in/check-out and updates lists instantly
+  useKidChurchLiveSync({
+    churchMeetingId: currentMeeting?.id,
+    enabled: Boolean(currentMeeting?.id),
+  });
 
   const loading = loadingKids || (fetchingKids && kids.length === 0);
 
@@ -104,19 +112,19 @@ const KidChurchDashboard: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       const mainEl = document.querySelector('main');
       if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-      void refetchRegisteredKids();
+      void refetchAttendance();
     };
 
     window.addEventListener('reset-kid-church-dashboard', handleReset);
     return () => {
       window.removeEventListener('reset-kid-church-dashboard', handleReset);
     };
-  }, [kidGroups.length, refetchRegisteredKids]);
+  }, [kidGroups.length, refetchAttendance]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await Promise.all([refetchKidGroups(), refetchRegisteredKids()]);
+      await Promise.all([refetchKidGroups(), refetchAttendance()]);
       toast.success('Registros de salones actualizados');
     } catch {
       toast.error('Error al actualizar los registros');
@@ -378,11 +386,12 @@ const KidChurchDashboard: React.FC = () => {
         </>
       )}
 
-      {/* Kid Details Bottom Sheet */}
+      {/* Kid Details Bottom Sheet (Alerta de EPS deshabilitada para coordinadores, supervisores y maestros) */}
       <KidDetailsDrawer
         open={openKidDrawer}
         onOpenChange={setOpenKidDrawer}
         kid={selectedKid}
+        showEpsAlert={false}
       />
     </div>
   );

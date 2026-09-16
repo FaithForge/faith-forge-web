@@ -4,6 +4,7 @@ import { microserviceApiRequest } from '@/libs/utils/http';
 import { buildRegistrationLog } from '@/libs/utils/registrationLog';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
+import { kidChurchApi } from '@/libs/state/redux/api/kidChurchApi';
 
 export const CreateKidRegistration = createAsyncThunk(
   'kid-church/CreateKidRegistration',
@@ -89,7 +90,7 @@ export const RemoveKidRegistration = createAsyncThunk(
     payload: {
       id: string;
     },
-    { getState },
+    { getState, dispatch },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -105,6 +106,14 @@ export const RemoveKidRegistration = createAsyncThunk(
         },
       })
     ).data;
+
+    dispatch(
+      kidChurchApi.util.invalidateTags([
+        { type: 'KidRegistered', id: 'LIST' },
+        { type: 'KidGroup', id: 'LIST' },
+        { type: 'Kid', id: 'LIST' },
+      ]),
+    );
 
     return response;
   },

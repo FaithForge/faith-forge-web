@@ -23,25 +23,42 @@ import { useAppSelector } from '@/libs/state/redux/hooks';
 import { UserRole, ChurchRole, AppRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import { useGetKidQuery } from '@/libs/state/redux/api/kidChurchApi';
 
 interface KidDetailsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kid?: IKid;
+  showEpsAlert?: boolean;
 }
 
 /**
  * Bottom sheet drawer displaying complete details of a registered kid in the kids ministry.
  * Uses the exact design language, styling, and card layout from KidCheckInView.
  *
- * @param {KidDetailsDrawerProps} props - Open state and kid data.
+ * @param {KidDetailsDrawerProps} props - Open state, kid data, and optional showEpsAlert override.
  * @returns {JSX.Element | null}
  */
-const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange, kid }) => {
+const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
+  open,
+  onOpenChange,
+  kid: propKid,
+  showEpsAlert,
+}) => {
   useModalBackClose(open, () => onOpenChange(false));
 
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+
+  const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
+  const shouldFetchDetails = Boolean(open && propKid?.id && (!propKid?.relations || propKid.relations.length === 0));
+
+  const { data: fetchedKid, isFetching: loadingFullKid } = useGetKidQuery(
+    { id: propKid?.id || '', registrationChurchMeetingId: currentMeeting?.id },
+    { skip: !shouldFetchDetails }
+  );
+
+  const kid = fetchedKid || propKid;
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -49,6 +66,12 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     (state) => state.volunteerContextSlice.activeVolunteerRole,
   );
   const userRoles = (user?.roles as AppRole[]) || [];
+
+  const kidsModuleName = useKidsTerm('module_alias');
+  const kidsTeacherTerm = useKidsTerm('teacher');
+  const guardianTerm = useKidsTerm('guardian');
+  const guardiansTerm = useKidsTerm('guardians');
+  const churchVolunteerTerm = useChurchTerm('volunteer');
 
   const canViewCreatorInfo =
     userRoles.includes(UserRole.SUPER_ADMIN) ||
@@ -87,12 +110,6 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
   const isOverage = isKidOverage(kid);
   const isRegistered = !!kid.currentKidRegistration;
 
-  const kidsModuleName = useKidsTerm('module_alias');
-  const kidsTeacherTerm = useKidsTerm('teacher');
-  const guardianTerm = useKidsTerm('guardian');
-  const guardiansTerm = useKidsTerm('guardians');
-  const churchVolunteerTerm = useChurchTerm('volunteer');
-
   const senderName = user ? capitalizeWords(`${user.firstName || ''} ${user.lastName || ''}`.trim()) : `un(a) ${churchVolunteerTerm.toLowerCase()}`;
   let roleTitle = churchVolunteerTerm;
   if (currentRole === UserRole.KID_GROUP_USER) {
@@ -128,6 +145,15 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
     : null;
 
   const isEpsUnknown = kid?.healthSecurityEntity?.trim()?.toUpperCase() === 'NO SABE';
+
+  // La alerta de EPS "NO SABE" solo aplica para el personal de registro de niños (quienes reciben a los acudientes).
+  // No debe mostrarse a coordinadores de grupo, supervisores de iglekids o maestros de salón.
+  const isRegisterRole =
+    currentRole === UserRole.KID_REGISTER_USER ||
+    currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
+    currentRole === UserRole.KID_REGISTER_ADMIN;
+
+  const shouldShowEpsAlert = showEpsAlert ?? isRegisterRole;
 
   const registrationObservation =
     kid?.currentKidRegistration?.observation ||
@@ -232,8 +258,8 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
                 </div>
               )}
 
-              {/* Banner de aviso si la EPS es NO SABE */}
-              {isEpsUnknown && (
+              {/* Banner de aviso si la EPS es NO SABE (exclusivo para personal de registro) */}
+              {shouldShowEpsAlert && isEpsUnknown && (
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-2xl flex items-start gap-3 text-xs leading-relaxed shadow-xs">
                   <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
                   <div className="flex-1">
@@ -356,13 +382,22 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
 
                   {kid?.healthSecurityEntity && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">EPS</span>
-                      <span className={clsx("font-bold", isEpsUnknown ? "text-amber-700 flex items-center gap-1.5" : "text-gray-800")}>
-                        {isEpsUnknown && <AlertTriangle size={15} className="text-amber-600" />}
-                        {capitalizeWords(kid.healthSecurityEntity)}
-                      </span>
-                    </div>
-                  )}
+                       <span className="font-semibold text-gray-500">EPS</span>
+                       <span
+                         className={clsx(
+                           'font-bold',
+                           shouldShowEpsAlert && isEpsUnknown
+                             ? 'text-amber-700 flex items-center gap-1.5'
+                             : 'text-gray-800'
+                         )}
+                       >
+                         {shouldShowEpsAlert && isEpsUnknown && (
+                           <AlertTriangle size={15} className="text-amber-600" />
+                         )}
+                         {capitalizeWords(kid.healthSecurityEntity)}
+                       </span>
+                     </div>
+                   )}
 
                   {kid?.medicalCondition && (
                     <div className="flex justify-between items-start py-1 border-b border-gray-50">
@@ -452,6 +487,13 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({ open, onOpenChange,
               )}
 
               {/* Acudientes Autorizados */}
+              {loadingFullKid && (
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3 animate-pulse">
+                  <div className="h-4 bg-gray-100 rounded w-1/3" />
+                  <div className="h-20 bg-gray-50 rounded-xl" />
+                </div>
+              )}
+
               {kid.relations && kid.relations.length > 0 && (
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3.5">
                   <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide border-b border-gray-100 pb-2">

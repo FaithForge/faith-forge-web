@@ -15,10 +15,15 @@ export interface MicroserviceBaseQueryArgs {
   queueIfOffline?: boolean;
 }
 
+import { ProblemDetails } from '@/libs/models/problemDetails';
+
 export interface ApiCustomError {
   status?: number;
   data?: unknown;
   message?: string;
+  code?: string;
+  detail?: string;
+  problemDetails?: ProblemDetails;
 }
 
 /**
@@ -66,11 +71,7 @@ export const microserviceBaseQuery: BaseQueryFn<
 
     return { data: response.data };
   } catch (err: unknown) {
-    const errorObj = err as {
-      code?: string;
-      message?: string;
-      response?: { status?: number; data?: unknown };
-    };
+    const errorObj = err as any;
 
     const isOffline =
       (typeof navigator !== 'undefined' && !navigator.onLine) ||
@@ -89,11 +90,20 @@ export const microserviceBaseQuery: BaseQueryFn<
       });
     }
 
+    const problemDetails: ProblemDetails | undefined =
+      errorObj?.problemDetails || errorObj?.response?.data?.error;
+    const code: string | undefined = problemDetails?.code || errorObj?.code;
+    const detail: string | undefined =
+      problemDetails?.detail || problemDetails?.message || errorObj?.message;
+
     return {
       error: {
         status: errorObj?.response?.status,
         data: errorObj?.response?.data,
-        message: errorObj?.message || 'Error de conexión',
+        message: detail || 'Error de conexión',
+        code,
+        detail,
+        problemDetails,
       },
     };
   }

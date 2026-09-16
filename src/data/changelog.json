@@ -9,7 +9,9 @@
       "Los administradores y coordinadores de área ahora pueden visualizar quién creó el registro de un niño junto a su grupo correspondiente.",
       "Restricción de acceso para mantener la privacidad de la información en roles operativos y de consulta.",
       "Mayor rapidez y actualización inmediata en los listados de salones y asistencia en tiempo real.",
-      "Guardado local preventivo y sincronización automática sin pérdida de datos al restablecerse la conexión a internet."
+      "Guardado local preventivo y sincronización automática sin pérdida de datos al restablecerse la conexión a internet.",
+      "Optimización de avisos en la consulta del niño: la alerta de EPS pendiente ahora se muestra exclusivamente al equipo de registro de niños durante el ingreso.",
+      "Mantenimiento continuo de los contadores en los salones: la cantidad de niños por salón permanece visible en todo momento al seleccionar o filtrar un salón específico."
     ]
   },
   {

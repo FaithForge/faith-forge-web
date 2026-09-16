@@ -17,11 +17,16 @@ export interface GetKidGroupsArgs {
   type?: KidGroupType;
 }
 
-export interface GetKidGroupRegisteredArgs {
+export interface GetKidGroupAttendanceArgs {
   kidGroupId?: string;
   date: string;
   churchMeetingId?: string;
 }
+
+/**
+ * @deprecated Legacy endpoint args. Use GetKidGroupAttendanceArgs instead.
+ */
+export interface GetKidGroupRegisteredArgs extends GetKidGroupAttendanceArgs {}
 
 export interface GetKidsArgs {
   page?: number;
@@ -79,6 +84,26 @@ export const kidChurchApi = baseApi.injectEndpoints({
           : [{ type: 'KidGroup', id: 'LIST' }],
     }),
 
+    getKidGroupAttendance: builder.query<IKid[], GetKidGroupAttendanceArgs>({
+      query: ({ kidGroupId, date, churchMeetingId }) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid-group/attendance',
+        method: HttpRequestMethod.GET,
+        params: {
+          kidGroupId,
+          date,
+          churchMeetingId,
+        },
+      }),
+      providesTags: (_result, _error, arg) => [
+        { type: 'KidRegistered', id: arg.kidGroupId || 'ALL' },
+        { type: 'KidRegistered', id: 'LIST' },
+      ],
+    }),
+
+    /**
+     * @deprecated Legacy heavy endpoint. Kept for backward compatibility. Use getKidGroupAttendance instead.
+     */
     getKidGroupRegistered: builder.query<IKid[], GetKidGroupRegisteredArgs>({
       query: ({ kidGroupId, date, churchMeetingId }) => ({
         microservice: MicroserviceEnum.KidChurch,
@@ -205,6 +230,20 @@ export const kidChurchApi = baseApi.injectEndpoints({
         { type: 'Kid', id: 'LIST' },
       ],
     }),
+
+    deleteKidRegistration: builder.mutation<void, string>({
+      query: (id) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: `/kid-registration/${id}`,
+        method: HttpRequestMethod.DELETE,
+        queueIfOffline: true,
+      }),
+      invalidatesTags: [
+        { type: 'KidRegistered', id: 'LIST' },
+        { type: 'KidGroup', id: 'LIST' },
+        { type: 'Kid', id: 'LIST' },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -212,6 +251,8 @@ export const kidChurchApi = baseApi.injectEndpoints({
 export const {
   useGetKidGroupsQuery,
   useLazyGetKidGroupsQuery,
+  useGetKidGroupAttendanceQuery,
+  useLazyGetKidGroupAttendanceQuery,
   useGetKidGroupRegisteredQuery,
   useLazyGetKidGroupRegisteredQuery,
   useGetKidMedicalConditionsQuery,
@@ -226,4 +267,5 @@ export const {
   useLazyGetKidGuardianQuery,
   useCreateKidGuardianMutation,
   useCreateKidRegistrationMutation,
+  useDeleteKidRegistrationMutation,
 } = kidChurchApi;

@@ -240,6 +240,29 @@ const executeApiRequest = async (
         throw new Error(`Invalid HTTP verb: ${method}`);
     }
 
+    // Unbox standard response envelope: { success: true, data: ..., meta: ... }
+    if (
+      response &&
+      response.data &&
+      typeof response.data === 'object' &&
+      response.data.success === true &&
+      'data' in response.data
+    ) {
+      const envelope = response.data;
+      const unboxedData = envelope.data;
+      const meta = envelope.meta;
+
+      // If payload has pagination metadata, merge onto unboxed data if object (non-array)
+      // so legacy thunks expecting response.data.totalPages or total still find them
+      if (meta && typeof unboxedData === 'object' && unboxedData !== null && !Array.isArray(unboxedData)) {
+        Object.assign(unboxedData, meta);
+      }
+
+      response.data = unboxedData;
+      (response as any).meta = meta;
+      (response as any).rawEnvelope = envelope;
+    }
+
     // Save successful GET response in memory cache
     if (cacheKey && response && response.status >= 200 && response.status < 300) {
       memoryHttpCache.set(cacheKey, response);
@@ -247,6 +270,13 @@ const executeApiRequest = async (
 
     return response;
   } catch (error: any) {
+    if (error?.response?.data?.error) {
+      const prob = error.response.data.error;
+      error.code = prob.code || error.code;
+      error.detail = prob.detail || prob.message;
+      error.problemDetails = prob;
+    }
+
     if (error?.response?.status === 401) {
       // 1. Never treat /user/login 401 (invalid credentials) as session expiration
       if (url.includes('/user/login')) {
