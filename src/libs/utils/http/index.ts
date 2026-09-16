@@ -156,6 +156,10 @@ const executeApiRequest = async (
   options: ApiRequestOptions = {},
 ): Promise<AxiosResponse<any, any>> => {
   let { headers = {} } = options;
+  headers = {
+    'x-api-envelope': 'true',
+    ...headers,
+  };
   const { params = {}, data = {}, responseType, cache, forceRefresh } = options;
 
   const isAuthEndpoint =
