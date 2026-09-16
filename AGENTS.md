@@ -35,10 +35,22 @@
   - `src/components/common`: ErrorBoundary, NetworkStatusBanner.
 - `src/libs` contains shared logic, types, state, and utilities:
   - `src/libs/state/redux`: Slices, thunks, store configuration, and persistence.
-  - `src/libs/utils`: HTTP client, Bluetooth printer drivers, date/text formatting, auth/biometrics, cache control.
+  - `src/libs/state/redux/api`: RTK Query base and domain APIs (`baseApi`, `kidChurchApi`, `churchApi`).
+  - `src/libs/utils`: HTTP client, Bluetooth printer drivers, date/text formatting, auth/biometrics, cache control, offline queue.
   - `src/libs/hooks`: Navigation guards, modal controls, and meeting status hooks.
   - `src/libs/models`: TypeScript domain interfaces and Redux entity definitions.
 - `src/services` contains specialized API services.
+
+## State Management Architecture & Progressive RTK Query Migration
+
+- **Separación Estricta de Estado**:
+  - **Estado de Servidor (*Server State* - 100% RTK Query)**: Toda petición de lectura (queries) o mutación contra los microservicios vive en `src/libs/state/redux/api/` (`baseApi`, `kidChurchApi`, `churchApi`). Aprovecha el etiquetado declarativo (`tagTypes`), deduplicación de peticiones en vuelo, auto-invalidación, refetch ante reconexión y sincronización de cola offline.
+  - **Estado de Cliente y Sesión (*Client State* - Redux Slices)**: Reservado **única y exclusivamente** para preferencias locales del dispositivo y contexto de sesión persistido (`authSlice` con tokens/perfil, `printerModeSlice`, `volunteerContextSlice`, selección activa de reunión/sede). Queda prohibido mezclar lógica de fetching de servidor en estos slices.
+- **Regla de Migración Progresiva (Obligatoria para la IA)**:
+  - **Flujos y pantallas nuevas**: DEBEN crearse consumiendo directamente los hooks autogenerados de RTK Query (`useGet...Query`, `use...Mutation`). PROHIBIDO crear nuevos `createAsyncThunk` o nuevos slices para datos de servidor.
+  - **Flujos y pantallas existentes en mantenimiento**: Cada vez que se actualice o modifique un componente existente, se debe reemplazar progresivamente su `dispatch(Thunk)` y `useAppSelector` de datos por el hook de RTK Query correspondiente.
+  - **Extinción ordenada de código heredado**: Una vez que un `*.thunk.ts` o slice de datos deje de tener componentes dependientes, se retirará limpiamente de `store.ts`.
+
 
 ## UI/UX Guidelines
 

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { RefreshCw, Search, Users, AlertCircle, Sparkles, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -8,8 +8,10 @@ import Alert from '@/components/ui/Alert';
 import Input from '@/components/ui/Input';
 import TagKidGroup from '@/components/ui/TagKidGroup';
 import KidDetailsDrawer from '@/components/modal/KidDetailsDrawer';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetKidGroups, GetKidGroupRegistered } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
+import {
+  useGetKidGroupsQuery,
+  useGetKidGroupRegisteredQuery,
+} from '@/libs/state/redux/api/kidChurchApi';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
@@ -20,20 +22,15 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
 /**
  * Main dashboard for the kids ministry (Coordinators, Supervisors, Volunteers).
- * Displays live attendance statistics per classroom and registered kids for today's service.
+ * Displays live attendance statistics per classroom and registered kids for today's service
+ * powered by RTK Query declarative caching and auto-revalidation.
  *
  * @returns {JSX.Element}
  */
 const KidChurchDashboard: React.FC = () => {
-  const dispatch = useAppDispatch();
   const { currentMeeting, currentCampus, isConfigured } = useChurchMeetingStatus();
   const kidsClassroomsName = useKidsTerm('classrooms');
   const kidsModuleName = useKidsTerm('module_alias');
-
-  const { data: kids, loading } = useAppSelector((state) => state.kidGroupRegisteredSlice);
-  const { data: kidGroups, loading: loadingKidGroups } = useAppSelector(
-    (state) => state.kidGroupSlice,
-  );
 
   const [searchText, setSearchText] = useState('');
   const [selectedKidGroupId, setSelectedKidGroupId] = useState<string>('');
@@ -41,6 +38,37 @@ const KidChurchDashboard: React.FC = () => {
   const [openKidDrawer, setOpenKidDrawer] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const searchInputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // RTK Query: Classroom list with tag-based caching
+  const {
+    data: kidGroups = [],
+    isLoading: loadingKidGroups,
+    refetch: refetchKidGroups,
+  } = useGetKidGroupsQuery();
+
+  const activeKidGroupId =
+    kidGroups.length === 1 ? kidGroups[0].id : selectedKidGroupId || undefined;
+
+  const todayIso = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
+
+  // RTK Query: Live registered kids query with automatic tag invalidation
+  const {
+    data: kids = [],
+    isLoading: loadingKids,
+    isFetching: fetchingKids,
+    refetch: refetchRegisteredKids,
+  } = useGetKidGroupRegisteredQuery(
+    {
+      date: todayIso,
+      kidGroupId: activeKidGroupId,
+      churchMeetingId: currentMeeting?.id,
+    },
+    {
+      skip: !currentMeeting?.id,
+    },
+  );
+
+  const loading = loadingKids || (fetchingKids && kids.length === 0);
 
   const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
 
@@ -59,52 +87,14 @@ const KidChurchDashboard: React.FC = () => {
     };
   }, [loadingKidGroups, kidGroups.length, setSearchAvailable, registerSearchFocusHandler]);
 
-  // 1. Initial load: Invoke GET /kid-groups with the user's token (force: true to resolve permissions)
-  useEffect(() => {
-    dispatch(GetKidGroups({ force: true }));
-  }, [dispatch]);
-
-  // 2. Auto-preselect when user is Supervisor with a single assigned classroom (length === 1)
+  // Auto-preselect when user is Supervisor with a single assigned classroom (length === 1)
   useEffect(() => {
     if (kidGroups.length === 1 && selectedKidGroupId !== kidGroups[0].id) {
       setSelectedKidGroupId(kidGroups[0].id);
     }
   }, [kidGroups, selectedKidGroupId]);
 
-  // Helper to fetch registered kids with specific classroom query
-  const fetchRegisteredKids = useCallback(
-    async (targetKidGroupId?: string) => {
-      if (!currentMeeting?.id) return;
-      try {
-        await dispatch(
-          GetKidGroupRegistered({
-            date: new Date(),
-            kidGroupId: targetKidGroupId,
-          }),
-        ).unwrap();
-      } catch (err: any) {
-        if (err?.status === 403 || (typeof err?.message === 'string' && err.message.includes('permiso'))) {
-          toast.error('No tienes permiso para supervisar este salón');
-        } else {
-          toast.error(err?.message || 'Error al actualizar los registros');
-        }
-      }
-    },
-    [dispatch, currentMeeting?.id],
-  );
-
-  // 3. Query kids when meeting or classroom selection changes
-  useEffect(() => {
-    if (currentMeeting?.id) {
-      if (kidGroups.length === 1) {
-        fetchRegisteredKids(kidGroups[0].id);
-      } else if (kidGroups.length > 1) {
-        fetchRegisteredKids(selectedKidGroupId || undefined);
-      }
-    }
-  }, [currentMeeting?.id, selectedKidGroupId, kidGroups, fetchRegisteredKids]);
-
-  // Listen for BottomNav tab click to reset search, filters and refresh classroom registrations
+  // Listen for BottomNav tab click to reset search and filters
   useEffect(() => {
     const handleReset = () => {
       setSearchText('');
@@ -114,25 +104,22 @@ const KidChurchDashboard: React.FC = () => {
       window.scrollTo({ top: 0, behavior: 'smooth' });
       const mainEl = document.querySelector('main');
       if (mainEl) mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-
-      if (currentMeeting?.id) {
-        const targetId = kidGroups.length === 1 ? kidGroups[0].id : '';
-        fetchRegisteredKids(targetId || undefined);
-      }
+      void refetchRegisteredKids();
     };
 
     window.addEventListener('reset-kid-church-dashboard', handleReset);
     return () => {
       window.removeEventListener('reset-kid-church-dashboard', handleReset);
     };
-  }, [currentMeeting?.id, kidGroups, fetchRegisteredKids]);
+  }, [kidGroups.length, refetchRegisteredKids]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      const targetId = kidGroups.length === 1 ? kidGroups[0].id : selectedKidGroupId;
-      await fetchRegisteredKids(targetId || undefined);
+      await Promise.all([refetchKidGroups(), refetchRegisteredKids()]);
       toast.success('Registros de salones actualizados');
+    } catch {
+      toast.error('Error al actualizar los registros');
     } finally {
       setIsRefreshing(false);
     }

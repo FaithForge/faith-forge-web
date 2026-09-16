@@ -17,8 +17,10 @@ import { toast } from 'sonner';
 import { useForm, Controller } from 'react-hook-form';
 
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
-import { GetKidMedicalConditions } from '@/libs/state/redux/thunks/kid-church/kid-medical-condition.thunk';
+import {
+  useGetKidGroupsQuery,
+  useGetKidMedicalConditionsQuery,
+} from '@/libs/state/redux/api/kidChurchApi';
 import { GetKidGuardian, CreateKidGuardian } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
 import { CreateKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
@@ -66,8 +68,8 @@ const NewKidView = () => {
   stepRef.current = step;
   isUploadingRef.current = isUploading;
 
-  const kidGroupSlice = useAppSelector((state) => state.kidGroupSlice);
-  const kidMedicalConditionSlice = useAppSelector((state) => state.kidMedicalConditionSlice);
+  const { data: kidGroups = [] } = useGetKidGroupsQuery();
+  const { data: kidMedicalConditions = [] } = useGetKidMedicalConditionsQuery();
   const kidGuardianSlice = useAppSelector((state) => state.kidGuardianSlice);
   const kidSlice = useAppSelector((state) => state.kidSlice);
 
@@ -159,8 +161,6 @@ const NewKidView = () => {
   });
 
   useEffect(() => {
-    dispatch(GetKidGroups({}));
-    dispatch(GetKidMedicalConditions());
     dispatch(cleanCurrentKidGuardian());
     return () => { dispatch(cleanCurrentKidGuardian()); };
   }, [dispatch]);
@@ -404,10 +404,10 @@ const NewKidView = () => {
   };
 
   const staticKidGroups = useMemo(() => {
-    return (kidGroupSlice.data || []).filter(
+    return kidGroups.filter(
       (g: any) => g.type !== KidGroupType.SPECIAL,
     );
-  }, [kidGroupSlice.data]);
+  }, [kidGroups]);
 
   return (
     <div className="min-h-full bg-background flex flex-col flex-1 pb-6 sm:pb-8">
@@ -632,7 +632,7 @@ const NewKidView = () => {
                     label="Condición Médica"
                     options={[
                       { id: '', name: 'Ninguna' },
-                      ...(kidMedicalConditionSlice.data || [])
+                      ...kidMedicalConditions,
                     ]}
                     value={field.value}
                     onChange={field.onChange}

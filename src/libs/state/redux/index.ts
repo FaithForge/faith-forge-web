@@ -23,3 +23,4 @@ export * from './thunks/kid-church/kid-registration.thunk';
 export * from './thunks/kid-church/kid.thunk';
 export * from './thunks/user/auth.thunk';
 export * from './thunks/user/user.thunk';
+export * from './api';

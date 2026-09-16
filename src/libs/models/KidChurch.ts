@@ -169,7 +169,12 @@ export enum KidGroupType {
   SPECIAL = 'SPECIAL',
 }
 
-// GET
+export interface IKidCreator {
+  id: string;
+  firstName: string;
+  lastName: string;
+  groupName?: string;
+}
 
 export interface IKid {
   id: string;
@@ -189,6 +194,8 @@ export interface IKid {
   observations?: string;
   medicalCondition?: IKidMedicalCondition;
   relations?: IKidGuardian[];
+  createdById?: string;
+  createdBy?: IKidCreator;
 }
 
 export interface IKidGuardian {

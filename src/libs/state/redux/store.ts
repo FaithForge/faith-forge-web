@@ -10,6 +10,8 @@ import {
   persistStore,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import { setupListeners } from '@reduxjs/toolkit/query';
+import { baseApi } from './api/baseApi';
 import adminChurchMeetingSlice from './slices/church/adminChurchMeeting.slice';
 import churchCampusSlice from './slices/church/churchCampus.slice';
 import churchMeetingSlice from './slices/church/churchMeeting.slice';
@@ -33,6 +35,7 @@ import editUserSlice from './slices/user/editUser.slice';
 import userSlice from './slices/user/users.slice';
 
 const reducers = combineReducers({
+  [baseApi.reducerPath]: baseApi.reducer,
   adminChurchMeetingSlice,
   churchCampusSlice,
   churchMeetingSlice,
@@ -82,9 +85,18 @@ export const store = configureStore({
       serializableCheck: {
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
       },
-    }),
+    }).concat(baseApi.middleware),
   devTools: process.env.NODE_ENV !== 'production',
 });
+
+setupListeners(store.dispatch);
+
+// Auto-invalidate relevant RTK Query tags when offline queue syncs
+if (typeof window !== 'undefined') {
+  window.addEventListener('offlineQueue:synced', () => {
+    store.dispatch(baseApi.util.invalidateTags(['KidGroup', 'KidRegistered', 'ChurchMeeting']));
+  });
+}
 
 export const persistor = persistStore(store);
 export type RootState = ReturnType<typeof store.getState>;

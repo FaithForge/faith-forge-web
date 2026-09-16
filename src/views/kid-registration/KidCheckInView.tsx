@@ -25,6 +25,8 @@ import { parseRegistrationLog } from '@/libs/utils/registrationLog';
 import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday, toDateOnlyInputValue } from '@/libs/utils/date';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
+import { VolunteerRole } from '@/libs/models';
+import { AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
@@ -47,6 +49,23 @@ const KidCheckInView = () => {
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
+  const user = useAppSelector(state => state.authSlice.user);
+  const currentRole = useAppSelector(state => state.authSlice.currentRole);
+  const activeVolunteerRole = useAppSelector(
+    state => state.volunteerContextSlice.activeVolunteerRole
+  );
+  const userRoles = (user?.roles as AppRole[]) || [];
+
+  const canViewCreatorInfo =
+    userRoles.includes(UserRole.SUPER_ADMIN) ||
+    userRoles.includes(UserRole.ADMIN) ||
+    userRoles.includes(UserRole.KID_REGISTER_ADMIN) ||
+    currentRole === UserRole.SUPER_ADMIN ||
+    currentRole === UserRole.ADMIN ||
+    (currentRole as any) === ChurchRole.MINISTRY_ADMIN ||
+    currentRole === UserRole.KID_REGISTER_ADMIN ||
+    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
+
   const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor } = useChurchMeetingStatus();
 
   const [selectedGuardian, setSelectedGuardian] = useState<string>('');
@@ -634,6 +653,20 @@ const KidCheckInView = () => {
                     <span className="font-semibold text-gray-500 mb-1">Observaciones generales</span>
                     <span className="font-medium text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs leading-relaxed">
                       {kid.observations}
+                    </span>
+                  </div>
+                )}
+
+                {canViewCreatorInfo && kid?.createdBy && (
+                  <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                    <span className="font-semibold text-gray-500">Creado por</span>
+                    <span className="font-bold text-gray-800 text-right flex items-center justify-end gap-1.5 flex-wrap">
+                      <span>{capitalizeWords(`${kid.createdBy.firstName || ''} ${kid.createdBy.lastName || ''}`.trim())}</span>
+                      {kid.createdBy.groupName && (
+                        <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-gray-100 text-gray-700 border border-gray-200 shrink-0">
+                          {kid.createdBy.groupName}
+                        </span>
+                      )}
                     </span>
                   </div>
                 )}

@@ -1,5 +1,18 @@
 [
   {
+    "version": "3.5.0",
+    "type": "minor",
+    "timestamp": "2026-09-16T20:54:22.758Z",
+    "dateFormatted": "16/09/2026 03:54 PM",
+    "title": "Información de autoría y sincronización continua",
+    "changes": [
+      "Los administradores y coordinadores de área ahora pueden visualizar quién creó el registro de un niño junto a su grupo correspondiente.",
+      "Restricción de acceso para mantener la privacidad de la información en roles operativos y de consulta.",
+      "Mayor rapidez y actualización inmediata en los listados de salones y asistencia en tiempo real.",
+      "Guardado local preventivo y sincronización automática sin pérdida de datos al restablecerse la conexión a internet."
+    ]
+  },
+  {
     "version": "3.4.1",
     "type": "patch",
     "timestamp": "2026-09-15T22:29:14.318Z",
