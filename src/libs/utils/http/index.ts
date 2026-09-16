@@ -252,13 +252,27 @@ const executeApiRequest = async (
       const unboxedData = envelope.data;
       const meta = envelope.meta;
 
-      // If payload has pagination metadata, merge onto unboxed data if object (non-array)
-      // so legacy thunks expecting response.data.totalPages or total still find them
-      if (meta && typeof unboxedData === 'object' && unboxedData !== null && !Array.isArray(unboxedData)) {
-        Object.assign(unboxedData, meta);
+      const isPaginatedMeta =
+        meta &&
+        (typeof meta.totalPages !== 'undefined' ||
+          typeof meta.total !== 'undefined' ||
+          typeof meta.currentPage !== 'undefined' ||
+          typeof meta.page !== 'undefined');
+
+      if (Array.isArray(unboxedData) && isPaginatedMeta) {
+        response.data = {
+          data: unboxedData,
+          ...meta,
+        };
+      } else {
+        // If payload has pagination metadata, merge onto unboxed data if object (non-array)
+        // so legacy thunks expecting response.data.totalPages or total still find them
+        if (meta && typeof unboxedData === 'object' && unboxedData !== null && !Array.isArray(unboxedData)) {
+          Object.assign(unboxedData, meta);
+        }
+        response.data = unboxedData;
       }
 
-      response.data = unboxedData;
       (response as any).meta = meta;
       (response as any).rawEnvelope = envelope;
     }
