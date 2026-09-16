@@ -405,7 +405,7 @@ const NewKidView = () => {
 
   const staticKidGroups = useMemo(() => {
     return (kidGroupSlice.data || []).filter(
-      (g: any) => g.type !== KidGroupType.SPECIAL && !g.name?.toLowerCase().includes('yo soy iglekids')
+      (g: any) => g.type !== KidGroupType.SPECIAL,
     );
   }, [kidGroupSlice.data]);
 

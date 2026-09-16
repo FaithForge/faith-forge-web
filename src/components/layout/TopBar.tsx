@@ -155,10 +155,7 @@ export const getRoleIcon = (roleId?: string, label?: string, appTitle?: string) 
 /** Checks if a service area belongs to registration */
 const isAreaRegistration = (area?: { scope?: string; name?: string }) => {
   if (!area) return false;
-  return (
-    area.scope === 'KID_REGISTRATION' ||
-    (area.name || '').toLowerCase().includes('regi')
-  );
+  return area.scope === 'KID_REGISTRATION';
 };
 
 /** Checks if a role is a system-level admin role (which never belongs to a group) */
@@ -292,9 +289,7 @@ const TopBar = () => {
     );
     dispatch(setActiveVolunteerRole(primaryRole));
 
-    const isKidRegistration =
-      primaryArea?.scope === 'KID_REGISTRATION' ||
-      (primaryArea?.name || '').toLowerCase().includes('regi');
+    const isKidRegistration = primaryArea?.scope === 'KID_REGISTRATION';
 
     let targetRole: AppRole;
     const isCurrentRegistrationRole =
@@ -389,9 +384,7 @@ const TopBar = () => {
     currentVolunteerCampus?.groups?.forEach((group) => {
       const primaryArea = group.areas?.[0];
       const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
-      const isGroupRegistration =
-        primaryArea?.scope === 'KID_REGISTRATION' ||
-        (primaryArea?.name || '').toLowerCase().includes('regi');
+      const isGroupRegistration = primaryArea?.scope === 'KID_REGISTRATION';
       let targetRole: AppRole;
       if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
         // GROUP_COORDINATOR manages a specific group, never the full area → always KID_GROUP_ADMIN
@@ -876,9 +869,7 @@ const TopBar = () => {
                         const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
                         const isSupervisor = primaryRole === VolunteerRole.SUPERVISOR;
                         const isCoordinator = primaryRole === VolunteerRole.GROUP_COORDINATOR;
-                        const isGroupRegistration =
-                          primaryArea?.scope === 'KID_REGISTRATION' ||
-                          (primaryArea?.name || '').toLowerCase().includes('regi');
+                        const isGroupRegistration = primaryArea?.scope === 'KID_REGISTRATION';
                         const roleLabel = isSupervisor
                           ? 'Supervisor'
                           : isCoordinator
@@ -965,11 +956,12 @@ const TopBar = () => {
                             const isRoleAdmin = isSystemAdminRole(role.id, role.appTitle);
                             const isRegistrationAreaCoord = role.id === UserRole.KID_REGISTER_ADMIN;
                             const isCoordinatorRole =
-                              role.label.includes('Coordinador') ||
                               role.id === ChurchRole.MINISTRY_ADMIN ||
                               role.id === UserRole.KID_REGISTER_ADMIN ||
                               role.id === UserRole.KID_GROUP_ADMIN;
-                            const isSupervisorRole = role.label === 'Supervisor';
+                            const isSupervisorRole =
+                              role.id === UserRole.KID_REGISTER_SUPERVISOR ||
+                              role.id === UserRole.KID_GROUP_SUPERVISOR;
                             const RoleIcon = role.appTitle === 'Admin'
                               ? Sliders
                               : isCoordinatorRole

@@ -69,6 +69,7 @@ const persistConfig = {
     'printerModeSlice',
     'kidGroupSlice',
     'kidMedicalConditionSlice',
+    'ministrySlice',
   ],
 };
 

@@ -189,7 +189,7 @@ const UpdateKidView: React.FC = () => {
 
   const kidGroupOptions = useMemo(() => {
     return (kidGroupSlice.data || [])
-      .filter((g: any) => g.type !== KidGroupType.SPECIAL && !g.name?.toLowerCase().includes('yo soy iglekids'))
+      .filter((g: any) => g.type !== KidGroupType.SPECIAL)
       .map((g: any) => ({
         id: g.id,
         name: g.name,

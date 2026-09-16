@@ -77,14 +77,17 @@ export const TerminologyDrawer: React.FC<TerminologyDrawerProps> = ({
   const [kidsTerms, setKidsTerms] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
+
   const kidsMinistry = useMemo(() => {
-    return ministries.find(
-      (m) =>
-        m.type === MinistryType.KIDS ||
-        m.name.toLowerCase().includes('niño') ||
-        m.name.toLowerCase().includes('kid'),
-    );
-  }, [ministries]);
+    if (currentCampus?.id) {
+      const match = ministries.find(
+        (m) => m.churchCampusId === currentCampus.id && m.type === MinistryType.KIDS,
+      );
+      if (match) return match;
+    }
+    return ministries.find((m) => m.type === MinistryType.KIDS);
+  }, [ministries, currentCampus?.id]);
 
   // Asegura la carga de datos maestros al abrir el drawer
   useEffect(() => {

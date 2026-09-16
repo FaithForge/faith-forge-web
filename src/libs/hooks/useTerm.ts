@@ -27,13 +27,22 @@ export function getChurchTerm(
  *
  * @param {KidsTermKey} key - Clave del término de niños (ej. 'teacher', 'registration', 'guardian').
  * @param {Record<string, string>} [overrides] - Overrides directos del ministerio.
+ * @param {string} [ministryName] - Nombre del ministerio como fallback de module_alias.
  * @returns {string} El término personalizado o el valor predeterminado de escuela infantil.
  */
 export function getKidsTerm(
   key: KidsTermKey,
   overrides?: Record<string, string>,
+  ministryName?: string,
 ): string {
-  return overrides?.[key] || DEFAULT_MINISTRY_TERMINOLOGY.KIDS[key] || key;
+  if (overrides?.[key]) {
+    return overrides[key];
+  }
+  // Si no hay override específico de module_alias pero el ministerio tiene nombre configurado en BD, usarlo
+  if (key === 'module_alias' && ministryName?.trim()) {
+    return ministryName.trim();
+  }
+  return DEFAULT_MINISTRY_TERMINOLOGY.KIDS[key] || key;
 }
 
 /**
@@ -54,22 +63,76 @@ export function useChurchTerm(key: ChurchTermKey): string {
 
 /**
  * Hook reactivo para obtener términos del Ministerio de Niños.
- * Detecta automáticamente el ministerio de tipo KIDS en Redux y aplica sus personalizaciones.
+ * Detecta automáticamente el ministerio de tipo KIDS de la sede activa en Redux y aplica sus personalizaciones.
+ * Incluye resolución contextual por sede, fallback al nombre del ministerio y fallback inteligente a áreas de registro.
  *
  * @param {KidsTermKey} key - Clave del término de niños (ej. 'teacher', 'registration', 'guardian', 'classroom').
- * @returns {string} Término del ministerio de niños (ej. 'Servidor(a)' o 'Registro de niños').
+ * @returns {string} Término del ministerio de niños (ej. 'Iglekids', 'Regikids', 'Servidor(a)').
  */
 export function useKidsTerm(key: KidsTermKey): string {
-  const kidsMinistry = useSelector((state: RootState) =>
-    state.ministrySlice.ministries.find(
-      (m) =>
-        m.type === MinistryType.KIDS ||
-        m.name.toLowerCase().includes('niño') ||
-        m.name.toLowerCase().includes('kid'),
-    ),
+  const activeCampusId = useSelector(
+    (state: RootState) =>
+      state.churchCampusSlice.current?.id ||
+      state.volunteerContextSlice.activeCampusId,
   );
 
-  return getKidsTerm(key, kidsMinistry?.terminologyOverrides);
+  const volunteerCampuses = useSelector(
+    (state: RootState) => state.volunteerContextSlice.campuses || [],
+  );
+
+  const kidsMinistry = useSelector((state: RootState) => {
+    const ministries = state.ministrySlice.ministries || [];
+
+    // 1. Priorizar el ministerio KIDS de la sede activa
+    if (activeCampusId) {
+      const campusMatch = ministries.find(
+        (m) => m.churchCampusId === activeCampusId && m.type === MinistryType.KIDS,
+      );
+      if (campusMatch) return campusMatch;
+    }
+
+    // 2. Fallback a cualquier ministerio KIDS cargado
+    return ministries.find((m) => m.type === MinistryType.KIDS);
+  });
+
+  // 3. Fallback de nombre de ministerio si Redux aún no ha hidratado ministries
+  const fallbackMinistryName = useSelector((state: RootState) => {
+    if (kidsMinistry?.name) return kidsMinistry.name;
+    const currentVolunteerCampus =
+      volunteerCampuses.find((c) => c.id === activeCampusId) ||
+      volunteerCampuses[0];
+    if (currentVolunteerCampus?.ministryCoordinator?.ministryName) {
+      return currentVolunteerCampus.ministryCoordinator.ministryName;
+    }
+    return undefined;
+  });
+
+  // 4. Fallback de 'registration' si hay un área con scope KID_REGISTRATION en el contexto del campus
+  const registrationAreaFallback = useSelector((state: RootState) => {
+    if (key !== 'registration') return undefined;
+    const currentVolunteerCampus =
+      volunteerCampuses.find((c) => c.id === activeCampusId) ||
+      volunteerCampuses[0];
+    if (currentVolunteerCampus) {
+      for (const group of currentVolunteerCampus.groups || []) {
+        const regArea = group.areas?.find(
+          (a) => a.scope === 'KID_REGISTRATION',
+        );
+        if (regArea?.name) return regArea.name;
+      }
+      const coordArea = currentVolunteerCampus.areaCoordinates?.find(
+        (a) => a.scope === 'KID_REGISTRATION',
+      );
+      if (coordArea?.name) return coordArea.name;
+    }
+    return undefined;
+  });
+
+  const resolved = getKidsTerm(key, kidsMinistry?.terminologyOverrides, fallbackMinistryName);
+  if (key === 'registration' && resolved === DEFAULT_MINISTRY_TERMINOLOGY.KIDS.registration && registrationAreaFallback) {
+    return registrationAreaFallback;
+  }
+  return resolved;
 }
 
 /**

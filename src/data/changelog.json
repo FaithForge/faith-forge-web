@@ -8,7 +8,8 @@
     "changes": [
       "Los nombres en el log de registro ahora se muestran correctamente en mayúsculas iniciales en lugar de todo en mayúsculas.",
       "El rol de Coordinador de Grupo ya no aparece incorrectamente como Coordinador de Área en el selector de roles.",
-      "El rol de Servidor sin grupo asignado ahora muestra correctamente la etiqueta de Apoyo en el menú de roles."
+      "El rol de Servidor sin grupo asignado ahora muestra correctamente la etiqueta de Apoyo en el menú de roles.",
+      "Sincronización automática de los nombres y términos personalizados del ministerio según la sede activa al iniciar la sesión."
     ]
   },
   {

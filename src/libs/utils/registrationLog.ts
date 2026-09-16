@@ -42,9 +42,7 @@ interface BuildRegistrationLogParams {
  */
 const isRegistrationArea = (area: any): boolean => {
   if (!area) return false;
-  const scope = (area.scope || '').toString().toUpperCase();
-  const name = (area.name || '').toLowerCase();
-  return scope === 'KID_REGISTRATION' || name.includes('regi');
+  return (area.scope || '').toString().toUpperCase() === 'KID_REGISTRATION';
 };
 
 /**

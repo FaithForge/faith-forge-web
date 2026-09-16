@@ -12,6 +12,7 @@ import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth
 import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
 import { triggerSilentRefresh } from '@/libs/utils/http';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
+import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 import { APP_ROUTES } from '@/config/routes';
@@ -57,7 +58,7 @@ const MainLayoutContent = () => {
     dispatch(FetchMyVolunteerPermissions());
   }, [token, dispatch]);
 
-  // Automatically refresh church campuses and active meetings from BE on mount/focus
+  // Automatically refresh church campuses, active meetings, and ministries from BE on mount/focus
   useEffect(() => {
     if (!token) return;
 
@@ -69,6 +70,14 @@ const MainLayoutContent = () => {
           state: ChurchMeetingStateEnum.ACTIVE,
         })
       );
+      dispatch(
+        GetMinistries({
+          churchCampusId: currentCampus.id,
+          force: true,
+        })
+      );
+    } else {
+      dispatch(GetMinistries({ force: true }));
     }
   }, [token, currentCampus?.id, dispatch]);
 

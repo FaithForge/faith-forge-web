@@ -222,18 +222,15 @@ export const SupervisorTeamView: React.FC = () => {
   const activeAreaId = primaryArea?.id;
   const areaName = primaryArea?.name || 'Mi Área';
 
-  // Area Coordinator context: find the specific Area (e.g. Registro de Niños)
-  const areaCoord = activeCampusData?.areaCoordinates?.find((a) => {
-    const n = a.name.toLowerCase();
-    return n.includes('regi') || n.includes('registro');
-  }) || activeCampusData?.areaCoordinates?.[0];
+  // Area Coordinator context: find the specific Area by scope (KID_REGISTRATION)
+  const areaCoord =
+    activeCampusData?.areaCoordinates?.find(
+      (a) => a.scope === MinistryAreaScope.KID_REGISTRATION,
+    ) || activeCampusData?.areaCoordinates?.[0];
 
   const fallbackArea = activeCampusData?.groups
     .flatMap((g) => g.areas)
-    .find((a) => {
-      const n = a.name.toLowerCase();
-      return n.includes('regi') || n.includes('registro');
-    });
+    .find((a) => a.scope === MinistryAreaScope.KID_REGISTRATION);
 
   const effectiveAreaId = isAreaCoordinator
     ? (areaCoord?.id || fallbackArea?.id || activeAreaId)

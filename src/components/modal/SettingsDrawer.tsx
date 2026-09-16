@@ -114,15 +114,13 @@ const inferRoleFromGroup = (group: IVolunteerGroupConfigContext): AppRole | null
   const primaryArea = group.areas[0];
   const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
 
-  const isRegistration =
-    primaryArea?.scope === 'KID_REGISTRATION' ||
-    (primaryArea?.name || '').toLowerCase().includes('regi');
+  const isRegistration = primaryArea?.scope === 'KID_REGISTRATION';
 
   if (primaryRole === VolunteerRole.SUPERVISOR) {
     return isRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
   }
   if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-    return isRegistration ? UserRole.KID_REGISTER_ADMIN : UserRole.KID_GROUP_ADMIN;
+    return UserRole.KID_GROUP_ADMIN;
   }
   return isRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
 };
