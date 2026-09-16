@@ -55,7 +55,7 @@ const KidChurchDashboard: React.FC = () => {
 
   // RTK Query: Live registered kids query with automatic tag invalidation
   const {
-    data: kids = [],
+    data: rawKids,
     isLoading: loadingKids,
     isFetching: fetchingKids,
     refetch: refetchAttendance,
@@ -69,6 +69,19 @@ const KidChurchDashboard: React.FC = () => {
       skip: !currentMeeting?.id,
     },
   );
+
+  const kids: IKid[] = useMemo(() => {
+    if (Array.isArray(rawKids)) return rawKids;
+    if (typeof rawKids === 'string') {
+      try {
+        const parsed = JSON.parse(rawKids);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [rawKids]);
 
   // Realtime Live Sync: Receives SSE notifications on check-in/check-out and updates lists instantly
   useKidChurchLiveSync({
