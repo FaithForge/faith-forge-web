@@ -40,6 +40,26 @@ const versionPlugin = () => ({
   },
 });
 
+const prependSwPushPlugin = () => ({
+  name: 'prepend-sw-push',
+  apply: 'build' as const,
+  enforce: 'post' as const,
+  closeBundle: {
+    order: 'post' as const,
+    async handler() {
+      const swPath = path.resolve(__dirname, 'dist/sw.js');
+      if (fs.existsSync(swPath)) {
+        const original = fs.readFileSync(swPath, 'utf-8');
+        const importStatement = "importScripts('/sw-push.js');\n";
+        if (!original.startsWith(importStatement)) {
+          fs.writeFileSync(swPath, importStatement + original, 'utf-8');
+          console.log('✓ Successfully prepended importScripts to dist/sw.js');
+        }
+      }
+    },
+  },
+});
+
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
@@ -52,7 +72,6 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
-        importScripts: ['/sw-push.js'],
       },
       includeAssets: ['favicon.ico', 'logo-iglekids.png', 'icons/*.png'],
       devOptions: {
@@ -96,6 +115,7 @@ export default defineConfig({
         ],
       },
     }),
+    prependSwPushPlugin(),
   ],
   resolve: {
     alias: {

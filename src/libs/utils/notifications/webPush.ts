@@ -86,9 +86,24 @@ export const subscribeToPushNotifications = async (
   try {
     const registration = await navigator.serviceWorker.ready;
     let subscription = await registration.pushManager.getSubscription();
+    const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
+
+    if (subscription) {
+      const currentRawKey = subscription.options?.applicationServerKey;
+      if (currentRawKey) {
+        const currentBytes = new Uint8Array(currentRawKey);
+        const keysMatch =
+          currentBytes.length === applicationServerKey.length &&
+          currentBytes.every((b, idx) => b === applicationServerKey[idx]);
+
+        if (!keysMatch) {
+          await subscription.unsubscribe();
+          subscription = null;
+        }
+      }
+    }
 
     if (!subscription) {
-      const applicationServerKey = urlBase64ToUint8Array(vapidPublicKey);
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey,
