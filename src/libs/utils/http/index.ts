@@ -118,7 +118,13 @@ export const triggerSilentRefresh = async (): Promise<string> => {
         { timeout: 15000 }
       );
 
-      const { token: newToken, refreshToken: newRefreshToken } = response.data;
+      const raw = response.data;
+      const payload =
+        raw && typeof raw === 'object' && 'data' in raw && raw.data
+          ? raw.data
+          : raw;
+      const newToken = payload?.token;
+      const newRefreshToken = payload?.refreshToken;
       if (!newToken) {
         throw new Error('Invalid refresh token response');
       }
@@ -204,8 +210,15 @@ const executeApiRequest = async (
           Authorization: `Bearer ${freshToken}`,
         };
       } catch (err: any) {
-        // If refresh token is definitively invalid/expired (401), emit unauthorized
-        if (err?.response?.status === 401) {
+        const isNetworkDrop =
+          (typeof navigator !== 'undefined' && !navigator.onLine) ||
+          err?.code === 'ERR_NETWORK' ||
+          err?.message?.includes('Network Error') ||
+          err?.code === 'ECONNABORTED' ||
+          (err?.response?.status && err.response.status >= 500);
+
+        // If refresh token is definitively invalid/expired (401/403), emit unauthorized
+        if (!isNetworkDrop && (err?.response?.status === 401 || err?.response?.status === 403)) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('auth:unauthorized'));
           }
@@ -305,6 +318,15 @@ const executeApiRequest = async (
       if (!isAuthRefreshEndpoint && !options._retry) {
         options._retry = true;
 
+        const currentRefreshToken = getRefreshTokenFn ? getRefreshTokenFn() : undefined;
+        // If there is no refresh token available to rotate, session cannot be recovered
+        if (!currentRefreshToken) {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+          }
+          throw error;
+        }
+
         try {
           const newToken = await triggerSilentRefresh();
           const updatedHeaders = {
@@ -316,9 +338,17 @@ const executeApiRequest = async (
             headers: updatedHeaders,
           });
         } catch (refreshErr: any) {
-          // CRITICAL: Only dispatch unauthorized if the backend explicitly returned HTTP 401.
+          // CRITICAL: Only dispatch unauthorized if the backend rejected authentication,
+          // or if the refresh token is missing/invalid.
           // NEVER log out users on offline states, network drops, timeouts, or 5xx server errors!
-          if (refreshErr?.response?.status === 401) {
+          const isNetworkDrop =
+            (typeof navigator !== 'undefined' && !navigator.onLine) ||
+            refreshErr?.code === 'ERR_NETWORK' ||
+            refreshErr?.message?.includes('Network Error') ||
+            refreshErr?.code === 'ECONNABORTED' ||
+            (refreshErr?.response?.status && refreshErr.response.status >= 500);
+
+          if (!isNetworkDrop) {
             if (typeof window !== 'undefined') {
               window.dispatchEvent(new CustomEvent('auth:unauthorized'));
             }

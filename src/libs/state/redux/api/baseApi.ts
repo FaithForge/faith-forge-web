@@ -96,6 +96,16 @@ export const microserviceBaseQuery: BaseQueryFn<
     const detail: string | undefined =
       problemDetails?.detail || problemDetails?.message || errorObj?.message;
 
+    // Safety net: If an unrecoverable 401 reaches RTK Query, trigger unauthorized session expiration
+    if (
+      (errorObj?.response?.status === 401 || errorObj?.status === 401) &&
+      !url?.includes('/user/login')
+    ) {
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+      }
+    }
+
     return {
       error: {
         status: errorObj?.response?.status,

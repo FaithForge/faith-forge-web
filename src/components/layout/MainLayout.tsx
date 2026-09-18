@@ -95,7 +95,13 @@ const MainLayoutContent = () => {
       if (token && refreshToken && isTokenExpiringSoon(token, 180)) {
         try {
           await triggerSilentRefresh();
-        } catch {
+        } catch (err: any) {
+          const status = err?.response?.status;
+          if (status === 401 || status === 403) {
+            dispatch(logout());
+            toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+            navigate(APP_ROUTES.auth.login, { replace: true });
+          }
           // Silent catch: network drops/offline won't log out users
         }
       }

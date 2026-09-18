@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.5.1",
+    "type": "patch",
+    "timestamp": "2026-09-18T01:48:20.447Z",
+    "dateFormatted": "17/09/2026 08:48 PM",
+    "title": "Mejoras en la renovación y control de sesión",
+    "changes": [
+      "Renovación automática continua de la sesión para evitar interrupciones al navegar o consultar listados",
+      "Redirección inmediata a la pantalla de inicio de sesión con aviso claro cuando la sesión expira definitivamente"
+    ]
+  },
+  {
     "version": "3.5.0",
     "type": "minor",
     "timestamp": "2026-09-16T20:54:22.758Z",

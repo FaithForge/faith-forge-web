@@ -13,6 +13,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout, updateTokens } from '@/libs/state/redux/slices/user/auth.slice';
 import { setHttpAuthHandlers } from '@/libs/utils/http';
 import { store } from '@/libs/state/redux/store';
+import { baseApi } from '@/libs/state/redux/api/baseApi';
 import { userRolesNavBarConfig } from '@/components/layout/TopBar';
 import { useScreenWakeLock } from '@/libs/hooks/useScreenWakeLock';
 import { isRoleEnabled } from '@/config/roles';
@@ -87,6 +88,7 @@ function App() {
 
     const handleUnauthorized = () => {
       dispatch(logout());
+      dispatch(baseApi.util.resetApiState());
       toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
     };
 
