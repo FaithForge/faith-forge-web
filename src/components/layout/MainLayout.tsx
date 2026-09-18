@@ -1,11 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
+import { motion } from 'framer-motion';
 import BottomNav from './BottomNav';
 import TopBar, { userRolesNavBarConfig } from './TopBar';
 import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { SearchScrollProvider, useSearchScroll } from '@/libs/context/SearchScrollContext';
-import { RoleTransitionProvider } from '@/libs/context/RoleTransitionContext';
+import { RoleTransitionProvider, useRoleTransition } from '@/libs/context/RoleTransitionContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
@@ -41,6 +42,7 @@ const MainLayoutContent = () => {
   const mainRef = useRef<HTMLElement>(null);
   const prevPathnameRef = useRef<string>(pathname);
   const { setIsScrolledPastSearch, registerMainContainer } = useSearchScroll();
+  const { isTransitioning } = useRoleTransition();
 
   const { token, refreshToken } = useAppSelector((state) => state.authSlice);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -272,9 +274,15 @@ const MainLayoutContent = () => {
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto relative flex flex-col bg-slate-50 min-h-0"
       >
-        <div className={clsx("flex-1 flex flex-col min-h-0", !isAdminRole ? "pb-32 sm:pb-36" : "pb-4")}>
+        <motion.div
+          key={isTransitioning ? 'role-transitioning' : pathname}
+          initial={isTransitioning ? false : { opacity: 0.35 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          className={clsx("flex-1 flex flex-col min-h-0", !isAdminRole ? "pb-32 sm:pb-36" : "pb-4")}
+        >
           <Outlet />
-        </div>
+        </motion.div>
       </main>
 
 
