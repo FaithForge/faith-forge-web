@@ -30,6 +30,7 @@ import {
   getExistingPushSubscription,
   getPushPermissionState,
   requestAndSyncPushSubscription,
+  unregisterAndRemovePushSubscription,
 } from '@/libs/utils/notifications/webPush';
 import { KidGuardianRelationEnum } from '@/libs/models/KidChurch';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
@@ -55,6 +56,7 @@ const KidGuardianDashboardView: React.FC = () => {
   const [fullscreenQrOpen, setFullscreenQrOpen] = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [isSubscribingPush, setIsSubscribingPush] = useState(false);
+  const [isDeactivatingPush, setIsDeactivatingPush] = useState(false);
 
   const {
     data,
@@ -116,6 +118,20 @@ const KidGuardianDashboardView: React.FC = () => {
       toast.error('Ocurrió un problema al activar las notificaciones.');
     } finally {
       setIsSubscribingPush(false);
+    }
+  };
+
+  const handleDeactivatePush = async () => {
+    setIsDeactivatingPush(true);
+    try {
+      await unregisterAndRemovePushSubscription();
+      setPushSubscribed(false);
+      toast.info('Notificaciones desactivadas en este dispositivo.');
+    } catch (err) {
+      console.warn('Failed to deactivate push:', err);
+      toast.error('Ocurrió un problema al desactivar las notificaciones.');
+    } finally {
+      setIsDeactivatingPush(false);
     }
   };
 
@@ -289,35 +305,62 @@ const KidGuardianDashboardView: React.FC = () => {
         </Dialog.Portal>
       </Dialog.Root>
 
-      {/* Push Notification Banner */}
-      {isPushNotificationSupported() && !pushSubscribed && (
-        <div className="bg-white rounded-2xl p-3.5 border border-indigo-100 shadow-2xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
-              <BellRing className="w-4.5 h-4.5" />
+      {/* Push Notification Card */}
+      {isPushNotificationSupported() && (
+        !pushSubscribed ? (
+          <div className="bg-white rounded-2xl p-3.5 border border-indigo-100 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+                <BellRing className="w-4.5 h-4.5" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs font-bold text-slate-900 leading-tight">
+                  {t('kidGuardian:dashboard.enable_push_title', 'Notificaciones en tu celular')}
+                </h4>
+                <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
+                  {t(
+                    'kidGuardian:dashboard.enable_push_desc',
+                    'Te avisamos en pantalla cuando tu niño ingrese a su salón.'
+                  )}
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <h4 className="text-xs font-bold text-slate-900 leading-tight">
-                {t('kidGuardian:dashboard.enable_push_title', 'Notificaciones en tu celular')}
-              </h4>
-              <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
-                {t(
-                  'kidGuardian:dashboard.enable_push_desc',
-                  'Te avisamos en pantalla cuando tu niño ingrese a su salón.'
-                )}
-              </p>
-            </div>
+            <Button
+              variant="default"
+              size="sm"
+              onClick={handleActivatePush}
+              loading={isSubscribingPush}
+              className="shrink-0 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold px-3 py-1.5 rounded-xl cursor-pointer"
+            >
+              {t('kidGuardian:dashboard.enable_push_button', 'Activar avisos')}
+            </Button>
           </div>
-          <Button
-            variant="default"
-            size="sm"
-            onClick={handleActivatePush}
-            loading={isSubscribingPush}
-            className="shrink-0 text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 font-bold px-3 py-1.5 rounded-xl cursor-pointer"
-          >
-            {t('kidGuardian:dashboard.enable_push_button', 'Activar avisos')}
-          </Button>
-        </div>
+        ) : (
+          <div className="bg-emerald-50/70 rounded-2xl p-3 border border-emerald-200/60 shadow-2xs flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-emerald-100/80 text-emerald-700 flex items-center justify-center shrink-0">
+                <BellRing className="w-4 h-4" />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs font-bold text-emerald-950 leading-tight flex items-center gap-1.5">
+                  <span>Notificaciones activas</span>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse" />
+                </h4>
+                <p className="text-[11px] text-emerald-800 font-medium truncate mt-0.5">
+                  Recibirás avisos cuando tus niños ingresen al salón.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleDeactivatePush}
+              disabled={isDeactivatingPush}
+              className="shrink-0 text-[11px] text-slate-500 hover:text-rose-600 font-semibold px-2.5 py-1 rounded-lg hover:bg-rose-50/50 transition-colors cursor-pointer"
+            >
+              {isDeactivatingPush ? 'Desactivando...' : 'Desactivar'}
+            </button>
+          </div>
+        )
       )}
 
       {/* Children Section */}

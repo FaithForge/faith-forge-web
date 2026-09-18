@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Lock } from 'lucide-react';
+import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Lock, BellRing } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -16,6 +16,13 @@ import {
   registerBiometrics,
   clearBiometricSession,
 } from '@/libs/utils/biometrics';
+import {
+  isPushNotificationSupported,
+  getExistingPushSubscription,
+  getPushPermissionState,
+  requestAndSyncPushSubscription,
+  unregisterAndRemovePushSubscription,
+} from '@/libs/utils/notifications/webPush';
 import { UserExperienceEnum } from '@/libs/utils/auth';
 
 interface UserProfileModalProps {
@@ -31,6 +38,9 @@ const UserProfileModal = ({ open, onOpenChange, variant }: UserProfileModalProps
   const [isRegisteringBio, setIsRegisteringBio] = useState(false);
   const [bioAvailable, setBioAvailable] = useState(false);
   const [isBioEnabled, setIsBioEnabled] = useState(false);
+  const [pushSupported, setPushSupported] = useState(false);
+  const [pushEnabled, setPushEnabled] = useState(false);
+  const [isPushLoading, setIsPushLoading] = useState(false);
   useModalBackClose(open, () => onOpenChange(false));
 
   const user = useAppSelector((state) => state.authSlice.user);
@@ -45,6 +55,13 @@ const UserProfileModal = ({ open, onOpenChange, variant }: UserProfileModalProps
         setBioAvailable(available);
         setIsBioEnabled(hasRegisteredBiometrics());
       });
+
+      if (isPushNotificationSupported()) {
+        setPushSupported(true);
+        getExistingPushSubscription().then((sub) => {
+          setPushEnabled(Boolean(sub) && getPushPermissionState() === 'granted');
+        });
+      }
     }
   }, [open]);
 
@@ -97,6 +114,36 @@ const UserProfileModal = ({ open, onOpenChange, variant }: UserProfileModalProps
       toast.error('Ocurrió un error al configurar la biometría.');
     } finally {
       setIsRegisteringBio(false);
+    }
+  };
+
+  const handleTogglePush = async () => {
+    setIsPushLoading(true);
+    try {
+      if (pushEnabled) {
+        await unregisterAndRemovePushSubscription();
+        setPushEnabled(false);
+        toast.info('Notificaciones desactivadas en este dispositivo.');
+      } else {
+        const success = await requestAndSyncPushSubscription();
+        if (success) {
+          setPushEnabled(true);
+          toast.success('¡Notificaciones en el celular activadas con éxito!');
+        } else {
+          if (getPushPermissionState() === 'denied') {
+            toast.error(
+              'Las notificaciones están bloqueadas en tu navegador. Puedes habilitarlas en los permisos del sitio.'
+            );
+          } else {
+            toast.error('No se concedieron permisos de notificación.');
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('Push toggle failed:', err);
+      toast.error('Ocurrió un problema al actualizar las notificaciones.');
+    } finally {
+      setIsPushLoading(false);
     }
   };
 
@@ -203,7 +250,7 @@ const UserProfileModal = ({ open, onOpenChange, variant }: UserProfileModalProps
                   <button
                     type="button"
                     onClick={handleToggleBiometrics}
-                    className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-bold transition-all ${
+                    className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                       isBioEnabled
                         ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
                         : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
@@ -215,6 +262,30 @@ const UserProfileModal = ({ open, onOpenChange, variant }: UserProfileModalProps
                     </div>
                     <span className="text-[11px] font-semibold underline">
                       {isBioEnabled ? 'Desactivar' : 'Configurar'}
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* Push Notifications Section */}
+              {pushSupported && (
+                <div className="pt-2 border-t border-gray-100">
+                  <button
+                    type="button"
+                    onClick={handleTogglePush}
+                    disabled={isPushLoading}
+                    className={`w-full flex items-center justify-between py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      pushEnabled
+                        ? 'bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100'
+                        : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <BellRing size={16} className={pushEnabled ? 'text-emerald-600' : 'text-gray-500'} />
+                      <span>{pushEnabled ? 'Notificaciones en celular: Activas' : 'Activar avisos en celular'}</span>
+                    </div>
+                    <span className="text-[11px] font-semibold underline">
+                      {isPushLoading ? 'Cargando...' : pushEnabled ? 'Desactivar' : 'Activar'}
                     </span>
                   </button>
                 </div>

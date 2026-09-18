@@ -120,6 +120,38 @@ export const unsubscribeFromPushNotifications = async (): Promise<boolean> => {
 };
 
 /**
+ * Unregisters the push subscription from the backend and unsubscribes the device from PushManager.
+ *
+ * @returns {Promise<boolean>}
+ */
+export const unregisterAndRemovePushSubscription = async (): Promise<boolean> => {
+  try {
+    const subscription = await getExistingPushSubscription();
+    if (subscription?.endpoint) {
+      const { store } = await import('@/libs/state/redux/store');
+      const { userApi } = await import('@/libs/state/redux/api/userApi');
+
+      const unregisterPromise = store.dispatch(
+        userApi.endpoints.unsubscribePushNotification.initiate({
+          endpoint: subscription.endpoint,
+        })
+      );
+      await unregisterPromise.unwrap().catch(() => {});
+      unregisterPromise.unsubscribe();
+    }
+
+    if (subscription) {
+      await subscription.unsubscribe();
+    }
+
+    return true;
+  } catch (err) {
+    console.warn('Failed to unregister push subscription:', err);
+    return false;
+  }
+};
+
+/**
  * Requests push notification permission from the user and, if granted and an authenticated session exists,
  * subscribes the device via Web Push and registers the subscription in the backend.
  *
