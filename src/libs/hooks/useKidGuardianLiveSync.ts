@@ -66,7 +66,7 @@ export const useKidGuardianLiveSync = ({
             t('kidGuardian:dashboard.live_checkin_toast', {
               kid: kidName,
               classroom: groupName,
-              defaultValue: `¡${kidName} acaba de ingresar al salón ${groupName}!`,
+              defaultValue: `¡${kidName} fue registrado con éxito para el salón ${groupName}!`,
             }),
             {
               duration: 7000,

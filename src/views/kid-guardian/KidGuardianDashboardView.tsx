@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { QRCode } from 'react-qrcode-logo';
 import {
   QrCode,
-  Maximize2,
   AlertCircle,
   Clock,
   CheckCircle2,
-  Sun,
   X,
   RefreshCw,
   Calendar,
@@ -19,7 +17,6 @@ import {
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
-import * as Dialog from '@radix-ui/react-dialog';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
@@ -52,7 +49,6 @@ const KidGuardianDashboardView: React.FC = () => {
   const campusTerm = useChurchTerm('campus');
   const meetingTerm = useChurchTerm('meeting');
 
-  const [fullscreenQrOpen, setFullscreenQrOpen] = useState(false);
   const [pushSubscribed, setPushSubscribed] = useState(false);
   const [isSubscribingPush, setIsSubscribingPush] = useState(false);
 
@@ -65,7 +61,23 @@ const KidGuardianDashboardView: React.FC = () => {
   } = useGetMyGuardianAssignedKidsQuery();
 
   const guardian = data?.guardian;
-  const kids = data?.kids || [];
+  const rawKids = data?.kids || [];
+
+  const kids = useMemo(() => {
+    return [...rawKids].sort((a, b) => {
+      const aRegistered = Boolean(a.todayRegistration);
+      const bRegistered = Boolean(b.todayRegistration);
+
+      // 1. Si un niño está registrado hoy, se posiciona de primero
+      if (aRegistered && !bRegistered) return -1;
+      if (!aRegistered && bRegistered) return 1;
+
+      // 2. Por defecto / desempate: orden alfabético de A a Z por nombre
+      const nameA = `${a.firstName || ''} ${a.lastName || ''}`.trim().toLowerCase();
+      const nameB = `${b.firstName || ''} ${b.lastName || ''}`.trim().toLowerCase();
+      return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
+    });
+  }, [rawKids]);
   const qrValue = guardian?.qrCodeValue || guardian?.id || authUser?.id || '';
   const firstName = guardian?.firstName || authUser?.firstName || '';
   const lastName = guardian?.lastName || authUser?.lastName || '';
@@ -189,13 +201,7 @@ const KidGuardianDashboardView: React.FC = () => {
           )}
 
           {/* QR Code Container */}
-          <div
-            onClick={() => setFullscreenQrOpen(true)}
-            className="mt-3 p-2 bg-white rounded-2xl shadow-sm cursor-pointer transition-transform active:scale-95 group relative"
-            role="button"
-            tabIndex={0}
-            aria-label={t('kidGuardian:dashboard.tap_qr_to_enlarge', 'Ampliar código QR')}
-          >
+          <div className="mt-3 p-2 bg-white rounded-2xl shadow-sm relative">
             {qrValue ? (
               <QRCode
                 value={qrValue}
@@ -211,11 +217,6 @@ const KidGuardianDashboardView: React.FC = () => {
                 <QrCode className="w-10 h-10 animate-pulse" />
               </div>
             )}
-            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/5 rounded-2xl transition-colors flex items-center justify-center">
-              <span className="opacity-0 group-hover:opacity-100 bg-slate-900/80 text-white text-[11px] font-semibold py-1 px-2.5 rounded-full flex items-center gap-1 transition-opacity">
-                <Maximize2 className="w-3 h-3" /> {t('kidGuardian:dashboard.enlarge', 'Ampliar')}
-              </span>
-            </div>
           </div>
 
           <p className="text-[11px] text-indigo-100/90 font-medium mt-2 flex items-center gap-1.5 justify-center">
@@ -228,82 +229,21 @@ const KidGuardianDashboardView: React.FC = () => {
         </div>
       </section>
 
-      {/* Fullscreen QR Modal */}
-      <Dialog.Root open={fullscreenQrOpen} onOpenChange={setFullscreenQrOpen}>
-        <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-black/85 z-50 animate-in fade-in duration-200" />
-          <Dialog.Content className="fixed inset-4 sm:inset-auto sm:top-1/2 sm:left-1/2 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:max-w-md w-full bg-white rounded-3xl p-6 z-50 shadow-2xl flex flex-col items-center text-center animate-in zoom-in-95 duration-200 outline-hidden">
-            <div className="w-full flex items-center justify-between pb-2 border-b border-slate-100">
-              <div className="text-left">
-                <Dialog.Title className="text-base font-bold text-slate-800">
-                  {t('kidGuardian:dashboard.modal_qr_title', 'Código QR de Ingreso')}
-                </Dialog.Title>
-                <Dialog.Description className="text-xs text-slate-500">
-                  {guardianFullName}
-                </Dialog.Description>
-              </div>
-              <Dialog.Close asChild>
-                <button
-                  type="button"
-                  className="w-8 h-8 rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center justify-center transition-colors cursor-pointer"
-                  aria-label={t('common:actions.close', 'Cerrar')}
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </Dialog.Close>
-            </div>
-
-            <div className="my-5 p-4 bg-white rounded-2xl border-2 border-slate-200 shadow-inner flex items-center justify-center">
-              {qrValue && (
-                <QRCode
-                  value={qrValue}
-                  size={260}
-                  qrStyle="squares"
-                  fgColor="#000000"
-                  bgColor="#ffffff"
-                  ecLevel="M"
-                  quietZone={10}
-                />
-              )}
-            </div>
-
-            <div className="w-full bg-amber-50 border border-amber-200/80 rounded-2xl p-3 flex items-center gap-2.5 text-left">
-              <Sun className="w-5 h-5 text-amber-600 shrink-0" />
-              <p className="text-xs text-amber-900 font-medium leading-relaxed">
-                {t(
-                  'kidGuardian:dashboard.brightness_hint',
-                  'Sube el brillo de tu pantalla al máximo para facilitar el escaneo en el lector.',
-                )}
-              </p>
-            </div>
-
-            <Button
-              variant="primary"
-              block
-              onClick={() => setFullscreenQrOpen(false)}
-              className="mt-4"
-            >
-              {t('kidGuardian:dashboard.ready', 'Listo')}
-            </Button>
-          </Dialog.Content>
-        </Dialog.Portal>
-      </Dialog.Root>
-
       {/* Push Notification Card - Only prompt when not yet subscribed */}
       {isPushNotificationSupported() && !pushSubscribed && (
         <div className="bg-white rounded-2xl p-3.5 border border-indigo-100 shadow-2xs flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
             <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
               <BellRing className="w-4.5 h-4.5" />
             </div>
-            <div className="min-w-0">
+            <div className="min-w-0 flex-1">
               <h4 className="text-xs font-bold text-slate-900 leading-tight">
                 {t('kidGuardian:dashboard.enable_push_title', 'Notificaciones en tu celular')}
               </h4>
-              <p className="text-[11px] text-slate-600 font-medium truncate mt-0.5">
+              <p className="text-[11px] text-slate-600 font-medium leading-snug mt-0.5">
                 {t(
                   'kidGuardian:dashboard.enable_push_desc',
-                  'Te avisamos en pantalla cuando tu niño ingrese a su salón.'
+                  'Mantente informado al instante sobre el registro de tus niños.'
                 )}
               </p>
             </div>
@@ -414,13 +354,13 @@ const KidGuardianDashboardView: React.FC = () => {
                             ) : (
                               <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-emerald-100 text-slate-900 border border-emerald-300 px-2.5 py-0.5 rounded-full shadow-2xs">
                                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
-                                {t('kidGuardian:dashboard.status_checked_in', 'Ingresado')}
+                                {t('kidGuardian:dashboard.status_checked_in', 'Registrado')}
                               </span>
                             )
                           ) : (
                             <span className="inline-flex items-center gap-1.5 text-xs font-semibold bg-slate-100 text-slate-800 border border-slate-200 px-2.5 py-0.5 rounded-full">
                               <Clock className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                              {t('kidGuardian:dashboard.status_not_checked_in', 'Sin ingresar hoy')}
+                              {t('kidGuardian:dashboard.status_not_checked_in', 'Sin registro hoy')}
                             </span>
                           )}
                         </div>
@@ -477,7 +417,7 @@ const KidGuardianDashboardView: React.FC = () => {
                           ) : (
                             <>
                               <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                              {t('kidGuardian:dashboard.active_checkin_title', 'Detalles del ingreso de hoy')}
+                              {t('kidGuardian:dashboard.active_checkin_title', 'Detalles del registro de hoy')}
                             </>
                           )}
                         </span>
@@ -542,7 +482,7 @@ const KidGuardianDashboardView: React.FC = () => {
                       {kid.todayRegistration.observation && (
                         <div className="pt-2 border-t border-slate-200 flex items-baseline gap-1.5 text-xs">
                           <span className="font-bold text-slate-700 shrink-0">
-                            {t('kidGuardian:dashboard.checkin_observation_label', 'Observación al ingresar')}:
+                            {t('kidGuardian:dashboard.checkin_observation_label', 'Observación de registro')}:
                           </span>
                           <span className="font-semibold text-slate-900 italic break-words">
                             "{kid.todayRegistration.observation}"
@@ -555,7 +495,7 @@ const KidGuardianDashboardView: React.FC = () => {
                     <div className="bg-slate-50/80 border border-slate-200/70 rounded-xl px-3 py-2 flex items-center justify-between text-xs text-slate-900">
                       <div className="flex items-center gap-1.5 text-slate-600">
                         <Clock className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                        <span>{t('kidGuardian:dashboard.status_not_checked_in', 'Sin ingresar hoy')}</span>
+                        <span>{t('kidGuardian:dashboard.status_not_checked_in', 'Sin registro hoy')}</span>
                       </div>
                       {kid.kidGroup && (
                         <div className="flex items-center gap-1 text-[11px] text-slate-600 font-medium">

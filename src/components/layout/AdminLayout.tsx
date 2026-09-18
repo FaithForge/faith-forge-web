@@ -162,16 +162,6 @@ const AdminLayoutContent: React.FC = () => {
                   </div>
                 </div>
 
-                {hasMultipleSpaces && (
-                  <DropdownMenu.Item
-                    onSelect={handleSwitchSpace}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-amber-50 text-amber-800 transition-colors text-sm font-medium mb-1"
-                  >
-                    <LayoutGrid size={16} className="text-amber-600" />
-                    <span>Cambiar de espacio</span>
-                  </DropdownMenu.Item>
-                )}
-
                 <DropdownMenu.Item
                   onSelect={() => handleOpenProfile(true)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm text-gray-700"
@@ -187,6 +177,16 @@ const AdminLayoutContent: React.FC = () => {
                   <Sparkles size={16} className="text-amber-500" />
                   <span>{t('common:navigation.changelog', { defaultValue: 'Novedades' })}</span>
                 </DropdownMenu.Item>
+
+                {hasMultipleSpaces && (
+                  <DropdownMenu.Item
+                    onSelect={handleSwitchSpace}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-amber-50 text-amber-800 transition-colors text-sm font-medium"
+                  >
+                    <LayoutGrid size={16} className="text-amber-600" />
+                    <span>Cambiar de espacio</span>
+                  </DropdownMenu.Item>
+                )}
 
                 <DropdownMenu.Item
                   onSelect={handleLogout}

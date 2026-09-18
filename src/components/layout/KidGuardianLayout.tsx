@@ -130,6 +130,14 @@ const KidGuardianLayout: React.FC = () => {
                   </div>
                 </div>
 
+                <DropdownMenu.Item
+                  onSelect={() => handleOpenProfile(true)}
+                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors outline-hidden"
+                >
+                  <User className="w-4 h-4 text-slate-500" />
+                  <span>{t('common:navigation.profile', 'Mi Perfil')}</span>
+                </DropdownMenu.Item>
+
                 {hasMultipleSpaces && (
                   <DropdownMenu.Item
                     onSelect={handleSwitchSpace}
@@ -139,14 +147,6 @@ const KidGuardianLayout: React.FC = () => {
                     <span>{t('kidGuardian:header.switch_space', 'Cambiar de espacio')}</span>
                   </DropdownMenu.Item>
                 )}
-
-                <DropdownMenu.Item
-                  onSelect={() => handleOpenProfile(true)}
-                  className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors outline-hidden"
-                >
-                  <User className="w-4 h-4 text-slate-500" />
-                  <span>{t('common:navigation.profile', 'Mi Perfil')}</span>
-                </DropdownMenu.Item>
 
                 <DropdownMenu.Item
                   onSelect={handleLogout}

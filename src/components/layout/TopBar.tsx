@@ -1212,16 +1212,6 @@ const TopBar = () => {
                 </div>
               </div>
               
-              {hasMultipleSpaces && (
-                <DropdownMenu.Item 
-                  onSelect={() => navigate(APP_ROUTES.hub)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-indigo-50 text-indigo-700 transition-colors text-sm font-medium mb-1"
-                >
-                  <LayoutGrid size={16} className="text-indigo-600" />
-                  <span>Cambiar de espacio</span>
-                </DropdownMenu.Item>
-              )}
-
               <DropdownMenu.Item 
                 onSelect={() => handleOpenProfile(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
@@ -1237,6 +1227,16 @@ const TopBar = () => {
                 <Sparkles size={16} className="text-amber-500" />
                 {t('navigation.changelog')}
               </DropdownMenu.Item>
+
+              {hasMultipleSpaces && (
+                <DropdownMenu.Item 
+                  onSelect={() => navigate(APP_ROUTES.hub)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-indigo-50 text-indigo-700 transition-colors text-sm font-medium"
+                >
+                  <LayoutGrid size={16} className="text-indigo-600" />
+                  <span>Cambiar de espacio</span>
+                </DropdownMenu.Item>
+              )}
               
               <DropdownMenu.Item 
                 onSelect={handleLogout}

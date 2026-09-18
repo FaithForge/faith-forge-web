@@ -18,6 +18,7 @@ self.addEventListener('push', (event) => {
   const options = {
     body: data.body || 'Tu niño ha sido registrado.',
     icon: data.icon || '/icons/notification-icon.png',
+    badge: data.badge || '/icons/badge-icon.png',
     vibrate: [200, 100, 200],
     tag: data.tag || `iglekids-${Date.now()}`,
     renotify: true,
