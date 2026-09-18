@@ -17,23 +17,25 @@ export const userApi = baseApi.injectEndpoints({
       providesTags: ['UserOverview'],
     }),
 
-    getVapidPublicKey: builder.query<{ publicKey: string }, void>({
-      query: () => ({
+    getVapidPublicKey: builder.query<{ publicKey: string }, { token?: string } | void>({
+      query: (args) => ({
         microservice: MicroserviceEnum.User,
         url: '/push/vapid-public-key',
         method: HttpRequestMethod.GET,
+        headers: args?.token ? { Authorization: `Bearer ${args.token}` } : undefined,
       }),
     }),
 
     subscribePushNotification: builder.mutation<
       { success: boolean },
-      { subscription: unknown }
+      { subscription: unknown; token?: string }
     >({
       query: (payload) => ({
         microservice: MicroserviceEnum.User,
         url: '/push/subscribe',
         method: HttpRequestMethod.POST,
-        data: payload,
+        data: { subscription: payload.subscription },
+        headers: payload.token ? { Authorization: `Bearer ${payload.token}` } : undefined,
       }),
     }),
 

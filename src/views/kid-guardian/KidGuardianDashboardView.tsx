@@ -24,15 +24,12 @@ import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { useGetMyGuardianAssignedKidsQuery } from '@/libs/state/redux/api/kidChurchApi';
-import {
-  useGetVapidPublicKeyQuery,
-  useSubscribePushNotificationMutation,
-} from '@/libs/state/redux/api/userApi';
 import { useKidGuardianLiveSync } from '@/libs/hooks/useKidGuardianLiveSync';
 import {
   isPushNotificationSupported,
-  subscribeToPushNotifications,
   getExistingPushSubscription,
+  getPushPermissionState,
+  requestAndSyncPushSubscription,
 } from '@/libs/utils/notifications/webPush';
 import { KidGuardianRelationEnum } from '@/libs/models/KidChurch';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
@@ -67,9 +64,6 @@ const KidGuardianDashboardView: React.FC = () => {
     isFetching,
   } = useGetMyGuardianAssignedKidsQuery();
 
-  const { data: vapidData } = useGetVapidPublicKeyQuery();
-  const [subscribePushMutation] = useSubscribePushNotificationMutation();
-
   const guardian = data?.guardian;
   const kids = data?.kids || [];
   const qrValue = guardian?.qrCodeValue || guardian?.id || authUser?.id || '';
@@ -85,7 +79,7 @@ const KidGuardianDashboardView: React.FC = () => {
   useEffect(() => {
     if (isPushNotificationSupported()) {
       getExistingPushSubscription().then((sub) => {
-        setPushSubscribed(Boolean(sub));
+        setPushSubscribed(Boolean(sub) && getPushPermissionState() === 'granted');
       });
     }
   }, []);
@@ -97,14 +91,10 @@ const KidGuardianDashboardView: React.FC = () => {
   });
 
   const handleActivatePush = async () => {
-    if (!vapidData?.publicKey) return;
     setIsSubscribingPush(true);
     try {
-      const subscription = await subscribeToPushNotifications(vapidData.publicKey);
-      if (subscription) {
-        await subscribePushMutation({
-          subscription: subscription.toJSON(),
-        }).unwrap();
+      const success = await requestAndSyncPushSubscription();
+      if (success) {
         setPushSubscribed(true);
         toast.success(
           t(
@@ -113,7 +103,13 @@ const KidGuardianDashboardView: React.FC = () => {
           )
         );
       } else {
-        toast.error('No se concedieron permisos de notificación.');
+        if (getPushPermissionState() === 'denied') {
+          toast.error(
+            'Las notificaciones están bloqueadas en tu navegador. Puedes habilitarlas en la configuración del sitio.'
+          );
+        } else {
+          toast.error('No se concedieron permisos de notificación.');
+        }
       }
     } catch (err) {
       console.warn('Push subscription failed:', err);

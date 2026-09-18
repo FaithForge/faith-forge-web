@@ -8,9 +8,10 @@ self.addEventListener('push', (event) => {
     const title = data.title || 'Iglekids';
     const options = {
       body: data.body || 'Tu niño ha sido registrado.',
-      icon: data.icon || '/icons/icon-192x192.png',
-      badge: data.badge || '/icons/icon-192x192.png',
-      vibrate: [100, 50, 100],
+      icon: data.icon || '/icons/notification-icon.png',
+      vibrate: [200, 100, 200],
+      tag: data.tag || `iglekids-${Date.now()}`,
+      renotify: true,
       data: data.data || { url: '/kid-guardian' },
     };
 

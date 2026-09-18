@@ -118,3 +118,65 @@ export const unsubscribeFromPushNotifications = async (): Promise<boolean> => {
     return false;
   }
 };
+
+/**
+ * Requests push notification permission from the user and, if granted and an authenticated session exists,
+ * subscribes the device via Web Push and registers the subscription in the backend.
+ *
+ * @param {string} [authToken] - Optional token to use instead of reading from store state.
+ * @returns {Promise<boolean>} True if notifications are permitted and registered with the server.
+ */
+export const requestAndSyncPushSubscription = async (
+  authToken?: string
+): Promise<boolean> => {
+  if (!isPushNotificationSupported()) return false;
+
+  try {
+    const permission = await requestPushPermission();
+    if (permission !== 'granted') {
+      return false;
+    }
+
+    // Delay checking store slightly if token is not passed, in case Redux persist is hydrating
+    const { store } = await import('@/libs/state/redux/store');
+    const { userApi } = await import('@/libs/state/redux/api/userApi');
+
+    const token = authToken || store.getState().authSlice?.token;
+    if (!token) {
+      return true;
+    }
+
+    // Retrieve VAPID public key
+    const vapidPromise = store.dispatch(
+      userApi.endpoints.getVapidPublicKey.initiate(token ? { token } : undefined)
+    );
+    const vapidResult = await vapidPromise.unwrap();
+    vapidPromise.unsubscribe();
+
+    if (!vapidResult?.publicKey) {
+      return false;
+    }
+
+    // Subscribe to browser PushManager
+    const subscription = await subscribeToPushNotifications(vapidResult.publicKey);
+    if (!subscription) {
+      return false;
+    }
+
+    // Register with backend User microservice
+    const subPromise = store.dispatch(
+      userApi.endpoints.subscribePushNotification.initiate({
+        subscription: subscription.toJSON(),
+        token,
+      })
+    );
+    await subPromise.unwrap();
+    subPromise.unsubscribe();
+
+    return true;
+  } catch (err) {
+    console.warn('Auto push subscription registration failed:', err);
+    return false;
+  }
+};
+

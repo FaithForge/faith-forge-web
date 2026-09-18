@@ -19,6 +19,7 @@ import { baseApi } from '@/libs/state/redux/api/baseApi';
 import { userRolesNavBarConfig } from '@/components/layout/TopBar';
 import { useScreenWakeLock } from '@/libs/hooks/useScreenWakeLock';
 import { isRoleEnabled } from '@/config/roles';
+import { requestAndSyncPushSubscription } from '@/libs/utils/notifications/webPush';
 
 // Lazy-loaded route views for optimal code-splitting and reduced initial bundle size
 const LoginView = lazy(() => import('@/views/auth/LoginView'));
@@ -142,6 +143,17 @@ function App() {
     dispatch(GetChurchCampuses());
     dispatch(GetMinistries());
   }, [dispatch, token]);
+
+  // Request notification permissions on app startup
+  useEffect(() => {
+    requestAndSyncPushSubscription();
+  }, []);
+
+  // When an authenticated session is active or restored, ensure device push subscription is synced
+  useEffect(() => {
+    if (!token) return;
+    requestAndSyncPushSubscription(token);
+  }, [token]);
 
   useEffect(() => {
     setHttpAuthHandlers({

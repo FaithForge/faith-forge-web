@@ -22,6 +22,7 @@ import {
 } from '@/libs/utils/biometrics';
 import { formatPersonShortName } from '@/libs/utils/text';
 import { APP_VERSION } from '@/constants/version';
+import { requestAndSyncPushSubscription } from '@/libs/utils/notifications/webPush';
 
 interface IFormLoginInput {
   username: string;
@@ -159,6 +160,7 @@ const LoginView = () => {
             refreshToken: result.refreshToken,
           })
         );
+        requestAndSyncPushSubscription(result.token);
         await dispatch(FetchMyVolunteerPermissions());
         const name =
           formatPersonShortName(result.user?.firstName, result.user?.lastName) ||
@@ -180,6 +182,7 @@ const LoginView = () => {
 
         if (UserLogin.fulfilled.match(loginResult)) {
           const payload = loginResult.payload;
+          requestAndSyncPushSubscription(payload.token);
           await updateBiometricSessionToken({
             token: payload.token,
             refreshToken: payload.refreshToken,
@@ -237,6 +240,8 @@ const LoginView = () => {
       const resultAction = await dispatch(UserLogin({ username: cleanInput, password: data.password }));
       if (UserLogin.fulfilled.match(resultAction)) {
         const payload = resultAction.payload;
+        // Prompt push notification permissions and sync subscription for this user
+        requestAndSyncPushSubscription(payload.token);
         // The authoritative username is payload.user?.username (never email)
         const authoritativeUsername = payload.user?.username || cleanInput;
 
