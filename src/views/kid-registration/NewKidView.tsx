@@ -46,12 +46,17 @@ import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Alert from '@/components/ui/Alert';
 import StepProgress from '@/components/ui/StepProgress';
+import { useTranslation } from 'react-i18next';
 
 const NewKidView = () => {
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const guardianTerm = useKidsTerm('guardian');
-  const newKidSteps = useMemo(() => ['Datos del Niño', `${guardianTerm} Responsable`], [guardianTerm]);
+  const newKidSteps = useMemo(() => [
+    t('kidRegistration:form.step_kid_info'), 
+    t('kidRegistration:form.step_guardian_info', { guardian: guardianTerm })
+  ], [guardianTerm, t]);
   const { registerGuard } = useNavigationGuard();
   const { shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
 
@@ -342,7 +347,7 @@ const NewKidView = () => {
        const resultAction = await dispatch(CreateKidGuardian(guardianPayload as any));
        if (CreateKidGuardian.fulfilled.match(resultAction)) {
           if (!resultAction.payload.error) {
-             toast.success(`¡Niño y ${guardianTerm} guardados!`);
+             toast.success(t('kidRegistration:form.success_kid_created'));
              window.scrollTo({ top: 0, behavior: 'smooth' });
              // Ir a check-in
              navigate(APP_ROUTES.kidRegistration.checkIn(kidSlice.current.id), { replace: true });
@@ -350,10 +355,10 @@ const NewKidView = () => {
              toast.error(resultAction.payload.error || `Error al guardar ${guardianTerm.toLowerCase()}`);
           }
        } else {
-          toast.error(`Error al guardar ${guardianTerm.toLowerCase()}`);
+          toast.error(t('kidRegistration:form.error_creating_kid'));
        }
     } catch(e) {
-       toast.error("Error inesperado");
+       toast.error(t('common:states.error_occurred'));
     } finally {
        setIsUploading(false);
     }
@@ -411,7 +416,7 @@ const NewKidView = () => {
 
   return (
     <div className="min-h-full bg-background flex flex-col flex-1 pb-6 sm:pb-8">
-      <PageHeader title="Nuevo Registro" onBack={handleCancelClick} />
+      <PageHeader title={t('kidRegistration:form.new_kid_title')} onBack={handleCancelClick} />
       <StepProgress currentStep={step} steps={newKidSteps} />
 
       <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full pb-36">
@@ -665,7 +670,7 @@ const NewKidView = () => {
               className="mb-3"
               disabled={isUploading || isUnderThreeMonths}
             >
-              {isUploading ? 'Guardando...' : <>Guardar Niño y Continuar <ChevronRight size={18} className="ml-2 inline" /></>}
+              {isUploading ? t('common:states.saving') : <>{t('kidRegistration:form.btn_next_to_guardian', { guardian: guardianTerm })} <ChevronRight size={18} className="ml-2 inline" /></>}
             </Button>
             {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
             <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
@@ -880,7 +885,7 @@ const NewKidView = () => {
               className="mb-3"
               disabled={isUploading}
             >
-              {isUploading ? 'Guardando...' : <>Guardar {guardianTerm} <Check size={18} className="ml-2 inline" /></>}
+              {isUploading ? t('common:states.saving') : <>{t('kidRegistration:form.btn_save_kid')} <Check size={18} className="ml-2 inline" /></>}
             </Button>
             {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
             <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
@@ -891,10 +896,10 @@ const NewKidView = () => {
       <ConfirmModal
         open={showCancelModal}
         onOpenChange={handleCloseModal}
-        title="¿Estás seguro de salir?"
-        description="Perderás todos los datos del niño que no hayas guardado."
-        confirmText="Sí, salir"
-        cancelText="Continuar llenando"
+        title={t('kidRegistration:form.discard_modal_title')}
+        description={t('kidRegistration:form.discard_modal_description')}
+        confirmText={t('kidRegistration:form.discard_modal_confirm')}
+        cancelText={t('kidRegistration:form.discard_modal_cancel')}
         onConfirm={handleConfirmCancel}
         type="danger"
         disableBackClose={true}

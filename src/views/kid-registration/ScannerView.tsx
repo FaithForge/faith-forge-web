@@ -24,13 +24,18 @@ import { useKidsTerm } from '@/libs/hooks/useTerm';
 import StepProgress from '@/components/ui/StepProgress';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import ProcessingPrintModal from '@/components/modal/ProcessingPrintModal';
-
-const SCAN_STEPS = ['Escanear', 'Selección', 'Observaciones'];
+import { useTranslation } from 'react-i18next';
 
 const ScannerView = () => {
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const guardianTerm = useKidsTerm('guardian');
+  const scanSteps = useMemo(() => [
+    t('kidRegistration:scanner.steps.scan'),
+    t('kidRegistration:scanner.steps.selection'),
+    t('kidRegistration:scanner.steps.observations')
+  ], [t]);
   const { kidGuardian, relations, loading } = useAppSelector(state => state.scanQRKidGuardianSlice);
   const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
@@ -50,7 +55,7 @@ const ScannerView = () => {
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
   const [pendingNavigation, setPendingNavigation] = useState<'back' | 'home' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [processingStep, setProcessingStep] = useState('Registrando niños...');
+  const [processingStep, setProcessingStep] = useState(t('kidRegistration:scanner.saving_records'));
 
   // Load special groups (Yo Soy Iglekids)
   useEffect(() => {
@@ -116,7 +121,7 @@ const ScannerView = () => {
           setStep(2);
         }
       } catch (err) {
-        toast.error("Error al escanear código o no encontrado.");
+        toast.error(t('kidRegistration:scanner.error_scan'));
         setScanResult(null);
       }
     }
@@ -141,16 +146,16 @@ const ScannerView = () => {
     const isVol = volunteerKids.includes(kid.id);
     if (isVol) {
       setVolunteerKids(prev => prev.filter(id => id !== kid.id));
-      toast.info(`Cambiado a salón habitual (${kid.kidGroup?.name || 'Salón habitual'})`, { id: `volunteer-toggle-${kid.id}` });
+      toast.info(t('kidRegistration:scanner.toast_switched_habitual', { group: kid.kidGroup?.name || 'Salón habitual' }), { id: `volunteer-toggle-${kid.id}` });
     } else {
       setVolunteerKids(prev => [...prev, kid.id]);
-      toast.success(`Cambiado a ${specialGroupName} (Servidor)`, { id: `volunteer-toggle-${kid.id}` });
+      toast.success(t('kidRegistration:scanner.toast_switched_server', { group: specialGroupName }), { id: `volunteer-toggle-${kid.id}` });
     }
   };
 
   const handleConfirmKids = () => {
     if (selectedKids.length === 0) {
-      toast.error("Seleccione al menos un niño para registrar");
+      toast.error(t('kidRegistration:scanner.error_select_at_least_one'));
       return;
     }
     setStep(3);
@@ -161,7 +166,7 @@ const ScannerView = () => {
 
     try {
       setIsProcessing(true);
-      setProcessingStep('Guardando registros...');
+      setProcessingStep(t('kidRegistration:scanner.saving_records'));
 
       const promises = selectedKids.map(kidId => {
         const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
@@ -199,7 +204,7 @@ const ScannerView = () => {
           const finalObs = obsType === 'OTHER' ? customObservations[kidId]?.trim() : (obsType !== 'NONE' ? obsType : undefined);
           const regRes = results[i];
 
-          setProcessingStep(`Imprimiendo etiqueta Bluetooth (${i + 1}/${selectedKids.length})...`);
+          setProcessingStep(t('kidRegistration:scanner.printing_bluetooth', { current: i + 1, total: selectedKids.length }));
 
           await bluetoothPrinter.printKidTicket({
             kidName: `${kid?.firstName || ''} ${kid?.lastName || ''}`.trim(),
@@ -215,14 +220,14 @@ const ScannerView = () => {
           });
           await new Promise((resolve) => setTimeout(resolve, 300));
         }
-        toast.success("¡Niños registrados e impresos por Bluetooth!");
+        toast.success(t('kidRegistration:scanner.success_registered_printed'));
       } else {
-        toast.success("¡Niños registrados con éxito!");
+        toast.success(t('kidRegistration:scanner.success_registered'));
       }
 
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
-      toast.error("Ocurrió un error al registrar los niños");
+      toast.error(t('kidRegistration:scanner.error_registering'));
     } finally {
       setIsProcessing(false);
     }
@@ -245,9 +250,9 @@ const ScannerView = () => {
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50 pb-6">
-      <PageHeader title="Registro por QR" onBack={handleCancelClick} />
+      <PageHeader title={t('kidRegistration:scanner.title')} onBack={handleCancelClick} />
 
-      <StepProgress currentStep={step} steps={SCAN_STEPS} />
+      <StepProgress currentStep={step} steps={scanSteps} />
 
       <div className="p-4 max-w-xl mx-auto w-full">
         
@@ -262,9 +267,9 @@ const ScannerView = () => {
                 
                 {/* Textos informativos */}
                 <div className="text-center mb-4 landscape:mb-0 landscape:order-2 landscape:flex-1 landscape:text-left">
-                  <h2 className="text-lg font-bold text-gray-800 mb-1">Escanear Código</h2>
+                  <h2 className="text-lg font-bold text-gray-800 mb-1">{t('kidRegistration:scanner.scan_card_title')}</h2>
                   <p className="text-xs sm:text-sm text-gray-500 leading-relaxed mb-0 landscape:mb-4">
-                    Apunta la cámara al código QR de {guardianTerm.toLowerCase()} para buscar a los niños asociados.
+                    {t('kidRegistration:scanner.scan_instructions', { guardian: guardianTerm.toLowerCase() })}
                   </p>
 
                   {/* Botón integrado en landscape */}
@@ -275,7 +280,7 @@ const ScannerView = () => {
                       variant="default"
                       className="py-3 font-bold shadow-sm"
                     >
-                      Generar QR {guardianTerm}
+                      {t('kidRegistration:scanner.btn_generate_guardian_qr', { guardian: guardianTerm })}
                     </Button>
                   </div>
                 </div>
@@ -306,7 +311,7 @@ const ScannerView = () => {
                 variant="default"
                 className="py-3 font-bold shadow-sm"
               >
-                Generar QR {guardianTerm}
+                {t('kidRegistration:scanner.btn_generate_guardian_qr', { guardian: guardianTerm })}
               </Button>
             </div>
 
@@ -320,7 +325,7 @@ const ScannerView = () => {
               <p className="text-xl text-primary font-bold mt-1">
                 {capitalizeWords(`${kidGuardian.firstName || ''} ${kidGuardian.lastName || ''}`.trim())}
               </p>
-              <p className="text-sm text-gray-500 mt-2">Confirme que sea {guardianTerm.toLowerCase()} y seleccione los niños a registrar hoy.</p>
+              <p className="text-sm text-gray-500 mt-2">{t('kidRegistration:scanner.confirm_guardian_prompt', { guardian: guardianTerm.toLowerCase() })}</p>
             </div>
 
             <div className="flex flex-col gap-3 mb-6">
@@ -330,7 +335,7 @@ const ScannerView = () => {
                 const isRegistered = !!kid.currentKidRegistration;
                 const isSelected = selectedKids.includes(kid.id);
                 const isKidVolunteer = volunteerKids.includes(kid.id);
-                const displayedGroupName = isKidVolunteer ? specialGroupName : (kid.kidGroup?.name || 'Sin salón');
+                const displayedGroupName = isKidVolunteer ? specialGroupName : (kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom'));
                 const isStatic = isKidVolunteer ? false : !!kid.staticGroup;
                 const hasMaxAge = isKidOverage(kid);
                 const isBlockedByAge = hasMaxAge && !isKidVolunteer && !isAdmin;
@@ -355,12 +360,12 @@ const ScannerView = () => {
                         </h3>
                         {isBday && (
                           <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 animate-pulse">
-                            🎂 ¡Cumpleaños!
+                            {t('kidRegistration:scanner.birthday_badge')}
                           </span>
                         )}
                         {isRegistered && (
                           <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                            Registrado
+                            {t('kidRegistration:scanner.registered_badge')}
                           </span>
                         )}
                         {hasMaxAge && (
@@ -370,7 +375,7 @@ const ScannerView = () => {
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className="text-xs font-medium text-gray-500">Código: {kid.faithForgeId}</span>
+                        <span className="text-xs font-medium text-gray-500">{t('kidRegistration:scanner.code_label', { code: kid.faithForgeId })}</span>
                         <span className="text-gray-300">•</span>
                         <div className="flex items-center gap-1.5">
                           <TagKidGroup kidGroup={displayedGroupName} staticGroup={isStatic} className="text-[10px] py-0.5 px-2" />
@@ -384,8 +389,8 @@ const ScannerView = () => {
                               className={clsx(
                                 "w-6 h-6 rounded-full flex items-center justify-center transition-all border shrink-0",
                                 isKidVolunteer 
-                                  ? "bg-primary text-white border-primary shadow-xs scale-105" 
-                                  : "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 hover:scale-105 active:scale-95"
+                                   ? "bg-primary text-white border-primary shadow-xs scale-105" 
+                                   : "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 hover:scale-105 active:scale-95"
                               )}
                               title={isKidVolunteer ? "Cambiar a recibir en su salón habitual" : `Cambiar a ${specialGroupName} (Servidor)`}
                             >
@@ -413,7 +418,7 @@ const ScannerView = () => {
               block
               variant="primary"
             >
-              Siguiente <ChevronRight size={18} className="ml-2 inline" />
+              {t('kidRegistration:scanner.btn_next')} <ChevronRight size={18} className="ml-2 inline" />
             </Button>
           </div>
         )}
@@ -423,7 +428,7 @@ const ScannerView = () => {
             <div className="bg-blue-50 border border-blue-100 p-4 rounded-xl mb-6 flex gap-3">
               <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
               <p className="text-sm text-blue-800 font-medium leading-relaxed">
-                Si los niños tienen alguna observación, por favor escríbala abriendo el desplegable correspondiente.
+                {t('kidRegistration:scanner.observations_info')}
               </p>
             </div>
 
@@ -436,7 +441,7 @@ const ScannerView = () => {
                   const isKidVolunteer = volunteerKids.includes(kid.id);
                   const displayedGroupName = isKidVolunteer 
                     ? specialGroupName 
-                    : `${kid.kidGroup?.name || 'Sin salón'}${kid.staticGroup ? ' (Estático)' : ''}`;
+                    : `${kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom')}${kid.staticGroup ? ' (Estático)' : ''}`;
                   
                   return (
                     <div key={kid.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
@@ -456,31 +461,31 @@ const ScannerView = () => {
                         isExpanded ? "pb-4 opacity-100" : "max-h-0 opacity-0 overflow-hidden"
                       )}>
                         <Select
-                          label="Observaciones al registrar (Check-in)"
+                          label={t('kidRegistration:scanner.observations_select_label')}
                           value={observationTypes[kid.id] || 'NONE'}
                           onChange={(e) => setObservationTypes({
                             ...observationTypes,
                             [kid.id]: e.target.value
                           })}
                         >
-                          <option value="NONE">Ninguna</option>
-                          <option value="Lleva bolso">Lleva bolso</option>
-                          <option value="Lleva merienda">Lleva merienda</option>
-                          <option value="Lleva bolso y merienda">Lleva bolso y merienda</option>
-                          <option value="OTHER">Otra observación</option>
+                          <option value="NONE">{t('kidRegistration:scanner.observations_options.none')}</option>
+                          <option value="Lleva bolso">{t('kidRegistration:scanner.observations_options.has_bag')}</option>
+                          <option value="Lleva merienda">{t('kidRegistration:scanner.observations_options.has_snack')}</option>
+                          <option value="Lleva bolso y merienda">{t('kidRegistration:scanner.observations_options.has_bag_and_snack')}</option>
+                          <option value="OTHER">{t('kidRegistration:scanner.observations_options.other')}</option>
                         </Select>
 
                         {(observationTypes[kid.id] === 'OTHER') && (
                           <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
                             <textarea 
-                              className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary focus:ring-0 transition-colors outline-none text-sm shadow-sm"
+                              className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary focus:ring-0 transition-colors outline-none text-sm shadow-sm placeholder:text-gray-400"
                               rows={3}
                               maxLength={300}
                               autoComplete="off"
                               autoCorrect="off"
                               autoCapitalize="off"
                               spellCheck={false}
-                              placeholder="Escriba la observación personalizada..."
+                              placeholder={t('kidRegistration:scanner.custom_observation_placeholder')}
                               value={customObservations[kid.id] || ''}
                               onChange={(e) => setCustomObservations({
                                 ...customObservations,
@@ -504,7 +509,7 @@ const ScannerView = () => {
               loadingText={processingStep}
               disabled={isProcessing}
             >
-              <Printer size={20} className="mr-2 shrink-0" /> Registrar Niños
+              <Printer size={20} className="mr-2 shrink-0" /> {t('kidRegistration:scanner.btn_register_kids')}
             </Button>
           </form>
         )}
@@ -519,10 +524,10 @@ const ScannerView = () => {
       <ConfirmModal
         open={showCancelModal}
         onOpenChange={handleCloseModal}
-        title="¿Cancelar el escaneo?"
-        description="Se perderá el progreso de los niños seleccionados."
-        confirmText="Sí, cancelar"
-        cancelText="Continuar escaneando"
+        title={t('kidRegistration:scanner.cancel_modal_title')}
+        description={t('kidRegistration:scanner.cancel_modal_description')}
+        confirmText={t('kidRegistration:scanner.cancel_modal_confirm')}
+        cancelText={t('kidRegistration:scanner.cancel_modal_cancel')}
         onConfirm={handleConfirmCancel}
         type="danger"
       />
@@ -530,10 +535,10 @@ const ScannerView = () => {
       <ConfirmModal
         open={showAdminOutOfScheduleModal}
         onOpenChange={setShowAdminOutOfScheduleModal}
-        title="¿Registrar niños fuera de horario?"
-        description={`${meetingErrorMsg || 'El servicio actual se encuentra fuera de horario de registro.'} Como administrador, ¿deseas proceder con el registro de los niños seleccionados?`}
-        confirmText="Sí, registrar niños"
-        cancelText="Cancelar"
+        title={t('kidRegistration:scanner.out_of_schedule_modal_title')}
+        description={t('kidRegistration:scanner.out_of_schedule_modal_description', { message: meetingErrorMsg || 'El servicio actual se encuentra fuera de horario de registro.' })}
+        confirmText={t('kidRegistration:scanner.out_of_schedule_modal_confirm')}
+        cancelText={t('common:actions.cancel')}
         type="warning"
         onConfirm={executeBatchRegistration}
       />

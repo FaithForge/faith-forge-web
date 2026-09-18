@@ -1,0 +1,48 @@
+{
+  "actions": {
+    "save": "Guardar",
+    "save_changes": "Guardar cambios",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "add": "Agregar",
+    "search": "Buscar...",
+    "filter": "Filtrar",
+    "clear_filters": "Limpiar filtros",
+    "confirm": "Confirmar",
+    "back": "Volver",
+    "close": "Cerrar",
+    "accept": "Aceptar",
+    "continue": "Continuar",
+    "retry": "Reintentar",
+    "refresh": "Actualizar",
+    "export": "Exportar",
+    "print": "Imprimir",
+    "view_details": "Ver detalles",
+    "select": "Seleccionar"
+  },
+  "states": {
+    "loading": "Cargando...",
+    "saving": "Guardando información...",
+    "processing": "Procesando...",
+    "empty": "No se encontraron resultados",
+    "no_data": "Sin registros disponibles",
+    "error_occurred": "Ha ocurrido un error inesperado",
+    "success": "Operación exitosa"
+  },
+  "dialogs": {
+    "confirm_title": "¿Estás seguro?",
+    "confirm_delete_title": "¿Eliminar elemento?",
+    "cannot_undo": "Esta acción no se puede deshacer.",
+    "unsaved_changes": "Tienes cambios sin guardar. ¿Deseas salir de todas formas?"
+  },
+  "navigation": {
+    "home": "Inicio",
+    "back": "Atrás",
+    "menu": "Menú",
+    "settings": "Configuración",
+    "profile": "Mi Perfil",
+    "logout": "Cerrar sesión"
+  }
+}

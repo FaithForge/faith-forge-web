@@ -8,6 +8,7 @@ import { store, persistor } from '@/libs/state/redux/store';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
+import '@/libs/i18n';
 import { setupChunkLoadErrorAutoRecover } from '@/libs/utils/appCache';
 import { setupRemoteVersionWatcher } from '@/libs/utils/versionCheck';
 

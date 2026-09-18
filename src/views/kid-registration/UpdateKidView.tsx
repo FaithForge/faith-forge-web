@@ -31,8 +31,10 @@ import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import SelectSearch from '@/components/ui/SelectSearch';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';
+import { useTranslation } from 'react-i18next';
 
 const UpdateKidView: React.FC = () => {
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -174,14 +176,14 @@ const UpdateKidView: React.FC = () => {
       );
 
       if (UpdateKid.fulfilled.match(result)) {
-        toast.success('¡Datos del niño actualizados!');
+        toast.success(t('kidRegistration:form.success_kid_updated'));
         await dispatch(GetKid({ id }));
         navigate(APP_ROUTES.kidRegistration.checkIn(id), { replace: true });
       } else {
-        toast.error('Error al actualizar los datos del niño');
+        toast.error(t('kidRegistration:form.error_updating_kid'));
       }
     } catch {
-      toast.error('Error inesperado al actualizar el niño');
+      toast.error(t('common:states.error_occurred'));
     } finally {
       setIsSubmitting(false);
     }
@@ -214,7 +216,7 @@ const UpdateKidView: React.FC = () => {
   return (
     <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader
-        title="Actualizar Datos del Niño"
+        title={t('kidRegistration:form.update_kid_title')}
         onBack={() => navigate(APP_ROUTES.kidRegistration.checkIn(id || ''))}
       />
 
@@ -428,9 +430,9 @@ const UpdateKidView: React.FC = () => {
             className="mb-3"
             disabled={isUnderThreeMonths}
             loading={isSubmitting}
-            loadingText="Guardando cambios..."
+            loadingText={t('common:states.saving')}
           >
-            Guardar Cambios
+            {t('kidRegistration:form.btn_save_changes')}
           </Button>
           {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
           <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />

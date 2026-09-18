@@ -20,8 +20,10 @@ import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
+import { useTranslation } from 'react-i18next';
 
 const RegistrationDashboard = () => {
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchText, setSearchText] = useState('');
@@ -181,7 +183,7 @@ const RegistrationDashboard = () => {
         <Input 
           ref={searchInputRef}
           icon="search" 
-          placeholder={shouldBlockKids ? "Búsqueda no disponible" : "Buscar niño por nombre o código"}
+          placeholder={shouldBlockKids ? t('kidRegistration:dashboard.search_disabled') : t('kidRegistration:dashboard.search_placeholder')}
           value={searchText}
           onChange={(e) => setSearchText(e.target.value)}
           onClear={handleClearSearch}
@@ -197,8 +199,8 @@ const RegistrationDashboard = () => {
       {!isConfigured && (
         <Alert 
           type="error"
-          title="Falta configuración"
-          message="Por favor, selecciona una sede, servicio e impresora en la opción de Configuración de la barra inferior."
+          title={t('kidRegistration:dashboard.config_warning_title')}
+          message={t('kidRegistration:dashboard.config_warning_message')}
         />
       )}
 
@@ -206,8 +208,8 @@ const RegistrationDashboard = () => {
       {isConfigured && currentPrinter && currentMeeting && (
         <Alert 
           type="info"
-          title={`Impresora: ${currentPrinter.name}`}
-          message={`Reunión: ${currentMeeting.name} (${currentCampus?.name || ''})`}
+          title={t('kidRegistration:dashboard.printer_info', { printer: currentPrinter.name })}
+          message={t('kidRegistration:dashboard.meeting_info', { meeting: currentMeeting.name, campus: currentCampus?.name || '' })}
           className="bg-cyan-100 text-cyan-800 border-cyan-200"
         />
       )}
@@ -233,9 +235,9 @@ const RegistrationDashboard = () => {
               <line x1="14" x2="10" y1="15" y2="19"/>
             </svg>
           </div>
-          <h3 className="text-lg font-bold text-gray-700 mb-1">Fuera de horario</h3>
+          <h3 className="text-lg font-bold text-gray-700 mb-1">{t('kidRegistration:dashboard.out_of_schedule_title')}</h3>
           <p className="text-sm text-gray-500 leading-relaxed">
-            La búsqueda y el registro de niños se encuentran bloqueados temporalmente para proteger la información.
+            {t('kidRegistration:dashboard.out_of_schedule_message')}
           </p>
         </div>
       )}
@@ -252,15 +254,15 @@ const RegistrationDashboard = () => {
                   <SearchX size={28} />
                 </div>
                 <h3 className="text-base font-bold text-gray-800 mb-1">
-                  {searchText ? 'No se encontraron niños' : 'Directorio de niños'}
+                  {searchText ? t('kidRegistration:dashboard.no_kids_found_title') : t('kidRegistration:dashboard.directory_title')}
                 </h3>
                 <p className="text-xs text-gray-500 max-w-sm leading-relaxed">
                   {searchText ? (
                     <>
-                      No encontramos resultados para <span className="font-semibold text-gray-800">"{searchText}"</span>.
+                      {t('kidRegistration:dashboard.no_results_search', { query: searchText })}
                     </>
                   ) : (
-                    'Busca un niño para registrar su asistencia en el servicio actual.'
+                    t('kidRegistration:dashboard.search_prompt')
                   )}
                 </p>
 
@@ -268,30 +270,26 @@ const RegistrationDashboard = () => {
                 <div className="mt-3.5 p-3 bg-gray-50/90 rounded-xl border border-gray-200/80 text-left max-w-sm w-full">
                   <span className="text-[11px] font-bold text-gray-700 flex items-center gap-1.5 mb-1.5">
                     <Lightbulb size={13} className="text-amber-500 shrink-0" />
-                    Consejos para encontrar al niño:
+                    {t('kidRegistration:dashboard.search_tips_title')}
                   </span>
                   <ul className="text-[11px] text-gray-600 space-y-1.5 list-disc list-inside">
                     <li>
-                      Puedes <strong>abreviar</strong> nombre y apellido (ej:{' '}
-                      <span className="font-semibold text-gray-800">Ju Marti</span> o{' '}
-                      <span className="font-semibold text-gray-800">Mat Gom</span>).
+                      {t('kidRegistration:dashboard.search_tip_abbreviate')}
                     </li>
                     <li>
-                      Busca <strong>solo por su primer nombre</strong> (ej:{' '}
-                      <span className="font-medium text-gray-800">Mateo</span>).
+                      {t('kidRegistration:dashboard.search_tip_firstname')}
                     </li>
                     <li>
-                      Busca <strong>solo por apellido</strong> anteponiendo un espacio (ej:{' '}
-                      <span className="font-semibold text-gray-800">" Pérez"</span>).
+                      {t('kidRegistration:dashboard.search_tip_lastname')}
                     </li>
                     <li>
-                      O escribe directamente su <strong>código numérico</strong>.
+                      {t('kidRegistration:dashboard.search_tip_code')}
                     </li>
                   </ul>
                 </div>
 
                 <p className="text-xs text-gray-500 max-w-sm mt-3 leading-relaxed">
-                  Si tras probar estas opciones el niño aún no aparece, procede a crearlo en el sistema:
+                  {t('kidRegistration:dashboard.create_prompt')}
                 </p>
 
                 <div className="flex items-center gap-2 mt-3.5 flex-wrap justify-center">
@@ -302,7 +300,7 @@ const RegistrationDashboard = () => {
                       className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-95 rounded-xl transition-all"
                     >
                       <RotateCcw size={14} />
-                      <span>Limpiar búsqueda</span>
+                      <span>{t('kidRegistration:dashboard.btn_clear_search')}</span>
                     </button>
                   )}
                   <button
@@ -311,7 +309,7 @@ const RegistrationDashboard = () => {
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 active:scale-95 rounded-xl transition-all shadow-xs"
                   >
                     <Plus size={14} />
-                    <span>Crear niño</span>
+                    <span>{t('kidRegistration:dashboard.btn_create_kid')}</span>
                   </button>
                 </div>
               </div>
@@ -324,13 +322,14 @@ const RegistrationDashboard = () => {
                   const overage = isKidOverage(kid);
                   const isBday = isDateToday(kid.birthday);
 
-                  let subtitleText = `Código: ${kid.faithForgeId || kid.id}`;
+                  let subtitleText = t('kidRegistration:dashboard.code_label', { code: kid.faithForgeId || kid.id });
                   let showOverageStyle = false;
 
                   if (isRegistered) {
-                    subtitleText = `Código: ${kid.faithForgeId || kid.id}${
-                      kid.currentKidRegistration?.date ? ` • a las ${dayjs(kid.currentKidRegistration.date).format('h:mm:ss A')}` : ''
-                    }`;
+                    const timeStr = kid.currentKidRegistration?.date 
+                      ? ` ${t('kidRegistration:dashboard.registered_at', { time: dayjs(kid.currentKidRegistration.date).format('h:mm:ss A') })}`
+                      : '';
+                    subtitleText = `${t('kidRegistration:dashboard.code_label', { code: kid.faithForgeId || kid.id })}${timeStr}`;
                   } else if (overage) {
                     subtitleText = KID_AGE_COPY.maxAgeDashboardSubtitle;
                     showOverageStyle = true;
@@ -340,7 +339,7 @@ const RegistrationDashboard = () => {
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
                       {isBday && (
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
-                          🎂 Hoy
+                          {t('kidRegistration:dashboard.badge_birthday')}
                         </span>
                       )}
                       {overage && (
@@ -350,7 +349,7 @@ const RegistrationDashboard = () => {
                       )}
                       {isRegistered && (
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                          Registrado
+                          {t('kidRegistration:dashboard.badge_registered')}
                         </span>
                       )}
                     </div>
@@ -384,7 +383,7 @@ const RegistrationDashboard = () => {
                 {loadingMore && (
                   <div className="flex items-center gap-2 py-2 px-4 bg-white rounded-full border border-gray-100 shadow-2xs text-xs font-semibold text-gray-500">
                     <Loader2 size={16} className="animate-spin text-primary" />
-                    <span>Cargando más niños...</span>
+                    <span>{t('kidRegistration:dashboard.loading_more')}</span>
                   </div>
                 )}
                 {!loadingMore && hasMore && (
@@ -394,7 +393,7 @@ const RegistrationDashboard = () => {
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-semibold text-gray-500 hover:text-gray-700 bg-white hover:bg-gray-50 border border-gray-200/80 rounded-full shadow-2xs transition-all active:scale-95 cursor-pointer"
                   >
                     <ChevronDown size={14} />
-                    <span>Cargar más niños</span>
+                    <span>{t('kidRegistration:dashboard.btn_load_more')}</span>
                   </button>
                 )}
                 {!loadingMore && !hasMore && (

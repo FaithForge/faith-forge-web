@@ -34,10 +34,12 @@ import Alert from '@/components/ui/Alert';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import ProcessingPrintModal from '@/components/modal/ProcessingPrintModal';
+import { useTranslation } from 'react-i18next';
 
 dayjs.locale('es');
 
 const KidCheckInView = () => {
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -311,10 +313,10 @@ const KidCheckInView = () => {
     if (!kid?.currentKidRegistration) return;
     try {
       setIsProcessing(true);
-      setProcessingStep('Solicitando reimpresión...');
+      setProcessingStep(t('kidRegistration:check_in.reprint_requesting'));
       await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id })).unwrap();
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
-        setProcessingStep('Imprimiendo etiqueta Bluetooth...');
+        setProcessingStep(t('kidRegistration:check_in.reprint_printing_bluetooth'));
         const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
         const currentReg = kid.currentKidRegistration as any;
         await bluetoothPrinter.printKidTicket({
@@ -328,13 +330,13 @@ const KidCheckInView = () => {
           isVolunteer: isKidVolunteer,
           gender: kid.gender || (kid as any).sex,
         });
-        toast.success("¡Reimpresión Bluetooth realizada con éxito!");
+        toast.success(t('kidRegistration:check_in.reprint_success_bluetooth'));
       } else {
-        toast.success("Reimpresión solicitada correctamente");
+        toast.success(t('kidRegistration:check_in.reprint_success'));
       }
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
-      toast.error("Error al reimprimir");
+      toast.error(t('kidRegistration:check_in.reprint_error'));
     } finally {
       setIsProcessing(false);
     }
@@ -344,10 +346,10 @@ const KidCheckInView = () => {
     if (!kid?.currentKidRegistration) return;
     try {
       await dispatch(RemoveKidRegistration({ id: kid.currentKidRegistration.id })).unwrap();
-      toast.success("Registro eliminado");
+      toast.success(t('kidRegistration:check_in.delete_registration_success'));
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
-      toast.error("Error al eliminar registro");
+      toast.error(t('kidRegistration:check_in.delete_registration_error'));
     }
   };
 
@@ -444,7 +446,7 @@ const KidCheckInView = () => {
               className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
             >
               <Pencil size={17} className="text-gray-500" />
-              <span>Actualizar datos del niño</span>
+              <span>{t('kidRegistration:check_in.btn_update_data')}</span>
             </button>
 
             <button
@@ -456,7 +458,7 @@ const KidCheckInView = () => {
               className="w-full text-left px-4 py-2.5 hover:bg-gray-50 flex items-center gap-3 text-sm font-semibold text-gray-700 transition-colors"
             >
               <UserPlus size={17} className="text-gray-500" />
-              <span>Asignar nuevo(a) {guardianTerm.toLowerCase()}</span>
+              <span>{t('kidRegistration:check_in.btn_assign_guardian', { guardian: guardianTerm })}</span>
             </button>
 
             {isAdmin && (
@@ -471,7 +473,7 @@ const KidCheckInView = () => {
                   className="w-full text-left px-4 py-2.5 hover:bg-red-50 flex items-center gap-3 text-sm font-semibold text-red-600 transition-colors"
                 >
                   <Trash2 size={17} className="text-red-500" />
-                  <span>Eliminar niño</span>
+                  <span>{t('kidRegistration:check_in.btn_delete_kid')}</span>
                 </button>
               </>
             )}
@@ -498,7 +500,7 @@ const KidCheckInView = () => {
             {isBirthdayToday && (
               <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white p-3.5 rounded-2xl mb-4 flex items-center justify-center gap-2.5 text-sm font-black shadow-md animate-pulse tracking-wide">
                 <Cake size={22} className="text-yellow-200 animate-bounce" />
-                <span>¡¡¡HOY ES SU CUMPLEAÑOS!!! 🎉🎂</span>
+                <span>{t('kidRegistration:check_in.birthday_banner')}</span>
               </div>
             )}
 
@@ -565,7 +567,7 @@ const KidCheckInView = () => {
                 <div className="flex-1 min-w-0">
                   <h3 className="text-lg sm:text-xl font-bold text-gray-800 leading-snug break-words">{capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`)}</h3>
                   <h4 className="text-sm text-gray-500 font-medium mt-0.5">
-                    Código: {kid?.faithForgeId || kid?.id}{formattedAge ? ` • Edad: ${formattedAge}` : ''}
+                    {t('kidRegistration:check_in.code_label')}: {kid?.faithForgeId || kid?.id}{formattedAge ? ` • ${t('kidRegistration:check_in.age_label')}: ${formattedAge}` : ''}
                   </h4>
                   <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                     <TagKidGroup
@@ -579,12 +581,12 @@ const KidCheckInView = () => {
                     )}
                     {isBirthdayToday && (
                       <span className="px-2.5 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
-                        🎂 Hoy
+                        {t('kidRegistration:dashboard.badge_birthday')}
                       </span>
                     )}
                     {isRegistered && (
                       <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                        Registrado
+                        {t('kidRegistration:dashboard.badge_registered')}
                       </span>
                     )}
                     {!isRegistered && (
@@ -605,33 +607,33 @@ const KidCheckInView = () => {
             {/* Tarjeta con Información Detallada del Niño (Datos del Niño) */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-4">
               <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 border-b border-gray-100 pb-2">
-                Datos del niño
+                {t('kidRegistration:form.step_kid_info')}
               </h2>
               <div className="flex flex-col gap-y-3 text-sm">
                 {formattedAge && (
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="font-semibold text-gray-500">Edad</span>
+                    <span className="font-semibold text-gray-500">{t('kidRegistration:check_in.age_label')}</span>
                     <span className="font-bold text-gray-800">{formattedAge}</span>
                   </div>
                 )}
 
                 {kid?.birthday && (
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="font-semibold text-gray-500">Fecha de nacimiento</span>
+                    <span className="font-semibold text-gray-500">{t('kidRegistration:form.birthday_label')}</span>
                     <span className="font-bold text-gray-800">{formatDateOnly(kid.birthday)}</span>
                   </div>
                 )}
 
                 {kid?.gender && (
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="font-semibold text-gray-500">Género</span>
-                    <span className="font-bold text-gray-800">{kid.gender === 'M' ? 'Masculino' : kid.gender === 'F' ? 'Femenino' : kid.gender}</span>
+                    <span className="font-semibold text-gray-500">{t('kidRegistration:form.gender_label')}</span>
+                    <span className="font-bold text-gray-800">{kid.gender === 'M' ? t('kidRegistration:form.gender_male') : kid.gender === 'F' ? t('kidRegistration:form.gender_female') : kid.gender}</span>
                   </div>
                 )}
 
                 {kid?.healthSecurityEntity && (
                   <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                    <span className="font-semibold text-gray-500">EPS</span>
+                    <span className="font-semibold text-gray-500">{t('kidRegistration:check_in.health_entity_label')}</span>
                     <span className={clsx("font-bold", isEpsUnknown ? "text-amber-700 flex items-center gap-1.5" : "text-gray-800")}>
                       {isEpsUnknown && <AlertTriangle size={15} className="text-amber-600" />}
                       {capitalizeWords(kid.healthSecurityEntity)}
@@ -641,7 +643,7 @@ const KidCheckInView = () => {
 
                 {kid?.medicalCondition && (
                   <div className="flex justify-between items-start py-1 border-b border-gray-50">
-                    <span className="font-semibold text-gray-500">Condición Médica</span>
+                    <span className="font-semibold text-gray-500">{t('kidRegistration:check_in.medical_condition_label')}</span>
                     <span className="font-bold text-amber-600 text-right">
                       {typeof kid.medicalCondition === 'object' ? `${kid.medicalCondition.code || ''} - ${kid.medicalCondition.name || ''}` : kid.medicalCondition}
                     </span>
@@ -650,7 +652,7 @@ const KidCheckInView = () => {
 
                 {kid?.observations && (
                   <div className="flex flex-col py-1">
-                    <span className="font-semibold text-gray-500 mb-1">Observaciones generales</span>
+                    <span className="font-semibold text-gray-500 mb-1">{t('kidRegistration:check_in.notes_label')}</span>
                     <span className="font-medium text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs leading-relaxed">
                       {kid.observations}
                     </span>
@@ -804,12 +806,12 @@ const KidCheckInView = () => {
 
                 <div className="flex flex-col gap-3 mb-8">
                   <Button onClick={handleReprint} block variant="primary">
-                    <Printer size={18} className="mr-2 shrink-0" /> Reimprimir registro
+                    <Printer size={18} className="mr-2 shrink-0" /> {t('kidRegistration:check_in.btn_reprint_ticket')}
                   </Button>
                   
                   {isSupervisor && (
                     <Button onClick={handleDelete} block variant="danger">
-                      <Trash2 size={18} className="mr-2 inline" /> Eliminar Registro
+                      <Trash2 size={18} className="mr-2 inline" /> {t('kidRegistration:check_in.btn_delete_registration')}
                     </Button>
                   )}
                 </div>
@@ -819,7 +821,9 @@ const KidCheckInView = () => {
               <>
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 mb-6">
                   <div className="mb-5">
-                    <label className="block text-xs font-bold text-gray-700 mb-3 uppercase">¿Quién lo entrega?</label>
+                    <label className="block text-xs font-bold text-gray-700 mb-3 uppercase">
+                      {t('kidRegistration:form.step_guardian_info', { guardian: guardianTerm })}
+                    </label>
                     <div className="flex flex-col gap-2.5">
                       {relationsList.length === 0 ? (
                         <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs leading-relaxed shadow-xs">
@@ -945,15 +949,15 @@ const KidCheckInView = () => {
 
                   <div>
                     <Select
-                      label="Observaciones al registrar (Check-in)"
+                      label={t('kidRegistration:scanner.observations_select_label')}
                       value={observationType}
                       onChange={(e) => setObservationType(e.target.value)}
                     >
-                      <option value="NONE">Ninguna</option>
-                      <option value="Lleva bolso">Lleva bolso</option>
-                      <option value="Lleva merienda">Lleva merienda</option>
-                      <option value="Lleva bolso y merienda">Lleva bolso y merienda</option>
-                      <option value="OTHER">Otra observación</option>
+                      <option value="NONE">{t('kidRegistration:scanner.observations_options.none')}</option>
+                      <option value="Lleva bolso">{t('kidRegistration:scanner.observations_options.has_bag')}</option>
+                      <option value="Lleva merienda">{t('kidRegistration:scanner.observations_options.has_snack')}</option>
+                      <option value="Lleva bolso y merienda">{t('kidRegistration:scanner.observations_options.has_bag_and_snack')}</option>
+                      <option value="OTHER">{t('kidRegistration:scanner.observations_options.other')}</option>
                     </Select>
 
                     {observationType === 'OTHER' && (
@@ -962,7 +966,7 @@ const KidCheckInView = () => {
                           className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm placeholder:text-gray-400"
                           rows={3}
                           maxLength={300}
-                          placeholder="Escriba la observación personalizada..."
+                          placeholder={t('kidRegistration:scanner.custom_observation_placeholder')}
                           value={customObservation}
                           onChange={(e) => setCustomObservation(e.target.value)}
                           autoFocus
@@ -1006,7 +1010,7 @@ const KidCheckInView = () => {
                   loadingText={processingStep}
                   disabled={shouldBlockKids || loading || isProcessing || relationsList.length === 0 || (isOverage && !isAdmin) || isSelectedGuardianPhoneInvalid}
                 >
-                  <Printer size={20} className="mr-2 shrink-0" /> Registrar e Imprimir Etiqueta
+                  <Printer size={20} className="mr-2 shrink-0" /> {t('kidRegistration:check_in.btn_confirm_checkin')}
                 </Button>
                 {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
                 <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
@@ -1047,7 +1051,7 @@ const KidCheckInView = () => {
         title="¿Registrar fuera de horario?"
         description={`${meetingErrorMsg || 'El servicio seleccionado se encuentra fuera del horario habitual de registro.'} Como administrador, ¿deseas confirmar y proceder con el registro de este niño?`}
         confirmText="Sí, registrar"
-        cancelText="Cancelar"
+        cancelText={t('common:actions.cancel')}
         type="warning"
         onConfirm={executeRegistration}
       />
@@ -1057,8 +1061,8 @@ const KidCheckInView = () => {
         onOpenChange={setShowVolunteerConfirmModal}
         title={`Cambiar niño a ${isKidVolunteer ? (kid?.kidGroup?.name || 'salón habitual') : specialGroupName}`}
         description={`El niño será registrado ${isKidVolunteer ? `para recibir en su salón habitual (${kid?.kidGroup?.name || 'Salón habitual'})` : `en el área de servidores (${specialGroupName})`}. Por favor confirma si deseas realizar esta acción.`}
-        confirmText="Confirmar"
-        cancelText="Cancelar"
+        confirmText={t('common:actions.confirm')}
+        cancelText={t('common:actions.cancel')}
         type="info"
         onConfirm={() => setIsKidVolunteer(!isKidVolunteer)}
       />
@@ -1073,7 +1077,7 @@ const KidCheckInView = () => {
         title={`¿Eliminar relación de ${guardianTerm.toLowerCase()}?`}
         description={`¿Estás seguro de que deseas desvincular a ${guardianRelationToDelete?.fullName || `este(a) ${guardianTerm.toLowerCase()}`} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}
         confirmText="Sí, eliminar"
-        cancelText="Cancelar"
+        cancelText={t('common:actions.cancel')}
         type="danger"
         onConfirm={handleConfirmDeleteGuardianRelation}
       />

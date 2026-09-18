@@ -65,6 +65,20 @@
   - **Llamadas telefónicas**: Usar consistentemente `Phone` de `lucide-react`.
   - **Niños y niñas**: Usar `FaChild` y `FaChildDress` de `react-icons/fa6` para género masculino/femenino.
 
+## Text Management & Internationalization (i18n)
+
+- **Cero Textos Quemados en Vistas Nuevas**: Toda nueva vista, modal, drawer o componente de interfaz DEBE utilizar el sistema de internacionalización a través de `useTranslation()` de `react-i18next`. Queda prohibido hardcodear textos o cadenas en español directamente en el JSX para código nuevo.
+- **Estructura Modular por Namespaces**:
+  - Los recursos se organizan en `src/locales/es/<namespace>.json`.
+  - `common.json`: Acciones transversales (`actions.save`, `actions.cancel`, `actions.delete`, etc.), estados globales (`states.loading`, `states.saving`, etc.) y diálogos comunes.
+  - Para módulos específicos, crear o extender namespaces temáticos (ej. `auth.json`, `kidChurch.json`, `admin.json`).
+  - Todo nuevo namespace DEBE registrarse en `src/libs/i18n/index.ts` dentro de `resources` para preservar el tipado estricto y autocompletado en TypeScript (`CustomTypeOptions`).
+- **Articulación con el Motor de Nomenclatura Adaptable**:
+  - Los términos institucionales y operativos variables de la iglesia (`useChurchTerm`, `useKidsTerm`, `useMinistryTerm`) NO son textos estáticos traducibles directamente; son variables dinámicas configurables por cada iglesia.
+  - La integración DEBE realizarse mediante interpolación en las plantillas de traducción:
+    `t('select_meeting_prompt', { meeting: meetingTerm.toLowerCase() })` con `{ "select_meeting_prompt": "Selecciona una {{meeting}} para registrar asistencia" }`.
+- **Migración Progresiva**: Los componentes existentes en mantenimiento deben migrar sus textos quemados de manera oportunista cada vez que se toquen por una tarea o mejora.
+
 ## Build And Test
 
 - Use `npm run build` when a change affects routing, runtime behavior, or static generation.

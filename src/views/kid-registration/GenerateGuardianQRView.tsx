@@ -28,8 +28,10 @@ import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/ui/PageHeader';
 import { APP_ROUTES } from '@/config/routes';
+import { useTranslation } from 'react-i18next';
 
 const GenerateGuardianQRView: React.FC = () => {
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const kidsModuleName = useKidsTerm('module_alias');
@@ -149,13 +151,13 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
 
   return (
     <div className="flex-1 flex flex-col bg-gray-50 pb-6">
-      <PageHeader title="Generar Código QR" onBack={() => navigate(-1)} />
+      <PageHeader title={t('kidRegistration:guardian_qr.title', { guardian: guardianTerm })} onBack={() => navigate(-1)} />
 
       <div className="p-4 max-w-md mx-auto flex flex-col gap-4 animate-in fade-in duration-300">
         {/* Buscador de Documento */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-            Cédula o Documento de {guardianTerm}
+            {t('kidRegistration:guardian_qr.search_label', { guardian: guardianTerm })}
           </label>
           <form onSubmit={handleSearch} className="flex gap-2">
             <div className="relative flex-1 flex items-center">
@@ -163,7 +165,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
                 type="text"
                 value={nationalIdQuery}
                 onChange={(e) => setNationalIdQuery(e.target.value)}
-                placeholder="Ej: 1047480449"
+                placeholder={t('kidRegistration:guardian_qr.search_placeholder', { guardian: guardianTerm.toLowerCase() })}
                 autoComplete="off"
                 autoCorrect="off"
                 autoCapitalize="off"
@@ -194,7 +196,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
               className="px-4 shrink-0 rounded-xl"
             >
               <Search size={18} className="mr-1.5 inline" />
-              Buscar
+              {t('kidRegistration:guardian_qr.search_button')}
             </Button>
           </form>
         </div>
@@ -204,7 +206,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
           <div className="flex flex-col items-center justify-center p-8 gap-3 bg-white rounded-2xl border border-gray-100 shadow-sm">
             <Loader2 className="animate-spin text-primary" size={36} />
             <p className="text-sm font-medium text-gray-500">
-              {guardianLoading ? `Buscando ${guardianTerm.toLowerCase()}...` : 'Generando enlace QR...'}
+              {guardianLoading ? t('kidRegistration:guardian_qr.searching') : t('kidRegistration:guardian_qr.generating_link')}
             </p>
           </div>
         )}
@@ -273,12 +275,12 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
                 className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
               >
                 <FaWhatsapp size={18} />
-                Compartir por WhatsApp
+                {t('kidRegistration:guardian_qr.btn_whatsapp')}
               </button>
 
               <Button onClick={downloadCode} block variant="default">
                 <Download size={18} className="mr-2 inline" />
-                Descargar QR
+                {t('kidRegistration:guardian_qr.btn_download_image')}
               </Button>
 
               <Button block disabled variant="ghost" className="opacity-50">
@@ -289,7 +291,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
               <div className="pt-2 border-t border-gray-100 mt-1">
                 <Button onClick={handleFinish} block variant="primary">
                   <Check size={18} className="mr-2 inline" />
-                  Finalizar
+                  {t('common:actions.accept')}
                 </Button>
               </div>
             </div>
