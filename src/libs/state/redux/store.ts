@@ -85,6 +85,11 @@ const activeContextOnlyTransform = createTransform(
         current: inboundState?.current,
       };
     }
+    if (key === 'ministrySlice') {
+      return {
+        ministries: inboundState?.ministries || [],
+      };
+    }
     return inboundState;
   },
   // Transform state being rehydrated
@@ -116,9 +121,29 @@ const activeContextOnlyTransform = createTransform(
         ...outboundState,
       };
     }
+    if (key === 'ministrySlice') {
+      return {
+        ministries: [],
+        loadingMinistries: false,
+        errorMinistries: null,
+        areasByMinistry: {},
+        loadingAreas: false,
+        errorAreas: null,
+        groupsByMinistry: {},
+        loadingGroups: false,
+        errorGroups: null,
+        serviceAreaGroups: [],
+        loadingServiceAreaGroups: false,
+        errorServiceAreaGroups: null,
+        selectedMinistryId: null,
+        loadingAction: false,
+        errorAction: null,
+        ...outboundState,
+      };
+    }
     return outboundState;
   },
-  { whitelist: ['churchCampusSlice', 'churchMeetingSlice', 'churchPrinterSlice'] },
+  { whitelist: ['churchCampusSlice', 'churchMeetingSlice', 'churchPrinterSlice', 'ministrySlice'] },
 );
 
 const persistConfig = {
@@ -131,6 +156,7 @@ const persistConfig = {
     'churchMeetingSlice',
     'churchPrinterSlice',
     'printerModeSlice',
+    'ministrySlice',
   ],
   transforms: [activeContextOnlyTransform],
 };

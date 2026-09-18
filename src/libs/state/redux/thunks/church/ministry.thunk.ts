@@ -28,15 +28,15 @@ import { RootState } from '../../store';
 export const GetMinistries = createAsyncThunk(
   'church/GetMinistries',
   async (
-    payload: { churchCampusId?: string; churchId?: string; force?: boolean } = {},
+    payload: { churchCampusId?: string; churchId?: string; force?: boolean } | void = {},
     { getState, rejectWithValue },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
     const params: Record<string, string> = {};
-    if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
-    if (payload.churchId) params.churchId = payload.churchId;
+    if (payload?.churchCampusId) params.churchCampusId = payload.churchCampusId;
+    if (payload?.churchId) params.churchId = payload.churchId;
 
     try {
       const response = (

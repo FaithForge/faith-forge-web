@@ -5,6 +5,8 @@ import kidRegistration from '@/locales/es/kidRegistration.json';
 import kidChurch from '@/locales/es/kidChurch.json';
 import auth from '@/locales/es/auth.json';
 import admin from '@/locales/es/admin.json';
+import kidGuardian from '@/locales/es/kidGuardian.json';
+import hub from '@/locales/es/hub.json';
 
 export const defaultNS = 'common';
 export const resources = {
@@ -14,6 +16,8 @@ export const resources = {
     kidChurch,
     auth,
     admin,
+    kidGuardian,
+    hub,
   },
 } as const;
 

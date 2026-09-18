@@ -52,6 +52,7 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         cleanupOutdatedCaches: true,
+        importScripts: ['/sw-push.js'],
       },
       includeAssets: ['favicon.ico', 'logo-iglekids.png', 'icons/*.png'],
       devOptions: {

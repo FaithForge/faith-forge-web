@@ -1,0 +1,13 @@
+{
+  "badge": "Espacios de trabajo",
+  "greeting": "Hola, {{name}} 👋",
+  "prompt": "¿A qué espacio deseas ingresar hoy?",
+  "cards": {
+    "admin_title": "Administración",
+    "admin_subtitle": "Gestión institucional, sedes, reuniones y usuarios",
+    "staff_title": "{{volunteer}} {{module}}",
+    "staff_subtitle": "Estación de registro de niños, escaneo y atención en salones",
+    "guardian_title": "{{guardian}} - {{module}}",
+    "guardian_subtitle": "Carnet digital con código QR para ingreso y consulta de mis niños"
+  }
+}

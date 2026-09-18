@@ -64,6 +64,12 @@
   - **WhatsApp**: Toda acción, enlace o botón relacionado con WhatsApp DEBE usar obligatoriamente `FaWhatsapp` de `react-icons/fa6`. Queda estrictamente PROHIBIDO usar íconos de mensajería genéricos (`MessageCircle`, `MessageSquare`, etc.) de Lucide para representar WhatsApp.
   - **Llamadas telefónicas**: Usar consistentemente `Phone` de `lucide-react`.
   - **Niños y niñas**: Usar `FaChild` y `FaChildDress` de `react-icons/fa6` para género masculino/femenino.
+- **Consistencia Estricta de Cabecera (TopBar) y Forma Visual**:
+  - Toda barra superior (incluyendo `AdminLayout`, `MainLayout` o layouts de nuevos módulos) DEBE replicar con fidelidad exacta la forma, altura, anatomía y componentes del `TopBar` estándar (`px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0`):
+    - **Lado izquierdo**: Avatar/insignia circular (`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full`), título (`font-extrabold text-[13px] sm:text-[15px] leading-snug tracking-tight truncate`), subtítulo (`text-[10px] sm:text-[11px] font-medium opacity-90 mt-0.5 leading-none`).
+    - **Lado derecho**: Botón circular de búsqueda animado (`w-8 h-8 rounded-full`), y gatillo circular de usuario (`w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full overflow-hidden`).
+    - **Menú de usuario**: Todo menú de perfil o navegación de espacios debe vivir dentro del menú desplegable del avatar (`DropdownMenu.Content`), nunca como botones o píldoras flotantes sueltas en la barra.
+    - **PROHIBIDO inventar formas ajenas**: No crear barras sobredimensionadas (`h-16`), ni botones con estilos o píldoras extrañas que rompan la uniformidad geométrica de la app. Cada módulo o rol solo varía su **colometría temática** (ej. `bg-slate-900` para administración, `bg-primary` para iglekids), respetando estrictamente la forma base.
 
 ## Text Management & Internationalization (i18n)
 

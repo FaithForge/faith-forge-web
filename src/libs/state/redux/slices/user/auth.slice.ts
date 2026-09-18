@@ -37,6 +37,12 @@ const AuthSlice = createSlice({
       state.experiences = action.payload;
       if (action.payload.length === 1) {
         state.activeExperience = action.payload[0];
+      } else if (
+        action.payload.length > 1 &&
+        state.activeExperience &&
+        !action.payload.includes(state.activeExperience)
+      ) {
+        state.activeExperience = null;
       }
     },
     changeCurrentRole: (state, action: PayloadAction<AppRole>) => {
@@ -92,6 +98,7 @@ const AuthSlice = createSlice({
       if (action.payload.refreshToken) {
         state.refreshToken = action.payload.refreshToken;
       }
+      state.activeExperience = null;
       state.error = undefined;
       state.loading = false;
     },
@@ -134,6 +141,8 @@ const AuthSlice = createSlice({
       state.experiences = action.payload.experiences || [];
       if (action.payload.experiences?.length === 1) {
         state.activeExperience = action.payload.experiences[0];
+      } else {
+        state.activeExperience = null;
       }
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;

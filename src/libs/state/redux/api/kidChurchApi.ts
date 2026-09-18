@@ -257,9 +257,10 @@ export const kidChurchApi = baseApi.injectEndpoints({
         result
           ? [
               { type: 'KidGuardian', id: result.guardian.id },
+              { type: 'KidGuardian', id: 'LIST' },
               { type: 'KidRegistered', id: 'LIST' },
             ]
-          : [{ type: 'KidGuardian', id: 'ME' }],
+          : [{ type: 'KidGuardian', id: 'ME' }, { type: 'KidGuardian', id: 'LIST' }],
     }),
   }),
   overrideExisting: false,

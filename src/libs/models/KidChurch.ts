@@ -334,6 +334,8 @@ export interface IAssignedKidItem {
   photoUrl?: string;
   birthday?: string;
   age?: number;
+  healthSecurityEntity?: string;
+  observations?: string;
   relation: KidGuardianRelationCodeEnum;
   kidGroup?: {
     id: string;
@@ -345,7 +347,14 @@ export interface IAssignedKidItem {
     id: string;
     date: Date;
     churchMeetingId: string;
+    churchMeetingName?: string;
+    churchCampusName?: string;
     groupId: string;
+    groupName?: string;
+    observation?: string;
+    isMeetingFinished?: boolean;
+    meetingInitialHour?: string;
+    meetingFinalHour?: string;
   } | null;
 }
 

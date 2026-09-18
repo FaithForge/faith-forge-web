@@ -16,13 +16,15 @@ import {
   registerBiometrics,
   clearBiometricSession,
 } from '@/libs/utils/biometrics';
+import { UserExperienceEnum } from '@/libs/utils/auth';
 
 interface UserProfileModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  variant?: 'default' | 'white' | 'guardian';
 }
 
-const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
+const UserProfileModal = ({ open, onOpenChange, variant }: UserProfileModalProps) => {
   const [showClearCacheConfirm, setShowClearCacheConfirm] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -33,6 +35,9 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
 
   const user = useAppSelector((state) => state.authSlice.user);
   const token = useAppSelector((state) => state.authSlice.token);
+  const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
+  const isGuardian = variant === 'guardian' || activeExperience === UserExperienceEnum.KID_GUARDIAN;
+  const isWhite = !isGuardian && variant === 'white';
 
   useEffect(() => {
     if (open) {
@@ -103,22 +108,61 @@ const UserProfileModal = ({ open, onOpenChange }: UserProfileModalProps) => {
           <Dialog.Content className="fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%] bg-surface w-[90%] max-w-sm rounded-2xl shadow-xl z-[301] p-0 overflow-hidden outline-none animate-in fade-in zoom-in-95 duration-200">
             
             {/* Header */}
-            <div className="bg-primary p-6 text-white flex flex-col items-center relative">
-              <button 
+            <div
+              className={
+                isGuardian
+                  ? 'bg-gradient-to-br from-indigo-600 via-indigo-700 to-sky-700 p-6 text-white flex flex-col items-center relative overflow-hidden'
+                  : isWhite
+                  ? 'bg-white border-b border-slate-200 p-6 text-slate-900 flex flex-col items-center relative'
+                  : 'bg-primary p-6 text-white flex flex-col items-center relative'
+              }
+            >
+              {/* Subtle background glow for guardian */}
+              {isGuardian && (
+                <>
+                  <div className="absolute -right-6 -bottom-6 w-24 h-24 bg-white/10 rounded-full blur-lg pointer-events-none" />
+                  <div className="absolute -left-6 -top-6 w-20 h-20 bg-sky-400/20 rounded-full blur-md pointer-events-none" />
+                </>
+              )}
+              <button
                 onClick={() => onOpenChange(false)}
-                className="absolute top-4 right-4 p-1.5 bg-white/20 hover:bg-white/30 rounded-full transition-colors"
+                className={
+                  isWhite
+                    ? 'absolute top-4 right-4 p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-full transition-colors cursor-pointer z-10'
+                    : 'absolute top-4 right-4 p-1.5 bg-white/20 hover:bg-white/30 text-white rounded-full transition-colors cursor-pointer z-10'
+                }
               >
                 <X size={18} />
               </button>
-              <div className="w-20 h-20 bg-white text-primary rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-sm ring-4 ring-primary-foreground/20 overflow-hidden">
+              <div
+                className={
+                  isGuardian
+                    ? 'w-20 h-20 bg-white text-indigo-700 rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-md ring-4 ring-white/30 overflow-hidden relative z-10'
+                    : isWhite
+                    ? 'w-20 h-20 bg-slate-100 text-slate-800 rounded-full flex items-center justify-center text-3xl font-bold mb-3 ring-4 ring-slate-100 overflow-hidden border border-slate-200 shadow-inner'
+                    : 'w-20 h-20 bg-white text-primary rounded-full flex items-center justify-center text-3xl font-bold mb-3 shadow-sm ring-4 ring-primary-foreground/20 overflow-hidden'
+                }
+              >
                 {user.photoUrl ? (
                   <img src={user.photoUrl} alt={userName} className="w-full h-full object-cover" />
                 ) : (
                   userInitials
                 )}
               </div>
-              <h2 className="text-xl font-bold">{userName}</h2>
-              <p className="opacity-90 text-sm mt-1">Perfil de Usuario</p>
+              <h2 className={isWhite ? 'text-xl font-bold text-slate-900' : 'text-xl font-bold text-white relative z-10'}>
+                {userName}
+              </h2>
+              <p
+                className={
+                  isGuardian
+                    ? 'text-indigo-100/90 text-sm mt-0.5 font-medium relative z-10'
+                    : isWhite
+                    ? 'text-slate-500 text-sm mt-0.5 font-medium'
+                    : 'opacity-90 text-sm mt-1'
+                }
+              >
+                Perfil de Usuario
+              </p>
             </div>
 
             {/* Info list */}

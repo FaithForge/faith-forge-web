@@ -38,6 +38,8 @@ interface RoleThemeStyle {
   tagBg: string;
 }
 
+const EMPTY_ASSIGNMENTS: IVolunteerAssignment[] = [];
+
 /**
  * Resolves the visual theme (badge, avatar initials, photo border, and row highlight)
  * according to the exact role and area colors defined across the application interface:
@@ -250,9 +252,10 @@ export const SupervisorTeamView: React.FC = () => {
     ? `my-team-area-${effectiveCampusId}-${effectiveAreaId || 'all'}`
     : `my-team-${effectiveCampusId}-${effectiveGroupId || 'all'}-${isGroupCoordinator ? 'all' : (activeAreaId || 'all')}`;
 
-  const assignments = useAppSelector(
-    (state) => state.volunteerSlice.assignmentsByPartition[partitionKey] || [],
-  );
+  const assignments =
+    useAppSelector(
+      (state) => state.volunteerSlice.assignmentsByPartition[partitionKey],
+    ) ?? EMPTY_ASSIGNMENTS;
   const isLoading = useAppSelector(
     (state) => state.volunteerSlice.loadingByPartition[partitionKey] || false,
   );

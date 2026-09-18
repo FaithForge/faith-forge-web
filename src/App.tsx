@@ -11,6 +11,8 @@ import PageLoader from '@/components/layout/PageLoader';
 import { APP_ROUTES } from '@/config/routes';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout, updateTokens } from '@/libs/state/redux/slices/user/auth.slice';
+import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
+import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { setHttpAuthHandlers } from '@/libs/utils/http';
 import { store } from '@/libs/state/redux/store';
 import { baseApi } from '@/libs/state/redux/api/baseApi';
@@ -59,6 +61,7 @@ const KidGuardianDashboardView = lazy(
   () => import('@/views/kid-guardian/KidGuardianDashboardView')
 );
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { UserExperienceEnum } from '@/libs/utils/auth';
 
 const IndexRedirect = () => {
@@ -76,6 +79,16 @@ const IndexRedirect = () => {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
 
+  // If user explicitly chose Kid Church Staff experience
+  if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF) {
+    const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
+    const dashboardUrl =
+      isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
+        ? userRolesNavBarConfig[currentRole]!.dashboardUrl
+        : APP_ROUTES.kidRegistration.root;
+    return <Navigate to={dashboardUrl} replace />;
+  }
+
   // If user has multiple experiences and has not picked one yet, send to the Hub
   if (!activeExperience && experiences.length > 1) {
     return <Navigate to={APP_ROUTES.hub} replace />;
@@ -89,6 +102,16 @@ const IndexRedirect = () => {
   // If user has only one experience and it is Admin
   if (experiences.length === 1 && experiences[0] === UserExperienceEnum.ADMIN) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
+  }
+
+  // If user has only one experience and it is Kid Church Staff
+  if (experiences.length === 1 && experiences[0] === UserExperienceEnum.KID_CHURCH_STAFF) {
+    const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
+    const dashboardUrl =
+      isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
+        ? userRolesNavBarConfig[currentRole]!.dashboardUrl
+        : APP_ROUTES.kidRegistration.root;
+    return <Navigate to={dashboardUrl} replace />;
   }
 
   // Default: Find the base dashboard URL for the current role if enabled
@@ -109,7 +132,16 @@ const IndexRedirect = () => {
  */
 function App() {
   const dispatch = useAppDispatch();
+  const token = useAppSelector((state) => state.authSlice.token);
   useScreenWakeLock();
+
+  // Global bootstrap: Ensure campuses, church settings, and ministries (custom terminology)
+  // are loaded as soon as an authenticated session is active.
+  useEffect(() => {
+    if (!token) return;
+    dispatch(GetChurchCampuses());
+    dispatch(GetMinistries());
+  }, [dispatch, token]);
 
   useEffect(() => {
     setHttpAuthHandlers({
@@ -154,8 +186,12 @@ function App() {
     <>
       <NetworkStatusBanner />
       <Toaster position="top-center" richColors swipeDirections={['top', 'left', 'right']} />
-      <Analytics />
-      <SpeedInsights />
+      {import.meta.env.PROD && (
+        <>
+          <Analytics />
+          <SpeedInsights />
+        </>
+      )}
       <BrowserRouter>
         <ScrollToTop />
         <Suspense fallback={<PageLoader />}>
@@ -174,9 +210,8 @@ function App() {
                 <Route index element={<KidGuardianDashboardView />} />
               </Route>
 
-              {/* Operational Volunteers & Admin Layout */}
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<IndexRedirect />} />
+              {/* Admin Experience Layout (Decoupled from Kids Ministry) */}
+              <Route element={<AdminLayout />}>
                 <Route path={APP_ROUTES.admin.root} element={<AdminDashboard />} />
                 <Route path={APP_ROUTES.admin.createUser} element={<CreateUserView />} />
                 <Route path={APP_ROUTES.admin.users} element={<UserManagementView />} />
@@ -210,6 +245,11 @@ function App() {
                   path={APP_ROUTES.admin.volunteerApplications}
                   element={<VolunteerApplicationsView />}
                 />
+              </Route>
+
+              {/* Operational Volunteers Layout (Kids Ministry) */}
+              <Route path="/" element={<MainLayout />}>
+                <Route index element={<IndexRedirect />} />
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
                 <Route path={APP_ROUTES.kidChurch.myTeam} element={<SupervisorTeamView />} />
                 <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />

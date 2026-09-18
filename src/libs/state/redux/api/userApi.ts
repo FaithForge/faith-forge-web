@@ -16,6 +16,38 @@ export const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ['UserOverview'],
     }),
+
+    getVapidPublicKey: builder.query<{ publicKey: string }, void>({
+      query: () => ({
+        microservice: MicroserviceEnum.User,
+        url: '/push/vapid-public-key',
+        method: HttpRequestMethod.GET,
+      }),
+    }),
+
+    subscribePushNotification: builder.mutation<
+      { success: boolean },
+      { subscription: unknown }
+    >({
+      query: (payload) => ({
+        microservice: MicroserviceEnum.User,
+        url: '/push/subscribe',
+        method: HttpRequestMethod.POST,
+        data: payload,
+      }),
+    }),
+
+    unsubscribePushNotification: builder.mutation<
+      { success: boolean },
+      { endpoint: string }
+    >({
+      query: (payload) => ({
+        microservice: MicroserviceEnum.User,
+        url: '/push/unsubscribe',
+        method: HttpRequestMethod.DELETE,
+        data: payload,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -23,4 +55,8 @@ export const userApi = baseApi.injectEndpoints({
 export const {
   useGetMyOverviewQuery,
   useLazyGetMyOverviewQuery,
+  useGetVapidPublicKeyQuery,
+  useLazyGetVapidPublicKeyQuery,
+  useSubscribePushNotificationMutation,
+  useUnsubscribePushNotificationMutation,
 } = userApi;

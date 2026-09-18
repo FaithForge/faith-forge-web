@@ -65,6 +65,15 @@
     --color-primary: #003963;
     --color-primary-rgb: 0, 57, 99;
   }
+  .theme-GUARDIAN {
+    --color-primary: #4338ca;
+    --color-primary-rgb: 67, 56, 202;
+    --color-primary-foreground: #ffffff;
+    --color-background: #f8fafc;
+    --color-surface: #ffffff;
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
+  }
 
   html,
   body,

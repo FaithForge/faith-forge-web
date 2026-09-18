@@ -5,9 +5,9 @@ import { Crown, Shield, HeartHandshake, ChevronRight, LogOut, Sparkles } from 'l
 import { FaChild } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { setActiveExperience } from '@/libs/state/redux/slices/user/auth.slice';
+import { setActiveExperience, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
 import { UserLogout } from '@/libs/state/redux/thunks/user/auth.thunk';
-import { UserExperienceEnum } from '@/libs/utils/auth';
+import { UserExperienceEnum, UserRole, ChurchRole } from '@/libs/utils/auth';
 import { APP_ROUTES } from '@/config/routes';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { formatPersonShortName } from '@/libs/utils/text';
@@ -19,7 +19,7 @@ import { formatPersonShortName } from '@/libs/utils/text';
  * @returns {JSX.Element} The rendered Hub experience selector.
  */
 const HubView: React.FC = () => {
-  const { t } = useTranslation(['common', 'auth']);
+  const { t } = useTranslation(['hub', 'common', 'auth']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.authSlice.user);
@@ -31,30 +31,35 @@ const HubView: React.FC = () => {
 
   const shortName = formatPersonShortName(user?.firstName, user?.lastName) || 'Usuario';
 
+  const routeUserToExperience = (exp: UserExperienceEnum, replace = false) => {
+    dispatch(setActiveExperience(exp));
+
+    if (exp === UserExperienceEnum.ADMIN) {
+      const adminRole = (user?.roles || []).find((r: any) =>
+        [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF].includes(r)
+      ) || UserRole.ADMIN;
+      dispatch(changeCurrentRole(adminRole as any));
+      navigate(APP_ROUTES.admin.root, { replace });
+    } else if (exp === UserExperienceEnum.KID_CHURCH_STAFF) {
+      const operationalRole = (user?.roles || []).find((r: any) =>
+        ![UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF].includes(r)
+      ) || ChurchRole.MINISTRY_ADMIN;
+      dispatch(changeCurrentRole(operationalRole as any));
+      navigate(APP_ROUTES.kidRegistration.root, { replace });
+    } else if (exp === UserExperienceEnum.KID_GUARDIAN) {
+      navigate(APP_ROUTES.kidGuardian.root, { replace });
+    }
+  };
+
   // If the user only has 1 experience, automatically redirect them without showing the hub
   useEffect(() => {
     if (experiences.length === 1) {
-      const single = experiences[0];
-      dispatch(setActiveExperience(single));
-      if (single === UserExperienceEnum.ADMIN) {
-        navigate(APP_ROUTES.admin.root, { replace: true });
-      } else if (single === UserExperienceEnum.KID_CHURCH_STAFF) {
-        navigate(APP_ROUTES.kidRegistration.root, { replace: true });
-      } else if (single === UserExperienceEnum.KID_GUARDIAN) {
-        navigate(APP_ROUTES.kidGuardian.root, { replace: true });
-      }
+      routeUserToExperience(experiences[0], true);
     }
-  }, [experiences, dispatch, navigate]);
+  }, [experiences]);
 
   const handleSelectExperience = (exp: UserExperienceEnum) => {
-    dispatch(setActiveExperience(exp));
-    if (exp === UserExperienceEnum.ADMIN) {
-      navigate(APP_ROUTES.admin.root);
-    } else if (exp === UserExperienceEnum.KID_CHURCH_STAFF) {
-      navigate(APP_ROUTES.kidRegistration.root);
-    } else if (exp === UserExperienceEnum.KID_GUARDIAN) {
-      navigate(APP_ROUTES.kidGuardian.root);
-    }
+    routeUserToExperience(exp, false);
   };
 
   const handleLogout = async () => {
@@ -66,8 +71,11 @@ const HubView: React.FC = () => {
   const cardsConfig = [
     {
       id: UserExperienceEnum.ADMIN,
-      title: 'Administración',
-      subtitle: 'Gestión institucional, sedes, reuniones y usuarios',
+      title: t('hub:cards.admin_title', 'Administración'),
+      subtitle: t(
+        'hub:cards.admin_subtitle',
+        'Gestión institucional, sedes, reuniones y usuarios',
+      ),
       icon: Crown,
       gradient: 'from-slate-800 to-slate-900',
       badgeBg: 'bg-slate-100 text-slate-700',
@@ -77,8 +85,15 @@ const HubView: React.FC = () => {
     },
     {
       id: UserExperienceEnum.KID_CHURCH_STAFF,
-      title: `${volunteerTerm} ${kidsModuleName}`,
-      subtitle: 'Estación de registro de niños, escaneo y atención en salones',
+      title: t('hub:cards.staff_title', {
+        volunteer: volunteerTerm,
+        module: kidsModuleName,
+        defaultValue: `${volunteerTerm} ${kidsModuleName}`,
+      }),
+      subtitle: t(
+        'hub:cards.staff_subtitle',
+        'Estación de registro de niños, escaneo y atención en salones',
+      ),
       icon: Shield,
       gradient: 'from-emerald-600 to-teal-700',
       badgeBg: 'bg-emerald-50 text-emerald-700',
@@ -88,8 +103,15 @@ const HubView: React.FC = () => {
     },
     {
       id: UserExperienceEnum.KID_GUARDIAN,
-      title: `${guardianTerm} - ${kidsModuleName}`,
-      subtitle: 'Carnet digital con código QR para ingreso y consulta de mis niños',
+      title: t('hub:cards.guardian_title', {
+        guardian: guardianTerm,
+        module: kidsModuleName,
+        defaultValue: `${guardianTerm} - ${kidsModuleName}`,
+      }),
+      subtitle: t(
+        'hub:cards.guardian_subtitle',
+        'Carnet digital con código QR para ingreso y consulta de mis niños',
+      ),
       icon: FaChild,
       gradient: 'from-indigo-600 to-sky-600',
       badgeBg: 'bg-indigo-50 text-indigo-700',
@@ -108,13 +130,13 @@ const HubView: React.FC = () => {
         <div className="text-center mb-8">
           <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-50 border border-indigo-100 text-indigo-700 text-xs font-semibold mb-3">
             <Sparkles className="w-3.5 h-3.5" />
-            <span>Espacios de trabajo</span>
+            <span>{t('hub:badge', 'Espacios de trabajo')}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-            Hola, {shortName} 👋
+            {t('hub:greeting', { name: shortName, defaultValue: `Hola, ${shortName} 👋` })}
           </h1>
           <p className="text-sm text-slate-500 mt-1.5 max-w-xs mx-auto">
-            ¿A qué espacio deseas ingresar hoy?
+            {t('hub:prompt', '¿A qué espacio deseas ingresar hoy?')}
           </p>
         </div>
 

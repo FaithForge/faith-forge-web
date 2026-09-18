@@ -159,7 +159,7 @@ const LoginView = () => {
             refreshToken: result.refreshToken,
           })
         );
-        dispatch(FetchMyVolunteerPermissions());
+        await dispatch(FetchMyVolunteerPermissions());
         const name =
           formatPersonShortName(result.user?.firstName, result.user?.lastName) ||
           result.username;

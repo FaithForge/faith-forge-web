@@ -4,10 +4,12 @@
     "type": "minor",
     "timestamp": "2026-09-18T03:57:32.067Z",
     "dateFormatted": "17/09/2026 10:57 PM",
-    "title": "Portal de Acudientes y Selector de Espacios",
+    "title": "Portal de Acudientes, Sincronización en Vivo y Notificaciones",
     "changes": [
       "Nuevo carnet digital con código QR para acudientes",
-      "Visualización de niños asignados y estado de ingreso",
+      "Visualización de niños asignados y estado de ingreso en tiempo real",
+      "Notificaciones en el dispositivo al registrar el ingreso de los niños",
+      "Detección inteligente de servicios finalizados y múltiples reuniones del día",
       "Selector de espacios para voluntarios y acudientes"
     ]
   },

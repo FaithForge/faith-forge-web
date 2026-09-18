@@ -12,6 +12,7 @@ import {
   Crown,
   Shield,
   Sliders,
+  LayoutGrid,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
@@ -30,7 +31,7 @@ const ChangelogDrawer = lazy(() => import('@/components/modal/ChangelogDrawer'))
 const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
 
 import { APP_VERSION } from '@/constants/version';
-import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
+import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole, UserExperienceEnum } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -234,6 +235,9 @@ const TopBar = () => {
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
+  const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
+  const hasMultipleSpaces = experiences.length > 1;
 
   const [hasOpenedProfile, setHasOpenedProfile] = useState(false);
   const [hasOpenedChangelog, setHasOpenedChangelog] = useState(false);
@@ -435,18 +439,37 @@ const TopBar = () => {
     return combined;
   }, [operationalRoles, volunteerGroupRoles]);
 
-  // Super Admin and Admin can view and switch to all ENABLED system roles.
-  // Other users only see their active operational roles.
-  const availableRoles: ThemeRole[] = isAdminUser
-    ? (ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
-        .map((role) => userRolesNavBarConfig[role])
-        .filter(Boolean) as ThemeRole[])
-    : allOperationalRoleIds.map((role: AppRole) => userRolesNavBarConfig[role]!).filter(Boolean);
+  // Super Admin and Admin can view and switch to all ENABLED system roles when not strictly in KID_CHURCH_STAFF space.
+  // In KID_CHURCH_STAFF space, we isolate operational roles for kids church and registration.
+  const availableRoles: ThemeRole[] = useMemo(() => {
+    if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF) {
+      const opRoles = allOperationalRoleIds
+        .map((role: AppRole) => userRolesNavBarConfig[role]!)
+        .filter(Boolean);
 
-  // Safe fallback if user has no operational roles (only regular USER or unmapped)
-  if (availableRoles.length === 0) {
-    availableRoles.push(userRolesNavBarConfig[UserRole.USER]);
-  }
+      if (opRoles.length > 0) return opRoles;
+
+      return ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
+        .filter((r) => r !== UserRole.SUPER_ADMIN && r !== UserRole.ADMIN && r !== UserRole.STAFF)
+        .map((role) => userRolesNavBarConfig[role])
+        .filter(Boolean) as ThemeRole[];
+    }
+
+    if (isAdminUser) {
+      return ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
+        .map((role) => userRolesNavBarConfig[role])
+        .filter(Boolean) as ThemeRole[];
+    }
+
+    const defaultRoles = allOperationalRoleIds
+      .map((role: AppRole) => userRolesNavBarConfig[role]!)
+      .filter(Boolean);
+
+    if (defaultRoles.length === 0) {
+      defaultRoles.push(userRolesNavBarConfig[UserRole.USER]);
+    }
+    return defaultRoles;
+  }, [activeExperience, isAdminUser, allOperationalRoleIds]);
 
   // Find the active visual role based on Redux currentRole (defaults to the first available role)
   let activeVisualRole = availableRoles[0];
@@ -759,7 +782,7 @@ const TopBar = () => {
     const kidChurchRoles = availableRoles.filter((r) => r.appTitle === 'KidChurch');
     const kidRegistrationRoles = availableRoles.filter((r) => r.appTitle === 'KidRegistration');
 
-    if (adminRoles.length > 0) {
+    if (adminRoles.length > 0 && activeExperience !== UserExperienceEnum.KID_CHURCH_STAFF) {
       sections.push({ title: 'Administración', roles: adminRoles });
     }
     if (kidChurchRoles.length > 0) {
@@ -777,7 +800,7 @@ const TopBar = () => {
     }
 
     return sections;
-  }, [availableRoles, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
+  }, [availableRoles, activeExperience, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
 
   const roleTriggerContent = (
     <div className={clsx(
@@ -1183,10 +1206,22 @@ const TopBar = () => {
                 </div>
                 <div className="overflow-hidden">
                   <p className="font-bold text-sm truncate">{userName}</p>
-                  {userEmail && <p className="text-xs text-text-muted truncate">{userEmail}</p>}
+                  {(userEmail || user?.phone) && (
+                    <p className="text-xs text-text-muted truncate">{userEmail || user?.phone}</p>
+                  )}
                 </div>
               </div>
               
+              {hasMultipleSpaces && (
+                <DropdownMenu.Item 
+                  onSelect={() => navigate(APP_ROUTES.hub)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-indigo-50 text-indigo-700 transition-colors text-sm font-medium mb-1"
+                >
+                  <LayoutGrid size={16} className="text-indigo-600" />
+                  <span>Cambiar de espacio</span>
+                </DropdownMenu.Item>
+              )}
+
               <DropdownMenu.Item 
                 onSelect={() => handleOpenProfile(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
