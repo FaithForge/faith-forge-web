@@ -80,6 +80,23 @@ export const useKidGuardianLiveSync = ({
               { type: 'KidRegistered', id: 'LIST' },
             ])
           );
+        } else if (payload?.type === 'URGENT_NOTICE') {
+          // Vibración háptica continua en primer plano
+          try {
+            if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
+              navigator.vibrate([1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000]);
+            }
+          } catch {
+            // Ignore
+          }
+
+          const kidName = payload.kidName || 'Tu hijo(a)';
+          const groupName = payload.kidGroupName || 'el salón';
+          const reason = payload.reason || 'Se requiere tu presencia';
+          toast.error(`🚨 AVISO URGENTE: ${kidName}`, {
+            description: `Por favor acércate a ${groupName}. Motivo: ${reason}`,
+            duration: 20000,
+          });
         }
       } catch {
         // Heartbeats or raw text are safely ignored
