@@ -54,11 +54,44 @@ const VolunteerRequestPublicView = lazy(
 );
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
+const HubView = lazy(() => import('@/views/hub/HubView'));
+const KidGuardianDashboardView = lazy(
+  () => import('@/views/kid-guardian/KidGuardianDashboardView')
+);
+import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
+import { UserExperienceEnum } from '@/libs/utils/auth';
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
+  const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
 
-  // Find the base dashboard URL for the current role if enabled
+  // If user explicitly chose Kid Guardian experience
+  if (activeExperience === UserExperienceEnum.KID_GUARDIAN) {
+    return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
+  }
+
+  // If user explicitly chose Admin experience
+  if (activeExperience === UserExperienceEnum.ADMIN) {
+    return <Navigate to={APP_ROUTES.admin.root} replace />;
+  }
+
+  // If user has multiple experiences and has not picked one yet, send to the Hub
+  if (!activeExperience && experiences.length > 1) {
+    return <Navigate to={APP_ROUTES.hub} replace />;
+  }
+
+  // If user has only one experience and it is Kid Guardian
+  if (experiences.length === 1 && experiences[0] === UserExperienceEnum.KID_GUARDIAN) {
+    return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
+  }
+
+  // If user has only one experience and it is Admin
+  if (experiences.length === 1 && experiences[0] === UserExperienceEnum.ADMIN) {
+    return <Navigate to={APP_ROUTES.admin.root} replace />;
+  }
+
+  // Default: Find the base dashboard URL for the current role if enabled
   const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
   const dashboardUrl =
     isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
@@ -133,6 +166,15 @@ function App() {
               element={<VolunteerRequestPublicView />}
             />
             <Route element={<PrivateRoute />}>
+              {/* Hub: Experience selector */}
+              <Route path={APP_ROUTES.hub} element={<HubView />} />
+
+              {/* Kid Guardian Experience */}
+              <Route path={APP_ROUTES.kidGuardian.root} element={<KidGuardianLayout />}>
+                <Route index element={<KidGuardianDashboardView />} />
+              </Route>
+
+              {/* Operational Volunteers & Admin Layout */}
               <Route path="/" element={<MainLayout />}>
                 <Route index element={<IndexRedirect />} />
                 <Route path={APP_ROUTES.admin.root} element={<AdminDashboard />} />

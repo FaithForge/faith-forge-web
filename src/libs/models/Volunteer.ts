@@ -1,6 +1,8 @@
 import { EntityState, IChurchCampus, IChurchMeeting } from './Church';
 import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup } from './Ministry';
 import { IUser } from './User';
+import { UserExperienceEnum } from '../utils/auth';
+
 
 export const MinistryVolunteerStateEnum = {
   ...EntityState,
@@ -245,5 +247,13 @@ export interface IVolunteerContextResponse {
   campuses: IVolunteerCampusContext[];
   hasActiveGrants?: boolean;
 }
+
+export interface IUserOverviewResponse {
+  experiences: UserExperienceEnum[];
+  permissions: string[];
+  volunteerContext?: IVolunteerContextResponse;
+}
+
+
 
 

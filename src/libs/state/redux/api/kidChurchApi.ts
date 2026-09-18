@@ -6,10 +6,12 @@ import {
   IKid,
   IKidGroup,
   IKidGuardian,
+  IKidGuardianAssignedKidsResponse,
   IKidMedicalCondition,
   IUpdateKid,
   KidGroupType,
 } from '@/libs/models';
+
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { baseApi } from './baseApi';
 
@@ -244,6 +246,21 @@ export const kidChurchApi = baseApi.injectEndpoints({
         { type: 'Kid', id: 'LIST' },
       ],
     }),
+
+    getMyGuardianAssignedKids: builder.query<IKidGuardianAssignedKidsResponse, void>({
+      query: () => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid-guardian/assigned-kids',
+        method: HttpRequestMethod.GET,
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              { type: 'KidGuardian', id: result.guardian.id },
+              { type: 'KidRegistered', id: 'LIST' },
+            ]
+          : [{ type: 'KidGuardian', id: 'ME' }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -268,4 +285,7 @@ export const {
   useCreateKidGuardianMutation,
   useCreateKidRegistrationMutation,
   useDeleteKidRegistrationMutation,
+  useGetMyGuardianAssignedKidsQuery,
+  useLazyGetMyGuardianAssignedKidsQuery,
 } = kidChurchApi;
+

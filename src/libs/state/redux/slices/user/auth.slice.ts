@@ -3,6 +3,7 @@ import {
   AppRole,
   getMainUserRole,
   sortUserRolesByPriority,
+  UserExperienceEnum,
   UserRole,
 } from '@/libs/utils/auth';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
@@ -16,6 +17,8 @@ const initialState: IAuth = {
   refreshToken: undefined,
   currentRole: undefined,
   userMsRoles: [],
+  activeExperience: null,
+  experiences: [],
   error: undefined,
   loading: false,
 };
@@ -24,9 +27,22 @@ const AuthSlice = createSlice({
   name: 'auth',
   initialState: initialState,
   reducers: {
+    setActiveExperience: (
+      state,
+      action: PayloadAction<UserExperienceEnum | null>
+    ) => {
+      state.activeExperience = action.payload;
+    },
+    setExperiences: (state, action: PayloadAction<UserExperienceEnum[]>) => {
+      state.experiences = action.payload;
+      if (action.payload.length === 1) {
+        state.activeExperience = action.payload[0];
+      }
+    },
     changeCurrentRole: (state, action: PayloadAction<AppRole>) => {
       state.currentRole = action.payload;
     },
+
     updateTokens: (
       state,
       action: PayloadAction<{ token: string; refreshToken?: string }>
@@ -94,6 +110,8 @@ const AuthSlice = createSlice({
       state.refreshToken = undefined;
       state.currentRole = undefined;
       state.userMsRoles = [];
+      state.activeExperience = null;
+      state.experiences = [];
       state.error = undefined;
       state.loading = false;
       if (typeof document !== 'undefined') {
@@ -113,11 +131,16 @@ const AuthSlice = createSlice({
       };
       state.currentRole = getMainUserRole(action.payload.user?.roles);
       state.userMsRoles = action.payload.userMsRoles || [];
+      state.experiences = action.payload.experiences || [];
+      if (action.payload.experiences?.length === 1) {
+        state.activeExperience = action.payload.experiences[0];
+      }
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
       state.error = undefined;
       state.loading = false;
     });
+
     builder.addCase(UserLogin.rejected, (state, action) => {
       state.user = undefined;
       state.token = '';
@@ -152,9 +175,12 @@ const AuthSlice = createSlice({
 export const {
   logout,
   changeCurrentRole,
+  setActiveExperience,
+  setExperiences,
   setAuthSession,
   updateAuthUser,
   updateTokens,
   updateUserRoles,
 } = AuthSlice.actions;
 export default AuthSlice.reducer;
+

@@ -56,6 +56,9 @@ export const invalidateHttpCachePattern = (pattern: string): void => {
  * @returns {boolean} True if cacheable.
  */
 const isCatalogEndpoint = (url: string): boolean => {
+  if (url.startsWith('/kid-guardian/assigned-kids')) {
+    return false;
+  }
   return CATALOG_ENDPOINTS.some((ep) => url.startsWith(ep));
 };
 

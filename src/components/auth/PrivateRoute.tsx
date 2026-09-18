@@ -3,7 +3,7 @@ import { Navigate, Outlet } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout } from '@/libs/state/redux/slices/user/auth.slice';
 import { isTokenExpired } from '@/libs/utils/jwt';
-import { AppRole, UserRole } from '@/libs/utils/auth';
+import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 import { toast } from 'sonner';
@@ -12,14 +12,14 @@ import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
 /**
  * Protects routes that require authentication.
  * Redirects to the login page if no valid token is found or if the token has expired.
- * Also checks if the authenticated user has operational roles assigned; if they only have
- * the base USER role or inactive roles, blocks entry and displays a dedicated warning view.
+ * Also checks if the authenticated user has operational roles or kid guardian access assigned;
+ * if they have no active experiences, blocks entry and displays a dedicated warning view.
  *
  * @returns {JSX.Element} The protected outlet, a redirect to login, or the no-roles-assigned screen.
  */
 const PrivateRoute: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { token, refreshToken, user } = useAppSelector((state) => state.authSlice);
+  const { token, refreshToken, user, experiences } = useAppSelector((state) => state.authSlice);
   const expired = isTokenExpired(token);
 
   useEffect(() => {
@@ -33,6 +33,8 @@ const PrivateRoute: React.FC = () => {
     return <Navigate to={APP_ROUTES.auth.login} replace />;
   }
 
+  const isKidGuardian = experiences?.includes(UserExperienceEnum.KID_GUARDIAN);
+
   // Verifica si el usuario tiene al menos un rol operativo que esté habilitado con vistas activas
   const hasActiveEnabledRole = user?.roles?.some(
     (role) =>
@@ -41,12 +43,13 @@ const PrivateRoute: React.FC = () => {
       isRoleEnabled(role as AppRole)
   );
 
-  if (!hasActiveEnabledRole) {
+  if (!hasActiveEnabledRole && !isKidGuardian) {
     return <NoRolesAssignedView />;
   }
 
   return <Outlet />;
 };
+
 
 export default PrivateRoute;
 

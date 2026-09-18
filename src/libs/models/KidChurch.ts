@@ -1,5 +1,6 @@
-import { AppRole, UserRole } from '../utils/auth';
+import { AppRole, UserExperienceEnum, UserRole } from '../utils/auth';
 import { EntityState } from './Church';
+
 import {
   ReduxDefaultState,
   ReduxDefaultStateWithPagination,
@@ -254,7 +255,11 @@ export interface IAuth extends ReduxDefaultStateWithoutData {
   userMsRoles?: AppRole[];
   token: string;
   refreshToken?: string;
+  activeExperience?: UserExperienceEnum | null;
+  experiences?: UserExperienceEnum[];
 }
+
+
 
 export interface IAccount extends ReduxDefaultStateWithoutData {
   churchGroup?: string;
@@ -319,3 +324,40 @@ export interface IKidMedicalConditions extends ReduxDefaultState<IKidMedicalCond
 export interface IKidGroups extends ReduxDefaultState<IKidGroup> {}
 export interface IKidGroupRegistered extends ReduxDefaultState<IKid> {}
 export interface IKidGuardians extends ReduxDefaultState<IKidGuardian> {}
+
+export interface IAssignedKidItem {
+  id: string;
+  faithForgeId?: number;
+  firstName: string;
+  lastName: string;
+  gender: UserGenderCode;
+  photoUrl?: string;
+  birthday?: string;
+  age?: number;
+  relation: KidGuardianRelationCodeEnum;
+  kidGroup?: {
+    id: string;
+    name: string;
+    type?: KidGroupType;
+  } | null;
+  medicalCondition?: IKidMedicalCondition | null;
+  todayRegistration?: {
+    id: string;
+    date: Date;
+    churchMeetingId: string;
+    groupId: string;
+  } | null;
+}
+
+export interface IKidGuardianAssignedKidsResponse {
+  guardian: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    phone: string;
+    dialCodePhone?: string;
+    qrCodeValue: string;
+  };
+  kids: IAssignedKidItem[];
+}
+

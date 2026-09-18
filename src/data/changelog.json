@@ -1,5 +1,17 @@
 [
   {
+    "version": "3.6.0",
+    "type": "minor",
+    "timestamp": "2026-09-18T03:57:32.067Z",
+    "dateFormatted": "17/09/2026 10:57 PM",
+    "title": "Portal de Acudientes y Selector de Espacios",
+    "changes": [
+      "Nuevo carnet digital con código QR para acudientes",
+      "Visualización de niños asignados y estado de ingreso",
+      "Selector de espacios para voluntarios y acudientes"
+    ]
+  },
+  {
     "version": "3.5.1",
     "type": "patch",
     "timestamp": "2026-09-18T01:48:20.447Z",

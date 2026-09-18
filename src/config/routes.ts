@@ -46,4 +46,11 @@ export const APP_ROUTES = {
     generateQR: '/kid-registration/generate-guardian-qr',
     myTeam: '/kid-registration/my-team',
   },
+  hub: '/hub',
+  kidGuardian: {
+    root: '/kid-guardian',
+    qr: '/kid-guardian/qr',
+    children: '/kid-guardian/children',
+  },
 } as const;
+

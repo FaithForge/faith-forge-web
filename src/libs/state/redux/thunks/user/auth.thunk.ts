@@ -2,7 +2,7 @@ import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
-import { logout } from '../../slices/user/auth.slice';
+import { logout, setExperiences } from '../../slices/user/auth.slice';
 import { setVolunteerContext } from '../../slices/church/volunteerContext.slice';
 
 export const UserLogin = createAsyncThunk(
@@ -25,15 +25,16 @@ export const UserLogin = createAsyncThunk(
 
     const userMsRoles = [...(response?.user?.roles || [])];
 
-    // Fetch dynamic church volunteer permissions with retry logic
+    // Fetch user experiences, permissions and church volunteer context
+    let experiences: any[] = [];
     if (response?.token) {
       for (let attempt = 1; attempt <= 2; attempt++) {
         try {
-          const churchPermsResponse = (
+          const overviewResponse = (
             await microserviceApiRequest({
-              microservice: MS.Church,
+              microservice: MS.User,
               method: HttpRequestMethod.GET,
-              url: `/volunteer/me/permissions`,
+              url: `/user/me/overview`,
               options: {
                 headers: {
                   Authorization: `Bearer ${response.token}`,
@@ -42,24 +43,26 @@ export const UserLogin = createAsyncThunk(
             })
           ).data;
 
-          if (churchPermsResponse) {
+          if (overviewResponse) {
+            experiences = overviewResponse.experiences || [];
+            const vContext = overviewResponse.volunteerContext || overviewResponse;
             dispatch(
               setVolunteerContext({
-                isChurchVolunteer: !!churchPermsResponse.isChurchVolunteer,
-                campuses: churchPermsResponse.campuses || [],
+                isChurchVolunteer: !!vContext.isChurchVolunteer,
+                campuses: vContext.campuses || [],
                 userMsRoles,
-                hasActiveGrants: !!churchPermsResponse.hasActiveGrants,
+                hasActiveGrants: !!vContext.hasActiveGrants,
               })
             );
 
             if (
-              churchPermsResponse.permissions &&
-              Array.isArray(churchPermsResponse.permissions)
+              overviewResponse.permissions &&
+              Array.isArray(overviewResponse.permissions)
             ) {
               response.user.roles = Array.from(
                 new Set([
                   ...(response.user.roles || []),
-                  ...churchPermsResponse.permissions,
+                  ...overviewResponse.permissions,
                 ])
               );
             }
@@ -76,6 +79,7 @@ export const UserLogin = createAsyncThunk(
     return {
       ...response,
       userMsRoles,
+      experiences,
     };
   },
 );
@@ -89,9 +93,9 @@ export const FetchMyVolunteerPermissions = createAsyncThunk(
 
     const response = (
       await microserviceApiRequest({
-        microservice: MS.Church,
+        microservice: MS.User,
         method: HttpRequestMethod.GET,
-        url: `/volunteer/me/permissions`,
+        url: `/user/me/overview`,
         options: {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -101,19 +105,24 @@ export const FetchMyVolunteerPermissions = createAsyncThunk(
     ).data;
 
     if (response) {
+      const vContext = response.volunteerContext || response;
       dispatch(
         setVolunteerContext({
-          isChurchVolunteer: !!response.isChurchVolunteer,
-          campuses: response.campuses || [],
+          isChurchVolunteer: !!vContext.isChurchVolunteer,
+          campuses: vContext.campuses || [],
           userMsRoles: state.authSlice.userMsRoles || [],
-          hasActiveGrants: !!response.hasActiveGrants,
+          hasActiveGrants: !!vContext.hasActiveGrants,
         })
       );
+      if (response.experiences && Array.isArray(response.experiences)) {
+        dispatch(setExperiences(response.experiences));
+      }
     }
 
     return response?.permissions || [];
   },
 );
+
 
 export const UserLogout = createAsyncThunk(
   'user/UserLogout',

@@ -26,6 +26,14 @@ export enum UserRole {
 export type AppRole = UserRole | ChurchRole;
 export const AppRole = { ...UserRole, ...ChurchRole };
 
+/** User Experience Spaces Enum */
+export enum UserExperienceEnum {
+  ADMIN = 'ADMIN',
+  KID_CHURCH_STAFF = 'KID_CHURCH_STAFF',
+  KID_GUARDIAN = 'KID_GUARDIAN',
+}
+
+
 // ADMIN ROLES
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
 export const ChurchRoles = [...AdminRoles, UserRole.STAFF];

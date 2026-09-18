@@ -137,7 +137,9 @@ export const baseApi = createApi({
     'ChurchPrinter',
     'Volunteer',
     'User',
+    'UserOverview',
   ],
+
   refetchOnReconnect: true,
   refetchOnFocus: false,
   endpoints: () => ({}),
