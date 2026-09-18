@@ -9,6 +9,8 @@
       "Renovación automática continua de la sesión para evitar interrupciones al navegar o consultar listados",
       "Redirección inmediata a la pantalla de inicio de sesión con aviso claro cuando la sesión expira definitivamente",
       "Mayor rapidez y menor consumo de datos al iniciar la aplicación",
+      "Actualización inmediata y automática de salones y grupos al ingresar a la aplicación",
+      "Presentación ordenada de los salones de menor a mayor edad en los reportes de asistencia y paneles de consulta",
       "Correcciones de estabilidad y optimizaciones en la navegación"
     ]
   },

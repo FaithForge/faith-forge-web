@@ -8,6 +8,7 @@ import {
   REHYDRATE,
   persistReducer,
   persistStore,
+  createTransform,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import { setupListeners } from '@reduxjs/toolkit/query';
@@ -59,8 +60,68 @@ const reducers = combineReducers({
   scanQRKidGuardianSlice,
 });
 
+/**
+ * Redux Persist transform to only persist the currently selected active context
+ * ('current') for campuses, meetings, and printers, while excluding server-side
+ * lists ('data') from localStorage to guarantee fresh data fetching on app startup.
+ */
+const activeContextOnlyTransform = createTransform(
+  // Transform state on its way to being serialized and stored.
+  (inboundState: any, key) => {
+    if (key === 'churchCampusSlice') {
+      return {
+        current: inboundState?.current,
+        churchTerminologyOverrides: inboundState?.churchTerminologyOverrides,
+        church: inboundState?.church,
+      };
+    }
+    if (key === 'churchMeetingSlice') {
+      return {
+        current: inboundState?.current,
+      };
+    }
+    if (key === 'churchPrinterSlice') {
+      return {
+        current: inboundState?.current,
+      };
+    }
+    return inboundState;
+  },
+  // Transform state being rehydrated
+  (outboundState: any, key) => {
+    if (key === 'churchCampusSlice') {
+      return {
+        data: [],
+        error: undefined,
+        loading: false,
+        ...outboundState,
+      };
+    }
+    if (key === 'churchMeetingSlice') {
+      return {
+        data: [],
+        error: undefined,
+        loading: false,
+        meetingsByCampus: {},
+        ...outboundState,
+      };
+    }
+    if (key === 'churchPrinterSlice') {
+      return {
+        data: [],
+        error: undefined,
+        loading: false,
+        printersByCampus: {},
+        adminPrintersByCampus: {},
+        ...outboundState,
+      };
+    }
+    return outboundState;
+  },
+  { whitelist: ['churchCampusSlice', 'churchMeetingSlice', 'churchPrinterSlice'] },
+);
+
 const persistConfig = {
-  timeout: 10,
   key: 'root',
   storage,
   whitelist: [
@@ -70,13 +131,11 @@ const persistConfig = {
     'churchMeetingSlice',
     'churchPrinterSlice',
     'printerModeSlice',
-    'kidGroupSlice',
-    'kidMedicalConditionSlice',
-    'ministrySlice',
   ],
+  transforms: [activeContextOnlyTransform],
 };
 
-const persistedReducer = persistReducer(persistConfig, reducers);
+const persistedReducer = persistReducer<ReturnType<typeof reducers>>(persistConfig, reducers);
 
 export const store = configureStore({
   reducer: persistedReducer,
@@ -99,5 +158,5 @@ if (typeof window !== 'undefined') {
 }
 
 export const persistor = persistStore(store);
-export type RootState = ReturnType<typeof store.getState>;
+export type RootState = ReturnType<typeof reducers>;
 export type AppDispatch = typeof store.dispatch;

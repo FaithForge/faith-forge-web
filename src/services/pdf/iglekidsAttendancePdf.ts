@@ -4,6 +4,7 @@ import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/es';
 import { IAttendanceReportData } from '@/libs/models';
+import { getGroupAgeRank } from '@/libs/utils/kidGroup';
 
 dayjs.extend(utc);
 dayjs.locale('es');
@@ -28,46 +29,6 @@ const COLORS = {
   border: [226, 232, 240] as [number, number, number],
   bgSoft: [248, 250, 252] as [number, number, number],
   white: [255, 255, 255] as [number, number, number],
-};
-
-/**
- * Known age progression order for Iglekids classrooms (from youngest to oldest).
- */
-const KNOWN_CLASSROOM_ORDER: Array<{ match: string; rank: number }> = [
-  { match: 'bebe', rank: 1 },
-  { match: 'bebé', rank: 1 },
-  { match: 'cuna', rank: 1 },
-  { match: 'caminador', rank: 2 },
-  { match: 'yo soy', rank: 3 },
-  { match: 'maternal', rank: 3 },
-  { match: 'parvulo', rank: 3 },
-  { match: 'párvulo', rank: 3 },
-  { match: 'tito', rank: 4 },
-  { match: 'jeremia', rank: 5 },
-  { match: 'jeremía', rank: 5 },
-  { match: 'zaqueo', rank: 6 },
-  { match: 'timoteo', rank: 7 },
-];
-
-/**
- * Computes an age-sorting rank for a classroom group.
- * Matches known Iglekids classrooms first, and falls back to attendee average age.
- *
- * @param {string} groupName - The classroom name.
- * @param {Array<{ kid: { age: number } }> | undefined} kids - Attendees in that group.
- * @returns {number} Numeric rank (lower number = younger age).
- */
-const getGroupAgeRank = (groupName: string, kids?: Array<{ kid: { age: number } }>): number => {
-  const norm = groupName.toLowerCase().trim();
-  const known = KNOWN_CLASSROOM_ORDER.find((item) => norm.includes(item.match));
-  if (known) return known.rank * 10;
-
-  if (kids && kids.length > 0) {
-    const sum = kids.reduce((acc, k) => acc + (k.kid.age || 0), 0);
-    return 100 + sum / kids.length;
-  }
-
-  return 200;
 };
 
 /**
@@ -359,7 +320,7 @@ export const generateIglekidsAttendancePdf = (report: IAttendanceReportData): vo
 
   const rawGroups = report.summary?.byKidGroup || [];
   // Sort classrooms by age ascending (menor a mayor edad)
-  const groups = [...rawGroups].sort((a, b) => getGroupAgeRank(a.groupName) - getGroupAgeRank(b.groupName));
+  const groups = [...rawGroups].sort((a, b) => getGroupAgeRank(a.groupName, report.attendees) - getGroupAgeRank(b.groupName, report.attendees));
 
   const maxGroupCount = Math.max(...groups.map((g) => g.count), 1);
   const maxBarW = halfW - 52;

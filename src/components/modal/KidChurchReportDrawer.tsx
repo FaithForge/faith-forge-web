@@ -12,6 +12,7 @@ import { getAttendanceReportDetail } from '@/services/kidChurchReportService';
 import { generateKidAttendancePdf } from '@/services/pdf/iglekidsAttendancePdf';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import { sortKidGroupsByAge } from '@/libs/utils/kidGroup';
 
 const DAYS_TO_NUM: Record<string, number> = {
   SUNDAY: 0,
@@ -98,6 +99,11 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
   const [isLoading, setIsLoading] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
   const [report, setReport] = useState<IAttendanceReportData | null>(null);
+
+  const sortedGroups = useMemo(() => {
+    const raw = report?.summary?.byKidGroup || (report as any)?.statistics?.byKidGroup || [];
+    return sortKidGroupsByAge(raw, report?.attendees);
+  }, [report]);
 
   const availableMeetings = useMemo(() => {
     const byCampus = (meetings as any).meetingsByCampus?.[selectedCampusId];
@@ -403,14 +409,13 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                 </div>
 
                 {/* Classrooms Breakdown */}
-                {((report.summary?.byKidGroup && report.summary.byKidGroup.length > 0) ||
-                  ((report as any).statistics?.byKidGroup && (report as any).statistics.byKidGroup.length > 0)) && (
+                {sortedGroups.length > 0 && (
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">
                       Totales por Salones
                     </h3>
                     <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
-                      {(report.summary?.byKidGroup || (report as any).statistics?.byKidGroup || []).map((group: any) => {
+                      {sortedGroups.map((group: any) => {
                         const groupName = group.groupName || group.name || 'Salón';
                         return (
                           <div key={group.groupId || groupName} className="flex items-center justify-between p-3 bg-gray-50/50 hover:bg-gray-50">

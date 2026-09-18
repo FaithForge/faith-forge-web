@@ -18,6 +18,7 @@ import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import { useKidChurchLiveSync } from '@/libs/hooks/useKidChurchLiveSync';
+import { sortKidGroupsByAge } from '@/libs/utils/kidGroup';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
@@ -46,6 +47,11 @@ const KidChurchDashboard: React.FC = () => {
     isLoading: loadingKidGroups,
     refetch: refetchKidGroups,
   } = useGetKidGroupsQuery();
+
+  // Classrooms sorted from youngest to oldest age
+  const sortedKidGroups = useMemo(() => {
+    return sortKidGroupsByAge(kidGroups);
+  }, [kidGroups]);
 
   // Always query all kids for the active meeting when multiple classrooms exist,
   // so all classroom counters remain populated even when filtering by a specific classroom.
@@ -271,19 +277,19 @@ const KidChurchDashboard: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-6 gap-2">
-                {kidGroups.map((group: IKidGroup, index: number) => {
+                {sortedKidGroups.map((group: IKidGroup, index: number) => {
                   const isSelected = selectedKidGroupId === group.id;
                   const count = kids.filter((k: IKid) => k.kidGroup?.id === group.id).length;
                   
                   // Cálculo de ancho en base a sistema de 6 columnas
                   let colSpanClass = 'col-span-2'; // 3 salones por fila (33.3% cada uno)
-                  if (kidGroups.length === 2) {
+                  if (sortedKidGroups.length === 2) {
                     colSpanClass = 'col-span-3'; // 2 salones en 1 fila (50% cada uno)
                   } else {
-                    const remainder = kidGroups.length % 3;
-                    if (remainder === 1 && index === kidGroups.length - 1) {
+                    const remainder = sortedKidGroups.length % 3;
+                    if (remainder === 1 && index === sortedKidGroups.length - 1) {
                       colSpanClass = 'col-span-6'; // 1 salón solo en la última fila (100% ampliado)
-                    } else if (remainder === 2 && index >= kidGroups.length - 2) {
+                    } else if (remainder === 2 && index >= sortedKidGroups.length - 2) {
                       colSpanClass = 'col-span-3'; // 2 salones en la última fila (50% cada uno cubriendo todo el ancho)
                     }
                   }
