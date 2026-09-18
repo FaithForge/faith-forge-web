@@ -262,6 +262,18 @@ export const kidChurchApi = baseApi.injectEndpoints({
             ]
           : [{ type: 'KidGuardian', id: 'ME' }, { type: 'KidGuardian', id: 'LIST' }],
     }),
+
+    sendUrgentGuardianNotice: builder.mutation<
+      { success: boolean; delivered: boolean; message?: string },
+      { guardianId: string; kidId: string; reason?: string }
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid-registration/guardian-urgent-notice',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -288,5 +300,6 @@ export const {
   useDeleteKidRegistrationMutation,
   useGetMyGuardianAssignedKidsQuery,
   useLazyGetMyGuardianAssignedKidsQuery,
+  useSendUrgentGuardianNoticeMutation,
 } = kidChurchApi;
 

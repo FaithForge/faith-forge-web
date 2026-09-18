@@ -10,6 +10,12 @@ export interface GetChurchPrintersArgs {
   churchCampusId?: string;
 }
 
+export type CacheScope = 'all' | 'printers' | 'services' | 'registrations';
+
+export interface ClearCacheArgs {
+  scope?: CacheScope;
+}
+
 /**
  * RTK Query endpoints for the Church microservice.
  * Injected modularly into the baseApi with declarative cache tag management.
@@ -62,6 +68,49 @@ export const churchApi = baseApi.injectEndpoints({
             ]
           : [{ type: 'ChurchPrinter', id: 'LIST' }],
     }),
+
+    clearCache: builder.mutation<{ success: boolean; scope: CacheScope }, ClearCacheArgs | void>({
+      query: (args) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/admin/clear-cache',
+        method: HttpRequestMethod.POST,
+        data: { scope: args?.scope || 'all' },
+      }),
+      invalidatesTags: (_result, _error, args) => {
+        const scope = args?.scope || 'all';
+        switch (scope) {
+          case 'printers':
+            return [{ type: 'ChurchPrinter', id: 'LIST' }];
+          case 'services':
+            return [
+              { type: 'ChurchMeeting', id: 'LIST' },
+              { type: 'ChurchCampus', id: 'LIST' },
+              { type: 'Volunteer', id: 'LIST' },
+            ];
+          case 'registrations':
+            return [
+              { type: 'Kid', id: 'LIST' },
+              { type: 'KidGroup', id: 'LIST' },
+              { type: 'KidRegistered', id: 'LIST' },
+              { type: 'KidGuardian', id: 'LIST' },
+              { type: 'KidMedicalCondition', id: 'LIST' },
+            ];
+          case 'all':
+          default:
+            return [
+              { type: 'ChurchPrinter', id: 'LIST' },
+              { type: 'ChurchMeeting', id: 'LIST' },
+              { type: 'ChurchCampus', id: 'LIST' },
+              { type: 'Volunteer', id: 'LIST' },
+              { type: 'Kid', id: 'LIST' },
+              { type: 'KidGroup', id: 'LIST' },
+              { type: 'KidRegistered', id: 'LIST' },
+              { type: 'KidGuardian', id: 'LIST' },
+              { type: 'KidMedicalCondition', id: 'LIST' },
+            ];
+        }
+      },
+    }),
   }),
   overrideExisting: false,
 });
@@ -73,5 +122,6 @@ export const {
   useLazyGetChurchCampusesQuery,
   useGetChurchPrintersQuery,
   useLazyGetChurchPrintersQuery,
+  useClearCacheMutation,
 } = churchApi;
 

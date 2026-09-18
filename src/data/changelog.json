@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.7.0",
+    "type": "minor",
+    "timestamp": "2026-09-18T21:51:34.320Z",
+    "dateFormatted": "18/09/2026 04:51 PM",
+    "title": "Gestión segmentada de memoria caché",
+    "changes": [
+      "Opciones independientes para limpiar y actualizar datos de impresoras, servicios y registros",
+      "Panel administrativo interactivo con control por secciones"
+    ]
+  },
+  {
     "version": "3.6.0",
     "type": "minor",
     "timestamp": "2026-09-18T03:57:32.067Z",

@@ -1,10 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, FileText } from 'lucide-react';
+import Button from '@/components/ui/Button';
+import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, FileText, BellRing } from 'lucide-react';
 import { FaWhatsapp, FaChild, FaChildDress } from 'react-icons/fa6';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
+import { toast } from 'sonner';
 import TagKidGroup from '@/components/ui/TagKidGroup';
 import ModalOverlay from '@/components/ui/ModalOverlay';
 import {
@@ -24,7 +26,7 @@ import { useAppSelector } from '@/libs/state/redux/hooks';
 import { UserRole, ChurchRole, AppRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
-import { useGetKidQuery } from '@/libs/state/redux/api/kidChurchApi';
+import { useGetKidQuery, useSendUrgentGuardianNoticeMutation } from '@/libs/state/redux/api/kidChurchApi';
 
 interface KidDetailsDrawerProps {
   open: boolean;
@@ -51,6 +53,10 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [urgentNoticeGuardian, setUrgentNoticeGuardian] = useState<IKidGuardian | null>(null);
+  const [urgentReasonPreset, setUrgentReasonPreset] = useState<string>('presence');
+  const [urgentCustomReason, setUrgentCustomReason] = useState<string>('');
+  const [sendUrgentNotice, { isLoading: isSendingUrgentNotice }] = useSendUrgentGuardianNoticeMutation();
 
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
   const shouldFetchDetails = Boolean(open && propKid?.id && (!propKid?.relations || propKid.relations.length === 0));
@@ -163,6 +169,55 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
     (kid?.currentKidRegistration as any)?.additionalInfo?.observation ||
     (kid?.currentKidRegistration as any)?.additionalInfo?.observations;
 
+
+  const handleOpenUrgentNotice = (g: IKidGuardian) => {
+    setUrgentNoticeGuardian(g);
+    setUrgentReasonPreset('presence');
+    setUrgentCustomReason('');
+  };
+
+  const handleSendUrgentNotice = async () => {
+    if (!urgentNoticeGuardian || !kid?.id) return;
+
+    const guardianActual = (urgentNoticeGuardian as any).guardian || urgentNoticeGuardian;
+    const guardianName = capitalizeWords(
+      `${guardianActual.firstName || ''} ${guardianActual.lastName || ''}`.trim()
+    );
+
+    let reasonText = t('kid_details.urgent_notice_reason_presence', 'Se requiere presencia en el salón');
+    if (urgentReasonPreset === 'health') {
+      reasonText = t('kid_details.urgent_notice_reason_health', 'Niño indispuesto / Salud');
+    } else if (urgentReasonPreset === 'crying') {
+      reasonText = t('kid_details.urgent_notice_reason_crying', 'Llanto constante / Inconsolable');
+    } else if (urgentReasonPreset === 'early_pickup') {
+      reasonText = t('kid_details.urgent_notice_reason_early_pickup', 'Retiro anticipado del menor');
+    } else if (urgentReasonPreset === 'custom') {
+      reasonText = urgentCustomReason.trim() || t('kid_details.urgent_notice_reason_presence', 'Se requiere presencia en el salón');
+    }
+
+    try {
+      const res = await sendUrgentNotice({
+        guardianId: guardianActual.id || urgentNoticeGuardian.id!,
+        kidId: kid.id,
+        reason: reasonText,
+      }).unwrap();
+
+      if (res.delivered) {
+        toast.success(
+          t('kid_details.urgent_notice_toast_success', {
+            guardian: guardianName,
+            defaultValue: `¡Aviso urgente enviado al celular de ${guardianName}!`,
+          })
+        );
+      } else {
+        toast.info(res.message || t('kid_details.urgent_notice_toast_not_delivered'));
+      }
+      setUrgentNoticeGuardian(null);
+    } catch {
+      toast.error('No se pudo enviar el aviso urgente');
+    }
+  };
+
   const renderGuardianCard = (
     guardian: IKidGuardian,
     isPrimary: boolean = false,
@@ -228,26 +283,39 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
           </div>
         </div>
 
-        {phone && (
-          <div className="flex items-center gap-2 shrink-0">
-            <a
-              href={whatsappUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs hover:bg-emerald-600 active:scale-95 transition-all"
-              title={t('kid_details.whatsapp_btn_title')}
+        <div className="flex items-center gap-2 shrink-0">
+          {(g.hasPushActive || guardian.hasPushActive) && (
+            <button
+              type="button"
+              onClick={() => handleOpenUrgentNotice(guardian)}
+              className="w-8 h-8 rounded-full bg-amber-500 hover:bg-amber-600 text-white flex items-center justify-center shadow-xs active:scale-95 transition-all cursor-pointer group"
+              title={t('kid_details.app_notice_btn_title', 'Enviar aviso urgente al celular')}
             >
-              <FaWhatsapp size={16} />
-            </a>
-            <a
-              href={`tel:${rawPhone}`}
-              className="w-8 h-8 rounded-full bg-gray-200/80 text-gray-700 hover:bg-gray-300 flex items-center justify-center active:scale-95 transition-all"
-              title={t('kid_details.call_btn_title', { guardian: guardianTerm.toLowerCase() })}
-            >
-              <Phone size={15} />
-            </a>
-          </div>
-        )}
+              <BellRing size={15} className="group-hover:rotate-12 transition-transform" />
+            </button>
+          )}
+
+          {phone && (
+            <>
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs hover:bg-emerald-600 active:scale-95 transition-all"
+                title={t('kid_details.whatsapp_btn_title')}
+              >
+                <FaWhatsapp size={16} />
+              </a>
+              <a
+                href={`tel:${rawPhone}`}
+                className="w-8 h-8 rounded-full bg-gray-200/80 text-gray-700 hover:bg-gray-300 flex items-center justify-center active:scale-95 transition-all"
+                title={t('kid_details.call_btn_title', { guardian: guardianTerm.toLowerCase() })}
+              >
+                <Phone size={15} />
+              </a>
+            </>
+          )}
+        </div>
       </div>
     );
   };
@@ -555,6 +623,113 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               {kid.faithForgeId ? t('kid_details.code_prefix', { code: kid.faithForgeId }) : ''}
             </p>
           </div>
+        </div>
+      </ModalOverlay>
+
+      {/* Modal de Aviso Urgente al Celular */}
+      <ModalOverlay open={!!urgentNoticeGuardian} onClose={() => setUrgentNoticeGuardian(null)}>
+        <div className="relative bg-white rounded-3xl overflow-hidden shadow-2xl max-w-sm w-full mx-auto p-5 flex flex-col">
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <BellRing size={16} />
+              </div>
+              <h3 className="font-bold text-gray-900 text-base">
+                {t('kid_details.urgent_notice_modal_title', 'Aviso Urgente al Celular')}
+              </h3>
+            </div>
+            <button
+              type="button"
+              onClick={() => setUrgentNoticeGuardian(null)}
+              className="w-8 h-8 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 flex items-center justify-center transition-all cursor-pointer"
+            >
+              <X size={16} />
+            </button>
+          </div>
+
+          {urgentNoticeGuardian && (() => {
+            const g = (urgentNoticeGuardian as any).guardian || urgentNoticeGuardian;
+            const guardianName = capitalizeWords(`${g.firstName || ''} ${g.lastName || ''}`.trim());
+            const kidName = capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim());
+            const groupName = kid.kidGroup?.name || (kid.currentKidRegistration as any)?.kidGroup?.name;
+
+            return (
+              <div className="mt-3 flex flex-col gap-3">
+                <p className="text-xs text-gray-500">
+                  {t('kid_details.urgent_notice_modal_desc', { guardian: guardianName })}
+                </p>
+
+                <div className="bg-gray-50 rounded-xl p-3 border border-gray-100 text-xs flex flex-col gap-1.5">
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium">{t('kid_details.urgent_notice_recipient')}:</span>
+                    <span className="font-bold text-gray-800">{guardianName}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-500 font-medium">{t('kid_details.urgent_notice_kid')}:</span>
+                    <span className="font-bold text-gray-800">{kidName}</span>
+                  </div>
+                  {groupName && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 font-medium">{t('kid_details.urgent_notice_classroom')}:</span>
+                      <span className="font-bold text-gray-800">{groupName}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-gray-700">
+                    {t('kid_details.urgent_notice_reason_label', 'Motivo del llamado')}
+                  </label>
+                  <select
+                    value={urgentReasonPreset}
+                    onChange={(e) => setUrgentReasonPreset(e.target.value)}
+                    className="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-medium text-gray-800 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                  >
+                    <option value="presence">{t('kid_details.urgent_notice_reason_presence')}</option>
+                    <option value="health">{t('kid_details.urgent_notice_reason_health')}</option>
+                    <option value="crying">{t('kid_details.urgent_notice_reason_crying')}</option>
+                    <option value="early_pickup">{t('kid_details.urgent_notice_reason_early_pickup')}</option>
+                    <option value="custom">{t('kid_details.urgent_notice_reason_custom')}</option>
+                  </select>
+
+                  {urgentReasonPreset === 'custom' && (
+                    <input
+                      type="text"
+                      value={urgentCustomReason}
+                      onChange={(e) => setUrgentCustomReason(e.target.value)}
+                      placeholder={t('kid_details.urgent_notice_custom_placeholder')}
+                      className="mt-1 w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs font-medium text-gray-800 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-amber-500"
+                      maxLength={100}
+                    />
+                  )}
+                </div>
+
+                <div className="flex items-center gap-2 mt-2 pt-2 border-t border-gray-100">
+                  <Button
+                    type="button"
+                    variant="default"
+                    size="sm"
+                    className="flex-1 text-xs py-2"
+                    onClick={() => setUrgentNoticeGuardian(null)}
+                    disabled={isSendingUrgentNotice}
+                  >
+                    {t('kid_details.urgent_notice_btn_cancel', 'Cancelar')}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="flex-1 text-xs py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold"
+                    onClick={handleSendUrgentNotice}
+                    disabled={isSendingUrgentNotice}
+                  >
+                    {isSendingUrgentNotice
+                      ? t('kid_details.urgent_notice_sending', 'Enviando...')
+                      : t('kid_details.urgent_notice_btn_send', 'Enviar aviso urgente')}
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </ModalOverlay>
     </>

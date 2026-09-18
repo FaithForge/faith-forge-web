@@ -91,18 +91,18 @@ const AdminLayoutContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
-      {/* Top Header matching exact TopBar shape and dimensions with Admin color scheme */}
-      <header className="bg-slate-900 text-white px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 border-b border-slate-800 shadow-none z-40 sticky top-0 transition-colors duration-300">
+      {/* Top Header matching exact TopBar shape and dimensions with primary blue color scheme */}
+      <header className="bg-primary text-primary-foreground px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 border-b border-white/10 shadow-none z-40 sticky top-0 transition-colors duration-300">
         {/* Left Side: Brand and Scope (Same layout as TopBar) */}
         <div className="flex items-center gap-2.5 outline-none rounded-xl py-0.5 px-1">
-          <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-amber-500 text-white p-1 shadow-xs shrink-0 self-center">
-            <Crown className="w-5 h-5 text-white" />
+          <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white p-1 shadow-xs shrink-0 self-center">
+            <Crown className="w-4.5 h-4.5 text-amber-500 fill-amber-500" />
           </div>
           <div className="flex flex-col justify-center text-left min-w-0">
             <h1 className="font-extrabold text-[13px] sm:text-[15px] leading-snug tracking-tight truncate max-w-[200px] sm:max-w-xs md:max-w-sm text-white">
               {activeChurch?.name || 'Administración'}
             </h1>
-            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] tracking-wide text-slate-400 font-medium mt-0.5 leading-none">
+            <div className="flex items-center gap-1 text-[10px] sm:text-[11px] tracking-wide text-white/80 font-medium mt-0.5 leading-none">
               <span>Rol: {isSuperAdmin ? 'Super Administrador' : 'Administrador'}</span>
             </div>
           </div>
@@ -131,7 +131,7 @@ const AdminLayoutContent: React.FC = () => {
           {/* User Dropdown */}
           <DropdownMenu.Root>
             <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95 cursor-pointer">
-              <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-slate-800 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner overflow-hidden text-slate-200 border border-slate-700">
+              <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-white/20 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner overflow-hidden text-white border border-white/30">
                 {user?.photoUrl ? (
                   <img src={user.photoUrl} alt={shortName} className="w-full h-full object-cover" />
                 ) : (

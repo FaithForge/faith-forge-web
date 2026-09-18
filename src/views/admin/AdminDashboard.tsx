@@ -12,7 +12,6 @@ import {
   Sparkles,
   Database,
   Trash2,
-  Loader2,
   Layers,
   MapPin,
   Printer,
@@ -21,12 +20,9 @@ import {
 
 import { APP_ROUTES } from '@/config/routes';
 import clsx from 'clsx';
-import ConfirmModal from '@/components/ui/ConfirmModal';
+import { ClearCacheDrawer } from '@/components/modal/ClearCacheDrawer';
 import { TerminologyDrawer } from '@/components/modal/TerminologyDrawer';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
-import { CleanCache } from '@/libs/state/redux/thunks/admin/admin.thunk';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
-import { toast } from 'sonner';
 
 interface AdminActionItem {
   id: string;
@@ -52,10 +48,8 @@ interface AdminCategory {
 const AdminDashboard: React.FC = () => {
   const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [clearCacheOpen, setClearCacheOpen] = useState(false);
   const [terminologyOpen, setTerminologyOpen] = useState(false);
-  const [isClearing, setIsClearing] = useState(false);
 
   const volunteersTerm = useChurchTerm('volunteers');
   const campusesTerm = useChurchTerm('campuses');
@@ -174,24 +168,6 @@ const AdminDashboard: React.FC = () => {
     },
   ], [t, volunteersTerm, campusesTerm, campusTerm, meetingsTerm]);
 
-  /**
-   * Dispatches the CleanCache thunk and handles the response with toast notifications.
-   *
-   * @returns {Promise<void>} Resolves when the cache clearing operation is completed.
-   */
-  const handleClearCache = async () => {
-    setIsClearing(true);
-    const toastId = toast.loading(t('admin:dashboard.clearing_cache_toast'));
-    try {
-      await dispatch(CleanCache()).unwrap();
-      toast.success(t('admin:dashboard.cache_cleared_success'), { id: toastId });
-    } catch (error) {
-      toast.error(t('admin:dashboard.cache_cleared_error'), { id: toastId });
-    } finally {
-      setIsClearing(false);
-    }
-  };
-
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50 pb-16">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-5 flex flex-col gap-6">
@@ -235,9 +211,8 @@ const AdminDashboard: React.FC = () => {
                       <div
                         key={item.id}
                         onClick={() => {
-                          if (isClearing) return;
                           if (item.id === 'clear-cache') {
-                            setConfirmOpen(true);
+                            setClearCacheOpen(true);
                           } else if (item.id === 'terminology-settings') {
                             setTerminologyOpen(true);
                           } else {
@@ -246,8 +221,7 @@ const AdminDashboard: React.FC = () => {
                         }}
                         className={clsx(
                           'group flex items-center gap-3.5 p-4 sm:p-5 cursor-pointer transition-all duration-200',
-                          'hover:bg-slate-50 active:bg-slate-100/80',
-                          isClearing && item.id === 'clear-cache' && 'opacity-65 cursor-not-allowed'
+                          'hover:bg-slate-50 active:bg-slate-100/80'
                         )}
                       >
                         {/* Icon */}
@@ -274,11 +248,7 @@ const AdminDashboard: React.FC = () => {
 
                         {/* Action Chevron */}
                         <div className="shrink-0 text-gray-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
-                          {item.id === 'clear-cache' && isClearing ? (
-                            <Loader2 size={18} className="animate-spin text-primary" />
-                          ) : (
-                            <ChevronRight size={18} />
-                          )}
+                          <ChevronRight size={18} />
                         </div>
                       </div>
                     );
@@ -290,16 +260,10 @@ const AdminDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Confirm Modal for Cache Clearing */}
-      <ConfirmModal
-        open={confirmOpen}
-        onOpenChange={setConfirmOpen}
-        title={t('admin:dashboard.confirm_clear_cache_title')}
-        description={t('admin:dashboard.confirm_clear_cache_desc')}
-        confirmText={t('admin:dashboard.confirm_clear_cache_btn')}
-        cancelText={t('common:actions.cancel')}
-        onConfirm={handleClearCache}
-        type="warning"
+      {/* Drawer for Segmented System Cache Management */}
+      <ClearCacheDrawer
+        open={clearCacheOpen}
+        onOpenChange={setClearCacheOpen}
       />
 
       {/* Drawer for Church and Ministry Terminology Customization */}

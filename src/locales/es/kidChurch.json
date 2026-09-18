@@ -104,7 +104,25 @@
     "invalid_phone_tooltip": "El teléfono registrado para este(a) {{guardian}} tiene un formato errado",
     "whatsapp_btn_title": "Enviar mensaje por WhatsApp",
     "call_btn_title": "Llamar {{guardian}}",
+    "app_notice_btn_title": "Enviar aviso urgente al celular",
     "other_guardians": "Otros(as) {{guardians}}",
-    "whatsapp_default_message": "Hola, te hablamos de {{module}}. Mi nombre es *{{sender}}* y soy *{{role}}* de {{module}}. Te escribimos sobre el niño(a) *{{kid}}* por: "
+    "whatsapp_default_message": "Hola, te hablamos de {{module}}. Mi nombre es *{{sender}}* y soy *{{role}}* de {{module}}. Te escribimos sobre el niño(a) *{{kid}}* por: ",
+    "urgent_notice_modal_title": "Aviso Urgente al Celular",
+    "urgent_notice_modal_desc": "Se enviará una alerta prioritaria con vibración prolongada al teléfono de {{guardian}}.",
+    "urgent_notice_recipient": "Acudiente",
+    "urgent_notice_kid": "Niño(a)",
+    "urgent_notice_classroom": "Salón",
+    "urgent_notice_reason_label": "Motivo del llamado",
+    "urgent_notice_reason_presence": "Se requiere presencia en el salón",
+    "urgent_notice_reason_health": "Niño indispuesto / Salud",
+    "urgent_notice_reason_crying": "Llanto constante / Inconsolable",
+    "urgent_notice_reason_early_pickup": "Retiro anticipado del menor",
+    "urgent_notice_reason_custom": "Otro motivo...",
+    "urgent_notice_custom_placeholder": "Describe brevemente la razón...",
+    "urgent_notice_btn_cancel": "Cancelar",
+    "urgent_notice_btn_send": "Enviar aviso urgente",
+    "urgent_notice_sending": "Enviando alerta...",
+    "urgent_notice_toast_success": "¡Aviso urgente enviado al celular de {{guardian}}!",
+    "urgent_notice_toast_not_delivered": "El acudiente no tiene notificaciones activas en su celular en este momento."
   }
 }

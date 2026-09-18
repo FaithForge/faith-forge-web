@@ -210,6 +210,7 @@ export interface IKidGuardian {
   gender: UserGenderCode;
   relation: KidGuardianRelationCodeEnum;
   state?: KidGuardianStateEnum;
+  hasPushActive?: boolean;
 }
 
 export interface IKidRegistration {
