@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, lazy, Suspense } from 'react';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   User,
@@ -23,9 +23,11 @@ import {
 } from '@/libs/state/redux/slices/church/volunteerContext.slice';
 import { VolunteerRole, IVolunteerGroupConfigContext } from '@/libs/models/Volunteer';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
-import UserProfileModal from '@/components/modal/UserProfileModal';
-import ChangelogDrawer from '@/components/modal/ChangelogDrawer';
-import SettingsDrawer from '@/components/modal/SettingsDrawer';
+
+const UserProfileModal = lazy(() => import('@/components/modal/UserProfileModal'));
+const ChangelogDrawer = lazy(() => import('@/components/modal/ChangelogDrawer'));
+const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
+
 import { APP_VERSION } from '@/constants/version';
 import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
@@ -223,13 +225,32 @@ const TopBar = () => {
   const dispatch = useAppDispatch();
   const [profileOpen, setProfileOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
+  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+
   const { isSearchAvailable, isScrolledPastSearch, triggerFocusSearch } = useSearchScroll();
   const { startTransition } = useRoleTransition();
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
 
-  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [hasOpenedProfile, setHasOpenedProfile] = useState(false);
+  const [hasOpenedChangelog, setHasOpenedChangelog] = useState(false);
+  const [hasOpenedSettings, setHasOpenedSettings] = useState(false);
+
+  const handleOpenProfile = (open: boolean) => {
+    if (open) setHasOpenedProfile(true);
+    setProfileOpen(open);
+  };
+
+  const handleOpenChangelog = (open: boolean) => {
+    if (open) setHasOpenedChangelog(true);
+    setChangelogOpen(open);
+  };
+
+  const handleOpenSettings = (open: boolean) => {
+    if (open) setHasOpenedSettings(true);
+    setSettingsDrawerOpen(open);
+  };
 
   const {
     isChurchVolunteer,
@@ -1165,7 +1186,7 @@ const TopBar = () => {
               </div>
               
               <DropdownMenu.Item 
-                onSelect={() => setProfileOpen(true)}
+                onSelect={() => handleOpenProfile(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
               >
                 <User size={16} className="text-text-muted" />
@@ -1173,7 +1194,7 @@ const TopBar = () => {
               </DropdownMenu.Item>
 
               <DropdownMenu.Item 
-                onSelect={() => setChangelogOpen(true)}
+                onSelect={() => handleOpenChangelog(true)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
               >
                 <Sparkles size={16} className="text-amber-500" />
@@ -1191,7 +1212,7 @@ const TopBar = () => {
               <div className="mt-2 pt-2 border-t border-gray-100 text-center">
                 <button
                   type="button"
-                  onClick={() => setChangelogOpen(true)}
+                  onClick={() => handleOpenChangelog(true)}
                   className="text-[10px] font-semibold text-gray-400 hover:text-primary transition-colors cursor-pointer"
                 >
                   {activeChurch?.name ? `${activeChurch.name} · v${APP_VERSION}` : `${kidsModuleName} v${APP_VERSION}`}
@@ -1203,18 +1224,28 @@ const TopBar = () => {
       </div>
 
       {/* User Profile Modal */}
-      <UserProfileModal open={profileOpen} onOpenChange={setProfileOpen} />
+      {hasOpenedProfile && (
+        <Suspense fallback={null}>
+          <UserProfileModal open={profileOpen} onOpenChange={handleOpenProfile} />
+        </Suspense>
+      )}
 
       {/* Changelog Drawer */}
-      <ChangelogDrawer open={changelogOpen} onOpenChange={setChangelogOpen} />
+      {hasOpenedChangelog && (
+        <Suspense fallback={null}>
+          <ChangelogDrawer open={changelogOpen} onOpenChange={handleOpenChangelog} />
+        </Suspense>
+      )}
 
       {/* Drawer para cambiar de sede o grupo manualmente */}
-      <SettingsDrawer
-        open={settingsDrawerOpen}
-        onOpenChange={(v) => {
-          setSettingsDrawerOpen(v);
-        }}
-      />
+      {hasOpenedSettings && (
+        <Suspense fallback={null}>
+          <SettingsDrawer
+            open={settingsDrawerOpen}
+            onOpenChange={handleOpenSettings}
+          />
+        </Suspense>
+      )}
 
     </header>
     </>

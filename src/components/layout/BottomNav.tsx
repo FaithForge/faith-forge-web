@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, LucideIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
-import SettingsDrawer from '@/components/modal/SettingsDrawer';
-import ReportDrawer from '@/components/modal/ReportDrawer';
-import KidChurchReportDrawer from '@/components/modal/KidChurchReportDrawer';
 import { APP_ROUTES } from '@/config/routes';
+
+const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
+const ReportDrawer = lazy(() => import('@/components/modal/ReportDrawer'));
+const KidChurchReportDrawer = lazy(() => import('@/components/modal/KidChurchReportDrawer'));
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
@@ -22,6 +23,18 @@ const BottomNav = () => {
   
   const [openSettings, setOpenSettings] = useState(false);
   const [openReport, setOpenReport] = useState(false);
+  const [hasOpenedSettings, setHasOpenedSettings] = useState(false);
+  const [hasOpenedReport, setHasOpenedReport] = useState(false);
+
+  const handleOpenSettings = (open: boolean) => {
+    if (open) setHasOpenedSettings(true);
+    setOpenSettings(open);
+  };
+
+  const handleOpenReport = (open: boolean) => {
+    if (open) setHasOpenedReport(true);
+    setOpenReport(open);
+  };
 
   const meetingTerm = useChurchTerm('meeting');
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
@@ -46,7 +59,7 @@ const BottomNav = () => {
   // Apertura automática de configuración inicial cuando no está configurado
   useEffect(() => {
     if (!isAdminRole && !isConfigured && !openSettings) {
-      setOpenSettings(true);
+      handleOpenSettings(true);
     }
   }, [isAdminRole, isConfigured, openSettings]);
 
@@ -134,15 +147,18 @@ const BottomNav = () => {
                 return;
               }
               if (!isConfigured && (item.label === 'Crear Niño' || item.label === 'Escanear QR')) {
-                setOpenSettings(true);
+                handleOpenSettings(true);
                 toast.info(`Por favor selecciona la ${meetingTerm.toLowerCase()} a registrar antes de continuar.`);
                 return;
               }
               if (item.action === 'settings') {
-                setOpenSettings(true);
+                handleOpenSettings(true);
                 return;
               }
-              if (item.action === 'report') { setOpenReport(true); return; }
+              if (item.action === 'report') {
+                handleOpenReport(true);
+                return;
+              }
 
               const isRegistrationHomeClick = item.label === 'Inicio' || item.path === APP_ROUTES.kidRegistration.root;
               const isKidChurchHomeClick = item.label === 'Niños Registrados' || item.path === APP_ROUTES.kidChurch.root;
@@ -225,14 +241,22 @@ const BottomNav = () => {
       </div>
 
       {/* Drawer Modals */}
-      <SettingsDrawer
-        open={openSettings}
-        onOpenChange={setOpenSettings}
-      />
-      {isKidChurchRole ? (
-        <KidChurchReportDrawer open={openReport} onOpenChange={setOpenReport} />
-      ) : (
-        <ReportDrawer open={openReport} onOpenChange={setOpenReport} />
+      {hasOpenedSettings && (
+        <Suspense fallback={null}>
+          <SettingsDrawer
+            open={openSettings}
+            onOpenChange={handleOpenSettings}
+          />
+        </Suspense>
+      )}
+      {hasOpenedReport && (
+        <Suspense fallback={null}>
+          {isKidChurchRole ? (
+            <KidChurchReportDrawer open={openReport} onOpenChange={handleOpenReport} />
+          ) : (
+            <ReportDrawer open={openReport} onOpenChange={handleOpenReport} />
+          )}
+        </Suspense>
       )}
     </>
   );

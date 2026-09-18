@@ -196,10 +196,6 @@ export const SupervisorTeamView: React.FC = () => {
     }
   }, [canAccessTeam, currentRole, navigate]);
 
-  if (!canAccessTeam) {
-    return null;
-  }
-
   const churchVolunteersTerm = useChurchTerm('volunteers');
   const kidsRegistrationName = useKidsTerm('registration');
   const kidsModuleName = useKidsTerm('module_alias');
@@ -474,6 +470,10 @@ export const SupervisorTeamView: React.FC = () => {
     }
     return 'bg-purple-100 text-purple-700';
   }, [isRegistrationUser, isAreaCoordinator, isCoordinator]);
+
+  if (!canAccessTeam) {
+    return null;
+  }
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-5 pb-28 sm:pb-32">

@@ -1,4 +1,3 @@
-import { DateTime } from 'luxon';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/es';
@@ -76,10 +75,8 @@ export const isDateToday = (date?: string | Date | null): boolean => {
  * @param {Date} birthday - The date of birth.
  * @returns {number} - The age in years.
  */
-export const calculateAge = (birthday: Date): number => {
-  const today = DateTime.local();
-  const birth = DateTime.fromJSDate(birthday);
-  return today.diff(birth, 'years').years;
+export const calculateAge = (birthday: Date | string): number => {
+  return dayjs().diff(dayjs(birthday), 'year');
 };
 
 /**

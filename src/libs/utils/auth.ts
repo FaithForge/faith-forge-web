@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import { useSelector } from 'react-redux';
 import { RootState } from '../state/redux';
 
@@ -191,7 +190,11 @@ const userRolePriority: Record<string, number> = {
  * @returns {UserRole[]} Roles ordered by priority (ascending).
  */
 export const sortUserRolesByPriority = (roles: UserRole[]): UserRole[] => {
-  return _.orderBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER, 'asc');
+  return [...roles].sort(
+    (a, b) =>
+      (userRolePriority[a] ?? Number.MAX_SAFE_INTEGER) -
+      (userRolePriority[b] ?? Number.MAX_SAFE_INTEGER),
+  );
 };
 
 /**
@@ -201,7 +204,12 @@ export const sortUserRolesByPriority = (roles: UserRole[]): UserRole[] => {
  * @returns {UserRole|undefined} The role with highest priority or `undefined` if none.
  */
 export const getMainUserRole = (roles: UserRole[]): UserRole | undefined => {
-  return _.minBy(roles, (role) => userRolePriority[role] ?? Number.MAX_SAFE_INTEGER);
+  if (!roles || roles.length === 0) return undefined;
+  return roles.reduce((best, current) => {
+    const bestPriority = userRolePriority[best] ?? Number.MAX_SAFE_INTEGER;
+    const currentPriority = userRolePriority[current] ?? Number.MAX_SAFE_INTEGER;
+    return currentPriority < bestPriority ? current : best;
+  });
 };
 
 /**

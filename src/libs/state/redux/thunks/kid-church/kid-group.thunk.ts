@@ -2,7 +2,7 @@ import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { KidGroupType } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { DateTime } from 'luxon';
+import dayjs from 'dayjs';
 import { RootState } from '../../store';
 
 export const GetKidGroups = createAsyncThunk(
@@ -67,7 +67,7 @@ export const GetKidGroupRegistered = createAsyncThunk(
             params: {
               kidGroupId,
               churchMeetingId: churchMeetingSlice.current?.id,
-              date: DateTime.fromJSDate(date).toISODate(),
+              date: dayjs(date).format('YYYY-MM-DD'),
             },
             headers: { Authorization: `Bearer ${token}` },
           },

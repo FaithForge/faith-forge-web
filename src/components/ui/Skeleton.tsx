@@ -1,4 +1,3 @@
-import _ from 'lodash';
 import React from 'react';
 
 export enum SkeletonType {
@@ -41,7 +40,7 @@ const Skeleton: React.FC<SkeletonProps> = ({ type, width = 'full', height = '4',
     case SkeletonType.TEXT:
       return (
         <>
-          {_.times(rows, (index) => (
+          {Array.from({ length: rows }, (_, index) => (
             <div key={index} className={`skeleton ${heightClass} ${widthClass} m-2`} />
           ))}
         </>
