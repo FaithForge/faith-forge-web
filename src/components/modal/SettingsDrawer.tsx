@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import {
   Settings,
@@ -153,6 +154,7 @@ const SettingsDrawer = ({
 }: SettingsDrawerProps) => {
   useModalBackClose(open, () => onOpenChange(false));
 
+  const { t } = useTranslation(['common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const campuses = useAppSelector((state) => state.churchCampusSlice);
@@ -438,9 +440,9 @@ const SettingsDrawer = ({
     try {
       setIsBtConnecting(true);
       const name = await bluetoothPrinter.requestAndConnect();
-      toast.success(`Impresora "${name}" vinculada correctamente`);
+      toast.success(t('settings.printer_linked_success', { name }));
     } catch (err: any) {
-      toast.error(err.message || 'Error al conectar impresora Bluetooth');
+      toast.error(err.message || t('settings.printer_connect_error'));
     } finally {
       setIsBtConnecting(false);
     }
@@ -528,7 +530,7 @@ const SettingsDrawer = ({
     onOpenChange(false);
     dispatch(logout());
     navigate(APP_ROUTES.auth.login, { replace: true });
-    toast.success('Se ha cerrado su sesión', { duration: 5000 });
+    toast.success(t('settings.session_closed'), { duration: 5000 });
   };
 
   const isBluetoothMode = selectedMode === 'BLUETOOTH';
@@ -565,7 +567,7 @@ const SettingsDrawer = ({
       dismissible={isConfigured}
       showCloseButton={isConfigured}
       icon={<Settings size={18} className="text-primary shrink-0" />}
-      title="Configuración de Sesión"
+      title={t('settings.title')}
       bodyClassName="p-4 flex flex-col gap-4 pb-8"
       onPointerDownOutside={(e) => {
         if (!isConfigured) {
@@ -590,10 +592,10 @@ const SettingsDrawer = ({
         </div>
         <div className="min-w-0">
           <h2 className="text-sm font-bold text-gray-900 truncate">
-            ¡Hola, {userName}!
+            {t('settings.greeting', { name: userName })}
           </h2>
           <p className="text-xs text-gray-500 font-medium truncate">
-            Verifica tu {campusTerm.toLowerCase()} y {meetingTerm.toLowerCase()} asignada para hoy
+            {t('settings.greeting_subtitle', { campus: campusTerm.toLowerCase(), meeting: meetingTerm.toLowerCase() })}
           </p>
         </div>
       </div>
@@ -601,7 +603,7 @@ const SettingsDrawer = ({
       {/* ===================== CARD 1: Sede de Servicio ===================== */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3">
         <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
-          <Building2 size={16} className="text-primary" /> {campusTerm} de Servicio
+          <Building2 size={16} className="text-primary" /> {t('settings.campus_label', { campus: campusTerm })}
         </label>
 
         {availableCampuses.length === 1 ? (
@@ -619,10 +621,10 @@ const SettingsDrawer = ({
               onChange={(e) => handleCampusChange(e.target.value)}
             >
               {availableCampuses.length === 0 ? (
-                <option value="" disabled>No hay {campusesTerm.toLowerCase()} disponibles</option>
+                <option value="" disabled>{t('settings.no_campuses', { campuses: campusesTerm.toLowerCase() })}</option>
               ) : (
                 <>
-                  <option value="" disabled>Seleccione {campusTerm.toLowerCase()}...</option>
+                  <option value="" disabled>{t('settings.select_campus', { campus: campusTerm.toLowerCase() })}</option>
                   {availableCampuses.map((campus: any) => (
                     <option key={campus.id} value={campus.id}>
                       {campus.name}
@@ -644,7 +646,7 @@ const SettingsDrawer = ({
               <Users size={14} className="text-primary shrink-0" />
               <div className="min-w-0">
                 <span className="text-[10px] uppercase font-bold text-gray-400 block tracking-wider leading-none">
-                  Grupo asignado
+                  {t('settings.assigned_group')}
                 </span>
                 <span className="text-xs font-bold text-gray-800 truncate block mt-0.5">
                   {availableGroups[0].name}
@@ -671,7 +673,7 @@ const SettingsDrawer = ({
         {!isCurrentRoleAdmin && availableGroups.length > 1 && (
           <div className="pt-1">
             <label className="flex items-center gap-1.5 text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-1.5">
-              <Users size={13} className="text-primary" /> Grupo de Servicio
+              <Users size={13} className="text-primary" /> {t('settings.group_label')}
             </label>
             <div className="relative">
               <select
@@ -679,7 +681,7 @@ const SettingsDrawer = ({
                 value={selectedGroupId}
                 onChange={(e) => setSelectedGroupId(e.target.value)}
               >
-                <option value="" disabled>Seleccione grupo de servicio...</option>
+                <option value="" disabled>{t('settings.select_group_placeholder')}</option>
                 {availableGroups.map((group) => (
                   <option key={group.id} value={group.id}>
                     {group.name}
@@ -697,20 +699,20 @@ const SettingsDrawer = ({
       {/* ===================== CARD 2: Servicio o Reunión ===================== */}
       <div className="bg-white p-4 rounded-2xl border border-gray-200/80 shadow-xs flex flex-col gap-3">
         <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
-          <CalendarClock size={16} className="text-primary" /> {meetingTerm}
+          <CalendarClock size={16} className="text-primary" /> {t('settings.meeting_label', { meeting: meetingTerm })}
         </label>
 
         {isMeetingLoading ? (
           <div className="flex items-center justify-center gap-2 py-4 text-xs font-medium text-gray-500 bg-gray-50 rounded-xl">
             <Loader2 size={16} className="animate-spin text-primary" />
-            Cargando {meetingsTerm.toLowerCase()} de hoy...
+            {t('settings.loading_meetings', { meetings: meetingsTerm.toLowerCase() })}
           </div>
         ) : hasNoMeetingsToday ? (
           <div className="flex flex-col gap-3">
             <Alert
               type="warning"
-              title={`Sin ${meetingsTerm.toLowerCase()} programadas hoy`}
-              message={`No se encontraron ${meetingsTerm.toLowerCase()} activas para el día de hoy en la ${campusTerm.toLowerCase()} seleccionada.`}
+              title={t('settings.no_meetings_title', { meetings: meetingsTerm.toLowerCase() })}
+              message={t('settings.no_meetings_desc', { meetings: meetingsTerm.toLowerCase(), campus: campusTerm.toLowerCase() })}
             />
             <Button
               type="button"
@@ -718,7 +720,7 @@ const SettingsDrawer = ({
               onClick={handleLogout}
               className="w-full bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 text-xs"
             >
-              <LogOut size={15} /> Cerrar Sesión
+              <LogOut size={15} /> {t('navigation.logout')}
             </Button>
           </div>
         ) : (
@@ -730,11 +732,11 @@ const SettingsDrawer = ({
               disabled={isMeetingDisabled}
             >
               {availableMeetings.length === 0 ? (
-                <option value="" disabled>No hay {meetingsTerm.toLowerCase()} disponibles</option>
+                <option value="" disabled>{t('settings.no_meetings_available', { meetings: meetingsTerm.toLowerCase() })}</option>
               ) : (
                 <>
                   {availableMeetings.length > 1 && (
-                    <option value="" disabled>Seleccione {meetingTerm.toLowerCase()}...</option>
+                    <option value="" disabled>{t('settings.select_meeting', { meeting: meetingTerm.toLowerCase() })}</option>
                   )}
                   {availableMeetings.map((meeting: any) => (
                     <option key={meeting.id} value={meeting.id}>
@@ -758,7 +760,7 @@ const SettingsDrawer = ({
           isPrinterDisabled && 'opacity-60',
         )}>
           <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wider">
-            <Printer size={16} className="text-primary" /> Método de Impresión
+            <Printer size={16} className="text-primary" /> {t('settings.print_method')}
           </label>
 
           {/* Mode Selector Tabs */}
@@ -775,7 +777,7 @@ const SettingsDrawer = ({
                 )}
               >
                 <Printer size={14} />
-                <span>Red / {campusTerm}</span>
+                <span>{t('settings.network_campus', { campus: campusTerm })}</span>
               </button>
               <button
                 type="button"
@@ -786,7 +788,7 @@ const SettingsDrawer = ({
                 <Bluetooth size={14} className="text-gray-400" />
                 <span>Bluetooth</span>
                 <span className="text-[9px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded-full font-semibold border border-amber-200">
-                  Próximamente
+                  {t('settings.bluetooth_coming_soon')}
                 </span>
               </button>
             </div>
@@ -798,11 +800,11 @@ const SettingsDrawer = ({
               {isPrinterLoading ? (
                 <div className="flex items-center justify-center gap-2 py-4 text-xs font-medium text-gray-500 bg-gray-50 rounded-xl">
                   <Loader2 size={16} className="animate-spin text-primary" />
-                  Cargando impresoras de la {campusTerm.toLowerCase()}...
+                  {t('settings.loading_printers', { campus: campusTerm.toLowerCase() })}
                 </div>
               ) : availablePrinters.length === 0 ? (
                 <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-200 text-amber-800 text-xs font-medium">
-                  No hay impresoras de red activas en esta {campusTerm.toLowerCase()}.
+                  {t('settings.no_network_printers', { campus: campusTerm.toLowerCase() })}
                 </div>
               ) : (
                 <div className="relative">
@@ -813,7 +815,7 @@ const SettingsDrawer = ({
                     disabled={isPrinterDisabled}
                   >
                     {availablePrinters.length > 1 && (
-                      <option value="" disabled>Seleccione impresora de red...</option>
+                      <option value="" disabled>{t('settings.select_network_printer')}</option>
                     )}
                     {availablePrinters.map((printer: any) => (
                       <option key={printer.id} value={printer.id}>
@@ -842,14 +844,14 @@ const SettingsDrawer = ({
                   />
                   <div className="truncate">
                     <p className="text-xs font-bold text-gray-800 truncate">
-                      {printerModeSlice?.bluetoothDevice?.name || 'Sin impresora vinculada'}
+                      {printerModeSlice?.bluetoothDevice?.name || t('settings.no_printer_linked')}
                     </p>
                     <p className="text-[11px] text-gray-500">
                       {isBluetoothConnected
-                        ? 'Conectada y lista para imprimir'
+                        ? t('settings.printer_ready')
                         : isBtConnecting
-                        ? 'Conectando...'
-                        : 'No conectada'}
+                        ? t('settings.connecting')
+                        : t('settings.not_connected')}
                     </p>
                   </div>
                 </div>
@@ -861,7 +863,7 @@ const SettingsDrawer = ({
                       onClick={handleCancelBluetooth}
                       className="px-2 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-bold transition-all active:scale-95"
                     >
-                      Cancelar
+                      {t('actions.cancel')}
                     </button>
                   )}
                   <button
@@ -875,7 +877,7 @@ const SettingsDrawer = ({
                     ) : (
                       <Bluetooth size={13} />
                     )}
-                    <span>{isBluetoothConnected ? 'Cambiar' : 'Vincular'}</span>
+                    <span>{isBluetoothConnected ? t('settings.change') : t('settings.link')}</span>
                   </button>
                 </div>
               </div>
@@ -892,7 +894,7 @@ const SettingsDrawer = ({
                   ) : (
                     <RefreshCw size={13} />
                   )}
-                  <span>Imprimir ticket de prueba</span>
+                  <span>{t('settings.print_test_ticket')}</span>
                 </button>
               )}
             </div>
@@ -900,7 +902,7 @@ const SettingsDrawer = ({
         </div>
       )}
 
-      {/* ===================== FOOTER BUTTON ===================== */}
+      {/* ===================== CARD 4: FINALIZAR BUTTON ===================== */}
       {!hasNoMeetingsToday && (
         <Button
           onClick={handleSave}
@@ -910,7 +912,7 @@ const SettingsDrawer = ({
           className="mt-1 shadow-md shadow-primary/20 font-bold"
           disabled={isSaveDisabled}
         >
-          Finalizar
+          {t('settings.finish')}
         </Button>
       )}
 

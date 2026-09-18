@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   UserPlus, 
   UserCog, 
@@ -26,7 +27,6 @@ import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CleanCache } from '@/libs/state/redux/thunks/admin/admin.thunk';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { toast } from 'sonner';
-import { useState, useMemo } from 'react';
 
 interface AdminActionItem {
   id: string;
@@ -50,6 +50,7 @@ interface AdminCategory {
  * Vista Principal del Panel de Administración
  */
 const AdminDashboard: React.FC = () => {
+  const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -63,14 +64,14 @@ const AdminDashboard: React.FC = () => {
 
   const adminCategories: AdminCategory[] = useMemo(() => [
     {
-      title: 'Gestión de Usuarios',
-      description: 'Administración de cuentas, accesos, datos personales y perfiles del equipo.',
+      title: t('admin:dashboard.user_management_cat'),
+      description: t('admin:dashboard.user_management_cat_desc'),
       icon: Users,
       items: [
         {
           id: 'user-management',
-          title: `Directorio de Usuarios y ${volunteersTerm}`,
-          description: `Consulta personas y ${volunteersTerm.toLowerCase()}, gestiona datos personales, servicio ministerial, credenciales y roles.`,
+          title: t('admin:dashboard.users_directory_title', { volunteers: volunteersTerm }),
+          description: t('admin:dashboard.users_directory_desc', { volunteers: volunteersTerm.toLowerCase() }),
           icon: UserCog,
           route: APP_ROUTES.admin.users,
           iconBg: 'bg-blue-50 text-blue-600 border border-blue-100',
@@ -78,8 +79,8 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: 'create-user',
-          title: 'Crear Nuevo Usuario',
-          description: 'Registra un nuevo miembro del equipo o voluntario en la plataforma.',
+          title: t('admin:dashboard.create_user_title'),
+          description: t('admin:dashboard.create_user_desc'),
           icon: UserPlus,
           route: APP_ROUTES.admin.createUser,
           iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
@@ -88,14 +89,14 @@ const AdminDashboard: React.FC = () => {
       ],
     },
     {
-      title: `Gestión de Ministerios y ${volunteersTerm}`,
-      description: `Configuración de ministerios, áreas de servicio, grupos y asignación de ${volunteersTerm.toLowerCase()}.`,
+      title: t('admin:dashboard.ministries_cat', { volunteers: volunteersTerm }),
+      description: t('admin:dashboard.ministries_cat_desc', { volunteers: volunteersTerm.toLowerCase() }),
       icon: Layers,
       items: [
         {
           id: 'ministry-management',
-          title: 'Ministerios y Áreas de Servicio',
-          description: `Administra ministerios, áreas, grupos y sus configuraciones por ${campusTerm.toLowerCase()}.`,
+          title: t('admin:dashboard.ministries_management_title'),
+          description: t('admin:dashboard.ministries_management_desc', { campus: campusTerm.toLowerCase() }),
           icon: Layers,
           route: APP_ROUTES.admin.ministries,
           iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
@@ -103,8 +104,8 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: 'volunteer-applications',
-          title: `Solicitudes de ${volunteersTerm}`,
-          description: 'Revisa, aprueba o rechaza postulaciones de personas que desean servir en los ministerios.',
+          title: t('admin:dashboard.volunteer_applications_title', { volunteers: volunteersTerm }),
+          description: t('admin:dashboard.volunteer_applications_desc'),
           icon: UserCheck,
           route: APP_ROUTES.admin.volunteerApplications,
           iconBg: 'bg-violet-50 text-violet-600 border border-violet-100',
@@ -113,14 +114,14 @@ const AdminDashboard: React.FC = () => {
       ],
     },
     {
-      title: `${campusesTerm} e Instalaciones`,
-      description: `Administración de ${campusesTerm.toLowerCase()} físicas, ${meetingsTerm.toLowerCase()}, horarios e impresoras térmicas.`,
+      title: t('admin:dashboard.facilities_cat', { campuses: campusesTerm }),
+      description: t('admin:dashboard.facilities_cat_desc', { campuses: campusesTerm.toLowerCase(), meetings: meetingsTerm.toLowerCase() }),
       icon: Church,
       items: [
         {
           id: 'campuses-management',
-          title: `Gestión de ${campusesTerm}`,
-          description: `Crea, edita y organiza las ${campusesTerm.toLowerCase()} físicas de la congregación.`,
+          title: t('admin:dashboard.campuses_management_title', { campuses: campusesTerm }),
+          description: t('admin:dashboard.campuses_management_desc', { campuses: campusesTerm.toLowerCase() }),
           icon: MapPin,
           route: APP_ROUTES.admin.campuses,
           iconBg: 'bg-emerald-50 text-emerald-600 border border-emerald-100',
@@ -128,8 +129,8 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: 'service-status',
-          title: `Horarios y ${meetingsTerm} por ${campusTerm}`,
-          description: `Configura ${meetingsTerm.toLowerCase()}, franjas de culto y apertura de registro, y administra estados.`,
+          title: t('admin:dashboard.meetings_schedule_title', { meetings: meetingsTerm, campus: campusTerm }),
+          description: t('admin:dashboard.meetings_schedule_desc', { meetings: meetingsTerm.toLowerCase() }),
           icon: CalendarClock,
           route: APP_ROUTES.admin.churchMeetings,
           iconBg: 'bg-amber-50 text-amber-600 border border-amber-100',
@@ -137,8 +138,8 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: 'printers-management',
-          title: 'Impresoras Térmicas',
-          description: `Configura y gestiona las impresoras Bluetooth y de red asignadas por ${campusTerm.toLowerCase()}.`,
+          title: t('admin:dashboard.printers_management_title'),
+          description: t('admin:dashboard.printers_management_desc', { campus: campusTerm.toLowerCase() }),
           icon: Printer,
           route: APP_ROUTES.admin.printers,
           iconBg: 'bg-cyan-50 text-cyan-600 border border-cyan-100',
@@ -147,14 +148,14 @@ const AdminDashboard: React.FC = () => {
       ],
     },
     {
-      title: 'Sistema',
-      description: 'Tareas de mantenimiento, optimización y utilidades del sistema.',
+      title: t('admin:dashboard.system_cat'),
+      description: t('admin:dashboard.system_cat_desc'),
       icon: Database,
       items: [
         {
           id: 'terminology-settings',
-          title: 'Vocabulario y Nomenclatura',
-          description: `Personaliza los nombres de ${meetingsTerm.toLowerCase()}, ${campusesTerm.toLowerCase()}, roles y áreas según los conceptos de tu congregación.`,
+          title: t('admin:dashboard.terminology_title'),
+          description: t('admin:dashboard.terminology_desc', { meetings: meetingsTerm.toLowerCase(), campuses: campusesTerm.toLowerCase() }),
           icon: Sparkles,
           route: '',
           iconBg: 'bg-indigo-50 text-indigo-600 border border-indigo-100',
@@ -162,8 +163,8 @@ const AdminDashboard: React.FC = () => {
         },
         {
           id: 'clear-cache',
-          title: 'Borrar Caché',
-          description: 'Limpia la caché de la aplicación para sincronizar datos modificados o forzar actualizaciones.',
+          title: t('admin:dashboard.clear_cache_title'),
+          description: t('admin:dashboard.clear_cache_desc'),
           icon: Trash2,
           route: '',
           iconBg: 'bg-rose-50 text-rose-600 border border-rose-100',
@@ -171,7 +172,7 @@ const AdminDashboard: React.FC = () => {
         },
       ],
     },
-  ], [volunteersTerm, campusesTerm, campusTerm, meetingsTerm]);
+  ], [t, volunteersTerm, campusesTerm, campusTerm, meetingsTerm]);
 
   /**
    * Dispatches the CleanCache thunk and handles the response with toast notifications.
@@ -180,12 +181,12 @@ const AdminDashboard: React.FC = () => {
    */
   const handleClearCache = async () => {
     setIsClearing(true);
-    const toastId = toast.loading('Borrando la caché del sistema...');
+    const toastId = toast.loading(t('admin:dashboard.clearing_cache_toast'));
     try {
       await dispatch(CleanCache()).unwrap();
-      toast.success('Caché borrada correctamente', { id: toastId });
+      toast.success(t('admin:dashboard.cache_cleared_success'), { id: toastId });
     } catch (error) {
-      toast.error('Error al borrar la caché del sistema', { id: toastId });
+      toast.error(t('admin:dashboard.cache_cleared_error'), { id: toastId });
     } finally {
       setIsClearing(false);
     }
@@ -198,13 +199,13 @@ const AdminDashboard: React.FC = () => {
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
           <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-1">
             <Sparkles size={14} />
-            <span>Módulo de Administración</span>
+            <span>{t('admin:dashboard.badge')}</span>
           </div>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-            Panel de Control
+            {t('admin:dashboard.title')}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Selecciona una categoría para gestionar los usuarios, roles y servicios de la iglesia.
+            {t('admin:dashboard.subtitle')}
           </p>
         </div>
 
@@ -293,10 +294,10 @@ const AdminDashboard: React.FC = () => {
       <ConfirmModal
         open={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Borrar Caché del Sistema"
-        description="¿Estás seguro de que deseas borrar la caché de la aplicación? Esto podría causar una recarga temporal de la configuración y datos para todos los usuarios conectados."
-        confirmText="Sí, borrar caché"
-        cancelText="Cancelar"
+        title={t('admin:dashboard.confirm_clear_cache_title')}
+        description={t('admin:dashboard.confirm_clear_cache_desc')}
+        confirmText={t('admin:dashboard.confirm_clear_cache_btn')}
+        cancelText={t('common:actions.cancel')}
         onConfirm={handleClearCache}
         type="warning"
       />

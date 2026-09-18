@@ -1,4 +1,5 @@
 import React, { useState, useMemo, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
   User,
@@ -220,6 +221,7 @@ const findAssignedGroupForRole = (
 };
 
 const TopBar = () => {
+  const { t } = useTranslation(['common']);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -1140,8 +1142,8 @@ const TopBar = () => {
           <button
             type="button"
             onClick={triggerFocusSearch}
-            title="Buscar"
-            aria-label="Buscar"
+            title={t('navigation.search')}
+            aria-label={t('navigation.search')}
             className={clsx(
               "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90",
               isScrolledPastSearch
@@ -1190,7 +1192,7 @@ const TopBar = () => {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
               >
                 <User size={16} className="text-text-muted" />
-                Mi Perfil
+                {t('navigation.profile')}
               </DropdownMenu.Item>
 
               <DropdownMenu.Item 
@@ -1198,7 +1200,7 @@ const TopBar = () => {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
               >
                 <Sparkles size={16} className="text-amber-500" />
-                Novedades e Historial
+                {t('navigation.changelog')}
               </DropdownMenu.Item>
               
               <DropdownMenu.Item 
@@ -1206,7 +1208,7 @@ const TopBar = () => {
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-red-50 text-red-600 transition-colors text-sm mt-1"
               >
                 <LogOut size={16} />
-                Cerrar Sesión
+                {t('navigation.logout')}
               </DropdownMenu.Item>
 
               <div className="mt-2 pt-2 border-t border-gray-100 text-center">

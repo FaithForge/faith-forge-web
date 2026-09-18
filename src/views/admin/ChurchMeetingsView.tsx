@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { 
   ArrowLeft, 
   CalendarClock, 
@@ -37,21 +38,12 @@ import { APP_ROUTES } from '@/config/routes';
 import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 import ChurchMeetingModal from './components/ChurchMeetingModal';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 
 
 // ---------------------------------------------------------------------------
 // Helper Constants and Dictionaries
 // ---------------------------------------------------------------------------
-
-const DAY_LABEL: Record<Days, string> = {
-  [Days.MONDAY]: 'Lunes',
-  [Days.TUESDAY]: 'Martes',
-  [Days.WEDNESDAY]: 'Miércoles',
-  [Days.THURSDAY]: 'Jueves',
-  [Days.FRIDAY]: 'Viernes',
-  [Days.SATURDAY]: 'Sábado',
-  [Days.SUNDAY]: 'Domingo',
-};
 
 const DAY_ORDER: Record<Days, number> = {
   [Days.SUNDAY]: 0,
@@ -62,83 +54,6 @@ const DAY_ORDER: Record<Days, number> = {
   [Days.FRIDAY]: 5,
   [Days.SATURDAY]: 6,
 };
-
-const STATE_CONFIG: Record<
-  ChurchMeetingStateEnum,
-  {
-    label: string;
-    shortLabel: string;
-    icon: React.ElementType;
-    activeClass: string;
-    badgeClass: string;
-    textClass: string;
-  }
-> = {
-  [ChurchMeetingStateEnum.ACTIVE]: {
-    label: 'Activo',
-    shortLabel: 'Activo',
-    icon: CheckCircle2,
-    activeClass: 'bg-emerald-600 text-white border-emerald-600 shadow-xs',
-    badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80',
-    textClass: 'text-emerald-600',
-  },
-  [ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY]: {
-    label: 'No visible',
-    shortLabel: 'No visible',
-    icon: EyeOff,
-    activeClass: 'bg-amber-500 text-white border-amber-500 shadow-xs',
-    badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200/80',
-    textClass: 'text-amber-600',
-  },
-  [ChurchMeetingStateEnum.DISABLE]: {
-    label: 'Inactivo',
-    shortLabel: 'Inactivo',
-    icon: XCircle,
-    activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
-    badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
-    textClass: 'text-rose-600',
-  },
-  [ChurchMeetingStateEnum.INACTIVE]: {
-    label: 'Inactivo',
-    shortLabel: 'Inactivo',
-    icon: XCircle,
-    activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
-    badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
-    textClass: 'text-rose-600',
-  },
-  [ChurchMeetingStateEnum.DELETED]: {
-    label: 'Eliminado',
-    shortLabel: 'Eliminado',
-    icon: Trash2,
-    activeClass: 'bg-gray-600 text-white border-gray-600 shadow-xs',
-    badgeClass: 'bg-gray-50 text-gray-700 border border-gray-200/80',
-    textClass: 'text-gray-600',
-  },
-};
-
-const STATE_CATEGORIES = [
-  {
-    state: ChurchMeetingStateEnum.ACTIVE,
-    label: 'Activos',
-    icon: CheckCircle2,
-    iconBg: 'bg-emerald-100 text-emerald-700',
-    badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-  },
-  {
-    state: ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
-    label: 'No visibles',
-    icon: EyeOff,
-    iconBg: 'bg-amber-100 text-amber-700',
-    badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80',
-  },
-  {
-    state: ChurchMeetingStateEnum.DISABLE,
-    label: 'Inactivos',
-    icon: XCircle,
-    iconBg: 'bg-rose-100 text-rose-700',
-    badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/80',
-  },
-];
 
 /**
  * Normalizes and formats any time string (ISO, HH:mm:ss or HH:mm) to "HH:mm".
@@ -188,11 +103,67 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   onEdit,
   onDelete,
 }) => {
+  const { t } = useTranslation(['admin', 'common']);
+  const meetingTerm = useChurchTerm('meeting');
+
+  const stateConfig: Record<
+    ChurchMeetingStateEnum,
+    {
+      label: string;
+      shortLabel: string;
+      icon: React.ElementType;
+      activeClass: string;
+      badgeClass: string;
+      textClass: string;
+    }
+  > = {
+    [ChurchMeetingStateEnum.ACTIVE]: {
+      label: t('admin:meetings.status_active'),
+      shortLabel: t('admin:meetings.status_active'),
+      icon: CheckCircle2,
+      activeClass: 'bg-emerald-600 text-white border-emerald-600 shadow-xs',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80',
+      textClass: 'text-emerald-600',
+    },
+    [ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY]: {
+      label: t('admin:meetings.status_no_visible'),
+      shortLabel: t('admin:meetings.status_no_visible'),
+      icon: EyeOff,
+      activeClass: 'bg-amber-500 text-white border-amber-500 shadow-xs',
+      badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200/80',
+      textClass: 'text-amber-600',
+    },
+    [ChurchMeetingStateEnum.DISABLE]: {
+      label: t('admin:meetings.status_inactive'),
+      shortLabel: t('admin:meetings.status_inactive'),
+      icon: XCircle,
+      activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
+      badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
+      textClass: 'text-rose-600',
+    },
+    [ChurchMeetingStateEnum.INACTIVE]: {
+      label: t('admin:meetings.status_inactive'),
+      shortLabel: t('admin:meetings.status_inactive'),
+      icon: XCircle,
+      activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
+      badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
+      textClass: 'text-rose-600',
+    },
+    [ChurchMeetingStateEnum.DELETED]: {
+      label: t('admin:meetings.status_deleted'),
+      shortLabel: t('admin:meetings.status_deleted'),
+      icon: Trash2,
+      activeClass: 'bg-gray-600 text-white border-gray-600 shadow-xs',
+      badgeClass: 'bg-gray-50 text-gray-700 border border-gray-200/80',
+      textClass: 'text-gray-600',
+    },
+  };
+
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const m = meeting as any;
   const initTime = formatTime(m.initialRegistrationHour ?? m.initialHour);
   const finalTime = formatTime(m.finalRegistrationHour ?? m.finalHour);
-  const config = STATE_CONFIG[currentState] || STATE_CONFIG[ChurchMeetingStateEnum.ACTIVE];
+  const config = stateConfig[currentState] || stateConfig[ChurchMeetingStateEnum.ACTIVE];
   const CurrentIcon = config.icon;
 
   return (
@@ -211,7 +182,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
             </h3>
             {isModified && (
               <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                Modificado
+                {t('admin:meetings.modified_badge')}
               </span>
             )}
           </div>
@@ -239,7 +210,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
               type="button"
               onClick={onEdit}
               className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-slate-50 text-gray-500 hover:text-gray-800 transition-all shadow-2xs cursor-pointer"
-              title="Editar Servicio y Horarios"
+              title={t('admin:meetings.edit_tooltip', { meeting: meetingTerm })}
             >
               <Edit2 size={13} />
             </button>
@@ -250,7 +221,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
               type="button"
               onClick={onDelete}
               className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all shadow-2xs cursor-pointer"
-              title="Eliminar Servicio"
+              title={t('admin:meetings.delete_tooltip', { meeting: meetingTerm })}
             >
               <Trash2 size={13} />
             </button>
@@ -263,7 +234,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
         <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
           <Clock size={13} className="text-gray-400" />
           <span>
-            Horario de Registro: <strong className="text-gray-700">{initTime} – {finalTime}</strong>
+            {t('admin:meetings.registration_schedule')} <strong className="text-gray-700">{initTime} – {finalTime}</strong>
           </span>
         </div>
       )}
@@ -275,7 +246,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
           ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
           ChurchMeetingStateEnum.DISABLE,
         ].map((stateKey) => {
-          const itemConfig = STATE_CONFIG[stateKey];
+          const itemConfig = stateConfig[stateKey];
           const ItemIcon = itemConfig.icon;
           const isSelected = currentState === stateKey;
 
@@ -313,8 +284,14 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
  * @returns {JSX.Element} Rendered view component.
  */
 const ChurchMeetingsView: React.FC = () => {
+  const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+
+  const meetingTerm = useChurchTerm('meeting');
+  const meetingsTerm = useChurchTerm('meetings');
+  const campusTerm = useChurchTerm('campus');
+  const campusesTerm = useChurchTerm('campuses');
 
   const campuses = useAppSelector((state) => state.churchCampusSlice);
   const { meetings, loadingMeetings, loadingUpdate, error, success } =
@@ -359,7 +336,7 @@ const ChurchMeetingsView: React.FC = () => {
   // Notificaciones de éxito y error
   useEffect(() => {
     if (success) {
-      toast.success('Estados de servicios actualizados correctamente');
+      toast.success(t('admin:meetings.updated_success', { meetings: meetingsTerm.toLowerCase() }));
       dispatch(resetAdminChurchMeetingStatus());
       setPendingChanges({});
       if (selectedCampusId) {
@@ -370,7 +347,7 @@ const ChurchMeetingsView: React.FC = () => {
       toast.error(error);
       dispatch(resetAdminChurchMeetingStatus());
     }
-  }, [success, error, selectedCampusId, dispatch]);
+  }, [success, error, selectedCampusId, dispatch, t, meetingsTerm]);
 
   const handleConfirmDelete = async () => {
     if (!meetingToDelete || !selectedCampusId) return;
@@ -382,10 +359,10 @@ const ChurchMeetingsView: React.FC = () => {
           churchCampusId: selectedCampusId,
         }),
       ).unwrap();
-      toast.success('Servicio eliminado correctamente');
+      toast.success(t('admin:meetings.delete_success', { meeting: meetingTerm }));
       setMeetingToDelete(null);
     } catch (err: any) {
-      toast.error(typeof err === 'string' ? err : 'Error al eliminar el servicio');
+      toast.error(typeof err === 'string' ? err : t('admin:meetings.delete_error', { meeting: meetingTerm.toLowerCase() }));
     } finally {
       setIsDeleting(false);
     }
@@ -422,7 +399,7 @@ const ChurchMeetingsView: React.FC = () => {
    */
   const handleDiscardChanges = () => {
     setPendingChanges({});
-    toast.info('Cambios pendientes descartados');
+    toast.info(t('admin:meetings.discard_toast'));
   };
 
   /**
@@ -498,6 +475,43 @@ const ChurchMeetingsView: React.FC = () => {
     }
   }, [allDaysExpanded, allDayKeys]);
 
+  const getDayLabel = useCallback((day: Days | string): string => {
+    switch (day) {
+      case Days.MONDAY: return t('admin:meetings.days.monday');
+      case Days.TUESDAY: return t('admin:meetings.days.tuesday');
+      case Days.WEDNESDAY: return t('admin:meetings.days.wednesday');
+      case Days.THURSDAY: return t('admin:meetings.days.thursday');
+      case Days.FRIDAY: return t('admin:meetings.days.friday');
+      case Days.SATURDAY: return t('admin:meetings.days.saturday');
+      case Days.SUNDAY: return t('admin:meetings.days.sunday');
+      default: return String(day);
+    }
+  }, [t]);
+
+  const stateCategories = useMemo(() => [
+    {
+      state: ChurchMeetingStateEnum.ACTIVE,
+      label: t('admin:meetings.status_active_plural'),
+      icon: CheckCircle2,
+      iconBg: 'bg-emerald-100 text-emerald-700',
+      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
+    },
+    {
+      state: ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
+      label: t('admin:meetings.status_no_visible_plural'),
+      icon: EyeOff,
+      iconBg: 'bg-amber-100 text-amber-700',
+      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80',
+    },
+    {
+      state: ChurchMeetingStateEnum.DISABLE,
+      label: t('admin:meetings.status_inactive_plural'),
+      icon: XCircle,
+      iconBg: 'bg-rose-100 text-rose-700',
+      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/80',
+    },
+  ], [t]);
+
   const campusOptions = useMemo(() => {
     return campuses.data.map((campus) => ({
       id: campus.id,
@@ -510,7 +524,7 @@ const ChurchMeetingsView: React.FC = () => {
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
       <PageHeader
-        title="Estado de Servicios"
+        title={t('admin:meetings.header_title', { meetings: meetingsTerm })}
         onBack={() => navigate(APP_ROUTES.admin.root)}
         rightAction={
           selectedCampusId ? (
@@ -521,7 +535,7 @@ const ChurchMeetingsView: React.FC = () => {
                 setModalOpen(true);
               }}
               className="w-8 h-8 rounded-full flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 text-white transition-all shadow-xs cursor-pointer"
-              title="Nuevo Servicio"
+              title={t('admin:meetings.new_meeting_btn', { meeting: meetingTerm })}
             >
               <Plus size={18} />
             </button>
@@ -535,13 +549,13 @@ const ChurchMeetingsView: React.FC = () => {
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
           <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-1">
             <Sparkles size={14} />
-            <span>Módulo de Servicios</span>
+            <span>{t('admin:meetings.info_badge', { meetings: meetingsTerm })}</span>
           </div>
           <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-            Disponibilidad por Sede
+            {t('admin:meetings.availability_title', { campus: campusTerm })}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            Controla qué servicios están activos para registro, no visibles o inactivos.
+            {t('admin:meetings.availability_subtitle', { meetings: meetingsTerm.toLowerCase() })}
           </p>
         </div>
 
@@ -552,13 +566,13 @@ const ChurchMeetingsView: React.FC = () => {
               <MapPin size={14} />
             </div>
             <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wide">
-              Sede (Campus)
+              {t('admin:meetings.campus_label', { campus: campusTerm })}
             </h2>
           </div>
 
           <SelectSearch
             label=""
-            placeholder="Seleccionar sede..."
+            placeholder={t('admin:meetings.select_campus_placeholder', { campus: campusTerm.toLowerCase() })}
             options={campusOptions}
             value={selectedCampusId}
             onChange={(val) => setSelectedCampusId(val)}
@@ -575,9 +589,11 @@ const ChurchMeetingsView: React.FC = () => {
             ) : meetings.length === 0 ? (
               <div className="bg-white rounded-3xl p-12 border border-gray-100 shadow-xs text-center flex flex-col items-center justify-center gap-2">
                 <CalendarClock size={40} className="text-gray-300" />
-                <h3 className="font-bold text-gray-800 text-base mt-2">No hay servicios registrados</h3>
+                <h3 className="font-bold text-gray-800 text-base mt-2">
+                  {t('admin:meetings.no_meetings_title', { meetings: meetingsTerm.toLowerCase() })}
+                </h3>
                 <p className="text-xs text-gray-500 max-w-sm">
-                  Esta sede no cuenta con servicios configurados actualmente en el sistema.
+                  {t('admin:meetings.no_meetings_desc', { campus: campusTerm.toLowerCase(), meetings: meetingsTerm.toLowerCase() })}
                 </p>
               </div>
             ) : (
@@ -590,13 +606,15 @@ const ChurchMeetingsView: React.FC = () => {
                     </span>
                     <span className="text-xs text-gray-400">•</span>
                     <span className="text-xs font-semibold text-gray-600">
-                      {meetings.length} servicio{meetings.length !== 1 ? 's' : ''}
+                      {t('admin:meetings.meetings_count', { count: meetings.length, meetings: meetingsTerm.toLowerCase() })}
                     </span>
                   </div>
 
                   {dirtyCount > 0 && (
                     <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                      {dirtyCount} cambio{dirtyCount !== 1 ? 's' : ''} pendiente{dirtyCount !== 1 ? 's' : ''}
+                      {dirtyCount === 1
+                        ? t('admin:meetings.pending_changes_count', { count: dirtyCount })
+                        : t('admin:meetings.pending_changes_count_plural', { count: dirtyCount })}
                     </span>
                   )}
                 </div>
@@ -613,7 +631,7 @@ const ChurchMeetingsView: React.FC = () => {
                         : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                     )}
                   >
-                    Todos ({stateCounts.total})
+                    {t('admin:meetings.filter_all', { count: stateCounts.total })}
                   </button>
 
                   <button
@@ -627,7 +645,7 @@ const ChurchMeetingsView: React.FC = () => {
                     )}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    Activos ({stateCounts.active})
+                    {t('admin:meetings.filter_active', { count: stateCounts.active })}
                   </button>
 
                   <button
@@ -641,7 +659,7 @@ const ChurchMeetingsView: React.FC = () => {
                     )}
                   >
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    No visibles ({stateCounts.noVisible})
+                    {t('admin:meetings.filter_no_visible', { count: stateCounts.noVisible })}
                   </button>
 
                   <button
@@ -655,7 +673,7 @@ const ChurchMeetingsView: React.FC = () => {
                     )}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    Inactivos ({stateCounts.inactive})
+                    {t('admin:meetings.filter_inactive', { count: stateCounts.inactive })}
                   </button>
                 </div>
 
@@ -667,7 +685,7 @@ const ChurchMeetingsView: React.FC = () => {
                       onClick={toggleAllDays}
                       className="text-xs font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
                     >
-                      {allDaysExpanded ? 'Colapsar todos' : 'Expandir todos'}
+                      {allDaysExpanded ? t('admin:meetings.collapse_all') : t('admin:meetings.expand_all')}
                     </button>
                   </div>
                 )}
@@ -718,14 +736,14 @@ const ChurchMeetingsView: React.FC = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                              {DAY_LABEL[day as Days] ?? day}
+                              {getDayLabel(day)}
                             </h3>
                             <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-slate-100 text-gray-600 border border-gray-200/80">
                               {filteredDayMeetings.length}
                             </span>
                             {hasModifiedInDay && (
                               <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                                Modificado
+                                {t('admin:meetings.modified_badge')}
                               </span>
                             )}
                           </div>
@@ -744,7 +762,7 @@ const ChurchMeetingsView: React.FC = () => {
                       {/* Categorized Subsections - strictly INSIDE the Day Card */}
                       {isExpanded && (
                         <div className="p-3.5 sm:p-5 bg-slate-50/50 flex flex-col gap-5 animate-in fade-in duration-200">
-                          {STATE_CATEGORIES.map((cat) => {
+                          {stateCategories.map((cat) => {
                             if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
                               return null;
                             }
@@ -827,7 +845,7 @@ const ChurchMeetingsView: React.FC = () => {
               className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50"
             >
               <RotateCcw size={16} />
-              <span>Descartar</span>
+              <span>{t('admin:meetings.discard_btn')}</span>
             </button>
 
             <Button
@@ -840,11 +858,11 @@ const ChurchMeetingsView: React.FC = () => {
             >
               {loadingUpdate ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" /> Guardando...
+                  <Loader2 size={18} className="animate-spin" /> {t('admin:meetings.saving')}
                 </>
               ) : (
                 <>
-                  <Save size={18} /> Guardar {dirtyCount} Cambio{dirtyCount !== 1 ? 's' : ''}
+                  <Save size={18} /> {dirtyCount === 1 ? t('admin:meetings.save_btn', { count: dirtyCount }) : t('admin:meetings.save_btn_plural', { count: dirtyCount })}
                 </>
               )}
             </Button>
@@ -869,10 +887,10 @@ const ChurchMeetingsView: React.FC = () => {
       <ConfirmModal
         open={Boolean(meetingToDelete)}
         onOpenChange={(open) => !open && setMeetingToDelete(null)}
-        title="¿Eliminar este Servicio?"
-        description={`¿Estás seguro de que deseas eliminar el servicio "${meetingToDelete?.name}"?`}
-        confirmText="Sí, eliminar servicio"
-        cancelText="Cancelar"
+        title={t('admin:meetings.delete_confirm_title', { meeting: meetingTerm })}
+        description={t('admin:meetings.delete_confirm_desc', { meeting: meetingTerm.toLowerCase(), name: meetingToDelete?.name })}
+        confirmText={t('admin:meetings.delete_confirm_btn', { meeting: meetingTerm.toLowerCase() })}
+        cancelText={t('common:actions.cancel')}
         type="danger"
         onConfirm={handleConfirmDelete}
       />

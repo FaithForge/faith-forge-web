@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { ShieldAlert, LogOut, RefreshCw, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -20,6 +21,7 @@ import { capitalizeWords } from '@/libs/utils/text';
  * @returns {JSX.Element} Full-screen restricted access screen.
  */
 const NoRolesAssignedView: React.FC = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.authSlice.user);
@@ -37,7 +39,7 @@ const NoRolesAssignedView: React.FC = () => {
   const handleLogout = () => {
     dispatch(logout());
     navigate(APP_ROUTES.auth.login, { replace: true });
-    toast.success('Sesión cerrada correctamente');
+    toast.success(t('no_roles.session_closed'));
   };
 
   /**
@@ -50,13 +52,13 @@ const NoRolesAssignedView: React.FC = () => {
       if (FetchMyVolunteerPermissions.fulfilled.match(resultAction)) {
         const permissions = resultAction.payload;
         if (Array.isArray(permissions) && permissions.length > 0) {
-          toast.success('¡Roles actualizados! Ingresando a la aplicación...');
+          toast.success(t('no_roles.roles_updated'));
           return;
         }
       }
-      toast.info('Aún no tienes roles asignados. Por favor, comunícate con tu coordinador.');
+      toast.info(t('no_roles.no_roles_yet'));
     } catch {
-      toast.error('No se pudieron comprobar los permisos en este momento. Intenta de nuevo.');
+      toast.error(t('no_roles.check_error'));
     } finally {
       setIsChecking(false);
     }
@@ -80,22 +82,22 @@ const NoRolesAssignedView: React.FC = () => {
 
         {/* Title */}
         <h2 className="text-2xl font-black text-slate-900 tracking-tight mb-2">
-          Sin roles asignados
+          {t('no_roles.title')}
         </h2>
 
         {/* Current user badge */}
         <div className="mb-5 px-3.5 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-600 flex items-center gap-1.5 font-medium max-w-full">
           <User size={14} className="text-slate-400 shrink-0" />
           <span className="truncate">
-            Conectado como: <strong className="text-slate-800">{userName}</strong>
+            {t('no_roles.connected_as')} <strong className="text-slate-800">{userName}</strong>
           </span>
         </div>
 
         {/* Main Alert Message */}
         <Alert
           type="warning"
-          title="Acceso restringido"
-          message="No tienes roles asignados para usar la aplicación. Por favor, cierra sesión. Si consideras que se trata de un error, contacta a tu coordinador o superior para que habilite tus funciones de servicio."
+          title={t('no_roles.restricted_title')}
+          message={t('no_roles.restricted_message')}
           className="w-full text-left mb-5"
         />
 
@@ -109,7 +111,7 @@ const NoRolesAssignedView: React.FC = () => {
             className="font-bold flex items-center justify-center gap-2 shadow-sm py-3"
           >
             <LogOut size={18} />
-            <span>Cerrar Sesión</span>
+            <span>{t('no_roles.logout_button')}</span>
           </Button>
 
           <Button
@@ -117,12 +119,12 @@ const NoRolesAssignedView: React.FC = () => {
             block
             size="md"
             loading={isChecking}
-            loadingText="Verificando permisos..."
+            loadingText={t('common:states.loading')}
             onClick={handleCheckPermissions}
             className="font-medium text-slate-700 flex items-center justify-center gap-2 py-3"
           >
             <RefreshCw size={16} />
-            <span>Verificar si ya me asignaron rol</span>
+            <span>{t('no_roles.recheck_button')}</span>
           </Button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { RefreshCw, Search, Users, AlertCircle, Sparkles, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -30,6 +31,7 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
  * @returns {JSX.Element}
  */
 const KidChurchDashboard: React.FC = () => {
+  const { t } = useTranslation(['kidChurch', 'common']);
   const { currentMeeting, currentCampus, isConfigured } = useChurchMeetingStatus();
   const kidsClassroomsName = useKidsTerm('classrooms');
   const kidsModuleName = useKidsTerm('module_alias');
@@ -144,9 +146,9 @@ const KidChurchDashboard: React.FC = () => {
     setIsRefreshing(true);
     try {
       await Promise.all([refetchKidGroups(), refetchAttendance()]);
-      toast.success('Registros de salones actualizados');
+      toast.success(t('dashboard.toast_refreshed'));
     } catch {
-      toast.error('Error al actualizar los registros');
+      toast.error(t('dashboard.toast_refresh_error'));
     } finally {
       setIsRefreshing(false);
     }
@@ -193,8 +195,8 @@ const KidChurchDashboard: React.FC = () => {
         <div className="bg-white p-3.5 rounded-2xl shadow-sm border border-gray-100 flex items-center justify-between gap-3">
           <div className="min-w-0">
             <span className="text-[11px] font-bold uppercase tracking-wider text-primary block truncate">
-              {currentCampus?.name || 'Sede'}
-              {kidGroups.length === 1 && ` • Salón ${kidGroups[0].name}`}
+              {currentCampus?.name || t('dashboard.campus_fallback')}
+              {kidGroups.length === 1 && ` • ${t('dashboard.classroom_prefix', { name: kidGroups[0].name })}`}
             </span>
             <h2 className="text-base font-black text-gray-800 truncate">
               {currentMeeting.name}
@@ -202,14 +204,14 @@ const KidChurchDashboard: React.FC = () => {
           </div>
           <div className="flex items-center gap-1.5 bg-primary/10 text-primary px-3 py-1.5 rounded-xl shrink-0 font-black text-sm">
             <Users size={16} />
-            <span>{kids.length} {kids.length === 1 ? 'niño' : 'niños'}</span>
+            <span>{kids.length === 1 ? t('dashboard.kids_count_one') : t('dashboard.kids_count_other', { count: kids.length })}</span>
           </div>
         </div>
       ) : (
         <Alert
           type="error"
-          title="Falta configuración"
-          message="Por favor, selecciona una sede y servicio en la opción de Configuración de la barra inferior."
+          title={t('dashboard.missing_config_title')}
+          message={t('dashboard.missing_config_desc')}
         />
       )}
 
@@ -228,10 +230,10 @@ const KidChurchDashboard: React.FC = () => {
           </div>
           <div className="flex flex-col gap-1 max-w-sm">
             <h3 className="text-sm font-bold text-amber-900">
-              Acceso Restringido
+              {t('dashboard.access_restricted_title')}
             </h3>
             <p className="text-xs text-amber-700 leading-relaxed">
-              No tienes permiso para supervisar ningún salón en este servicio o tu usuario no tiene salones asignados.
+              {t('dashboard.access_restricted_desc')}
             </p>
           </div>
         </div>
@@ -247,8 +249,8 @@ const KidChurchDashboard: React.FC = () => {
               icon="search"
               placeholder={
                 kidGroups.length === 1
-                  ? `Buscar niño en ${kidGroups[0].name}...`
-                  : 'Buscar niño en salones...'
+                  ? t('dashboard.search_placeholder_single', { classroom: kidGroups[0].name })
+                  : t('dashboard.search_placeholder_multi')
               }
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -271,7 +273,7 @@ const KidChurchDashboard: React.FC = () => {
                     onClick={() => setSelectedKidGroupId('')}
                     className="text-[11px] font-bold text-primary hover:underline cursor-pointer"
                   >
-                    Ver todos
+                    {t('dashboard.view_all')}
                   </button>
                 )}
               </div>
@@ -321,7 +323,7 @@ const KidChurchDashboard: React.FC = () => {
                           isSelected ? 'text-primary' : 'text-gray-500',
                         )}
                       >
-                        {count} {count === 1 ? 'niño' : 'niños'}
+                        {count} {count === 1 ? t('dashboard.kids_count_one') : t('dashboard.kids_count_other', { count })}
                       </span>
                     </button>
                   );
@@ -343,12 +345,12 @@ const KidChurchDashboard: React.FC = () => {
                 <div className="text-center p-12 bg-white rounded-2xl border border-dashed border-gray-200 text-gray-400">
                   <Users size={36} className="mx-auto mb-2 opacity-40" />
                   <p className="text-sm font-semibold text-gray-600">
-                    No hay niños registrados en esta vista
+                    {t('dashboard.empty_title')}
                   </p>
                   <p className="text-xs text-gray-400 mt-1">
                     {searchText
-                      ? 'Intenta con otro término de búsqueda.'
-                      : 'Los niños aparecerán aquí una vez registrados en la entrada.'}
+                      ? t('dashboard.empty_desc_search')
+                      : t('dashboard.empty_desc_default')}
                   </p>
                 </div>
               )}
@@ -358,12 +360,16 @@ const KidChurchDashboard: React.FC = () => {
                   {filteredKids.map((kid: IKid) => {
                     const ageYears = Math.floor(kid.age ?? 0);
                     const ageMonths = kid.ageInMonths ? kid.ageInMonths - ageYears * 12 : 0;
-                    const subtitleText = `Salón: ${kid.kidGroup?.name || 'Sin salón'} • ${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`;
+                    const ageText = `${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`.trim();
+                    const subtitleText = t('dashboard.classroom_label', {
+                      classroom: kid.kidGroup?.name || t('dashboard.classroom_no_group'),
+                      age: ageText,
+                    });
 
                     const badgeElement = (
                       <div className="flex items-center gap-1 shrink-0">
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                          En Salón
+                          {t('dashboard.in_classroom')}
                         </span>
                       </div>
                     );
@@ -398,7 +404,7 @@ const KidChurchDashboard: React.FC = () => {
               'fixed right-5 bottom-24 w-13 h-13 rounded-full bg-primary text-primary-foreground shadow-xl flex items-center justify-center z-40 transition-transform active:scale-90 hover:shadow-2xl cursor-pointer',
               isRefreshing && 'opacity-70 cursor-not-allowed',
             )}
-            title="Actualizar salones"
+            title={t('dashboard.refresh_button_title')}
           >
             <RefreshCw size={22} className={clsx(isRefreshing && 'animate-spin')} />
           </button>

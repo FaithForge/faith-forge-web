@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, FileText } from 'lucide-react';
 import { FaWhatsapp, FaChild, FaChildDress } from 'react-icons/fa6';
@@ -45,6 +46,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
   kid: propKid,
   showEpsAlert,
 }) => {
+  const { t } = useTranslation(['kidChurch', 'common']);
   useModalBackClose(open, () => onOpenChange(false));
 
   const [showPhotoModal, setShowPhotoModal] = useState(false);
@@ -178,7 +180,12 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
     const rawPhone = `${dialCode}${phone}`.replace(/\s+/g, '');
     const cleanWhatsAppDigits = `${dialCode}${phone}`.replace(/\D/g, '');
     const kidName = capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim());
-    const defaultWhatsAppText = `Hola, te hablamos de ${kidsModuleName}. Mi nombre es *${senderName}* y soy *${roleTitle}* de ${kidsModuleName}. Te escribimos sobre el niño(a) *${kidName}* por: `;
+    const defaultWhatsAppText = t('kid_details.whatsapp_default_message', {
+      module: kidsModuleName,
+      sender: senderName,
+      role: roleTitle,
+      kid: kidName,
+    });
     const whatsappUrl = `https://wa.me/${cleanWhatsAppDigits}?text=${encodeURIComponent(defaultWhatsAppText)}`;
 
     return (
@@ -198,7 +205,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
             </p>
             {isPrimary && (
               <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100/90 text-emerald-800 rounded-full border border-emerald-300/80 shrink-0 flex items-center gap-1">
-                <CheckCircle2 size={11} className="text-emerald-700" /> Entregó hoy
+                <CheckCircle2 size={11} className="text-emerald-700" /> {t('kid_details.badge_checked_in_today')}
               </span>
             )}
             <span className="text-[11px] font-medium text-gray-600 bg-gray-200/70 px-2 py-0.5 rounded-md shrink-0">
@@ -210,9 +217,12 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               {phoneFormatted}
             </p>
             {isPhoneErroneous && (
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200" title={`El teléfono registrado para este(a) ${guardianTerm.toLowerCase()} tiene un formato errado`}>
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-amber-50 text-amber-800 text-[10px] font-bold border border-amber-200"
+                title={t('kid_details.invalid_phone_tooltip', { guardian: guardianTerm.toLowerCase() })}
+              >
                 <AlertTriangle size={10} className="text-amber-600 shrink-0" />
-                <span>Formato errado</span>
+                <span>{t('kid_details.invalid_phone_format')}</span>
               </span>
             )}
           </div>
@@ -225,14 +235,14 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               className="w-8 h-8 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-xs hover:bg-emerald-600 active:scale-95 transition-all"
-              title="Enviar mensaje por WhatsApp"
+              title={t('kid_details.whatsapp_btn_title')}
             >
               <FaWhatsapp size={16} />
             </a>
             <a
               href={`tel:${rawPhone}`}
               className="w-8 h-8 rounded-full bg-gray-200/80 text-gray-700 hover:bg-gray-300 flex items-center justify-center active:scale-95 transition-all"
-              title={`Llamar ${guardianTerm.toLowerCase()}`}
+              title={t('kid_details.call_btn_title', { guardian: guardianTerm.toLowerCase() })}
             >
               <Phone size={15} />
             </a>
@@ -247,14 +257,14 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
       <AppDrawer
         open={open}
         onOpenChange={onOpenChange}
-        title="Detalle del Niño"
+        title={t('kid_details.title')}
         bodyClassName="p-4 flex flex-col gap-4 pb-12"
       >
               {/* Birthday Banner */}
               {isBirthdayToday && (
                 <div className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 text-white p-3.5 rounded-2xl flex items-center justify-center gap-2.5 text-sm font-black shadow-md animate-pulse tracking-wide">
                   <Cake size={22} className="text-yellow-200 animate-bounce" />
-                  <span>¡¡¡HOY ES SU CUMPLEAÑOS!!! 🎉🎂</span>
+                  <span>{t('kid_details.birthday_banner')}</span>
                 </div>
               )}
 
@@ -263,9 +273,9 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                 <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-2xl flex items-start gap-3 text-xs leading-relaxed shadow-xs">
                   <AlertTriangle size={20} className="text-amber-600 shrink-0 mt-0.5" />
                   <div className="flex-1">
-                    <h4 className="font-bold text-amber-900 text-sm mb-0.5">⚠️ EPS no registrada ("NO SABE")</h4>
+                    <h4 className="font-bold text-amber-900 text-sm mb-0.5">{t('kid_details.eps_alert_title')}</h4>
                     <p className="text-amber-800">
-                      La EPS del niño se encuentra registrada como <span className="font-bold">"NO SABE"</span>.
+                      {t('kid_details.eps_alert_desc')}
                     </p>
                   </div>
                 </div>
@@ -324,7 +334,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                       {capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`)}
                     </h3>
                     <h4 className="text-sm text-gray-500 font-medium mt-0.5">
-                      Código: {kid?.faithForgeId || kid?.id}{formattedAge ? ` • Edad: ${formattedAge}` : ''}
+                      {t('kid_details.code_prefix', { code: kid?.faithForgeId || kid?.id })}{formattedAge ? ` • ${t('kid_details.age_prefix', { age: formattedAge })}` : ''}
                     </h4>
                     <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                       <TagKidGroup
@@ -338,12 +348,12 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                       )}
                       {isBirthdayToday && (
                         <span className="px-2.5 py-0.5 text-xs font-bold bg-amber-100 text-amber-800 rounded-full border border-amber-300 flex items-center gap-1 animate-pulse">
-                          🎂 Hoy
+                          {t('kid_details.badge_today')}
                         </span>
                       )}
                       {isRegistered && (
                         <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
-                          Registrado
+                          {t('kid_details.badge_registered')}
                         </span>
                       )}
                     </div>
@@ -354,35 +364,35 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               {/* Tarjeta con Información Detallada del Niño (Datos del Niño) */}
               <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                 <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 border-b border-gray-100 pb-2">
-                  Datos del niño
+                  {t('kid_details.section_kid_data')}
                 </h2>
                 <div className="flex flex-col gap-y-3 text-sm">
                   {formattedAge && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">Edad</span>
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_age')}</span>
                       <span className="font-bold text-gray-800">{formattedAge}</span>
                     </div>
                   )}
 
                   {kid?.birthday && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">Fecha de nacimiento</span>
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_birthday')}</span>
                       <span className="font-bold text-gray-800">{birthdayFormatted}</span>
                     </div>
                   )}
 
                   {kid?.gender && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">Género</span>
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_gender')}</span>
                       <span className="font-bold text-gray-800">
-                        {kid.gender === 'M' ? 'Masculino' : kid.gender === 'F' ? 'Femenino' : (USER_GENDER_CODE_MAPPER as any)[kid.gender] || kid.gender}
+                        {kid.gender === 'M' ? t('kid_details.gender_male') : kid.gender === 'F' ? t('kid_details.gender_female') : (USER_GENDER_CODE_MAPPER as any)[kid.gender] || kid.gender}
                       </span>
                     </div>
                   )}
 
                   {kid?.healthSecurityEntity && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                       <span className="font-semibold text-gray-500">EPS</span>
+                       <span className="font-semibold text-gray-500">{t('kid_details.label_eps')}</span>
                        <span
                          className={clsx(
                            'font-bold',
@@ -401,7 +411,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
                   {kid?.medicalCondition && (
                     <div className="flex justify-between items-start py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">Condición Médica</span>
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_medical_condition')}</span>
                       <span className="font-bold text-amber-600 text-right">
                         {typeof kid.medicalCondition === 'object' ? `${kid.medicalCondition.code || ''} - ${kid.medicalCondition.name || ''}` : kid.medicalCondition}
                       </span>
@@ -410,7 +420,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
                   {kid?.observations && (
                     <div className="flex flex-col py-1">
-                      <span className="font-semibold text-gray-500 mb-1">Observaciones generales</span>
+                      <span className="font-semibold text-gray-500 mb-1">{t('kid_details.label_general_obs')}</span>
                       <span className="font-medium text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs leading-relaxed">
                         {kid.observations}
                       </span>
@@ -419,7 +429,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
                   {canViewCreatorInfo && kid?.createdBy && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">Creado por</span>
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_created_by')}</span>
                       <span className="font-bold text-gray-800 text-right flex items-center justify-end gap-1.5 flex-wrap">
                         <span>{capitalizeWords(`${kid.createdBy.firstName || ''} ${kid.createdBy.lastName || ''}`.trim())}</span>
                         {kid.createdBy.groupName && (
@@ -437,11 +447,11 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               {kid.currentKidRegistration && (
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                   <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide mb-4 border-b border-gray-100 pb-2">
-                    Información del registro
+                    {t('kid_details.section_registration_info')}
                   </h2>
                   <div className="flex flex-col gap-y-3 text-sm">
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
-                      <span className="font-semibold text-gray-500">Hora de ingreso</span>
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_check_in_time')}</span>
                       <span className="font-bold text-gray-800 text-right">
                         {dayjs(kid.currentKidRegistration.date).format('h:mm:ss A (D [de] MMMM)')}
                       </span>
@@ -451,9 +461,9 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                         const parsed = parseRegistrationLog(kid.currentKidRegistration.log);
                         return (
                           <div className="flex justify-between items-start py-1 border-b border-gray-50 last:border-0">
-                            <span className="font-semibold text-gray-500 shrink-0 pr-2">Log de registro</span>
+                            <span className="font-semibold text-gray-500 shrink-0 pr-2">{t('kid_details.label_registration_log')}</span>
                             <span className="font-bold text-gray-800 text-xs leading-snug text-right">
-                              {parsed?.author ? `Registrado por ${parsed.author}` : kid.currentKidRegistration.log}
+                              {parsed?.author ? t('kid_details.registered_by', { author: parsed.author }) : kid.currentKidRegistration.log}
                               {parsed?.badgeLabel && (
                                 <span
                                   className={clsx(
@@ -476,7 +486,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
                     {registrationObservation && (
                       <div className="flex flex-col py-1 border-b border-gray-50 last:border-0">
-                        <span className="font-semibold text-gray-500 mb-1">Observaciones del ingreso</span>
+                        <span className="font-semibold text-gray-500 mb-1">{t('kid_details.label_entry_obs')}</span>
                         <span className="font-medium text-gray-700 bg-gray-50 p-2.5 rounded-xl border border-gray-100 text-xs leading-relaxed">
                           {registrationObservation}
                         </span>
@@ -497,7 +507,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               {kid.relations && kid.relations.length > 0 && (
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-3.5">
                   <h2 className="text-sm font-bold text-gray-700 uppercase tracking-wide border-b border-gray-100 pb-2">
-                    {guardiansTerm} Autorizados
+                    {t('kid_details.section_guardians', { guardians: guardiansTerm })}
                   </h2>
 
                   <div className="flex flex-col gap-2.5">
@@ -509,7 +519,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                       <>
                         {primaryGuardian && (
                           <p className="text-[11px] font-bold text-gray-400 uppercase tracking-wider mt-1 px-1">
-                            Otros(as) {guardiansTerm.toLowerCase()}
+                            {t('kid_details.other_guardians', { guardians: guardiansTerm.toLowerCase() })}
                           </p>
                         )}
                         {otherGuardians.map((guardian) => renderGuardianCard(guardian, false))}
@@ -542,7 +552,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
               {capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
             </h4>
             <p className="text-xs text-gray-500 font-medium mt-0.5">
-              {kid.faithForgeId ? `Código: ${kid.faithForgeId}` : ''}
+              {kid.faithForgeId ? t('kid_details.code_prefix', { code: kid.faithForgeId }) : ''}
             </p>
           </div>
         </div>

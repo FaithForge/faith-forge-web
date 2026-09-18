@@ -1,4 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, LucideIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
@@ -16,6 +17,7 @@ import { VolunteerRole } from '@/libs/models/Volunteer';
 import { toast } from 'sonner';
 
 const BottomNav = () => {
+  const { t } = useTranslation(['common']);
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -106,28 +108,28 @@ const BottomNav = () => {
   if (isKidChurchRole) {
     // Tabs for Kid Church (KidChurchLayout)
     navItems = [
-      { path: APP_ROUTES.kidChurch.root, icon: Users, label: 'Niños Registrados', action: 'link' },
-      { path: '#', icon: Settings, label: 'Configurar', action: 'settings' },
+      { path: APP_ROUTES.kidChurch.root, icon: Users, label: t('navigation.registered_kids'), action: 'link' },
+      { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
     if (!isServidor) {
-      navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
+      navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
     }
     if (canViewTeam) {
-      navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: 'Mi Equipo', action: 'link' });
+      navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
     }
   } else {
     // Tabs for Kid Registration (KidRegistrationLayout)
     navItems = [
-      { path: APP_ROUTES.kidRegistration.root, icon: Home, label: 'Inicio', action: 'link' },
-      { path: APP_ROUTES.kidRegistration.new, icon: UserPlus, label: 'Crear Niño', action: 'link' },
-      { path: APP_ROUTES.kidRegistration.scanner, icon: QrCode, label: 'Escanear QR', action: 'link' },
-      { path: '#', icon: Settings, label: 'Configurar', action: 'settings' },
+      { path: APP_ROUTES.kidRegistration.root, icon: Home, label: t('navigation.home'), action: 'link' },
+      { path: APP_ROUTES.kidRegistration.new, icon: UserPlus, label: t('navigation.new_kid'), action: 'link' },
+      { path: APP_ROUTES.kidRegistration.scanner, icon: QrCode, label: t('navigation.scan_qr'), action: 'link' },
+      { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
     if (!isServidor) {
-      navItems.push({ path: '#', icon: FileText, label: 'Reporte', action: 'report' });
+      navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
     }
     if (canViewTeam) {
-      navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: 'Mi Equipo', action: 'link' });
+      navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
     }
   }
 
@@ -137,7 +139,8 @@ const BottomNav = () => {
         <nav className="pointer-events-auto bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-xl shadow-black/10 rounded-full py-1.5 px-2 flex justify-between items-center">
           {navItems.map((item) => {
             const isActive = pathname === item.path && item.action === 'link';
-            const isBlocked = shouldBlockKids && (item.label === 'Crear Niño' || item.label === 'Escanear QR');
+            const isKidAction = item.path === APP_ROUTES.kidRegistration.new || item.path === APP_ROUTES.kidRegistration.scanner;
+            const isBlocked = shouldBlockKids && isKidAction;
             const Icon = item.icon;
 
             const handleClick = (e: React.MouseEvent) => {
@@ -146,7 +149,7 @@ const BottomNav = () => {
                 toast.error(meetingErrorMsg || `La ${meetingTerm.toLowerCase()} se encuentra fuera del horario de registro.`);
                 return;
               }
-              if (!isConfigured && (item.label === 'Crear Niño' || item.label === 'Escanear QR')) {
+              if (!isConfigured && isKidAction) {
                 handleOpenSettings(true);
                 toast.info(`Por favor selecciona la ${meetingTerm.toLowerCase()} a registrar antes de continuar.`);
                 return;

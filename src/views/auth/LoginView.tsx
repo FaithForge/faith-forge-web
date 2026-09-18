@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Fingerprint, KeyRound } from 'lucide-react';
 import { toast } from 'sonner';
@@ -28,6 +29,7 @@ interface IFormLoginInput {
 }
 
 const LoginView = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const persistedUser = useAppSelector((state) => state.authSlice.user);
@@ -161,7 +163,7 @@ const LoginView = () => {
         const name =
           formatPersonShortName(result.user?.firstName, result.user?.lastName) ||
           result.username;
-        toast.success(`¡Bienvenido de nuevo, ${name}!`);
+        toast.success(t('login.welcome_back_name', { name }));
         navigate('/', { replace: true });
         return;
       }
@@ -187,20 +189,20 @@ const LoginView = () => {
           const name =
             formatPersonShortName(payload.user?.firstName, payload.user?.lastName) ||
             cleanBioUsername;
-          toast.success(`¡Bienvenido de nuevo, ${name}!`);
+          toast.success(t('login.welcome_back_name', { name }));
           navigate('/', { replace: true });
         } else {
           const rawMsg = loginResult.error?.message || '';
           const isAuthError = rawMsg.includes('401') || rawMsg.includes('404');
           const errMsg = isAuthError
-            ? 'Tus credenciales han cambiado. Por favor, ingresa con tu contraseña.'
-            : (loginResult.payload as any)?.message ?? rawMsg ?? 'Error al iniciar sesión';
+            ? t('login.credentials_changed')
+            : (loginResult.payload as any)?.message ?? rawMsg ?? t('login.error_default');
           toast.error(errMsg);
           setShowManualLogin(true);
         }
       }
     } catch (err: any) {
-      toast.error(err.message || 'No se pudo verificar la biometría.');
+      toast.error(err.message || t('login.bio_verify_failed'));
       setShowManualLogin(true);
     } finally {
       setIsBioLoading(false);
@@ -219,7 +221,7 @@ const LoginView = () => {
     setValue('username', '');
     setValue('password', '');
     setShowConfirmForgetBioModal(false);
-    toast.info('Se desvinculó la biometría de este dispositivo');
+    toast.info(t('login.bio_unlinked_toast'));
   };
 
   /**
@@ -262,20 +264,20 @@ const LoginView = () => {
               password: data.password,
             });
           }
-          toast.success('¡Bienvenido!');
+          toast.success(t('login.welcome_default'));
           navigate('/', { replace: true });
         }
       } else {
         const rawMsg = resultAction.error?.message || '';
         const isAuthError = rawMsg.includes('401') || rawMsg.includes('404');
         const errMsg = isAuthError 
-          ? 'Usuario o contraseña incorrectos' 
-          : (resultAction.payload as any)?.message ?? rawMsg ?? 'Ocurrió un error inesperado';
+          ? t('login.invalid_credentials')
+          : (resultAction.payload as any)?.message ?? rawMsg ?? t('login.unexpected_error');
         
         toast.error(errMsg);
       }
     } catch {
-      toast.error('Error de conexión. Intenta de nuevo.');
+      toast.error(t('login.connection_error'));
     } finally {
       setIsLoading(false);
     }
@@ -290,7 +292,7 @@ const LoginView = () => {
     if (pendingLoginData) {
       const success = await registerBiometrics(pendingLoginData);
       if (success) {
-        toast.success('¡Biometría (Huella / Face ID) configurada con éxito!');
+        toast.success(t('login.bio_configured_success'));
       }
     }
     setShowRegisterBioModal(false);
@@ -367,7 +369,7 @@ const LoginView = () => {
               </div>
 
               <div className="flex flex-col items-center mb-6">
-                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">Bienvenido de nuevo</span>
+                <span className="text-xs font-semibold uppercase tracking-wider text-gray-400">{t('login.welcome_back_header')}</span>
                 <h2 className="text-lg font-bold text-gray-800 mt-0.5">
                   {savedDisplayName}
                 </h2>
@@ -381,12 +383,12 @@ const LoginView = () => {
                   type="button"
                   onClick={handleBiometricLogin}
                   loading={isBioLoading}
-                  loadingText="Verificando huella..."
+                  loadingText={t('login.verifying_fingerprint')}
                   block
                   className="bg-emerald-600 hover:bg-emerald-700 text-white flex items-center justify-center gap-2.5 py-3.5 text-base shadow-xs font-semibold rounded-2xl"
                 >
                   <Fingerprint size={22} className="shrink-0" />
-                  Ingresar con huella
+                  {t('login.login_with_fingerprint')}
                 </Button>
 
                 <Button
@@ -397,7 +399,7 @@ const LoginView = () => {
                   className="py-3 text-sm font-semibold text-gray-600 border border-gray-200 hover:bg-gray-50 flex items-center justify-center gap-2 rounded-2xl"
                 >
                   <KeyRound size={16} className="text-gray-400 shrink-0" />
-                  Iniciar sesión con usuario
+                  {t('login.login_with_username')}
                 </Button>
 
                 <div className="pt-4 mt-1 border-t border-gray-100 flex justify-center">
@@ -406,7 +408,7 @@ const LoginView = () => {
                     onClick={() => setShowConfirmForgetBioModal(true)}
                     className="text-xs text-gray-400 hover:text-red-500 active:text-red-600 transition-colors py-2 px-3 font-medium cursor-pointer"
                   >
-                    ¿No eres tú? Desvincular huella
+                    {t('login.not_you_unlink')}
                   </button>
                 </div>
               </div>
@@ -415,35 +417,35 @@ const LoginView = () => {
             /* Traditional Username & Password Form */
             <div className="flex flex-col gap-5 animate-in fade-in zoom-in-95 duration-200">
               <div className="text-center">
-                <h2 className="text-xl font-bold text-gray-800">Iniciar Sesión</h2>
-                <p className="text-xs text-gray-500 mt-1">Ingresa tus credenciales para continuar</p>
+                <h2 className="text-xl font-bold text-gray-800">{t('login.login_title')}</h2>
+                <p className="text-xs text-gray-500 mt-1">{t('login.login_subtitle')}</p>
               </div>
 
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
                 <Input 
-                  label="Usuario / Email"
+                  label={t('login.username_label')}
                   type="text" 
-                  placeholder="Ingresa tu usuario"
+                  placeholder={t('login.username_placeholder')}
                   autoComplete="username"
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck={false}
                   error={errors.username?.message}
-                  {...register('username', { required: 'Este campo es obligatorio' })}
+                  {...register('username', { required: t('login.field_required') })}
                 />
 
                 <Input 
-                  label="Contraseña"
+                  label={t('login.password_label')}
                   type="password" 
-                  placeholder="Ingresa tu contraseña"
+                  placeholder={t('login.password_placeholder')}
                   autoComplete="current-password"
                   autoCorrect="off"
                   autoCapitalize="none"
                   spellCheck={false}
                   error={errors.password?.message}
                   {...register('password', { 
-                    required: 'La contraseña es obligatoria',
-                    minLength: { value: 6, message: 'Mínimo 6 caracteres' } 
+                    required: t('login.password_required'),
+                    minLength: { value: 6, message: t('login.password_min_length') } 
                   })}
                 />
 
@@ -452,10 +454,10 @@ const LoginView = () => {
                   block 
                   variant="primary" 
                   loading={isLoading}
-                  loadingText="Ingresando..."
+                  loadingText={t('login.submitting')}
                   className="mt-2 py-3 text-sm font-semibold rounded-2xl"
                 >
-                  Ingresar con Contraseña
+                  {t('login.login_with_password')}
                 </Button>
               </form>
 
@@ -467,7 +469,7 @@ const LoginView = () => {
                     className="w-full inline-flex items-center justify-center gap-2 text-xs text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/60 font-semibold py-3 px-4 rounded-2xl transition-colors cursor-pointer"
                   >
                     <Fingerprint size={16} className="text-emerald-600 shrink-0" />
-                    Volver a ingreso con huella
+                    {t('login.back_to_fingerprint')}
                   </button>
 
                   <button
@@ -475,7 +477,7 @@ const LoginView = () => {
                     onClick={() => setShowConfirmForgetBioModal(true)}
                     className="text-[11px] text-gray-400 hover:text-red-500 active:text-red-600 transition-colors py-2 px-3 font-medium cursor-pointer"
                   >
-                    Desvincular huella de {displayUsername}
+                    {t('login.unlink_user_bio', { user: displayUsername })}
                   </button>
                 </div>
               )}
@@ -483,17 +485,17 @@ const LoginView = () => {
           )}
         </div>
 
-        <p className="text-center mt-6 text-xs text-gray-400 font-medium">Versión {APP_VERSION}</p>
+        <p className="text-center mt-6 text-xs text-gray-400 font-medium">{t('login.version_footer', { version: APP_VERSION })}</p>
       </div>
 
       {/* Modal suggesting biometric registration on first login */}
       <ConfirmModal
         open={showRegisterBioModal}
         onOpenChange={(open) => !open && handleSkipRegisterBio()}
-        title="¿Activar ingreso con Huella / Face ID?"
-        description="Puedes usar el sensor de huella o Face ID de tu dispositivo para iniciar sesión de forma rápida y segura en las próximas ocasiones."
-        confirmText="Activar biometría"
-        cancelText="Ahora no"
+        title={t('login.modal_activate_bio_title')}
+        description={t('login.modal_activate_bio_desc')}
+        confirmText={t('login.modal_activate_bio_confirm')}
+        cancelText={t('login.modal_activate_bio_cancel')}
         type="info"
         onConfirm={handleConfirmRegisterBio}
       />
@@ -502,10 +504,10 @@ const LoginView = () => {
       <ConfirmModal
         open={showConfirmForgetBioModal}
         onOpenChange={setShowConfirmForgetBioModal}
-        title="¿Desvincular huella de este equipo?"
-        description={`Se eliminará la configuración biométrica de ${savedDisplayName || 'este usuario'} en este dispositivo. Podrás volver a configurarla iniciando sesión con contraseña.`}
-        confirmText="Sí, desvincular"
-        cancelText="Cancelar"
+        title={t('login.modal_unlink_bio_title')}
+        description={t('login.modal_unlink_bio_desc', { name: savedDisplayName || 'este usuario' })}
+        confirmText={t('login.modal_unlink_bio_confirm')}
+        cancelText={t('login.modal_unlink_bio_cancel')}
         type="warning"
         onConfirm={handleConfirmForgetBiometricUser}
       />

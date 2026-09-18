@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import { FileText, MapPin, CalendarClock, Download, X, Loader2, Users, UserPlus, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
@@ -79,6 +80,7 @@ type ReportData = IAttendanceReportData;
  * @returns {JSX.Element}
  */
 const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onOpenChange }) => {
+  const { t } = useTranslation(['kidChurch', 'common']);
   useModalBackClose(open, () => onOpenChange(false));
 
   const dispatch = useAppDispatch();
@@ -255,15 +257,15 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
       });
 
       if (!detailReport || (!detailReport.summary && (!detailReport.attendees || detailReport.attendees.length === 0))) {
-        toast.info('No se encontraron registros de asistencia para los criterios seleccionados.');
+        toast.info(t('report.toast_no_data'));
         return;
       }
 
       setReport(detailReport);
-      toast.success('Reporte generado exitosamente');
+      toast.success(t('report.toast_success'));
     } catch (err: any) {
       console.error('Error generating report', err);
-      toast.error(err?.response?.data?.message || 'Error al generar el reporte de asistencia.');
+      toast.error(err?.response?.data?.message || t('report.toast_error'));
     } finally {
       setIsLoading(false);
     }
@@ -276,17 +278,17 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
    */
   const handleDownloadPdf = () => {
     if (!report) {
-      toast.error('No hay información de reporte para generar el PDF.');
+      toast.error(t('report.toast_pdf_no_data'));
       return;
     }
 
     setIsDownloading(true);
     try {
       generateKidAttendancePdf(report);
-      toast.success('Reporte PDF generado y descargado correctamente');
+      toast.success(t('report.toast_pdf_success'));
     } catch (err) {
       console.error('Error generating report PDF', err);
-      toast.error('Error al generar el archivo PDF.');
+      toast.error(t('report.toast_pdf_error'));
     } finally {
       setIsDownloading(false);
     }
@@ -297,7 +299,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
       open={open}
       onOpenChange={onOpenChange}
       icon={<FileText size={18} className="text-primary shrink-0" />}
-      title={`Reporte de Asistencia - ${kidsModuleName}`}
+      title={t('report.title', { module: kidsModuleName })}
       bodyClassName="p-4 flex flex-col gap-4 pb-12"
     >
             {/* Filter Form Card */}
@@ -313,7 +315,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                     value={selectedCampusId}
                     onChange={(e) => handleCampusChange(e.target.value)}
                   >
-                    <option value="" disabled>Seleccione {campusTerm.toLowerCase()}...</option>
+                    <option value="" disabled>{t('report.select_campus', { campus: campusTerm.toLowerCase() })}</option>
                     {campuses.data.map((campus) => (
                       <option key={campus.id} value={campus.id}>{campus.name}</option>
                     ))}
@@ -336,7 +338,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                     onChange={(e) => handleMeetingChange(e.target.value)}
                     disabled={!selectedCampusId || (meetings.loading && availableMeetings.length === 0)}
                   >
-                    <option value="" disabled>Seleccione {meetingTerm.toLowerCase()}...</option>
+                    <option value="" disabled>{t('report.select_meeting', { meeting: meetingTerm.toLowerCase() })}</option>
                     {availableMeetings.map((meeting: any) => (
                       <option key={meeting.id} value={meeting.id}>{meeting.name}</option>
                     ))}
@@ -350,7 +352,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
               {/* Fecha */}
               <div>
                 <DateCalendarPicker
-                  label={`Fecha de la ${meetingTerm.toLowerCase()}`}
+                  label={t('report.meeting_date_label', { meeting: meetingTerm.toLowerCase() })}
                   value={selectedDate}
                   minDate={minDateStr}
                   maxDate={todayStr}
@@ -362,8 +364,8 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   }}
                   helpText={
                     selectedMeetingObj?.day
-                      ? `Solo se habilitan los días correspondientes a esta ${meetingTerm.toLowerCase()} (${getTranslatedDay(selectedMeetingObj.day)}).`
-                      : `Selecciona primero una ${meetingTerm.toLowerCase()} para habilitar las fechas correspondientes.`
+                      ? t('report.meeting_date_help', { meeting: meetingTerm.toLowerCase(), day: getTranslatedDay(selectedMeetingObj.day) })
+                      : t('report.meeting_date_help_empty', { meeting: meetingTerm.toLowerCase() })
                   }
                 />
               </div>
@@ -373,11 +375,11 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                 block
                 variant="primary"
                 loading={isLoading}
-                loadingText="Generando reporte..."
+                loadingText={t('report.generating')}
                 disabled={!selectedCampusId || !selectedMeetingId || !selectedDate || isLoading}
                 className="mt-1"
               >
-                Generar Reporte
+                {t('report.generate_button')}
               </Button>
             </div>
 
@@ -387,11 +389,11 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                 {/* General Totals */}
                 <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                   <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3 flex items-center gap-2">
-                    <Users size={16} className="text-primary" /> Totales Generales
+                    <Users size={16} className="text-primary" /> {t('report.general_totals')}
                   </h3>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="bg-primary/10 border border-primary/20 p-3.5 rounded-xl text-center">
-                      <span className="text-xs font-semibold text-primary block mb-1">Total Registrados</span>
+                      <span className="text-xs font-semibold text-primary block mb-1">{t('report.total_registered')}</span>
                       <span className="text-2xl font-black text-primary">
                         {report.summary?.totalKids ?? (report as any).totalKids ?? report.attendees?.length ?? 0}
                       </span>
@@ -399,7 +401,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
 
                     <div className="bg-amber-50 border border-amber-200 p-3.5 rounded-xl text-center">
                       <span className="text-xs font-semibold text-amber-800 block mb-1 flex items-center justify-center gap-1">
-                        <Sparkles size={13} /> Nuevos
+                        <Sparkles size={13} /> {t('report.total_new')}
                       </span>
                       <span className="text-2xl font-black text-amber-900">
                         {report.summary?.totalNewKids ?? (report as any).totalNewKids ?? 0}
@@ -412,7 +414,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                 {sortedGroups.length > 0 && (
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">
-                      Totales por Salones
+                      {t('report.classrooms_totals')}
                     </h3>
                     <div className="divide-y divide-gray-100 rounded-xl border border-gray-100 overflow-hidden">
                       {sortedGroups.map((group: any) => {
@@ -435,11 +437,11 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   ((report as any).statistics?.byGender && (report as any).statistics.byGender.length > 0)) && (
                   <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                     <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wide mb-3">
-                      Totales por Género
+                      {t('report.gender_totals')}
                     </h3>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center">
-                        <span className="text-xs font-semibold text-blue-700 block">Masculino</span>
+                        <span className="text-xs font-semibold text-blue-700 block">{t('report.gender_male')}</span>
                         <span className="text-xl font-black text-blue-900 mt-1 block">
                           {(report.summary?.byGender || (report as any).statistics?.byGender || []).find(
                             (g: any) => g.gender === 'M' || g.name === 'M' || (g.label && g.label.toLowerCase().includes('masc'))
@@ -448,7 +450,7 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                       </div>
 
                       <div className="bg-pink-50 border border-pink-200 p-3 rounded-xl text-center">
-                        <span className="text-xs font-semibold text-pink-700 block">Femenino</span>
+                        <span className="text-xs font-semibold text-pink-700 block">{t('report.gender_female')}</span>
                         <span className="text-xl font-black text-pink-900 mt-1 block">
                           {(report.summary?.byGender || (report as any).statistics?.byGender || []).find(
                             (g: any) => g.gender === 'F' || g.name === 'F' || (g.label && g.label.toLowerCase().includes('fem'))
@@ -465,11 +467,11 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
                   block
                   variant="primary"
                   loading={isDownloading}
-                  loadingText="Descargando PDF..."
+                  loadingText={t('report.downloading_pdf')}
                   disabled={isDownloading}
                   className="flex items-center justify-center gap-2 shadow-md"
                 >
-                  <Download size={18} /> Descargar Reporte en PDF
+                  <Download size={18} /> {t('report.download_pdf')}
                 </Button>
               </div>
             )}

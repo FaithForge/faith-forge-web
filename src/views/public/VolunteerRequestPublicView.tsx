@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   CheckCircle2,
   Sparkles,
@@ -58,6 +59,7 @@ const ROLE_OPTIONS = [
  * @returns {JSX.Element} Public application form or success confirmation.
  */
 const VolunteerRequestPublicView: React.FC = () => {
+  const { t } = useTranslation(['auth', 'common']);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -204,11 +206,11 @@ const VolunteerRequestPublicView: React.FC = () => {
 
   const handleCheckUser = async () => {
     if (!nationalIdType) {
-      toast.error('Por favor selecciona el tipo de documento');
+      toast.error(t('auth:volunteer_request.toast_select_id_type'));
       return;
     }
     if (!nationalId.trim()) {
-      toast.error('Por favor ingresa tu número de documento');
+      toast.error(t('auth:volunteer_request.toast_enter_id'));
       return;
     }
 
@@ -224,10 +226,10 @@ const VolunteerRequestPublicView: React.FC = () => {
       setHasCheckedUser(true);
       if (result.exists && result.userId) {
         setExistingUser(result);
-        toast.success('¡Servidor encontrado en el sistema!');
+        toast.success(t('auth:volunteer_request.toast_server_found'));
       } else {
         setExistingUser(null);
-        toast.info('No encontramos un registro previo. Por favor completa tus datos personales.');
+        toast.info(t('auth:volunteer_request.toast_no_prev_record'));
       }
     } catch {
       setHasCheckedUser(true);
@@ -241,61 +243,61 @@ const VolunteerRequestPublicView: React.FC = () => {
     e.preventDefault();
 
     if (!nationalIdType) {
-      toast.error('Por favor selecciona el tipo de documento');
+      toast.error(t('auth:volunteer_request.toast_select_id_type'));
       return;
     }
     if (!nationalId.trim()) {
-      toast.error('Por favor ingresa tu número de documento');
+      toast.error(t('auth:volunteer_request.toast_enter_id'));
       return;
     }
     if (!hasCheckedUser) {
-      toast.error('Por favor consulta tu documento primero');
+      toast.error(t('auth:volunteer_request.toast_check_doc_first'));
       return;
     }
     if (!churchCampusId) {
-      toast.error('Por favor selecciona una sede');
+      toast.error(t('auth:volunteer_request.toast_select_campus'));
       return;
     }
     if (!ministryGroupConfigId) {
-      toast.error('Por favor selecciona un grupo de servicio');
+      toast.error(t('auth:volunteer_request.toast_select_group'));
       return;
     }
     if (!requestedRole) {
-      toast.error('Por favor selecciona el rol en el que sirves');
+      toast.error(t('auth:volunteer_request.toast_select_role'));
       return;
     }
     if (requestedRole !== VolunteerRole.GROUP_COORDINATOR && !ministryAreaId) {
-      toast.error('Por favor selecciona un área de ministerio');
+      toast.error(t('auth:volunteer_request.toast_select_area'));
       return;
     }
 
     // Si es usuario nuevo, validar datos obligatorios
     if (!existingUser?.userId) {
       if (!firstName.trim()) {
-        toast.error('Por favor ingresa tus nombres completos');
+        toast.error(t('auth:volunteer_request.toast_enter_first_name'));
         return;
       }
       if (!lastName.trim()) {
-        toast.error('Por favor ingresa tus apellidos completos');
+        toast.error(t('auth:volunteer_request.toast_enter_last_name'));
         return;
       }
       const lastNameParts = lastName.trim().split(/\s+/).filter(Boolean);
       if (lastNameParts.length < 2) {
-        toast.error('Por favor ingresa ambos apellidos (primer y segundo apellido)');
+        toast.error(t('auth:volunteer_request.toast_enter_both_last_names'));
         return;
       }
       if (!birthday) {
-        toast.error('Por favor ingresa tu fecha de nacimiento');
+        toast.error(t('auth:volunteer_request.toast_enter_birthday'));
         return;
       }
       if (!gender) {
-        toast.error('Por favor selecciona tu género');
+        toast.error(t('auth:volunteer_request.toast_select_gender'));
         return;
       }
       if (phone && phone.trim()) {
         const phoneVal = validatePhoneNumber(phone, dialCodePhone);
         if (!phoneVal.isValid) {
-          toast.error(phoneVal.error || 'Por favor ingresa un número de teléfono válido');
+          toast.error(phoneVal.error || t('auth:volunteer_request.toast_valid_phone'));
           return;
         }
       }
@@ -336,9 +338,9 @@ const VolunteerRequestPublicView: React.FC = () => {
       }
 
       setSubmittedSuccess(true);
-      toast.success('¡Registro de servidor enviado exitosamente!');
+      toast.success(t('auth:volunteer_request.toast_submit_success'));
     } catch (err: any) {
-      let msg = 'Error al registrar los datos del servidor';
+      let msg = t('auth:volunteer_request.toast_submit_error');
       if (typeof err === 'string') {
         msg = err;
       } else if (err?.message) {
@@ -384,12 +386,10 @@ const VolunteerRequestPublicView: React.FC = () => {
 
           <div className="space-y-2">
             <h2 className="text-2xl font-extrabold text-gray-900 tracking-tight">
-              ¡Registro Enviado!
+              {t('auth:volunteer_request.submitted_title')}
             </h2>
             <p className="text-sm text-gray-600 leading-relaxed">
-              Muchas gracias. Tus datos han sido recibidos para registrar y actualizar el equipo de servidores en{' '}
-              <span className="font-bold text-emerald-700">{ministryName}</span>.
-              Tu coordinador confirmará tu asignación en el sistema.
+              {t('auth:volunteer_request.submitted_desc', { ministry: ministryName })}
             </p>
           </div>
 
@@ -397,13 +397,13 @@ const VolunteerRequestPublicView: React.FC = () => {
           <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3 text-left flex items-start gap-2.5 text-xs text-amber-900">
             <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
             <p className="leading-relaxed">
-              <span className="font-bold">¿Sirves en otro grupo?</span> Si también sirves en otro culto o grupo, debes registrar cada uno por separado pulsando el botón a continuación.
+              <span className="font-bold">{t('auth:volunteer_request.multi_group_title')}</span> {t('auth:volunteer_request.multi_group_desc')}
             </p>
           </div>
 
           <div className="p-4 bg-gray-50 rounded-2xl border border-gray-100 text-left text-xs text-gray-600 space-y-1.5">
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Servidor:</span>
+              <span className="text-gray-400 font-medium">{t('auth:volunteer_request.volunteer_label')}</span>
               <span className="font-semibold text-gray-800">
                 {existingUser
                   ? `${existingUser.maskedFirstName} ${existingUser.maskedLastName}`
@@ -411,30 +411,30 @@ const VolunteerRequestPublicView: React.FC = () => {
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Documento:</span>
+              <span className="text-gray-400 font-medium">{t('auth:volunteer_request.document_label')}</span>
               <span className="font-semibold text-gray-800">{nationalIdType} {nationalId}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Sede:</span>
+              <span className="text-gray-400 font-medium">{t('auth:volunteer_request.campus_label')}</span>
               <span className="font-semibold text-gray-800">
                 {catalog?.campuses?.find((c) => c.id === churchCampusId)?.name || 'Sede'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Grupo:</span>
+              <span className="text-gray-400 font-medium">{t('auth:volunteer_request.group_label')}</span>
               <span className="font-semibold text-gray-800">
                 {catalog?.ministryGroupConfigs?.find((g) => g.id === ministryGroupConfigId)?.name || 'Grupo'}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-400 font-medium">Rol:</span>
+              <span className="text-gray-400 font-medium">{t('auth:volunteer_request.role_label')}</span>
               <span className="font-semibold text-emerald-600">
                 {ROLE_OPTIONS.find((r) => r.value === requestedRole)?.label || requestedRole}
               </span>
             </div>
             {requestedRole !== VolunteerRole.GROUP_COORDINATOR && ministryAreaId && (
               <div className="flex justify-between">
-                <span className="text-gray-400 font-medium">Área:</span>
+                <span className="text-gray-400 font-medium">{t('auth:volunteer_request.area_label')}</span>
                 <span className="font-semibold text-gray-800">
                   {catalog?.ministryAreas?.find((a) => a.id === ministryAreaId)?.name}
                 </span>
@@ -448,7 +448,7 @@ const VolunteerRequestPublicView: React.FC = () => {
               block
               className="rounded-2xl py-3 text-sm font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 cursor-pointer"
             >
-              Registrar en otro grupo o servidor
+              {t('auth:volunteer_request.register_another_button')}
             </Button>
 
             <Button
@@ -459,7 +459,7 @@ const VolunteerRequestPublicView: React.FC = () => {
               className="rounded-2xl py-3 text-sm font-bold text-gray-700 hover:bg-gray-50 flex items-center justify-center gap-2 cursor-pointer border-gray-200"
             >
               <LogIn size={16} className="text-gray-500" />
-              Ir a Iniciar Sesión
+              {t('auth:volunteer_request.login_button')}
             </Button>
           </div>
         </div>
@@ -478,14 +478,13 @@ const VolunteerRequestPublicView: React.FC = () => {
           <div className="space-y-1">
             <div className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
               <Sparkles size={13} />
-              Registro de Servidores
+              {t('auth:volunteer_request.badge')}
             </div>
             <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 tracking-tight">
-              Registro de Servidores
+              {t('auth:volunteer_request.title')}
             </h1>
             <p className="text-xs sm:text-sm text-gray-600 max-w-md mx-auto">
-              Diligencia este formulario para confirmar tus datos y registrar el grupo donde sirves actualmente en{' '}
-              <span className="font-bold text-gray-800">{ministryName}</span>.
+              {t('auth:volunteer_request.subtitle', { ministry: ministryName })}
             </p>
           </div>
 
@@ -493,7 +492,7 @@ const VolunteerRequestPublicView: React.FC = () => {
           <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 max-w-md mx-auto text-left flex items-start gap-2.5 shadow-xs">
             <AlertCircle size={18} className="text-amber-600 shrink-0 mt-0.5" />
             <p className="text-xs text-amber-900 leading-relaxed font-medium">
-              <span className="font-bold">Importante:</span> Si sirves en más de un grupo, debes diligenciar este formulario <span className="underline font-bold">una vez por cada grupo</span> en el que participes.
+              <span className="font-bold">{t('auth:volunteer_request.multi_group_warning_prefix')}</span> {t('auth:volunteer_request.multi_group_warning_text')}
             </p>
           </div>
         </div>
@@ -508,19 +507,19 @@ const VolunteerRequestPublicView: React.FC = () => {
             <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
               <Shield size={18} className="text-emerald-600" />
               <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                1. Identificación
+                {t('auth:volunteer_request.section_id')}
               </h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="sm:col-span-1">
                 <Select
-                  label="Tipo Documento"
+                  label={t('auth:volunteer_request.id_type')}
                   required
                   value={nationalIdType}
                   onChange={(e) => handleDocumentTypeChange(e.target.value)}
                 >
-                  <option value="" className="text-gray-700 bg-white">Seleccionar</option>
+                  <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.id_type_select')}</option>
                   {ID_TYPES.map((idType) => (
                     <option key={idType.value} value={idType.value} className="text-gray-900 bg-white font-medium">
                       {idType.label}
@@ -530,9 +529,9 @@ const VolunteerRequestPublicView: React.FC = () => {
               </div>
               <div className="sm:col-span-2">
                 <Input
-                  label="Número de Documento"
+                  label={t('auth:volunteer_request.id_number')}
                   required
-                  placeholder="Ej. 1020304050"
+                  placeholder={t('auth:volunteer_request.id_number_placeholder')}
                   value={nationalId}
                   onChange={(e) => handleDocumentChange(e.target.value)}
                 />
@@ -550,7 +549,7 @@ const VolunteerRequestPublicView: React.FC = () => {
                 className="rounded-2xl py-3 text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
                 <Search size={15} />
-                Consultar mis datos
+                {t('auth:volunteer_request.check_my_data')}
               </Button>
             )}
 
@@ -563,7 +562,7 @@ const VolunteerRequestPublicView: React.FC = () => {
                   </div>
                   <div className="min-w-0">
                     <span className="inline-block text-[10px] font-bold text-emerald-700 uppercase tracking-wide bg-emerald-100/70 px-2 py-0.5 rounded-full">
-                      Servidor Identificado
+                      {t('auth:volunteer_request.server_identified_badge')}
                     </span>
                     <h3 className="text-sm sm:text-base font-extrabold text-gray-900 mt-1 truncate">
                       {existingUser.maskedFirstName} {existingUser.maskedLastName}
@@ -577,7 +576,7 @@ const VolunteerRequestPublicView: React.FC = () => {
                       )}
                     </div>
                     <p className="text-[11px] text-emerald-700 font-medium mt-1">
-                      ✓ No necesitas volver a llenar tus datos personales. Continúa con tu grupo de servicio abajo.
+                      {t('auth:volunteer_request.no_need_refill_hint')}
                     </p>
                   </div>
                 </div>
@@ -589,7 +588,7 @@ const VolunteerRequestPublicView: React.FC = () => {
                   }}
                   className="text-xs text-emerald-700 hover:text-emerald-900 underline font-medium cursor-pointer shrink-0"
                 >
-                  Cambiar
+                  {t('auth:volunteer_request.change_doc')}
                 </button>
               </div>
             )}
@@ -599,9 +598,9 @@ const VolunteerRequestPublicView: React.FC = () => {
               <div className="bg-sky-50 border border-sky-200 rounded-2xl p-3.5 flex items-start gap-2.5 text-xs text-sky-900">
                 <AlertCircle size={17} className="text-sky-600 shrink-0 mt-0.5" />
                 <div>
-                  <span className="font-bold">No encontramos un registro previo con este documento.</span>
+                  <span className="font-bold">{t('auth:volunteer_request.no_prev_record_title')}</span>
                   <p className="mt-0.5 text-sky-800">
-                    Por favor completa tus datos personales a continuación para registrarte:
+                    {t('auth:volunteer_request.no_prev_record_desc')}
                   </p>
                 </div>
               </div>
@@ -614,22 +613,22 @@ const VolunteerRequestPublicView: React.FC = () => {
               <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
                 <User size={18} className="text-emerald-600" />
                 <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                  2. Datos Personales
+                  {t('auth:volunteer_request.section_personal')}
                 </h2>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
-                  label="Nombres Completos"
+                  label={t('auth:volunteer_request.first_name')}
                   required
-                  placeholder="Ej. Juan Carlos"
+                  placeholder={t('auth:volunteer_request.first_name_placeholder')}
                   value={firstName}
                   onChange={(e) => setFirstName(e.target.value)}
                 />
                 <Input
-                  label="Apellidos Completos"
+                  label={t('auth:volunteer_request.last_name')}
                   required
-                  placeholder="Ej. Pérez Gómez (ambos apellidos)"
+                  placeholder={t('auth:volunteer_request.last_name_placeholder')}
                   value={lastName}
                   onChange={(e) => setLastName(e.target.value)}
                 />
@@ -637,19 +636,19 @@ const VolunteerRequestPublicView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Input
-                  label="Fecha de Nacimiento"
+                  label={t('auth:volunteer_request.birthday')}
                   type="date"
                   required
                   value={birthday}
                   onChange={(e) => setBirthday(e.target.value)}
                 />
                 <Select
-                  label="Género"
+                  label={t('auth:volunteer_request.gender')}
                   required
                   value={gender}
                   onChange={(e) => setGender(e.target.value)}
                 >
-                  <option value="" className="text-gray-700 bg-white">Selecciona tu género...</option>
+                  <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.gender_placeholder')}</option>
                   {GENDER_OPTIONS.map((g) => (
                     <option key={g.value} value={g.value} className="text-gray-900 bg-white font-medium">
                       {g.label}
@@ -660,16 +659,16 @@ const VolunteerRequestPublicView: React.FC = () => {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <PhoneInput
-                  label="Teléfono Celular"
+                  label={t('auth:volunteer_request.phone')}
                   dialCode={dialCodePhone}
                   phone={phone}
                   onDialCodeChange={setDialCodePhone}
                   onPhoneChange={setPhone}
                 />
                 <Input
-                  label="Correo Electrónico"
+                  label={t('auth:volunteer_request.email')}
                   type="email"
-                  placeholder="Ej. correo@ejemplo.com"
+                  placeholder={t('auth:volunteer_request.email_placeholder')}
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                 />
@@ -682,19 +681,19 @@ const VolunteerRequestPublicView: React.FC = () => {
             <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
               <MapPin size={18} className="text-emerald-600" />
               <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                {hasCheckedUser && !existingUser?.exists ? '3. Dónde sirves actualmente' : '2. Dónde sirves actualmente'}
+                {hasCheckedUser && !existingUser?.exists ? t('auth:volunteer_request.section_placement_new') : t('auth:volunteer_request.section_placement_existing')}
               </h2>
             </div>
 
             <div className="space-y-3">
               <Select
-                label="Sede / Campus"
+                label={t('auth:volunteer_request.campus')}
                 required
                 value={churchCampusId}
                 onChange={(e) => handleCampusChange(e.target.value)}
                 disabled={loadingCatalog}
               >
-                <option value="" className="text-gray-700 bg-white">Selecciona tu sede...</option>
+                <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.campus_placeholder')}</option>
                 {catalog?.campuses?.map((c) => (
                   <option key={c.id} value={c.id} className="text-gray-900 bg-white font-medium">
                     {c.name}
@@ -703,7 +702,7 @@ const VolunteerRequestPublicView: React.FC = () => {
               </Select>
 
               <Select
-                label="Grupo de Servicio"
+                label={t('auth:volunteer_request.group')}
                 required
                 value={ministryGroupConfigId}
                 onChange={(e) => handleGroupChange(e.target.value)}
@@ -711,10 +710,10 @@ const VolunteerRequestPublicView: React.FC = () => {
               >
                 <option value="" className="text-gray-700 bg-white">
                   {!churchCampusId
-                    ? 'Primero selecciona una sede...'
+                    ? t('auth:volunteer_request.select_campus_first')
                     : filteredGroups.length === 0
-                    ? 'No hay grupos configurados para esta sede'
-                    : 'Selecciona el grupo...'}
+                    ? t('auth:volunteer_request.no_groups_for_campus')
+                    : t('auth:volunteer_request.select_group_item')}
                 </option>
                 {filteredGroups.map((g) => (
                   <option key={g.id} value={g.id} className="text-gray-900 bg-white font-medium">
@@ -724,14 +723,14 @@ const VolunteerRequestPublicView: React.FC = () => {
               </Select>
 
               <Select
-                label="Rol en el que sirves"
+                label={t('auth:volunteer_request.role')}
                 required
                 value={requestedRole}
                 onChange={(e) => handleRoleChange(e.target.value as VolunteerRole)}
                 disabled={!ministryGroupConfigId}
               >
                 <option value="" className="text-gray-700 bg-white">
-                  {!ministryGroupConfigId ? 'Primero selecciona un grupo...' : 'Selecciona tu rol...'}
+                  {!ministryGroupConfigId ? t('auth:volunteer_request.select_group_first') : t('auth:volunteer_request.select_role_item')}
                 </option>
                 {ROLE_OPTIONS.map((opt) => (
                   <option key={opt.value} value={opt.value} className="text-gray-900 bg-white font-medium">
@@ -742,7 +741,7 @@ const VolunteerRequestPublicView: React.FC = () => {
 
               {requestedRole && requestedRole !== VolunteerRole.GROUP_COORDINATOR && (
                 <Select
-                  label="Área de Ministerio"
+                  label={t('auth:volunteer_request.area')}
                   required
                   value={ministryAreaId}
                   onChange={(e) => setMinistryAreaId(e.target.value)}
@@ -750,8 +749,8 @@ const VolunteerRequestPublicView: React.FC = () => {
                 >
                   <option value="" className="text-gray-700 bg-white">
                     {filteredAreas.length === 0
-                      ? 'No hay áreas disponibles para este grupo y sede'
-                      : 'Selecciona el área...'}
+                      ? t('auth:volunteer_request.no_areas_available')
+                      : t('auth:volunteer_request.select_area_item')}
                   </option>
                   {filteredAreas.map((a) => (
                     <option key={a.id} value={a.id} className="text-gray-900 bg-white font-medium">
@@ -771,10 +770,10 @@ const VolunteerRequestPublicView: React.FC = () => {
               loading={submitting}
               className="rounded-2xl py-3.5 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
             >
-              {submitting ? 'Registrando datos...' : 'Registrar Mis Datos'}
+              {submitting ? t('auth:volunteer_request.submitting') : t('auth:volunteer_request.submit')}
             </Button>
             <p className="text-[11px] text-center text-gray-400 mt-2">
-              Tus datos serán tratados de manera confidencial según las políticas de la iglesia.
+              {t('auth:volunteer_request.privacy_notice')}
             </p>
           </div>
         </form>

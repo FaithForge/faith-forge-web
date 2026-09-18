@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetVolunteerAssignments } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { IVolunteerAssignment, VolunteerRole } from '@/libs/models/Volunteer';
@@ -141,6 +142,7 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
  * @returns {JSX.Element} Rendered supervisor team view.
  */
 export const SupervisorTeamView: React.FC = () => {
+  const { t } = useTranslation(['kidChurch', 'common']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [searchTerm, setSearchTerm] = useState('');
@@ -188,13 +190,13 @@ export const SupervisorTeamView: React.FC = () => {
 
   useEffect(() => {
     if (!canAccessTeam) {
-      toast.error('No tienes permisos para acceder al equipo de supervisión.');
+      toast.error(t('supervisor_team.access_denied'));
       const fallbackUrl = currentRole?.includes('REGISTER')
         ? APP_ROUTES.kidRegistration.root
         : APP_ROUTES.kidChurch.root;
       navigate(fallbackUrl, { replace: true });
     }
-  }, [canAccessTeam, currentRole, navigate]);
+  }, [canAccessTeam, currentRole, navigate, t]);
 
   const churchVolunteersTerm = useChurchTerm('volunteers');
   const kidsRegistrationName = useKidsTerm('registration');
@@ -489,10 +491,10 @@ export const SupervisorTeamView: React.FC = () => {
             >
               <UserCheck size={13} />
               {isAreaCoordinator
-                ? 'Coordinador(a) de Área'
+                ? t('supervisor_team.role_area_coordinator')
                 : isGroupCoordinator
-                ? 'Coordinador(a) de Grupo'
-                : 'Supervisor(a)'}
+                ? t('supervisor_team.role_group_coordinator')
+                : t('supervisor_team.role_supervisor')}
             </span>
             {isAreaCoordinator ? (
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
@@ -514,17 +516,17 @@ export const SupervisorTeamView: React.FC = () => {
           </div>
           <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
             {isAreaCoordinator
-              ? `Mi Equipo — ${effectiveAreaName}`
+              ? t('supervisor_team.title_area', { name: effectiveAreaName })
               : isGroupCoordinator
-              ? `Mi Equipo — ${activeGroupConfigName || 'Grupo'}`
-              : `Mi Equipo — ${areaName}`}
+              ? t('supervisor_team.title_group', { name: activeGroupConfigName || 'Grupo' })
+              : t('supervisor_team.title_group', { name: areaName })}
           </h1>
           <p className="text-xs sm:text-sm text-gray-500 font-medium">
             {isAreaCoordinator
-              ? `Supervisores y servidores de ${effectiveAreaName} asignados a todos los grupos de esta sede`
+              ? t('supervisor_team.subtitle_area', { name: effectiveAreaName })
               : isGroupCoordinator
-              ? 'Supervisores y servidores asignados a las áreas de este grupo'
-              : 'Servidores asignados bajo tu supervisión para esta jornada'}
+              ? t('supervisor_team.subtitle_group')
+              : t('supervisor_team.subtitle_supervisor')}
           </p>
         </div>
 
@@ -534,7 +536,7 @@ export const SupervisorTeamView: React.FC = () => {
           className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200/80 transition-colors active:scale-95 disabled:opacity-50"
         >
           <RefreshCw size={14} className={clsx(isLoading && 'animate-spin text-primary')} />
-          Actualizar
+          {t('supervisor_team.refresh')}
         </button>
       </div>
 
@@ -549,15 +551,16 @@ export const SupervisorTeamView: React.FC = () => {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar servidor por nombre o documento..."
+            placeholder={t('supervisor_team.search_placeholder')}
             className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 shadow-2xs transition-all"
           />
         </div>
         <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white rounded-2xl border border-gray-200 text-xs font-bold text-gray-600 shadow-2xs justify-between sm:justify-start">
           <Users size={15} className="text-primary" />
           <span>
-            {filteredAssignments.length}{' '}
-            {filteredAssignments.length === 1 ? 'Servidor' : 'Servidores'}
+            {filteredAssignments.length === 1
+              ? t('supervisor_team.count_one')
+              : t('supervisor_team.count_other', { count: filteredAssignments.length })}
           </span>
         </div>
       </div>
@@ -575,7 +578,7 @@ export const SupervisorTeamView: React.FC = () => {
                 : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
             )}
           >
-            <span>Todos los grupos</span>
+            <span>{t('supervisor_team.all_groups')}</span>
             <span
               className={clsx(
                 'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
@@ -648,7 +651,7 @@ export const SupervisorTeamView: React.FC = () => {
                 : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
             )}
           >
-            <span>Todas las áreas</span>
+            <span>{t('supervisor_team.all_areas')}</span>
           </button>
 
           {/* Coordinadores de grupo - First specific category filter */}
@@ -663,7 +666,7 @@ export const SupervisorTeamView: React.FC = () => {
                   : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
               )}
             >
-              <span>Coordinadores de grupo</span>
+              <span>{t('supervisor_team.group_coordinators')}</span>
               <span
                 className={clsx(
                   'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
@@ -743,12 +746,14 @@ export const SupervisorTeamView: React.FC = () => {
             <Users size={28} />
           </div>
           <h3 className="text-base font-bold text-gray-800">
-            {searchTerm ? 'No se encontraron miembros' : `No hay ${churchVolunteersTerm.toLowerCase()} en tu equipo`}
+            {searchTerm
+              ? t('supervisor_team.empty_search_title')
+              : t('supervisor_team.empty_default_title', { volunteers: churchVolunteersTerm.toLowerCase() })}
           </h3>
           <p className="text-xs text-gray-400 max-w-sm">
             {searchTerm
-              ? 'Intenta con otro término de búsqueda o verifica que esté bien escrito.'
-              : `Los ${churchVolunteersTerm.toLowerCase()} asignados a tu área y grupo aparecerán aquí listados.`}
+              ? t('supervisor_team.empty_search_desc')
+              : t('supervisor_team.empty_default_desc', { volunteers: churchVolunteersTerm.toLowerCase() })}
           </p>
         </div>
       ) : (
@@ -818,7 +823,7 @@ export const SupervisorTeamView: React.FC = () => {
                             roleTheme.tagBg,
                           )}
                         >
-                          Tú
+                          {t('supervisor_team.badge_you')}
                         </span>
                       )}
                     </div>
@@ -839,11 +844,11 @@ export const SupervisorTeamView: React.FC = () => {
                                 asg.ministryGroupConfig?.name ||
                                 asg.serviceAreaGroup?.ministryGroupConfig?.name ||
                                 availableGroups.find(
-                                  (g) =>
-                                    g.id === asg.ministryGroupConfigId ||
-                                    g.id === asg.serviceAreaGroup?.ministryGroupConfigId,
+                                   (g) =>
+                                     g.id === asg.ministryGroupConfigId ||
+                                     g.id === asg.serviceAreaGroup?.ministryGroupConfigId,
                                 )?.name;
-                              return gName ? `· ${gName}` : '· Sin grupo asignado';
+                              return gName ? `· ${gName}` : t('supervisor_team.no_group_assigned');
                             })()
                           : `· ${asg.ministryArea?.name || asg.serviceAreaGroup?.ministryArea?.name || areaName}`}
                       </span>
@@ -871,22 +876,22 @@ export const SupervisorTeamView: React.FC = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-xs transition-all active:scale-95 shadow-2xs"
-                        title="Enviar mensaje de WhatsApp"
+                        title={t('supervisor_team.whatsapp_title')}
                       >
                         <FaWhatsapp size={15} />
-                        <span className="hidden sm:inline">WhatsApp</span>
+                        <span className="hidden sm:inline">{t('supervisor_team.whatsapp_btn')}</span>
                       </a>
                       <a
                         href={`tel:${dialCode}${cleanPhone}`}
                         className="p-2 rounded-xl text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-700 transition-all active:scale-95 shadow-2xs"
-                        title="Llamar"
+                        title={t('supervisor_team.call_title')}
                       >
                         <Phone size={15} />
                       </a>
                     </>
                   ) : (
                     <span className="text-[11px] text-gray-400 italic px-2">
-                      Sin teléfono
+                      {t('supervisor_team.no_phone')}
                     </span>
                   )}
                 </div>
