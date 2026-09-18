@@ -265,7 +265,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
 
     sendUrgentGuardianNotice: builder.mutation<
       { success: boolean; delivered: boolean; message?: string },
-      { guardianId: string; kidId: string; reason?: string }
+      { guardianId: string; kidId: string; reason?: string; vibrate?: number[] }
     >({
       query: (data) => ({
         microservice: MicroserviceEnum.KidChurch,

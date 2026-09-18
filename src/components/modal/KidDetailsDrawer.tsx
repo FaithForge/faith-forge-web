@@ -28,6 +28,11 @@ import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { useGetKidQuery, useSendUrgentGuardianNoticeMutation } from '@/libs/state/redux/api/kidChurchApi';
 
+// Patrón de alerta urgente prolongado: pulsos de 1 segundo con pausas de 250ms (~10s)
+const URGENT_NOTICE_VIBRATION_PATTERN = [
+  1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000,
+];
+
 interface KidDetailsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -200,6 +205,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
         guardianId: guardianActual.id || urgentNoticeGuardian.id!,
         kidId: kid.id,
         reason: reasonText,
+        vibrate: URGENT_NOTICE_VIBRATION_PATTERN,
       }).unwrap();
 
       if (res.delivered) {
