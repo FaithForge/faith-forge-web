@@ -1,0 +1,79 @@
+{
+  "terms": {
+    "title": "Términos y Condiciones de Uso",
+    "last_updated": "Última actualización: Septiembre de 2026",
+    "preamble": "Bienvenido a nuestra plataforma tecnológica. Al acceder o utilizar este sistema, usted declara y acepta expresamente los presentes Términos y Condiciones de Uso, que rigen la relación entre usted como usuario u operador y el servicio.",
+    "sections": {
+      "nature": {
+        "title": "1. Naturaleza del Servicio y Rol Tecnológico",
+        "content": "La plataforma es una herramienta de software destinada exclusivamente al apoyo organizativo, administrativo, logístico y de control operativo eclesiástico. La plataforma actúa como mero procesador e intermediario tecnológico en la nube y no interviene en las actividades presenciales, decisiones doctrinales, operativas ni de gobierno interno de las congregaciones o instituciones que hacen uso del sistema."
+      },
+      "third_party_data": {
+        "title": "2. Carga de Información y Declaración sobre Menores de Edad",
+        "content": "El usuario, voluntario, maestro o administrador que registre datos en la plataforma declara bajo gravedad de juramento que cuenta con la autorización previa, expresa e informada de los titulares de la información o de los acudientes legales (padres o tutores) en el caso de menores de edad. Es responsabilidad exclusiva del usuario y de la institución verificar y custodiar las autorizaciones correspondientes antes de almacenar cualquier dato en la plataforma."
+      },
+      "custody": {
+        "title": "3. Deslinde de Custodia y Seguridad Física en Eventos",
+        "content": "La plataforma suministra módulos de registro, códigos de verificación y herramientas de control, pero NO asume bajo ninguna circunstancia la custodia física, vigilancia, cuidado, guarda ni entrega de menores de edad o asistentes en los eventos presenciales. La supervisión física de los menores y la verificación en la entrega corresponden exclusivamente al personal de la institución."
+      },
+      "indemnity": {
+        "title": "4. Cláusula de Indemnidad",
+        "content": "El usuario y la institución que opera el sistema se comprometen a defender y mantener indemne a los desarrolladores, propietarios y proveedores de la plataforma ante cualquier reclamación, sanción administrativa, demanda civil o queja formulada por terceros, autoridades de protección de datos o acudientes, derivada de la carga no autorizada, inexactitud o uso indebido de los datos ingresados."
+      },
+      "availability": {
+        "title": "5. Disponibilidad del Servicio «Tal Cual» (As-Is)",
+        "content": "El software se provee «tal cual» y según su disponibilidad técnica. No se garantiza la continuidad ininterrumpida ante caídas imprevistas de telecomunicaciones, deficiencias en conexiones locales de internet, fallas en hardware local de impresión Bluetooth o contingencias de fuerza mayor."
+      },
+      "confidentiality": {
+        "title": "6. Deber de Confidencialidad del Operador",
+        "content": "Todo usuario o servidor autorizado con credenciales en la plataforma tiene la obligación ética y legal de mantener absoluta reserva sobre los datos personales a los que tenga acceso, quedando prohibida su divulgación, captura fotográfica no autorizada o empleo para fines personales o ajenos al servicio."
+      }
+    }
+  },
+  "privacy": {
+    "title": "Política de Tratamiento y Privacidad de Datos",
+    "last_updated": "Última actualización: Septiembre de 2026",
+    "intro": "Esta Política establece los lineamientos bajo los cuales se tratan y protegen los datos personales gestionados mediante nuestra plataforma tecnológica, en cumplimiento de los principios de legalidad, finalidad y seguridad de la información.",
+    "sections": {
+      "purpose": {
+        "title": "1. Finalidades del Tratamiento",
+        "content": "La recolección y almacenamiento de información persigue propósitos exclusivamente funcionales: identificación de asistentes, control seguro de asistencia, atención ante situaciones de primeros auxilios (verificación de afecciones de salud o alergias previamente autorizadas) y emisión de códigos o pulseras de entrega para la seguridad del menor."
+      },
+      "sensitive_data": {
+        "title": "2. Datos Sensibles y de Salud",
+        "content": "La información relativa a condiciones médicas, requerimientos especiales de salud o entidades promotoras de salud (EPS) tiene carácter sensible y su suministro es facultativo. Dichos datos solo se conservan para salvaguardar la integridad y el bienestar del menor durante su permanencia en las actividades infantiles."
+      },
+      "rights": {
+        "title": "3. Derechos de los Titulares (Habeas Data)",
+        "content": "Los titulares de los datos y los representantes legales de menores tienen derecho a conocer, actualizar, rectificar y solicitar la supresión de su información de las bases de datos activas, así como a revocar la autorización otorgada cuando ello proceda."
+      },
+      "security": {
+        "title": "4. Seguridad y Confidencialidad",
+        "content": "La plataforma implementa controles criptográficos, tokens de sesión y mecanismos de auditoría para prevenir la adulteración, pérdida o acceso no autorizado a los registros almacenados."
+      }
+    }
+  },
+  "modal": {
+    "title": "Actualización de Términos y Condiciones",
+    "subtitle": "Para continuar utilizando la plataforma, por favor revisa y acepta los términos de uso actualizados.",
+    "action_accept": "He leído y acepto los términos",
+    "action_read_full": "Ver documento completo",
+    "action_logging_out": "Cerrar sesión",
+    "accepting": "Guardando aceptación...",
+    "success_title": "Términos aceptados",
+    "success_description": "Gracias por mantener tus acuerdos al día.",
+    "summary_bullets": {
+      "bullet_1": "Uso responsable y confidencialidad de la información gestionada.",
+      "bullet_2": "Declaración de contar con autorización de los titulares o acudientes antes de registrar datos.",
+      "bullet_3": "La plataforma actúa como apoyo tecnológico y no asume custodia física presencial de menores."
+    }
+  },
+  "login_notice": {
+    "text": "Al iniciar sesión, aceptas nuestros",
+    "terms_link": "Términos y Condiciones",
+    "and": "y",
+    "privacy_link": "Política de Privacidad"
+  },
+  "back_to_home": "Volver al inicio",
+  "back_to_login": "Volver al inicio de sesión"
+}

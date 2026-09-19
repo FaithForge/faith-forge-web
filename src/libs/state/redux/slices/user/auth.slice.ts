@@ -37,11 +37,7 @@ const AuthSlice = createSlice({
       state.experiences = action.payload;
       if (action.payload.length === 1) {
         state.activeExperience = action.payload[0];
-      } else if (
-        action.payload.length > 1 &&
-        state.activeExperience &&
-        !action.payload.includes(state.activeExperience)
-      ) {
+      } else {
         state.activeExperience = null;
       }
     },

@@ -55,6 +55,8 @@ const VolunteerApplicationsView = lazy(
 const VolunteerRequestPublicView = lazy(
   () => import('@/views/public/VolunteerRequestPublicView'),
 );
+const TermsOfServiceView = lazy(() => import('@/views/legal/TermsOfServiceView'));
+const PrivacyPolicyView = lazy(() => import('@/views/legal/PrivacyPolicyView'));
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
 const HubView = lazy(() => import('@/views/hub/HubView'));
@@ -63,12 +65,27 @@ const KidGuardianDashboardView = lazy(
 );
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
-import { UserExperienceEnum } from '@/libs/utils/auth';
+import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
+import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
   const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
+  const user = useAppSelector((state) => state.authSlice.user);
+
+  const userRoles = (user?.roles || []) as AppRole[];
+  const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
+  const isMultiRoleUser =
+    experiences.length > 1 ||
+    isSuperAdmin ||
+    userRoles.filter(isRoleEnabled).length > 1;
+
+  // If user has 2 or more roles / experiences and has not picked an active experience yet,
+  // they MUST ALWAYS start at the Hub
+  if (isMultiRoleUser && !activeExperience) {
+    return <Navigate to={APP_ROUTES.hub} replace />;
+  }
 
   // If user explicitly chose Kid Guardian experience
   if (activeExperience === UserExperienceEnum.KID_GUARDIAN) {
@@ -91,7 +108,7 @@ const IndexRedirect = () => {
   }
 
   // If user has multiple experiences and has not picked one yet, send to the Hub
-  if (!activeExperience && experiences.length > 1) {
+  if (isMultiRoleUser) {
     return <Navigate to={APP_ROUTES.hub} replace />;
   }
 
@@ -206,6 +223,7 @@ function App() {
       )}
       <BrowserRouter>
         <ScrollToTop />
+        <TermsAcceptanceModal />
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path={APP_ROUTES.auth.login} element={<LoginView />} />
@@ -213,6 +231,8 @@ function App() {
               path={APP_ROUTES.public.volunteerRequest}
               element={<VolunteerRequestPublicView />}
             />
+            <Route path={APP_ROUTES.legal.terms} element={<TermsOfServiceView />} />
+            <Route path={APP_ROUTES.legal.privacy} element={<PrivacyPolicyView />} />
             <Route element={<PrivateRoute />}>
               {/* Hub: Experience selector */}
               <Route path={APP_ROUTES.hub} element={<HubView />} />

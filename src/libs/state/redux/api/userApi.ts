@@ -107,6 +107,57 @@ export const userApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: ['Notification'],
     }),
+
+    getPendingTerms: builder.query<
+      {
+        hasPending: boolean;
+        pendingTerms: Array<{
+          termsType: string;
+          requiredVersion: string;
+          title: string;
+          mandatory: boolean;
+          accepted: boolean;
+          acceptedVersion?: string;
+          acceptedAt?: string;
+        }>;
+      },
+      void
+    >({
+      query: () => ({
+        microservice: MicroserviceEnum.User,
+        url: '/user/terms/pending',
+        method: HttpRequestMethod.GET,
+      }),
+      providesTags: ['UserTerms'],
+    }),
+
+    acceptTerms: builder.mutation<
+      { success: boolean; id: string; acceptedAt: string },
+      {
+        termsType: string;
+        version: string;
+        channel?: string;
+        churchId?: string;
+        metadata?: Record<string, any>;
+      }
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.User,
+        url: '/user/terms/accept',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+      invalidatesTags: ['UserTerms'],
+    }),
+
+    getMyTermsAcceptances: builder.query<any[], void>({
+      query: () => ({
+        microservice: MicroserviceEnum.User,
+        url: '/user/terms/my-acceptances',
+        method: HttpRequestMethod.GET,
+      }),
+      providesTags: ['UserTerms'],
+    }),
   }),
   overrideExisting: false,
 });
@@ -124,4 +175,8 @@ export const {
   useRespondInAppNotificationMutation,
   useDeleteInAppNotificationMutation,
   useClearReadInAppNotificationsMutation,
+  useGetPendingTermsQuery,
+  useLazyGetPendingTermsQuery,
+  useAcceptTermsMutation,
+  useGetMyTermsAcceptancesQuery,
 } = userApi;

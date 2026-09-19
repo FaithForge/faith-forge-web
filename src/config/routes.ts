@@ -52,5 +52,9 @@ export const APP_ROUTES = {
     qr: '/kid-guardian/qr',
     children: '/kid-guardian/children',
   },
+  legal: {
+    terms: '/terms',
+    privacy: '/privacy',
+  },
 } as const;
 

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useForm, SubmitHandler } from 'react-hook-form';
 import { Fingerprint, KeyRound } from 'lucide-react';
@@ -9,7 +9,9 @@ import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { FetchMyVolunteerPermissions, UserLogin } from '@/libs/state/redux/thunks/user/auth.thunk';
-import { setAuthSession } from '@/libs/state/redux/slices/user/auth.slice';
+import { setAuthSession, setActiveExperience } from '@/libs/state/redux/slices/user/auth.slice';
+import { store } from '@/libs/state/redux/store';
+import { APP_ROUTES } from '@/config/routes';
 import {
   isBiometricsAvailable,
   hasRegisteredBiometrics,
@@ -23,6 +25,9 @@ import {
 import { formatPersonShortName } from '@/libs/utils/text';
 import { APP_VERSION } from '@/constants/version';
 import { requestAndSyncPushSubscription } from '@/libs/utils/notifications/webPush';
+import { LegalDocumentsDrawer } from '@/components/legal/LegalDocumentsDrawer';
+import { AppRole, UserRole } from '@/libs/utils/auth';
+import { isRoleEnabled } from '@/config/roles';
 
 interface IFormLoginInput {
   username: string;
@@ -30,7 +35,7 @@ interface IFormLoginInput {
 }
 
 const LoginView = () => {
-  const { t } = useTranslation(['auth', 'common']);
+  const { t } = useTranslation(['auth', 'common', 'legal']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const persistedUser = useAppSelector((state) => state.authSlice.user);
@@ -48,9 +53,13 @@ const LoginView = () => {
     user: any;
     token: string;
     refreshToken?: string;
+    experiences?: any[];
+    roles?: any[];
   } | null>(null);
   const [showRegisterBioModal, setShowRegisterBioModal] = useState(false);
   const [showConfirmForgetBioModal, setShowConfirmForgetBioModal] = useState(false);
+  const [legalDrawerOpen, setLegalDrawerOpen] = useState(false);
+  const [legalInitialTab, setLegalInitialTab] = useState<'terms' | 'privacy'>('terms');
   
   const defaultInitialUsername = initialBioData?.user?.username || initialBioData?.username || '';
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<IFormLoginInput>({
@@ -59,6 +68,22 @@ const LoginView = () => {
       password: '',
     },
   });
+
+  const navigateAfterLogin = (experiencesList?: any[], rolesList?: any[]) => {
+    const authState = store.getState().authSlice;
+    const list = experiencesList ?? authState.experiences ?? [];
+    const roles = (rolesList ?? authState.user?.roles ?? []) as AppRole[];
+    const isSuperAdmin = roles.includes(UserRole.SUPER_ADMIN);
+    const hasMultipleRoles =
+      list.length > 1 || isSuperAdmin || roles.filter(isRoleEnabled).length > 1;
+
+    if (hasMultipleRoles) {
+      dispatch(setActiveExperience(null));
+      navigate(APP_ROUTES.hub, { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
+  };
 
   // Ensure default brand blue theme on login screen
   useEffect(() => {
@@ -166,7 +191,7 @@ const LoginView = () => {
           formatPersonShortName(result.user?.firstName, result.user?.lastName) ||
           result.username;
         toast.success(t('login.welcome_back_name', { name }));
-        navigate('/', { replace: true });
+        navigateAfterLogin(undefined, result.user?.roles);
         return;
       }
 
@@ -193,7 +218,7 @@ const LoginView = () => {
             formatPersonShortName(payload.user?.firstName, payload.user?.lastName) ||
             cleanBioUsername;
           toast.success(t('login.welcome_back_name', { name }));
-          navigate('/', { replace: true });
+          navigateAfterLogin(payload.experiences, payload.user?.roles);
         } else {
           const rawMsg = loginResult.error?.message || '';
           const isAuthError = rawMsg.includes('401') || rawMsg.includes('404');
@@ -257,6 +282,8 @@ const LoginView = () => {
             user: payload.user,
             token: payload.token,
             refreshToken: payload.refreshToken,
+            experiences: payload.experiences,
+            roles: payload.user?.roles,
           });
           setShowRegisterBioModal(true);
         } else {
@@ -270,7 +297,7 @@ const LoginView = () => {
             });
           }
           toast.success(t('login.welcome_default'));
-          navigate('/', { replace: true });
+          navigateAfterLogin(payload.experiences, payload.user?.roles);
         }
       } else {
         const rawMsg = resultAction.error?.message || '';
@@ -294,6 +321,8 @@ const LoginView = () => {
    * @returns {Promise<void>}
    */
   const handleConfirmRegisterBio = async () => {
+    const experiences = pendingLoginData?.experiences;
+    const roles = pendingLoginData?.roles;
     if (pendingLoginData) {
       const success = await registerBiometrics(pendingLoginData);
       if (success) {
@@ -301,7 +330,7 @@ const LoginView = () => {
       }
     }
     setShowRegisterBioModal(false);
-    navigate('/', { replace: true });
+    navigateAfterLogin(experiences, roles);
   };
 
   /**
@@ -310,8 +339,10 @@ const LoginView = () => {
    * @returns {void}
    */
   const handleSkipRegisterBio = () => {
+    const experiences = pendingLoginData?.experiences;
+    const roles = pendingLoginData?.roles;
     setShowRegisterBioModal(false);
-    navigate('/', { replace: true });
+    navigateAfterLogin(experiences, roles);
   };
 
   const hasBioModeActive = bioAvailable && registeredBioData && !showManualLogin;
@@ -490,8 +521,42 @@ const LoginView = () => {
           )}
         </div>
 
-        <p className="text-center mt-6 text-xs text-gray-400 font-medium">{t('login.version_footer', { version: APP_VERSION })}</p>
+        {/* Legal notice */}
+        <p className="text-center mt-5 text-[11px] text-gray-400 leading-relaxed max-w-xs mx-auto">
+          {t('login_notice.text', { ns: 'legal' })}{' '}
+          <button
+            type="button"
+            onClick={() => {
+              setLegalInitialTab('terms');
+              setLegalDrawerOpen(true);
+            }}
+            className="text-gray-500 dark:text-gray-400 hover:text-primary underline font-medium cursor-pointer"
+          >
+            {t('login_notice.terms_link', { ns: 'legal' })}
+          </button>{' '}
+          {t('login_notice.and', { ns: 'legal' })}{' '}
+          <button
+            type="button"
+            onClick={() => {
+              setLegalInitialTab('privacy');
+              setLegalDrawerOpen(true);
+            }}
+            className="text-gray-500 dark:text-gray-400 hover:text-primary underline font-medium cursor-pointer"
+          >
+            {t('login_notice.privacy_link', { ns: 'legal' })}
+          </button>
+          .
+        </p>
+
+        <p className="text-center mt-3 text-xs text-gray-400 font-medium">{t('login.version_footer', { version: APP_VERSION })}</p>
       </div>
+
+      {/* Drawer modal for Terms and Privacy Policy */}
+      <LegalDocumentsDrawer
+        open={legalDrawerOpen}
+        onOpenChange={setLegalDrawerOpen}
+        initialTab={legalInitialTab}
+      />
 
       {/* Modal suggesting biometric registration on first login */}
       <ConfirmModal

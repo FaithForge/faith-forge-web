@@ -90,10 +90,22 @@ const activeContextOnlyTransform = createTransform(
         ministries: inboundState?.ministries || [],
       };
     }
+    if (key === 'authSlice') {
+      return {
+        ...inboundState,
+        activeExperience: null,
+      };
+    }
     return inboundState;
   },
   // Transform state being rehydrated
   (outboundState: any, key) => {
+    if (key === 'authSlice') {
+      return {
+        ...outboundState,
+        activeExperience: null,
+      };
+    }
     if (key === 'churchCampusSlice') {
       return {
         data: [],
@@ -143,7 +155,7 @@ const activeContextOnlyTransform = createTransform(
     }
     return outboundState;
   },
-  { whitelist: ['churchCampusSlice', 'churchMeetingSlice', 'churchPrinterSlice', 'ministrySlice'] },
+  { whitelist: ['churchCampusSlice', 'churchMeetingSlice', 'churchPrinterSlice', 'ministrySlice', 'authSlice'] },
 );
 
 const persistConfig = {

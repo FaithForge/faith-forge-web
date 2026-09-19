@@ -139,6 +139,7 @@ export const baseApi = createApi({
     'User',
     'UserOverview',
     'Notification',
+    'UserTerms',
   ],
 
   refetchOnReconnect: true,

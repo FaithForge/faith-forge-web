@@ -4,12 +4,14 @@
     "type": "patch",
     "timestamp": "2026-09-19T13:17:00.846Z",
     "dateFormatted": "19/09/2026 08:17 AM",
-    "title": "Mejoras de visualización y registros",
+    "title": "Mejoras de visualización, registros y acuerdos legales",
     "changes": [
       "Corrección en el selector de impresoras para permitir elegir cualquier equipo disponible en la sede",
       "Ajuste en el formulario de registro de niños para mostrar la acción correcta al guardar acudiente",
       "Corrección visual en el contador de niños dentro de los filtros de salones",
-      "Diseño más limpio y sobrio en los menús de usuario con acceso integrado a las novedades"
+      "Diseño más limpio y sobrio en los menús de usuario con acceso integrado a las novedades",
+      "Nuevas secciones de Términos de Servicio y Política de Privacidad con confirmación transparente de acuerdos",
+      "Inicio automático en el selector de espacios para usuarios con múltiples funciones asignadas"
     ]
   },
   {
