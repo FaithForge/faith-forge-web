@@ -373,7 +373,11 @@ const SettingsDrawer = ({
   // Auto-select meeting if only 1 meeting available for today
   useEffect(() => {
     if (!selectedCampusId || !open) return;
-    if (availableMeetings.length === 1 && selectedMeetingId !== availableMeetings[0].id) {
+    if (availableMeetings.length === 0) {
+      if (selectedMeetingId !== '') {
+        setSelectedMeetingId('');
+      }
+    } else if (availableMeetings.length === 1 && selectedMeetingId !== availableMeetings[0].id) {
       setSelectedMeetingId(availableMeetings[0].id);
     } else if (availableMeetings.length > 1) {
       const isValid = availableMeetings.some((m: any) => m.id === selectedMeetingId);
@@ -395,22 +399,22 @@ const SettingsDrawer = ({
     );
   }, [printers, selectedCampusId]);
 
-  // Auto-select printer if only 1 available
+  // Auto-select printer if only 1 available or preserve valid selection
   useEffect(() => {
     if (!selectedCampusId || !open || selectedMode === 'BLUETOOTH') return;
-    if (availablePrinters.length === 1) {
+    if (availablePrinters.length === 0) {
+      if (selectedPrinterId !== '') {
+        setSelectedPrinterId('');
+      }
+    } else if (availablePrinters.length === 1) {
       if (selectedPrinterId !== availablePrinters[0].id) {
         setSelectedPrinterId(availablePrinters[0].id);
       }
     } else if (availablePrinters.length > 1) {
-      const preferred = printers.current && availablePrinters.find((p: IChurchPrinter) => p.id === printers.current?.id);
-      if (preferred) {
-        setSelectedPrinterId(preferred.id);
-      } else {
-        const isValid = availablePrinters.some((p: IChurchPrinter) => p.id === selectedPrinterId);
-        if (!isValid) {
-          setSelectedPrinterId('');
-        }
+      const isValid = availablePrinters.some((p: IChurchPrinter) => p.id === selectedPrinterId);
+      if (!isValid) {
+        const preferred = printers.current && availablePrinters.find((p: IChurchPrinter) => p.id === printers.current?.id);
+        setSelectedPrinterId(preferred ? preferred.id : '');
       }
     }
   }, [availablePrinters, selectedCampusId, selectedPrinterId, printers.current, open, selectedMode]);

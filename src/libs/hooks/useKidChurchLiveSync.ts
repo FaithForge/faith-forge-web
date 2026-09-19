@@ -43,6 +43,7 @@ export const useKidChurchLiveSync = ({
             kidChurchApi.util.invalidateTags([
               { type: 'KidRegistered', id: 'LIST' },
               { type: 'KidGroup', id: 'LIST' },
+              'Notification',
             ])
           );
         }

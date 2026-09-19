@@ -22,12 +22,12 @@
   }
 
   .theme-SUPER_ADMIN {
-    --color-primary: #334155; /* slate-700 */
-    --color-primary-rgb: 51, 65, 85;
+    --color-primary: #003963;
+    --color-primary-rgb: 0, 57, 99;
   }
   .theme-ADMIN {
-    --color-primary: #475569; /* slate-600 */
-    --color-primary-rgb: 71, 85, 105;
+    --color-primary: #003963;
+    --color-primary-rgb: 0, 57, 99;
   }
   .theme-STAFF {
     --color-primary: #3b82f6; /* blue-500 */

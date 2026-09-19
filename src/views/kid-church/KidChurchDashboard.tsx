@@ -323,7 +323,7 @@ const KidChurchDashboard: React.FC = () => {
                           isSelected ? 'text-primary' : 'text-gray-500',
                         )}
                       >
-                        {count} {count === 1 ? t('dashboard.kids_count_one') : t('dashboard.kids_count_other', { count })}
+                        {count === 1 ? t('dashboard.kids_count_one') : t('dashboard.kids_count_other', { count })}
                       </span>
                     </button>
                   );

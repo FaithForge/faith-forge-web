@@ -1,5 +1,5 @@
 import { SelectorOption } from '../common-types/global';
-import { UserRole } from '../utils/auth';
+import { UserExperienceEnum, UserRole } from '../utils/auth';
 import { EntityState } from './Church';
 import { ReduxDefaultStateWithoutData } from './Redux';
 
@@ -287,3 +287,34 @@ export function generateTemporaryPassword(): string {
   const randomSuffix = Math.floor(100 + Math.random() * 900);
   return `Igle${currentYear}*${randomSuffix}`;
 }
+
+export type InAppNotificationType =
+  | 'URGENT_NOTICE'
+  | 'KID_REGISTERED'
+  | 'GUARDIAN_RESPONSE'
+  | 'GENERAL';
+
+export interface IInAppNotification {
+  id: string;
+  userId: string;
+  experience: UserExperienceEnum;
+  type: InAppNotificationType;
+  title: string;
+  body: string;
+  kidId?: string;
+  kidName?: string;
+  kidGroupName?: string;
+  guardianId?: string;
+  guardianName?: string;
+  reason?: string;
+  status?: 'PENDING' | 'ACKNOWLEDGED';
+  read: boolean;
+  createdAt: string;
+  data?: Record<string, any>;
+}
+
+export interface IInAppNotificationsResponse {
+  notifications: IInAppNotification[];
+  unreadCount: number;
+}
+

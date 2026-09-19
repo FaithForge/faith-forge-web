@@ -282,11 +282,11 @@ const NewKidView = () => {
       const resultAction = await dispatch(CreateKid(kidPayload as any));
       
       if (CreateKid.fulfilled.match(resultAction)) {
-        if (!resultAction.payload.error) {
+        if (!resultAction.payload?.error) {
            setStep(2);
            scrollToTop();
         } else {
-           toast.error(resultAction.payload.error || "Error al guardar el niño");
+           toast.error(resultAction.payload?.error || "Error al guardar el niño");
         }
       } else {
         toast.error("Error al guardar el niño");
@@ -344,22 +344,24 @@ const NewKidView = () => {
          relation: values.relation,
        };
        
-       const resultAction = await dispatch(CreateKidGuardian(guardianPayload as any));
-       if (CreateKidGuardian.fulfilled.match(resultAction)) {
-          if (!resultAction.payload.error) {
-             toast.success(t('kidRegistration:form.success_kid_created'));
-             window.scrollTo({ top: 0, behavior: 'smooth' });
-             // Ir a check-in
-             navigate(APP_ROUTES.kidRegistration.checkIn(kidSlice.current.id), { replace: true });
-          } else {
-             toast.error(resultAction.payload.error || `Error al guardar ${guardianTerm.toLowerCase()}`);
-          }
-       } else {
-          toast.error(t('kidRegistration:form.error_creating_kid'));
-       }
-    } catch(e) {
-       toast.error(t('common:states.error_occurred'));
-    } finally {
+        const resultAction = await dispatch(CreateKidGuardian(guardianPayload as any));
+        if (CreateKidGuardian.fulfilled.match(resultAction)) {
+           if (!resultAction.payload?.error) {
+              allowNavigation();
+              toast.success(t('kidRegistration:form.success_kid_created'));
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              // Ir a check-in
+              navigate(APP_ROUTES.kidRegistration.checkIn(kidSlice.current.id), { replace: true });
+           } else {
+              toast.error(resultAction.payload?.error || `Error al guardar ${guardianTerm.toLowerCase()}`);
+           }
+        } else {
+           toast.error(t('kidRegistration:form.error_creating_kid'));
+        }
+     } catch(e) {
+        console.error('Error submitting guardian:', e);
+        toast.error(t('common:states.error_occurred'));
+     } finally {
        setIsUploading(false);
     }
   };
@@ -667,10 +669,10 @@ const NewKidView = () => {
               type="submit"
               block
               variant="primary"
-              className="mb-3"
+              className="mb-3 text-sm sm:text-base"
               disabled={isUploading || isUnderThreeMonths}
             >
-              {isUploading ? t('common:states.saving') : <>{t('kidRegistration:form.btn_next_to_guardian', { guardian: guardianTerm })} <ChevronRight size={18} className="ml-2 inline" /></>}
+              {isUploading ? t('common:states.saving') : <>{t('kidRegistration:form.btn_next_to_guardian', { guardian: guardianTerm.toLowerCase() })} <ChevronRight size={18} className="ml-2 inline" /></>}
             </Button>
             {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
             <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
@@ -882,10 +884,10 @@ const NewKidView = () => {
               type="submit"
               block
               variant="primary"
-              className="mb-3"
+              className="mb-3 text-sm sm:text-base"
               disabled={isUploading}
             >
-              {isUploading ? t('common:states.saving') : <>{t('kidRegistration:form.btn_save_kid')} <Check size={18} className="ml-2 inline" /></>}
+              {isUploading ? t('common:states.saving') : <>{t('kidRegistration:form.btn_save_guardian', { guardian: guardianTerm })} <Check size={18} className="ml-2 inline" /></>}
             </Button>
             {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
             <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />

@@ -283,7 +283,7 @@ const executeApiRequest = async (
       } else {
         // If payload has pagination metadata, merge onto unboxed data if object (non-array)
         // so legacy thunks expecting response.data.totalPages or total still find them
-        if (meta && typeof unboxedData === 'object' && unboxedData !== null && !Array.isArray(unboxedData)) {
+        if (isPaginatedMeta && typeof unboxedData === 'object' && unboxedData !== null && !Array.isArray(unboxedData)) {
           Object.assign(unboxedData, meta);
         }
         response.data = unboxedData;

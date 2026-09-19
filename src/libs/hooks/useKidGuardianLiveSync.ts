@@ -47,6 +47,7 @@ export const useKidGuardianLiveSync = ({
               { type: 'KidGuardian', id: 'LIST' },
               { type: 'KidGuardian', id: guardianId },
               { type: 'KidRegistered', id: 'LIST' },
+              'Notification',
             ])
           );
 
@@ -97,6 +98,8 @@ export const useKidGuardianLiveSync = ({
             description: `Por favor acércate a ${groupName}. Motivo: ${reason}`,
             duration: 20000,
           });
+
+          dispatch(kidChurchApi.util.invalidateTags(['Notification']));
         }
       } catch {
         // Heartbeats or raw text are safely ignored

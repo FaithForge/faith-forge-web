@@ -39,6 +39,12 @@ const HubView: React.FC = () => {
         [UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF].includes(r)
       ) || UserRole.ADMIN;
       dispatch(changeCurrentRole(adminRole as any));
+      const adminTheme = adminRole === UserRole.SUPER_ADMIN
+        ? 'theme-SUPER_ADMIN'
+        : adminRole === UserRole.STAFF
+        ? 'theme-STAFF'
+        : 'theme-ADMIN';
+      document.body.className = `${adminTheme} antialiased bg-slate-50`;
       navigate(APP_ROUTES.admin.root, { replace });
     } else if (exp === UserExperienceEnum.KID_CHURCH_STAFF) {
       const operationalRole = (user?.roles || []).find((r: any) =>
@@ -50,6 +56,10 @@ const HubView: React.FC = () => {
       navigate(APP_ROUTES.kidGuardian.root, { replace });
     }
   };
+
+  useEffect(() => {
+    document.body.className = 'theme-USER antialiased bg-slate-50';
+  }, []);
 
   // If the user only has 1 experience, automatically redirect them without showing the hub
   useEffect(() => {

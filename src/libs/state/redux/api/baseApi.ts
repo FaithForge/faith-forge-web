@@ -138,6 +138,7 @@ export const baseApi = createApi({
     'Volunteer',
     'User',
     'UserOverview',
+    'Notification',
   ],
 
   refetchOnReconnect: true,

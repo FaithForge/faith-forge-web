@@ -8,10 +8,11 @@ import { NavigationGuardProvider } from '@/libs/context/NavigationGuardContext';
 import { SearchScrollProvider, useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { RoleTransitionProvider, useRoleTransition } from '@/libs/context/RoleTransitionContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { logout } from '@/libs/state/redux/slices/user/auth.slice';
+import { logout, setActiveExperience } from '@/libs/state/redux/slices/user/auth.slice';
 import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
 import { triggerSilentRefresh } from '@/libs/utils/http';
+import { UserExperienceEnum } from '@/libs/utils/auth';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { ChurchMeetingStateEnum } from '@/libs/models';
@@ -53,6 +54,11 @@ const MainLayoutContent = () => {
   useEffect(() => {
     registerMainContainer(mainRef.current);
   }, [registerMainContainer]);
+
+  // Ensure active experience is always synced to KID_CHURCH_STAFF when inside service area / volunteer layout
+  useEffect(() => {
+    dispatch(setActiveExperience(UserExperienceEnum.KID_CHURCH_STAFF));
+  }, [dispatch]);
 
   // Automatically refresh volunteer permissions in background on mount/session restore
   useEffect(() => {

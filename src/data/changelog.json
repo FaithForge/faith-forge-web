@@ -1,5 +1,18 @@
 [
   {
+    "version": "3.7.1",
+    "type": "patch",
+    "timestamp": "2026-09-19T13:17:00.846Z",
+    "dateFormatted": "19/09/2026 08:17 AM",
+    "title": "Mejoras de visualización y registros",
+    "changes": [
+      "Corrección en el selector de impresoras para permitir elegir cualquier equipo disponible en la sede",
+      "Ajuste en el formulario de registro de niños para mostrar la acción correcta al guardar acudiente",
+      "Corrección visual en el contador de niños dentro de los filtros de salones",
+      "Diseño más limpio y sobrio en los menús de usuario con acceso integrado a las novedades"
+    ]
+  },
+  {
     "version": "3.7.0",
     "type": "minor",
     "timestamp": "2026-09-18T21:51:34.320Z",

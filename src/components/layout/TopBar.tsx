@@ -13,22 +13,25 @@ import {
   Shield,
   Sliders,
   LayoutGrid,
+  Bell,
 } from 'lucide-react';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { logout, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
+import { logout, changeCurrentRole, setActiveExperience } from '@/libs/state/redux/slices/user/auth.slice';
 import {
   setActiveGroupConfig,
   setActiveVolunteerRole,
 } from '@/libs/state/redux/slices/church/volunteerContext.slice';
 import { VolunteerRole, IVolunteerGroupConfigContext } from '@/libs/models/Volunteer';
 import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 
 const UserProfileModal = lazy(() => import('@/components/modal/UserProfileModal'));
 const ChangelogDrawer = lazy(() => import('@/components/modal/ChangelogDrawer'));
 const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
+const NotificationsDrawer = lazy(() => import('@/components/modal/NotificationsDrawer'));
 
 import { APP_VERSION } from '@/constants/version';
 import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole, UserExperienceEnum } from '@/libs/utils/auth';
@@ -53,7 +56,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'Admin',
     label: 'Super Administrador',
     themeClass: 'theme-SUPER_ADMIN',
-    color: '#334155',
+    color: '#003963',
     dashboardUrl: APP_ROUTES.admin.root,
   },
   [UserRole.ADMIN]: {
@@ -61,7 +64,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'Admin',
     label: 'Administrador',
     themeClass: 'theme-ADMIN',
-    color: '#475569',
+    color: '#003963',
     dashboardUrl: APP_ROUTES.admin.root,
   },
   [UserRole.STAFF]: {
@@ -242,6 +245,20 @@ const TopBar = () => {
   const [hasOpenedProfile, setHasOpenedProfile] = useState(false);
   const [hasOpenedChangelog, setHasOpenedChangelog] = useState(false);
   const [hasOpenedSettings, setHasOpenedSettings] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [hasOpenedNotifications, setHasOpenedNotifications] = useState(false);
+
+  const currentExperience = useMemo(() => {
+    if (location.pathname.startsWith('/admin')) return UserExperienceEnum.ADMIN;
+    if (location.pathname.startsWith('/kid-guardian')) return UserExperienceEnum.KID_GUARDIAN;
+    return UserExperienceEnum.KID_CHURCH_STAFF;
+  }, [location.pathname]);
+
+  const { data: notificationsData } = useGetInAppNotificationsQuery(
+    { experience: currentExperience },
+    { skip: !user }
+  );
+  const unreadNotifCount = notificationsData?.unreadCount || 0;
 
   const handleOpenProfile = (open: boolean) => {
     if (open) setHasOpenedProfile(true);
@@ -519,6 +536,7 @@ const TopBar = () => {
     if (isNewRoleAdmin) {
       // Admins do not have groups
       targetGroupName = '';
+      dispatch(setActiveExperience(UserExperienceEnum.ADMIN));
       dispatch(
         setActiveGroupConfig({
           groupConfigId: '',
@@ -529,6 +547,7 @@ const TopBar = () => {
     } else if (isNewRoleAreaCoordinator) {
       // Area Coordinators have no single group
       targetGroupName = '';
+      dispatch(setActiveExperience(UserExperienceEnum.KID_CHURCH_STAFF));
       dispatch(
         setActiveGroupConfig({
           groupConfigId: '',
@@ -537,6 +556,7 @@ const TopBar = () => {
         }),
       );
     } else {
+      dispatch(setActiveExperience(UserExperienceEnum.KID_CHURCH_STAFF));
       // Roles that operate in a group (Supervisor, Servidor, Coordinador de Grupo)
       const assignedGroup = findAssignedGroupForRole(
         roleId,
@@ -1178,6 +1198,25 @@ const TopBar = () => {
           </button>
         )}
 
+        {/* Botón de Notificaciones */}
+        <button
+          type="button"
+          onClick={() => {
+            setHasOpenedNotifications(true);
+            setNotificationsOpen(true);
+          }}
+          title="Notificaciones"
+          aria-label="Notificaciones"
+          className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90 bg-black/15 hover:bg-black/25 text-white cursor-pointer relative"
+        >
+          <Bell size={18} />
+          {unreadNotifCount > 0 && (
+            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-rose-500 text-white rounded-full text-[10px] font-black flex items-center justify-center animate-pulse shadow-xs">
+              {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+            </span>
+          )}
+        </button>
+
         {/* Menú de Usuario */}
         <DropdownMenu.Root>
           <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95">
@@ -1220,39 +1259,36 @@ const TopBar = () => {
                 {t('navigation.profile')}
               </DropdownMenu.Item>
 
-              <DropdownMenu.Item 
-                onSelect={() => handleOpenChangelog(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
-              >
-                <Sparkles size={16} className="text-amber-500" />
-                {t('navigation.changelog')}
-              </DropdownMenu.Item>
-
               {hasMultipleSpaces && (
                 <DropdownMenu.Item 
                   onSelect={() => navigate(APP_ROUTES.hub)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-indigo-50 text-indigo-700 transition-colors text-sm font-medium"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 text-gray-700 transition-colors text-sm"
                 >
-                  <LayoutGrid size={16} className="text-indigo-600" />
+                  <LayoutGrid size={16} className="text-gray-500" />
                   <span>Cambiar de espacio</span>
                 </DropdownMenu.Item>
               )}
               
               <DropdownMenu.Item 
                 onSelect={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-red-50 text-red-600 transition-colors text-sm mt-1"
+                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-red-50 text-red-600 transition-colors text-sm mt-1 font-medium"
               >
                 <LogOut size={16} />
-                {t('navigation.logout')}
+                <span>{t('navigation.logout')}</span>
               </DropdownMenu.Item>
 
-              <div className="mt-2 pt-2 border-t border-gray-100 text-center">
+              <div className="mt-2 pt-2 border-t border-gray-100 text-center px-2">
                 <button
                   type="button"
                   onClick={() => handleOpenChangelog(true)}
-                  className="text-[10px] font-semibold text-gray-400 hover:text-primary transition-colors cursor-pointer"
+                  className="w-full text-[10px] text-gray-400 hover:text-gray-600 transition-colors cursor-pointer text-center leading-tight py-0.5 group"
                 >
-                  {activeChurch?.name ? `${activeChurch.name} · v${APP_VERSION}` : `${kidsModuleName} v${APP_VERSION}`}
+                  <span className="block truncate font-medium">
+                    {activeChurch?.name || kidsModuleName}
+                  </span>
+                  <span className="text-gray-400 group-hover:text-gray-600 mt-0.5 inline-block">
+                    v{APP_VERSION} · <span className="underline decoration-dotted underline-offset-2">Ver novedades</span>
+                  </span>
                 </button>
               </div>
             </DropdownMenu.Content>
@@ -1280,6 +1316,17 @@ const TopBar = () => {
           <SettingsDrawer
             open={settingsDrawerOpen}
             onOpenChange={handleOpenSettings}
+          />
+        </Suspense>
+      )}
+
+      {/* Notifications Drawer */}
+      {hasOpenedNotifications && (
+        <Suspense fallback={null}>
+          <NotificationsDrawer
+            open={notificationsOpen}
+            onOpenChange={setNotificationsOpen}
+            experience={currentExperience}
           />
         </Suspense>
       )}
