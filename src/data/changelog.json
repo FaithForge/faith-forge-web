@@ -7,7 +7,8 @@
     "title": "Corrección en selección de sede e impresoras",
     "changes": [
       "Asignación automática y precisa de la sede correspondiente para servidores asignados",
-      "Visualización y selección correcta de las impresoras exclusivas de la sede de servicio"
+      "Visualización y selección correcta de las impresoras exclusivas de la sede de servicio",
+      "Nueva opción de vigencia permanente (de por vida) al otorgar permisos temporales"
     ]
   },
   {

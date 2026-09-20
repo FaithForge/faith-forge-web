@@ -25,13 +25,14 @@ interface GrantTemporaryPermissionModalProps {
   onSuccess?: () => void;
 }
 
-type DurationPreset = '24_HOURS' | 'WEEKEND' | '7_DAYS' | '30_DAYS' | 'CUSTOM';
+type DurationPreset = '24_HOURS' | 'WEEKEND' | '7_DAYS' | '30_DAYS' | 'PERMANENT' | 'CUSTOM';
 
 const PRESETS: Array<{ id: DurationPreset; label: string; description: string }> = [
   { id: '24_HOURS', label: '24 Horas', description: 'Vence exactamente en un día' },
   { id: 'WEEKEND', label: 'Fin de Semana', description: 'Hasta el domingo a las 11:59 PM' },
   { id: '7_DAYS', label: '7 Días', description: 'Vence en una semana' },
   { id: '30_DAYS', label: '30 Días', description: 'Vence en un mes' },
+  { id: 'PERMANENT', label: 'De por vida', description: 'Sin vencimiento (año 2099)' },
   { id: 'CUSTOM', label: 'Personalizado', description: 'Elegir fecha y hora específica' },
 ];
 
@@ -112,6 +113,8 @@ export const GrantTemporaryPermissionModal: React.FC<GrantTemporaryPermissionMod
         return now.add(7, 'day').toISOString();
       case '30_DAYS':
         return now.add(30, 'day').toISOString();
+      case 'PERMANENT':
+        return dayjs('2099-12-31T23:59:59.999Z').toISOString();
       case 'CUSTOM':
         return customExpiresAt ? dayjs(customExpiresAt).toISOString() : now.add(1, 'day').toISOString();
       default:

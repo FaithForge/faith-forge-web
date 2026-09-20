@@ -855,7 +855,8 @@ const UserDetailView: React.FC = () => {
                 <div className="flex flex-col gap-2.5">
                   {userPermissionGrants.map((grant) => {
                     const meta = ALL_SYSTEM_ROLES_METADATA[grant.permission as UserRole];
-                    const isExpired = grant.expiresAt && dayjs(grant.expiresAt).isBefore(dayjs());
+                    const isPermanent = Boolean(grant.expiresAt && dayjs(grant.expiresAt).year() >= 2099);
+                    const isExpired = !isPermanent && grant.expiresAt && dayjs(grant.expiresAt).isBefore(dayjs());
 
                     return (
                       <div
@@ -864,6 +865,8 @@ const UserDetailView: React.FC = () => {
                           'p-3.5 rounded-2xl border flex items-center justify-between gap-3 shadow-2xs transition-colors',
                           isExpired
                             ? 'border-gray-200 bg-gray-50/70 opacity-75'
+                            : isPermanent
+                            ? 'border-emerald-100 bg-emerald-50/30 hover:bg-emerald-50/50'
                             : 'border-amber-100 bg-amber-50/30 hover:bg-amber-50/50',
                         )}
                       >
@@ -873,6 +876,8 @@ const UserDetailView: React.FC = () => {
                               'w-8 h-8 rounded-xl border flex items-center justify-center shrink-0 shadow-2xs mt-0.5',
                               isExpired
                                 ? 'bg-white border-gray-200 text-gray-400'
+                                : isPermanent
+                                ? 'bg-white border-emerald-200 text-emerald-600'
                                 : 'bg-white border-amber-200 text-amber-600',
                             )}
                           >
@@ -888,10 +893,12 @@ const UserDetailView: React.FC = () => {
                                   'text-[9px] font-bold px-1.5 py-0.5 rounded-md border uppercase tracking-wider',
                                   isExpired
                                     ? 'bg-gray-100 text-gray-600 border-gray-200'
+                                    : isPermanent
+                                    ? 'bg-emerald-100 text-emerald-800 border-emerald-200'
                                     : 'bg-amber-100 text-amber-800 border-amber-200',
                                 )}
                               >
-                                {isExpired ? 'Expirado' : 'Temporal'}
+                                {isExpired ? 'Expirado' : isPermanent ? 'De por vida' : 'Temporal'}
                               </span>
                             </div>
 
@@ -905,12 +912,14 @@ const UserDetailView: React.FC = () => {
                               <span
                                 className={clsx(
                                   'font-semibold',
-                                  isExpired ? 'text-gray-500' : 'text-amber-700',
+                                  isExpired ? 'text-gray-500' : isPermanent ? 'text-emerald-700' : 'text-amber-700',
                                 )}
                               >
                                 {grant.expiresAt
                                   ? isExpired
                                     ? `Expiró el ${dayjs(grant.expiresAt).format('DD/MM/YYYY hh:mm A')}`
+                                    : isPermanent
+                                    ? 'De por vida (Sin vencimiento)'
                                     : `Vence el ${dayjs(grant.expiresAt).format('DD/MM/YYYY hh:mm A')}`
                                   : 'Sin fecha de expiración'}
                               </span>
