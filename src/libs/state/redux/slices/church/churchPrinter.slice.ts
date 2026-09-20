@@ -61,13 +61,19 @@ const churchPrinterSlice = createSlice({
       if (!state.printersByCampus) {
         state.printersByCampus = {};
       }
-      // Ensure only ACTIVE printers are stored in operational cache
-      const activeIncoming = incoming.filter(
-        (p) =>
-          p.state === ChurchPrinterStateEnum.ACTIVE ||
-          (p as any).state === 'ACTIVE' ||
-          (p as any).active === true,
-      );
+      // Ensure only ACTIVE printers are stored in operational cache and keep churchCampusId populated
+      const activeIncoming = incoming
+        .filter(
+          (p) =>
+            p.state === ChurchPrinterStateEnum.ACTIVE ||
+            (p as any).state === 'ACTIVE' ||
+            (p as any).active === true,
+        )
+        .map((p) => ({
+          ...p,
+          churchCampusId: p.churchCampusId || campusId,
+        }));
+
       if (campusId) {
         state.printersByCampus[campusId] = activeIncoming;
       }
@@ -77,7 +83,18 @@ const churchPrinterSlice = createSlice({
       state.loading = false;
       state.loadedCampusId = campusId;
 
-      if (!state.current && activeIncoming.length > 0) {
+      if (
+        state.current &&
+        state.current.churchCampusId &&
+        campusId &&
+        state.current.churchCampusId !== campusId
+      ) {
+        if (activeIncoming.length === 1) {
+          state.current = activeIncoming[0];
+        } else {
+          state.current = undefined;
+        }
+      } else if (!state.current && activeIncoming.length > 0) {
         state.current = activeIncoming[0];
       } else if (state.current) {
         const match = activeIncoming.find((p: any) => p.id === state.current?.id);

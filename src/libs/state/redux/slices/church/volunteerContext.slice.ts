@@ -53,6 +53,19 @@ export const volunteerContextSlice = createSlice({
       if (action.payload.hasActiveGrants !== undefined) {
         state.hasActiveGrants = action.payload.hasActiveGrants;
       }
+      const isCurrentActiveValid = state.activeCampusId
+        ? action.payload.campuses.some((c) => c.id === state.activeCampusId)
+        : false;
+
+      if (!isCurrentActiveValid) {
+        if (action.payload.campuses.length === 1) {
+          state.activeCampusId = action.payload.campuses[0].id;
+          state.activeCampusName = action.payload.campuses[0].name;
+        } else {
+          state.activeCampusId = null;
+          state.activeCampusName = null;
+        }
+      }
     },
     setUserMsRoles: (state, action: PayloadAction<AppRole[]>) => {
       state.userMsRoles = action.payload;

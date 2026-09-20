@@ -15,6 +15,7 @@ import { triggerSilentRefresh } from '@/libs/utils/http';
 import { UserExperienceEnum } from '@/libs/utils/auth';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
+import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 import { APP_ROUTES } from '@/config/routes';
@@ -48,8 +49,18 @@ const MainLayoutContent = () => {
   const { token, refreshToken } = useAppSelector((state) => state.authSlice);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const activeVolunteerRole = useAppSelector((state) => state.volunteerContextSlice.activeVolunteerRole);
+  const volunteerCampuses = useAppSelector((state) => state.volunteerContextSlice.campuses || []);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
+
+  // Ensure non-admin volunteer with a single campus is automatically synced to their assigned campus
+  useEffect(() => {
+    if (isAdminRole || volunteerCampuses.length !== 1) return;
+    const assignedCampus = volunteerCampuses[0];
+    if (currentCampus?.id !== assignedCampus.id) {
+      dispatch(updateCurrentChurchCampus(assignedCampus.id));
+    }
+  }, [isAdminRole, volunteerCampuses, currentCampus?.id, dispatch]);
 
   useEffect(() => {
     registerMainContainer(mainRef.current);

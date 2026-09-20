@@ -287,12 +287,20 @@ const SettingsDrawer = ({
   useEffect(() => {
     if (!open) return;
 
-    // 1. Campus selection
-    const initCampusId =
-      volunteerActiveCampusId ||
-      campuses.current?.id ||
-      (availableCampuses.length === 1 ? availableCampuses[0].id : '') ||
-      '';
+    // 1. Campus selection (strictly constrained to available campuses)
+    const isCampusValid = (id?: string | null): id is string =>
+      Boolean(id && availableCampuses.some((c: any) => c.id === id));
+
+    let initCampusId = '';
+    if (availableCampuses.length === 1) {
+      initCampusId = availableCampuses[0].id;
+    } else if (isCampusValid(volunteerActiveCampusId)) {
+      initCampusId = volunteerActiveCampusId;
+    } else if (isCampusValid(campuses.current?.id)) {
+      initCampusId = campuses.current!.id;
+    } else if (availableCampuses.length > 0) {
+      initCampusId = availableCampuses[0].id;
+    }
     setSelectedCampusId(initCampusId);
 
     // 2. Load campus data if campus is set
@@ -319,12 +327,16 @@ const SettingsDrawer = ({
       setSelectedGroupId('');
     }
 
-    // 4. Meeting selection
-    setSelectedMeetingId(meetings.current?.id || '');
+    // 4. Meeting selection (only preselect if belongs to initCampusId)
+    const isCurrentMeetingValid =
+      meetings.current &&
+      (!meetings.current.churchCampusId || meetings.current.churchCampusId === initCampusId);
+    setSelectedMeetingId(isCurrentMeetingValid ? meetings.current?.id || '' : '');
 
-    // 5. Printer selection
+    // 5. Printer selection (only preselect if belongs to initCampusId)
     const isCurrentPrinterActive =
-      printers.current?.state === ChurchPrinterStateEnum.ACTIVE;
+      printers.current?.state === ChurchPrinterStateEnum.ACTIVE &&
+      (!printers.current.churchCampusId || printers.current.churchCampusId === initCampusId);
     setSelectedPrinterId(isCurrentPrinterActive ? printers.current?.id || '' : '');
     setSelectedMode(printerModeSlice?.mode || 'NETWORK');
 
@@ -333,6 +345,22 @@ const SettingsDrawer = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  // Synchronize selectedCampusId whenever availableCampuses loads or changes asynchronously
+  useEffect(() => {
+    if (!open || availableCampuses.length === 0) return;
+
+    const isCurrentSelectedValid = availableCampuses.some((c: any) => c.id === selectedCampusId);
+    if (!isCurrentSelectedValid) {
+      const nextCampusId =
+        (availableCampuses.length === 1 && availableCampuses[0].id) ||
+        (volunteerActiveCampusId && availableCampuses.some((c: any) => c.id === volunteerActiveCampusId) && volunteerActiveCampusId) ||
+        (campuses.current?.id && availableCampuses.some((c: any) => c.id === campuses.current?.id) && campuses.current.id) ||
+        availableCampuses[0].id;
+
+      setSelectedCampusId(nextCampusId);
+    }
+  }, [availableCampuses, selectedCampusId, volunteerActiveCampusId, campuses.current?.id, open]);
 
   // Subscribe to Bluetooth printer events
   useEffect(() => {
@@ -394,8 +422,9 @@ const SettingsDrawer = ({
       (printers as any).printersByCampus?.[selectedCampusId] ?? [];
     return rawPrinters.filter(
       (p) =>
-        p.state === ChurchPrinterStateEnum.ACTIVE ||
-        p.id === printers.current?.id,
+        (!p.churchCampusId || p.churchCampusId === selectedCampusId) &&
+        (p.state === ChurchPrinterStateEnum.ACTIVE ||
+          (printers.current?.churchCampusId === selectedCampusId && p.id === printers.current?.id)),
     );
   }, [printers, selectedCampusId]);
 

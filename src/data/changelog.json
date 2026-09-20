@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.7.2",
+    "type": "patch",
+    "timestamp": "2026-09-20T13:25:25.499Z",
+    "dateFormatted": "20/09/2026 08:25 AM",
+    "title": "Corrección en selección de sede e impresoras",
+    "changes": [
+      "Asignación automática y precisa de la sede correspondiente para servidores asignados",
+      "Visualización y selección correcta de las impresoras exclusivas de la sede de servicio"
+    ]
+  },
+  {
     "version": "3.7.1",
     "type": "patch",
     "timestamp": "2026-09-19T13:17:00.846Z",
