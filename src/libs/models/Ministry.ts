@@ -61,6 +61,7 @@ export interface IMinistryAreaKidGroupRelation {
 export enum MinistryAreaScope {
   KID_REGISTRATION = 'KID_REGISTRATION',
   KID_GROUP_MANAGEMENT = 'KID_GROUP_MANAGEMENT',
+  KID_SECURITY = 'KID_SECURITY',
 }
 
 export interface IMinistryArea {

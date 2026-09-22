@@ -25,6 +25,11 @@ export const ROLE_VISIBILITY_CONFIG: Record<AppRole, boolean> = {
   [UserRole.KID_REGISTER_SUPERVISOR]: true, // Registro - Supervisor
   [UserRole.KID_REGISTER_USER]: true,       // Registro - Servidor
 
+  // Seguridad y Logística de Niños
+  [ChurchRole.KID_SECURITY_COORDINATOR]: false,
+  [ChurchRole.KID_SECURITY_SUPERVISOR]: false,
+  [ChurchRole.KID_SECURITY_USER]: false,
+
   // Rol base de usuario
   [UserRole.USER]: false,
 };

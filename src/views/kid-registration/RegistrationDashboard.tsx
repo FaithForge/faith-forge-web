@@ -7,12 +7,13 @@ import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb, Sparkles, ChevronDown } from 'lucide-react';
+import { Loader2, Search, SearchX, RotateCcw, Plus, Lightbulb, Sparkles, ChevronDown, DoorOpen, ChevronRight } from 'lucide-react';
 import dayjs from 'dayjs';
 import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
+import { KidAttendanceFlowModeEnum } from '@/libs/models';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 
@@ -213,6 +214,34 @@ const RegistrationDashboard = () => {
           className="bg-cyan-100 text-cyan-800 border-cyan-200"
         />
       )}
+
+      {/* Control de Asistencia Modular (Si la sede no es ONLY_CHECK_IN) */}
+      {isConfigured &&
+        currentCampus?.kidAttendanceFlowMode &&
+        currentCampus.kidAttendanceFlowMode !== KidAttendanceFlowModeEnum.ONLY_CHECK_IN && (
+          <div
+            onClick={() => navigate(APP_ROUTES.kidRegistration.attendanceTracking)}
+            className="p-3.5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50/70 border border-emerald-200/80 rounded-2xl flex items-center justify-between gap-3 shadow-2xs hover:shadow-xs transition-all cursor-pointer active:scale-[0.99]"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                <DoorOpen size={20} />
+              </div>
+              <div className="min-w-0">
+                <h4 className="text-xs sm:text-sm font-bold text-emerald-950 truncate">
+                  {t('kidRegistration:attendance_tracking.title')}
+                </h4>
+                <p className="text-[11px] text-emerald-700 truncate">
+                  {t('kidRegistration:attendance_tracking.subtitle')}
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-emerald-600 text-white text-xs font-bold shrink-0 shadow-2xs hover:bg-emerald-700 transition-colors">
+              <span>Abrir</span>
+              <ChevronRight size={14} />
+            </div>
+          </div>
+        )}
 
       {/* Error de horario de servicio */}
       {isConfigured && !isMeetingValid && (

@@ -247,6 +247,12 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
                   desc: `Permisos para pase de lista en ${classroomTerm.toLowerCase()}es y reporte de asistencia.`,
                   badge: modAlias,
                 },
+                {
+                  id: MinistryAreaScope.KID_SECURITY,
+                  label: 'Seguridad y Control de Ingreso/Salida',
+                  desc: 'Permisos de control de acceso al área, seguimiento en vivo y entrega segura de niños.',
+                  badge: 'Seguridad',
+                },
               ].map((option) => {
                 const isSelected = scope === option.id;
                 return (

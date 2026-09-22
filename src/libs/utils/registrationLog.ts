@@ -1,6 +1,10 @@
 import { AppRole, UserRole, ChurchRole } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
 import {
+  IKidRegistration,
+  KidAttendanceStatusEnum,
+} from '@/libs/models/KidChurch';
+import {
   IVolunteerCampusContext,
   IVolunteerGroupConfigContext,
   VolunteerRole,
@@ -248,3 +252,90 @@ export const parseRegistrationLog = (
     rawText: text,
   };
 };
+
+/**
+ * Resolves volunteer author and badge information for a kid registration.
+ * Works both with structured fields (additionalInfo / attendanceStages) and historical log strings.
+ *
+ * @param {IKidRegistration | null | undefined} registration - The registration to extract author info from.
+ * @returns {IParsedRegistrationLog | null} Parsed registration author information.
+ */
+export const getRegistrationLogInfo = (
+  registration?: IKidRegistration | null,
+): IParsedRegistrationLog | null => {
+  if (!registration) return null;
+
+  const registerFullName = registration.additionalInfo?.registerFullName;
+  const registerGroupName = registration.additionalInfo?.registerGroupName;
+
+  if (registerFullName) {
+    const author = capitalizeWords(registerFullName.trim());
+    const group = registerGroupName?.trim();
+
+    if (!group) {
+      return {
+        author,
+        badgeType: 'general',
+        rawText: `Registrado por ${author}`,
+      };
+    }
+
+    const groupLower = group.toLowerCase();
+
+    if (groupLower.includes('coord')) {
+      const badgeLabel = groupLower.includes('general') ? 'Coordinación General' : 'Coordinación';
+      return {
+        author,
+        badgeLabel,
+        badgeType: 'coordinator',
+        rawText: `Registrado por ${author} (${badgeLabel})`,
+      };
+    }
+
+    if (groupLower.includes('admin')) {
+      return {
+        author,
+        badgeLabel: 'Administrador',
+        badgeType: 'admin',
+        rawText: `Registrado por ${author} (Administrador)`,
+      };
+    }
+
+    if (groupLower.includes('apoyo')) {
+      return {
+        author,
+        badgeLabel: 'Apoyo',
+        badgeType: 'support',
+        rawText: `Registrado por ${author} (Apoyo)`,
+      };
+    }
+
+    const formattedGroup = groupLower.startsWith('grupo') ? group : `Grupo ${group}`;
+    return {
+      author,
+      badgeLabel: formattedGroup,
+      badgeType: 'group',
+      rawText: `Registrado por ${author} del ${formattedGroup}`,
+    };
+  }
+
+  // Fallback for historical raw log strings if present on legacy records
+  const legacyLog =
+    (registration as any).log ||
+    (registration.attendanceStages?.[KidAttendanceStatusEnum.CHECKED_IN] as any)?.volunteerName;
+
+  if (legacyLog) {
+    const parsed = parseRegistrationLog(legacyLog);
+    if (parsed) return parsed;
+
+    return {
+      author: capitalizeWords(legacyLog),
+      badgeLabel: registerGroupName || undefined,
+      badgeType: registerGroupName ? 'group' : 'general',
+      rawText: `Registrado por ${legacyLog}`,
+    };
+  }
+
+  return null;
+};
+

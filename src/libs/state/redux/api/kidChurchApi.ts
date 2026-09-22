@@ -7,8 +7,13 @@ import {
   IKidGroup,
   IKidGuardian,
   IKidGuardianAssignedKidsResponse,
+  IKidLiveTrackingItem,
+  IKidLiveTrackingResponse,
   IKidMedicalCondition,
+  IKidRegistration,
   IUpdateKid,
+  KidAttendanceFlowModeEnum,
+  KidAttendanceStatusEnum,
   KidGroupType,
 } from '@/libs/models';
 
@@ -62,6 +67,20 @@ export interface CreateKidRegistrationApiPayload extends ICreateKidRegistration 
   churchMeetingId?: string;
   churchPrinterId?: string;
   log?: string;
+}
+
+export interface GetKidLiveTrackingArgs {
+  churchMeetingId: string;
+  date: string;
+  groupId?: string;
+  status?: KidAttendanceStatusEnum;
+  search?: string;
+}
+
+export interface ConfirmKidCheckoutApiPayload {
+  id: string;
+  guardianId?: string;
+  observation?: string;
 }
 
 /**
@@ -228,6 +247,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [
         { type: 'KidRegistered', id: 'LIST' },
+        { type: 'KidAttendanceTracking', id: 'LIST' },
         { type: 'KidGroup', id: 'LIST' },
         { type: 'Kid', id: 'LIST' },
       ],
@@ -242,6 +262,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [
         { type: 'KidRegistered', id: 'LIST' },
+        { type: 'KidAttendanceTracking', id: 'LIST' },
         { type: 'KidGroup', id: 'LIST' },
         { type: 'Kid', id: 'LIST' },
       ],
@@ -274,6 +295,115 @@ export const kidChurchApi = baseApi.injectEndpoints({
         data,
       }),
     }),
+
+    getKidLiveTracking: builder.query<IKidLiveTrackingResponse, GetKidLiveTrackingArgs>({
+      query: (args) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid-registration/live-tracking',
+        method: HttpRequestMethod.GET,
+        params: {
+          churchMeetingId: args.churchMeetingId,
+          date: args.date,
+          ...(args.groupId ? { kidGroupId: args.groupId } : {}),
+        },
+      }),
+      transformResponse: (raw: any): IKidLiveTrackingResponse => {
+        if (!raw) {
+          return {
+            flowMode: KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
+            summary: { totalRegistered: 0, pendingEntry: 0, inArea: 0, checkedOut: 0 },
+            data: [],
+          };
+        }
+
+        const mapKidToItem = (k: any, defaultStatus: KidAttendanceStatusEnum): IKidLiveTrackingItem => {
+          const reg = k.currentKidRegistration;
+          const stages = reg?.attendanceStages || {};
+          const checkIn = stages[KidAttendanceStatusEnum.CHECKED_IN];
+          const inArea = stages[KidAttendanceStatusEnum.IN_AREA];
+          const checkedOut = stages[KidAttendanceStatusEnum.CHECKED_OUT];
+
+          const primaryGuardian = k.relations?.[0] || k.guardians?.[0];
+          const guardianFullName =
+            reg?.additionalInfo?.guardianFullName ||
+            (primaryGuardian ? `${primaryGuardian.firstName || ''} ${primaryGuardian.lastName || ''}`.trim() : '');
+          const guardianPhone = primaryGuardian
+            ? `${primaryGuardian.dialCodePhone || ''}${primaryGuardian.phone || ''}`
+            : undefined;
+
+          return {
+            id: reg?.id || k.id,
+            kidId: k.id,
+            kidFullName: `${k.firstName || ''} ${k.lastName || ''}`.trim(),
+            faithForgeId: k.faithForgeId,
+            gender: k.gender,
+            photoUrl: k.photoUrl,
+            birthday: k.birthday,
+            age: k.age,
+            ageInMonths: k.ageInMonths,
+            groupId: reg?.groupId || k.kidGroup?.id || '',
+            groupName: reg?.additionalInfo?.groupName || k.kidGroup?.name || '',
+            guardianId: reg?.guardianId || primaryGuardian?.id || '',
+            guardianFullName,
+            guardianPhone,
+            attendanceStatus: reg?.attendanceStatus || defaultStatus,
+            date: reg?.date || new Date(),
+            registeredAt: checkIn?.timestamp || reg?.date || new Date(),
+            enteredAt: inArea?.timestamp,
+            checkedOutAt: checkedOut?.timestamp,
+            checkedOutGuardianId: checkedOut?.deliveredToGuardianId,
+            checkedOutGuardianName: reg?.additionalInfo?.checkedOutGuardianFullName,
+            observation: checkIn?.observation || reg?.observation,
+            checkOutObservation: checkedOut?.observation,
+            attendanceStages: stages,
+          };
+        };
+
+        const pendingItems = (raw.pendingEntry || []).map((k: any) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_IN));
+        const inAreaItems = (raw.inArea || []).map((k: any) => mapKidToItem(k, KidAttendanceStatusEnum.IN_AREA));
+        const checkedOutItems = (raw.checkedOut || []).map((k: any) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_OUT));
+        const allItems = [...pendingItems, ...inAreaItems, ...checkedOutItems];
+
+        return {
+          flowMode: raw.flowMode || KidAttendanceFlowModeEnum.FULL_FLOW,
+          summary: {
+            totalRegistered: raw.summary?.totalRegistered ?? allItems.length,
+            pendingEntry: raw.summary?.totalPendingEntry ?? pendingItems.length,
+            inArea: raw.summary?.totalInArea ?? inAreaItems.length,
+            checkedOut: raw.summary?.totalCheckedOut ?? checkedOutItems.length,
+          },
+          data: allItems,
+        };
+      },
+      providesTags: () => [{ type: 'KidAttendanceTracking', id: 'LIST' }],
+    }),
+
+    confirmKidEntry: builder.mutation<IKidRegistration, string>({
+      query: (id) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: `/kid-registration/${id}/confirm-entry`,
+        method: HttpRequestMethod.PATCH,
+      }),
+      invalidatesTags: [
+        { type: 'KidAttendanceTracking', id: 'LIST' },
+        { type: 'KidRegistered', id: 'LIST' },
+        { type: 'KidGroup', id: 'LIST' },
+      ],
+    }),
+
+    confirmKidCheckout: builder.mutation<IKidRegistration, ConfirmKidCheckoutApiPayload>({
+      query: ({ id, ...data }) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: `/kid-registration/${id}/confirm-checkout`,
+        method: HttpRequestMethod.PATCH,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'KidAttendanceTracking', id: 'LIST' },
+        { type: 'KidRegistered', id: 'LIST' },
+        { type: 'KidGroup', id: 'LIST' },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -301,5 +431,9 @@ export const {
   useGetMyGuardianAssignedKidsQuery,
   useLazyGetMyGuardianAssignedKidsQuery,
   useSendUrgentGuardianNoticeMutation,
+  useGetKidLiveTrackingQuery,
+  useLazyGetKidLiveTrackingQuery,
+  useConfirmKidEntryMutation,
+  useConfirmKidCheckoutMutation,
 } = kidChurchApi;
 

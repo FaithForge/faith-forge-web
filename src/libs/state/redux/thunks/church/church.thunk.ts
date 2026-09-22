@@ -201,7 +201,7 @@ export const GetChurchPrinters = createAsyncThunk(
 export const CreateChurchCampus = createAsyncThunk(
   'church/CreateChurchCampus',
   async (
-    payload: { name: string; description?: string; position?: number; state?: string },
+    payload: { name: string; description?: string; position?: number; state?: string; kidAttendanceFlowMode?: string },
     { getState, rejectWithValue, dispatch },
   ) => {
     const state = getState() as RootState;
@@ -238,7 +238,7 @@ export const CreateChurchCampus = createAsyncThunk(
 export const UpdateChurchCampus = createAsyncThunk(
   'church/UpdateChurchCampus',
   async (
-    payload: { id: string; name?: string; description?: string; position?: number; state?: string },
+    payload: { id: string; name?: string; description?: string; position?: number; state?: string; kidAttendanceFlowMode?: string },
     { getState, rejectWithValue, dispatch },
   ) => {
     const { id, ...data } = payload;

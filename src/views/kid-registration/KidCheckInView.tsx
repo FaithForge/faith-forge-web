@@ -21,7 +21,7 @@ import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
 import DeleteKidModal from '@/components/modal/DeleteKidModal';
 import { APP_ROUTES } from '@/config/routes';
 import { capitalizeWords } from '@/libs/utils/text';
-import { parseRegistrationLog } from '@/libs/utils/registrationLog';
+import { getRegistrationLogInfo } from '@/libs/utils/registrationLog';
 import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday, toDateOnlyInputValue } from '@/libs/utils/date';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
@@ -717,14 +717,15 @@ const KidCheckInView = () => {
                       </div>
                     )}
 
-                    {isSupervisor && kid?.currentKidRegistration?.log && (() => {
-                      const parsed = parseRegistrationLog(kid.currentKidRegistration.log);
+                    {isSupervisor && (() => {
+                      const parsed = getRegistrationLogInfo(kid?.currentKidRegistration);
+                      if (!parsed) return null;
                       return (
                         <div className="flex justify-between items-start py-1.5 border-b border-gray-50 last:border-0">
                           <span className="font-semibold text-gray-500 shrink-0 pr-2">Log de registro</span>
                           <span className="font-bold text-gray-800 text-sm leading-snug text-right">
-                            {parsed?.author ? `Registrado por ${parsed.author}` : kid.currentKidRegistration.log}
-                            {parsed?.badgeLabel && (
+                            {`Registrado por ${parsed.author}`}
+                            {parsed.badgeLabel && (
                               <span
                                 className={clsx(
                                   'inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-[11px] font-bold tracking-wide border align-middle',

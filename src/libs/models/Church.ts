@@ -30,6 +30,13 @@ export const ChurchMeetingStateEnum = {
 export type ChurchMeetingStateEnum =
   (typeof ChurchMeetingStateEnum)[keyof typeof ChurchMeetingStateEnum];
 
+export enum KidAttendanceFlowModeEnum {
+  ONLY_CHECK_IN = 'ONLY_CHECK_IN',
+  CHECK_IN_AND_ENTRY = 'CHECK_IN_AND_ENTRY',
+  DIRECT_ENTRY_AND_CHECK_OUT = 'DIRECT_ENTRY_AND_CHECK_OUT',
+  FULL_FLOW = 'FULL_FLOW',
+}
+
 export interface IChurch {
   id: string;
   name: string;
@@ -45,6 +52,7 @@ export interface IChurchCampus {
   description?: string;
   position?: number;
   state?: ChurchCampusStateEnum;
+  kidAttendanceFlowMode?: KidAttendanceFlowModeEnum;
   meetings?: IChurchMeeting[];
   printers?: IChurchPrinter[];
 }

@@ -171,5 +171,63 @@
     "btn_download_pdf": "Descargar PDF",
     "generating_link": "Generando enlace para WhatsApp...",
     "downloading": "Descargando carnet..."
+  },
+  "attendance_tracking": {
+    "title": "Control de Asistencia",
+    "subtitle": "Seguimiento en vivo de ingreso y salida",
+    "mode_not_enabled_title": "Módulo no activo en esta sede",
+    "mode_not_enabled_desc": "La sede activa opera en modo de solo registro. Para activar la confirmación de ingreso o salida, actualízalo en la administración de sedes.",
+    "btn_back_to_dashboard": "Volver al registro",
+    "tabs": {
+      "all": "Todos",
+      "pending_entry": "Por Ingresar",
+      "in_area": "En Salón",
+      "checked_out": "Entregados"
+    },
+    "summary": {
+      "total": "Total Registrados",
+      "pending": "Por Ingresar",
+      "in_area": "En Salón",
+      "checked_out": "Entregados"
+    },
+    "search_placeholder": "Buscar por niño o código...",
+    "filter_all_groups": "Todos los salones",
+    "actions": {
+      "confirm_entry": "Confirmar Ingreso",
+      "confirm_checkout": "Registrar Salida",
+      "scan_guardian_qr": "Escanear QR de Acudiente"
+    },
+    "status": {
+      "checked_in": "Por Ingresar",
+      "in_area": "En Salón",
+      "checked_out": "Entregado"
+    },
+    "checkout_modal": {
+      "title": "Entrega de Niño(a)",
+      "registered_guardian": "Acudiente registrado:",
+      "authorized_guardian": "¿Quién retira al niño?",
+      "same_guardian": "Mismo acudiente de check-in",
+      "other_guardian": "Otro acudiente autorizado",
+      "select_guardian_placeholder": "Seleccione un acudiente...",
+      "observation_label": "Observación de entrega (opcional)",
+      "observation_placeholder": "Ej: Se entrega con bolso y termo...",
+      "verify_qr_prompt": "Verificar carnet QR",
+      "scan_success": "QR de acudiente verificado",
+      "scan_mismatch": "El código escaneado no corresponde al acudiente",
+      "btn_confirm": "Confirmar Entrega",
+      "btn_cancel": "Cancelar",
+      "success_message": "¡Salida registrada exitosamente!"
+    },
+    "entry_success": "¡Ingreso al área confirmado!",
+    "empty": {
+      "pending_title": "No hay niños pendientes por ingresar",
+      "pending_desc": "Todos los niños registrados ya han ingresado a su salón.",
+      "in_area_title": "No hay niños en los salones",
+      "in_area_desc": "Los niños que ingresen al área aparecerán listados aquí.",
+      "checked_out_title": "Aún no se han registrado salidas",
+      "checked_out_desc": "Los niños entregados a sus acudientes aparecerán aquí.",
+      "all_title": "No se encontraron registros",
+      "all_desc": "No hay registros de asistencia que coincidan con la búsqueda."
+    }
   }
 }

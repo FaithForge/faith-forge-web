@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { ChurchCampusStateEnum, IChurchCampus } from '@/libs/models';
+import Select from '@/components/ui/Select';
+import { ChurchCampusStateEnum, IChurchCampus, KidAttendanceFlowModeEnum } from '@/libs/models';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CreateChurchCampus, UpdateChurchCampus } from '@/libs/state/redux/thunks/church/church.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
@@ -37,6 +38,9 @@ export const CampusModal: React.FC<CampusModalProps> = ({
   const [description, setDescription] = useState('');
   const [position, setPosition] = useState<number | ''>('');
   const [state, setState] = useState<ChurchCampusStateEnum>(ChurchCampusStateEnum.ACTIVE);
+  const [kidAttendanceFlowMode, setKidAttendanceFlowMode] = useState<KidAttendanceFlowModeEnum>(
+    KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
+  );
   const [nameError, setNameError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -49,11 +53,15 @@ export const CampusModal: React.FC<CampusModalProps> = ({
         setDescription(campusToEdit.description || '');
         setPosition(campusToEdit.position ?? '');
         setState(campusToEdit.state ?? ChurchCampusStateEnum.ACTIVE);
+        setKidAttendanceFlowMode(
+          campusToEdit.kidAttendanceFlowMode ?? KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
+        );
       } else {
         setName('');
         setDescription('');
         setPosition('');
         setState(ChurchCampusStateEnum.ACTIVE);
+        setKidAttendanceFlowMode(KidAttendanceFlowModeEnum.ONLY_CHECK_IN);
       }
       setNameError('');
     }
@@ -76,6 +84,7 @@ export const CampusModal: React.FC<CampusModalProps> = ({
             description: description.trim() || undefined,
             position: position !== '' ? Number(position) : undefined,
             state,
+            kidAttendanceFlowMode,
           }),
         ).unwrap();
         toast.success('Sede actualizada correctamente');
@@ -86,6 +95,7 @@ export const CampusModal: React.FC<CampusModalProps> = ({
             description: description.trim() || undefined,
             position: position !== '' ? Number(position) : undefined,
             state,
+            kidAttendanceFlowMode,
           }),
         ).unwrap();
         toast.success('Sede creada exitosamente');
@@ -167,6 +177,34 @@ export const CampusModal: React.FC<CampusModalProps> = ({
           />
           <p className="text-[11px] text-gray-400 mt-1">
             Determina la posición en que aparecerá la sede en los selectores de la aplicación.
+          </p>
+        </div>
+
+        {/* Kid Attendance Flow Mode */}
+        <div>
+          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
+            Flujo de Asistencia (Escuela de Niños)
+          </label>
+          <Select
+            value={kidAttendanceFlowMode}
+            onChange={(e) => setKidAttendanceFlowMode(e.target.value as KidAttendanceFlowModeEnum)}
+            disabled={loading}
+          >
+            <option value={KidAttendanceFlowModeEnum.ONLY_CHECK_IN}>
+              Solo Check-In (Registro básico)
+            </option>
+            <option value={KidAttendanceFlowModeEnum.CHECK_IN_AND_ENTRY}>
+              Check-In + Confirmación de Ingreso
+            </option>
+            <option value={KidAttendanceFlowModeEnum.DIRECT_ENTRY_AND_CHECK_OUT}>
+              Ingreso Directo + Salida / Check-Out
+            </option>
+            <option value={KidAttendanceFlowModeEnum.FULL_FLOW}>
+              Flujo Completo (Check-In + Ingreso + Salida)
+            </option>
+          </Select>
+          <p className="text-[11px] text-gray-400 mt-1">
+            Define las etapas operativas de registro, acceso a salones y entrega de niños para esta sede.
           </p>
         </div>
 

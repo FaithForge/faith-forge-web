@@ -1,5 +1,27 @@
 [
   {
+    "version": "3.8.1",
+    "type": "patch",
+    "timestamp": "2026-09-22T02:53:24.287Z",
+    "dateFormatted": "21/09/2026 09:53 PM",
+    "title": "Mejoras en el seguimiento de asistencia",
+    "changes": [
+      "Mayor fluidez y precisión en el seguimiento de niños en salones",
+      "Optimización en los registros y notas de asistencia"
+    ]
+  },
+  {
+    "version": "3.8.0",
+    "type": "minor",
+    "timestamp": "2026-09-20T15:29:19.532Z",
+    "dateFormatted": "20/09/2026 10:29 AM",
+    "title": "Control de asistencia y seguimiento de ingreso",
+    "changes": [
+      "Nuevo módulo de control de asistencia para verificar el ingreso a los salones y entrega segura de los niños.",
+      "Configuración personalizada de etapas de asistencia por cada sede."
+    ]
+  },
+  {
     "version": "3.7.2",
     "type": "patch",
     "timestamp": "2026-09-20T13:25:25.499Z",

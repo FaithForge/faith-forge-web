@@ -44,6 +44,7 @@ export const APP_ROUTES = {
     updateKid: (id: string | number) => `/kid-registration/update-kid/${id}`,
     scanner: '/kid-registration/scanner',
     generateQR: '/kid-registration/generate-guardian-qr',
+    attendanceTracking: '/kid-registration/attendance-tracking',
     myTeam: '/kid-registration/my-team',
   },
   hub: '/hub',

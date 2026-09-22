@@ -4,6 +4,9 @@ import { RootState } from '../state/redux';
 /** Church and Ministry domain roles */
 export enum ChurchRole {
   MINISTRY_ADMIN = 'MINISTRY_ADMIN',
+  KID_SECURITY_USER = 'KID_SECURITY_USER',
+  KID_SECURITY_SUPERVISOR = 'KID_SECURITY_SUPERVISOR',
+  KID_SECURITY_COORDINATOR = 'KID_SECURITY_COORDINATOR',
 }
 
 /** User Roles Enum */
@@ -71,6 +74,14 @@ export const KidChurchRegisterRoles: AppRole[] = [
 export const KidChurchGroupRoles: AppRole[] = [
   ...KidChurchSupervisorRoles,
   UserRole.KID_GROUP_USER,
+];
+
+export const KidChurchSecurityRoles: AppRole[] = [
+  ...AdminRoles,
+  ChurchRole.MINISTRY_ADMIN,
+  ChurchRole.KID_SECURITY_COORDINATOR,
+  ChurchRole.KID_SECURITY_SUPERVISOR,
+  ChurchRole.KID_SECURITY_USER,
 ];
 
 /**
@@ -312,6 +323,27 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<AppRole, RoleMetadata> = {
     category: 'Ministerio de Niños',
     description: 'Servidor de salón y pase de lista',
     badgeColor: 'bg-lime-100 text-lime-700 border-lime-200',
+  },
+  [ChurchRole.KID_SECURITY_COORDINATOR]: {
+    id: ChurchRole.KID_SECURITY_COORDINATOR,
+    name: 'Seguridad - Coordinador',
+    category: 'Seguridad Infantil',
+    description: 'Coordinador de seguridad, logística y entrega de niños',
+    badgeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+  },
+  [ChurchRole.KID_SECURITY_SUPERVISOR]: {
+    id: ChurchRole.KID_SECURITY_SUPERVISOR,
+    name: 'Seguridad - Supervisor',
+    category: 'Seguridad Infantil',
+    description: 'Supervisión de control de acceso y entrega segura',
+    badgeColor: 'bg-teal-100 text-teal-700 border-teal-200',
+  },
+  [ChurchRole.KID_SECURITY_USER]: {
+    id: ChurchRole.KID_SECURITY_USER,
+    name: 'Seguridad - Servidor',
+    category: 'Seguridad Infantil',
+    description: 'Servidor de control de ingreso, seguimiento y checkout',
+    badgeColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   },
   [UserRole.USER]: {
     id: UserRole.USER,

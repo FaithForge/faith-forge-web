@@ -130,6 +130,7 @@ export const baseApi = createApi({
     'Kid',
     'KidGroup',
     'KidRegistered',
+    'KidAttendanceTracking',
     'KidGuardian',
     'KidMedicalCondition',
     'ChurchMeeting',

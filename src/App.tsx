@@ -29,6 +29,9 @@ const ScannerView = lazy(() => import('@/views/kid-registration/ScannerView'));
 const GenerateGuardianQRView = lazy(() => import('@/views/kid-registration/GenerateGuardianQRView'));
 const KidCheckInView = lazy(() => import('@/views/kid-registration/KidCheckInView'));
 const UpdateKidView = lazy(() => import('@/views/kid-registration/UpdateKidView'));
+const AttendanceTrackingView = lazy(
+  () => import('@/views/kid-registration/AttendanceTrackingView'),
+);
 const AdminDashboard = lazy(() => import('@/views/admin/AdminDashboard'));
 const CreateUserView = lazy(() => import('@/views/admin/users/CreateUserView'));
 const UserManagementView = lazy(() => import('@/views/admin/users/UserManagementView'));
@@ -299,6 +302,10 @@ function App() {
                 <Route
                   path={APP_ROUTES.kidRegistration.generateQR}
                   element={<GenerateGuardianQRView />}
+                />
+                <Route
+                  path={APP_ROUTES.kidRegistration.attendanceTracking}
+                  element={<AttendanceTrackingView />}
                 />
               </Route>
             </Route>

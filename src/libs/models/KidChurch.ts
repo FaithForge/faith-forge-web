@@ -1,5 +1,5 @@
 import { AppRole, UserExperienceEnum, UserRole } from '../utils/auth';
-import { EntityState } from './Church';
+import { EntityState, KidAttendanceFlowModeEnum } from './Church';
 
 import {
   ReduxDefaultState,
@@ -170,12 +170,17 @@ export enum KidGroupType {
   SPECIAL = 'SPECIAL',
 }
 
-export interface IKidCreator {
+export interface IVolunteerInfo {
   id: string;
   firstName: string;
   lastName: string;
+  fullName: string;
   groupName?: string;
+  ministryName?: string;
+  role?: string;
 }
+
+export type IKidCreator = IVolunteerInfo;
 
 export interface IKid {
   id: string;
@@ -213,6 +218,36 @@ export interface IKidGuardian {
   hasPushActive?: boolean;
 }
 
+export enum KidAttendanceStatusEnum {
+  CHECKED_IN = 'CHECKED_IN',
+  IN_AREA = 'IN_AREA',
+  CHECKED_OUT = 'CHECKED_OUT',
+}
+
+export interface IKidAttendanceStageCheckIn {
+  volunteerUserId?: string;
+  observation?: string;
+  timestamp: Date | string;
+}
+
+export interface IKidAttendanceStageInArea {
+  volunteerUserId?: string;
+  timestamp: Date | string;
+}
+
+export interface IKidAttendanceStageCheckedOut {
+  volunteerUserId?: string;
+  deliveredToGuardianId?: string;
+  observation?: string;
+  timestamp: Date | string;
+}
+
+export interface IKidAttendanceStages {
+  [KidAttendanceStatusEnum.CHECKED_IN]?: IKidAttendanceStageCheckIn;
+  [KidAttendanceStatusEnum.IN_AREA]?: IKidAttendanceStageInArea;
+  [KidAttendanceStatusEnum.CHECKED_OUT]?: IKidAttendanceStageCheckedOut;
+}
+
 export interface IKidRegistration {
   id: string;
   date: Date;
@@ -221,7 +256,8 @@ export interface IKidRegistration {
   groupId: string;
   guardianId: string;
   churchMeetingId: string;
-  log?: string;
+  attendanceStatus?: KidAttendanceStatusEnum;
+  attendanceStages?: IKidAttendanceStages;
   additionalInfo?: {
     groupName?: string;
     guardianFullName?: string;
@@ -229,6 +265,9 @@ export interface IKidRegistration {
     churchMeetingName?: string;
     registerFullName?: string;
     registerGroupName?: string;
+    registerMinistryName?: string;
+    registerRole?: string;
+    checkedOutGuardianFullName?: string;
   };
 }
 
@@ -370,6 +409,45 @@ export interface IKidGuardianAssignedKidsResponse {
   };
   kids: IAssignedKidItem[];
 }
+
+export interface IKidLiveTrackingItem {
+  id: string;
+  kidId: string;
+  kidFullName: string;
+  faithForgeId?: number;
+  gender: string;
+  photoUrl?: string;
+  birthday?: string;
+  age?: number;
+  ageInMonths?: number;
+  groupId: string;
+  groupName: string;
+  guardianId: string;
+  guardianFullName: string;
+  guardianPhone?: string;
+  attendanceStatus: KidAttendanceStatusEnum;
+  date: Date | string;
+  registeredAt: Date | string;
+  enteredAt?: Date | string;
+  checkedOutAt?: Date | string;
+  checkedOutGuardianId?: string;
+  checkedOutGuardianName?: string;
+  observation?: string;
+  checkOutObservation?: string;
+  attendanceStages?: IKidAttendanceStages;
+}
+
+export interface IKidLiveTrackingResponse {
+  flowMode: KidAttendanceFlowModeEnum;
+  summary: {
+    totalRegistered: number;
+    pendingEntry: number;
+    inArea: number;
+    checkedOut: number;
+  };
+  data: IKidLiveTrackingItem[];
+}
+
 
 
 

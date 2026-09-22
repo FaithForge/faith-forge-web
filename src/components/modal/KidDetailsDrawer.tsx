@@ -18,7 +18,7 @@ import {
   VolunteerRole,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
-import { parseRegistrationLog } from '@/libs/utils/registrationLog';
+import { getRegistrationLogInfo } from '@/libs/utils/registrationLog';
 import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday } from '@/libs/utils/date';
 import { isKidOverage, KID_AGE_COPY } from '@/libs/common-types/constants';
@@ -531,14 +531,15 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                       </span>
                     </div>
 
-                      {isSupervisor && kid.currentKidRegistration.log && (() => {
-                        const parsed = parseRegistrationLog(kid.currentKidRegistration.log);
+                      {isSupervisor && (() => {
+                        const parsed = getRegistrationLogInfo(kid.currentKidRegistration);
+                        if (!parsed) return null;
                         return (
                           <div className="flex justify-between items-start py-1 border-b border-gray-50 last:border-0">
                             <span className="font-semibold text-gray-500 shrink-0 pr-2">{t('kid_details.label_registration_log')}</span>
                             <span className="font-bold text-gray-800 text-xs leading-snug text-right">
-                              {parsed?.author ? t('kid_details.registered_by', { author: parsed.author }) : kid.currentKidRegistration.log}
-                              {parsed?.badgeLabel && (
+                              {t('kid_details.registered_by', { author: parsed.author })}
+                              {parsed.badgeLabel && (
                                 <span
                                   className={clsx(
                                     'inline-flex items-center ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border align-middle',
