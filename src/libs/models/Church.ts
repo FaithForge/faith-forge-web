@@ -48,6 +48,7 @@ export interface IChurch {
 
 export interface IChurchCampus {
   id: string;
+  churchId?: string;
   name: string;
   description?: string;
   position?: number;

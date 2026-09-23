@@ -184,6 +184,7 @@ export type IKidCreator = IVolunteerInfo;
 
 export interface IKid {
   id: string;
+  churchId?: string;
   faithForgeId: number;
   firstName: string;
   lastName: string;
@@ -273,6 +274,7 @@ export interface IKidRegistration {
 
 export interface IKidGroup {
   id: string;
+  churchId?: string;
   name: string;
   description?: string;
   initialMonth?: string;
@@ -317,6 +319,7 @@ export interface ICreateKid {
   staticKidGroupId?: string;
   observations?: string;
   medicalConditionId?: string;
+  churchId?: string;
 }
 
 export interface ICreateKidGuardian {

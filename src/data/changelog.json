@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.9.0",
+    "type": "minor",
+    "timestamp": "2026-09-23T02:54:19.807Z",
+    "dateFormatted": "22/09/2026 09:54 PM",
+    "title": "Transición multi-sede y soporte inicial multitenant",
+    "changes": [
+      "Mejoras estructurales de pertenencia congregacional para mayor estabilidad en el acceso",
+      "Preparación arquitectónica de miembros e iglesia para soporte multi-congregación"
+    ]
+  },
+  {
     "version": "3.8.1",
     "type": "patch",
     "timestamp": "2026-09-22T02:53:24.287Z",

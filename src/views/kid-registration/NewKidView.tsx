@@ -77,6 +77,7 @@ const NewKidView = () => {
   const { data: kidMedicalConditions = [] } = useGetKidMedicalConditionsQuery();
   const kidGuardianSlice = useAppSelector((state) => state.kidGuardianSlice);
   const kidSlice = useAppSelector((state) => state.kidSlice);
+  const churchCampusSlice = useAppSelector((state) => state.churchCampusSlice);
 
   const { 
     register: registerKid, 
@@ -266,6 +267,10 @@ const NewKidView = () => {
         }
       }
 
+      const resolvedChurchId =
+        churchCampusSlice.church?.id ||
+        churchCampusSlice.current?.churchId;
+
       const kidPayload = {
         firstName: values.firstName,
         lastName: values.lastName,
@@ -277,6 +282,7 @@ const NewKidView = () => {
         photoUrl: uploadedPhotoUrl || undefined,
         healthSecurityEntity: values.healthSecurityEntity,
         medicalConditionId: values.medicalConditionId || undefined,
+        churchId: resolvedChurchId,
       };
 
       const resultAction = await dispatch(CreateKid(kidPayload as any));

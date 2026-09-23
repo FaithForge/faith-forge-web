@@ -10,6 +10,12 @@ export const MinistryVolunteerStateEnum = {
 export type MinistryVolunteerStateEnum =
   (typeof MinistryVolunteerStateEnum)[keyof typeof MinistryVolunteerStateEnum];
 
+export const ChurchMemberStateEnum = {
+  ...EntityState,
+} as const;
+export type ChurchMemberStateEnum =
+  (typeof ChurchMemberStateEnum)[keyof typeof ChurchMemberStateEnum];
+
 export const MinistryVolunteerAssignmentStateEnum = {
   ...EntityState,
 } as const;
@@ -27,7 +33,17 @@ export enum VolunteerRole {
 export interface IVolunteer {
   id: string;
   userId: string;
+  churchId?: string;
   state?: MinistryVolunteerStateEnum;
+  user?: Partial<IUser>;
+  assignments?: IVolunteerAssignment[];
+}
+
+export interface IChurchMember {
+  id: string;
+  userId: string;
+  churchId: string;
+  state?: ChurchMemberStateEnum;
   user?: Partial<IUser>;
   assignments?: IVolunteerAssignment[];
 }
@@ -35,7 +51,9 @@ export interface IVolunteer {
 export interface IVolunteerAssignment {
   id: string;
   volunteerId?: string;
+  /** @deprecated Use churchMemberId instead */
   ministryVolunteerId?: string;
+  churchMemberId?: string;
   role: VolunteerRole;
   serviceAreaGroupId?: string;
   ministryGroupConfigId?: string;
@@ -45,6 +63,7 @@ export interface IVolunteerAssignment {
   state?: MinistryVolunteerAssignmentStateEnum;
   volunteer?: IVolunteer;
   ministryVolunteer?: IVolunteer;
+  churchMember?: IChurchMember;
   user?: Partial<IUser>;
   serviceAreaGroup?: IServiceAreaGroup;
   ministryGroupConfig?: IMinistryGroupConfig;

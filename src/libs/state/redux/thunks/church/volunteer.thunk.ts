@@ -233,8 +233,8 @@ export const GetVolunteerAssignments = createAsyncThunk(
       const totalPages = isArray ? 1 : response?.totalPages || 1;
 
       const normalizedAssignments = rawAssignments.map((asg) => {
-        const volunteer = asg.volunteer || asg.ministryVolunteer || {};
-        const volunteerId = asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
+        const volunteer = asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
+        const volunteerId = asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
         const user = asg.user || volunteer.user;
 
         return {
@@ -422,8 +422,8 @@ export const GetVolunteerWithAssignments = createAsyncThunk(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       return assignmentsList.map((asg: any) => ({
         ...asg,
-        volunteerId: asg.volunteerId || asg.ministryVolunteerId,
-        volunteer: asg.volunteer || asg.ministryVolunteer,
+        volunteerId: asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId,
+        volunteer: asg.churchMember || asg.volunteer || asg.ministryVolunteer,
       })) as IVolunteerAssignment[];
     } catch (err) {
       const error = err as AxiosError;
