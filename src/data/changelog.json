@@ -1,5 +1,28 @@
 [
   {
+    "version": "3.9.2",
+    "type": "patch",
+    "timestamp": "2026-09-24T03:21:04.014Z",
+    "dateFormatted": "23/09/2026 10:21 PM",
+    "title": "Optimización del registro y gestión de niños",
+    "changes": [
+      "Mayor rapidez y fluidez en el registro y actualización de datos de niños",
+      "Mejoras de estabilidad y sincronización en la impresión de tickets",
+      "Mejora visual en la selección de observaciones de registro para mayor claridad"
+    ]
+  },
+  {
+    "version": "3.9.1",
+    "type": "patch",
+    "timestamp": "2026-09-24T00:42:34.636Z",
+    "dateFormatted": "23/09/2026 07:42 PM",
+    "title": "Migración completa de grupos de niños a RTK Query",
+    "changes": [
+      "Eliminados slices y thunks de grupos de niños",
+      "Se actualizaron componentes a usar useGetKidGroupsQuery"
+    ]
+  },
+  {
     "version": "3.9.0",
     "type": "minor",
     "timestamp": "2026-09-23T02:54:19.807Z",

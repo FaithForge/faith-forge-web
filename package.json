@@ -1,6 +1,6 @@
 {
   "name": "faith-forge-web",
-  "version": "3.9.0",
+  "version": "3.9.2",
   "private": true,
   "engines": {
     "node": "22.x"
@@ -12,6 +12,8 @@
     "dev:stack:down": "docker compose -f docker-compose.stack.yml down",
     "build": "tsc && NODE_OPTIONS=\"--experimental-global-webcrypto\" vite build",
     "start": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "lint": "eslint src",
     "commit": "node scripts/commit.mjs",
     "version:bump": "node scripts/bump-version.mjs"
@@ -55,14 +57,15 @@
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
     "@tailwindcss/vite": "^4.3.3",
-    "@types/jest": "^29.5.12",
-    "@types/node": "18.16.9",
+    "@testing-library/jest-dom": "^7.0.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.7",
+    "@types/node": "^22.20.4",
     "@types/pica": "^9.0.4",
     "@types/react": "18.3.1",
     "@types/react-dom": "18.3.0",
     "@typescript-eslint/eslint-plugin": "^8.33.0",
     "@typescript-eslint/parser": "^8.33.0",
-    "babel-jest": "^29.7.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.0.0",
     "eslint-import-resolver-typescript": "^3.6.1",
@@ -72,14 +75,13 @@
     "eslint-plugin-react": "7.35.0",
     "eslint-plugin-react-hooks": "4.6.2",
     "eslint-plugin-unused-imports": "^4.1.4",
-    "jest": "^29.7.0",
-    "jest-environment-jsdom": "^29.7.0",
+    "jsdom": "^30.1.1",
     "prettier": "^3.3.3",
     "tailwindcss": "^4.3.3",
-    "ts-jest": "^29.1.0",
     "ts-node": "10.9.1",
     "tslib": "^2.3.0",
-    "typescript": "~5.5.2"
+    "typescript": "~5.5.2",
+    "vitest": "^5.0.1"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "^4.63.0"

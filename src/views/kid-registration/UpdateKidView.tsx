@@ -7,9 +7,12 @@ import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetKid, UpdateKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
-import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
-import { GetKidMedicalConditions } from '@/libs/state/redux/thunks/kid-church/kid-medical-condition.thunk';
+import {
+  useGetKidQuery,
+  useUpdateKidMutation,
+  useGetKidGroupsQuery,
+  useGetKidMedicalConditionsQuery,
+} from '@/libs/state/redux/api/kidChurchApi';
 import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
 import { ID_TYPE_CODE_MAPPER, userGenderSelect, healthSecurityEntitySelect } from '@/libs/models';
 import { KidGroupType } from '@/libs/models/KidChurch';
@@ -39,9 +42,10 @@ const UpdateKidView: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  const { current: kid, loading: kidLoading } = useAppSelector((state) => state.kidSlice);
-  const kidGroupSlice = useAppSelector((state) => state.kidGroupSlice);
-  const kidMedicalConditionSlice = useAppSelector((state) => state.kidMedicalConditionSlice);
+  const { data: kid, isLoading: kidLoading } = useGetKidQuery({ id: id || '' }, { skip: !id });
+  const [updateKid] = useUpdateKidMutation();
+  const { data: kidGroups = [] } = useGetKidGroupsQuery();
+  const { data: medicalConditions = [] } = useGetKidMedicalConditionsQuery();
 
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
@@ -56,15 +60,6 @@ const UpdateKidView: React.FC = () => {
     watch,
     formState: { errors },
   } = useForm();
-
-  // Load groups, medical conditions, and kid info
-  useEffect(() => {
-    dispatch(GetKidGroups({}));
-    dispatch(GetKidMedicalConditions());
-    if (id) {
-      dispatch(GetKid({ id }));
-    }
-  }, [id, dispatch]);
 
   // Populate form with kid data
   useEffect(() => {
@@ -168,20 +163,13 @@ const UpdateKidView: React.FC = () => {
         updatePayload.photoUrl = uploadedPhotoUrl;
       }
 
-      const result = await dispatch(
-        UpdateKid({
-          id,
-          updateKid: updatePayload,
-        })
-      );
+      await updateKid({
+        id,
+        data: updatePayload,
+      }).unwrap();
 
-      if (UpdateKid.fulfilled.match(result)) {
-        toast.success(t('kidRegistration:form.success_kid_updated'));
-        await dispatch(GetKid({ id }));
-        navigate(APP_ROUTES.kidRegistration.checkIn(id), { replace: true });
-      } else {
-        toast.error(t('kidRegistration:form.error_updating_kid'));
-      }
+      toast.success(t('kidRegistration:form.success_kid_updated'));
+      navigate(APP_ROUTES.kidRegistration.checkIn(id), { replace: true });
     } catch {
       toast.error(t('common:states.error_occurred'));
     } finally {
@@ -190,17 +178,17 @@ const UpdateKidView: React.FC = () => {
   };
 
   const kidGroupOptions = useMemo(() => {
-    return (kidGroupSlice.data || [])
-      .filter((g: any) => g.type !== KidGroupType.SPECIAL)
-      .map((g: any) => ({
+    return kidGroups
+      .filter((g) => g.type !== KidGroupType.SPECIAL)
+      .map((g) => ({
         id: g.id,
         name: g.name,
       }));
-  }, [kidGroupSlice.data]);
+  }, [kidGroups]);
 
   const medicalConditionOptions = [
     { id: '', name: 'Ninguna' },
-    ...(kidMedicalConditionSlice.data || []).map((m: any) => ({
+    ...medicalConditions.map((m) => ({
       id: m.id,
       name: m.name,
     })),

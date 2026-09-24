@@ -2,10 +2,10 @@ import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import { X, Search, UserCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetKidGuardian, CreateKidGuardian } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
-import { GetKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
-import { cleanCurrentKidGuardian } from '@/libs/state/redux/slices/kid-church/kid-guardian.slice';
+import {
+  useLazyGetKidGuardianQuery,
+  useCreateKidGuardianMutation,
+} from '@/libs/state/redux/api/kidChurchApi';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
 import SelectSearch from '@/components/ui/SelectSearch';
@@ -18,8 +18,12 @@ import { useKidsTerm } from '@/libs/hooks/useTerm';
 import {
   IdType,
   UserIdType,
+  UserGenderCode,
   userGenderSelect,
   kidRelationSelect,
+  IKidGuardian,
+  ICreateKidGuardian,
+  KidGuardianRelationEnum,
 } from '@/libs/models';
 
 interface AssignGuardianModalProps {
@@ -48,12 +52,11 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
 }) => {
   useModalBackClose(open, onClose);
 
-  const dispatch = useAppDispatch();
   const guardianTerm = useKidsTerm('guardian');
-  const { current: existingGuardian, loading: guardianLoading } = useAppSelector(
-    (state) => state.kidGuardianSlice
-  );
+  const [triggerGetGuardian, { isFetching: guardianLoading }] = useLazyGetKidGuardianQuery();
+  const [createKidGuardian] = useCreateKidGuardianMutation();
 
+  const [existingGuardian, setExistingGuardian] = useState<IKidGuardian | null>(null);
   const [nationalIdType, setNationalIdType] = useState<string>(UserIdType.CC);
   const [nationalId, setNationalId] = useState('');
   const [firstName, setFirstName] = useState('');
@@ -67,7 +70,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
   // Reset form when modal opens
   useEffect(() => {
     if (open) {
-      dispatch(cleanCurrentKidGuardian());
+      setExistingGuardian(null);
       setNationalIdType(UserIdType.CC);
       setNationalId('');
       setFirstName('');
@@ -77,7 +80,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
       setGender('');
       setRelation('');
     }
-  }, [open, dispatch]);
+  }, [open]);
 
   // Autocomplete if existing guardian found in DB
   useEffect(() => {
@@ -92,15 +95,23 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     }
   }, [existingGuardian]);
 
-  const handleSearchGuardian = () => {
+  const handleSearchGuardian = async () => {
     const cleanDoc = nationalId.trim();
     if (cleanDoc) {
-      dispatch(GetKidGuardian(cleanDoc));
+      try {
+        const guardianData = await triggerGetGuardian({ nationalId: cleanDoc }).unwrap();
+        if (guardianData) {
+          setExistingGuardian(guardianData);
+          toast.success(`${guardianTerm} encontrado(a) en el sistema`);
+        }
+      } catch {
+        setExistingGuardian(null);
+      }
     }
   };
 
   const handleClearGuardian = () => {
-    dispatch(cleanCurrentKidGuardian());
+    setExistingGuardian(null);
     setNationalIdType(UserIdType.CC);
     setNationalId('');
     setFirstName('');
@@ -166,28 +177,25 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
 
     setIsSubmitting(true);
     try {
-      const payload = {
+      const payload: ICreateKidGuardian = {
         kidId,
-        nationalIdType: existingGuardian?.nationalIdType || nationalIdType,
+        nationalIdType: (existingGuardian?.nationalIdType || nationalIdType) as UserIdType,
         nationalId: (existingGuardian?.nationalId || nationalId).trim(),
         firstName: (existingGuardian?.firstName || firstName).trim(),
         lastName: (existingGuardian?.lastName || lastName).trim(),
         dialCodePhone: dialCodePhone,
         phone: phone.trim(),
-        gender: existingGuardian?.gender || gender,
-        relation,
+        gender: (existingGuardian?.gender || gender) as UserGenderCode,
+        relation: relation as KidGuardianRelationEnum,
       };
 
-      const response = await dispatch(CreateKidGuardian(payload as any));
-      if (!response.payload?.error) {
-        toast.success(`¡${guardianTerm} asignado(a) con éxito!`);
-        await dispatch(GetKid({ id: kidId }));
-        onClose();
-      } else {
-        toast.error(response.payload?.error || `Error al asignar ${guardianTerm.toLowerCase()}`);
-      }
-    } catch {
-      toast.error(`Error de conexión al asignar ${guardianTerm.toLowerCase()}`);
+      await createKidGuardian(payload).unwrap();
+      toast.success(`¡${guardianTerm} asignado(a) con éxito!`);
+      onClose();
+    } catch (err: unknown) {
+      const errorResponse = err as { data?: { message?: string }; message?: string };
+      const msg = errorResponse?.data?.message || errorResponse?.message || `Error al asignar ${guardianTerm.toLowerCase()}`;
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

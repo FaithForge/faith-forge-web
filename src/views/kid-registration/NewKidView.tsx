@@ -20,16 +20,17 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   useGetKidGroupsQuery,
   useGetKidMedicalConditionsQuery,
+  useLazyGetKidGuardianQuery,
+  useCreateKidGuardianMutation,
+  useCreateKidMutation,
 } from '@/libs/state/redux/api/kidChurchApi';
-import { GetKidGuardian, CreateKidGuardian } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
-import { CreateKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
+import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
-import { cleanCurrentKidGuardian } from '@/libs/state/redux/slices/kid-church/kid-guardian.slice';
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 
-import { healthSecurityEntitySelect, IdType, UserIdType } from '@/libs/models/User';
-import { ID_TYPE_CODE_MAPPER, kidRelationSelect } from '@/libs/models';
+import { healthSecurityEntitySelect, IdType, UserIdType, UserGenderCode } from '@/libs/models/User';
+import { ID_TYPE_CODE_MAPPER, kidRelationSelect, ICreateKid, ICreateKidGuardian, KidGuardianRelationEnum, IKidGuardian } from '@/libs/models';
 import { KidGroupType } from '@/libs/models/KidChurch';
 import { 
   KID_MIN_AGE_MONTHS, 
@@ -75,7 +76,10 @@ const NewKidView = () => {
 
   const { data: kidGroups = [] } = useGetKidGroupsQuery();
   const { data: kidMedicalConditions = [] } = useGetKidMedicalConditionsQuery();
-  const kidGuardianSlice = useAppSelector((state) => state.kidGuardianSlice);
+  const [triggerGetGuardian] = useLazyGetKidGuardianQuery();
+  const [createKidGuardian] = useCreateKidGuardianMutation();
+  const [createKid] = useCreateKidMutation();
+  const [existingGuardian, setExistingGuardian] = useState<IKidGuardian | null>(null);
   const kidSlice = useAppSelector((state) => state.kidSlice);
   const churchCampusSlice = useAppSelector((state) => state.churchCampusSlice);
 
@@ -166,11 +170,6 @@ const NewKidView = () => {
     onBlockBack: () => setShowCancelModal(true),
   });
 
-  useEffect(() => {
-    dispatch(cleanCurrentKidGuardian());
-    return () => { dispatch(cleanCurrentKidGuardian()); };
-  }, [dispatch]);
-
   // Automatically scroll to top of page and <main> container on step change
   const scrollToTop = () => {
     window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
@@ -193,17 +192,17 @@ const NewKidView = () => {
 
   // Auto-fill guardian details if already existing in database
   useEffect(() => {
-    if (kidGuardianSlice.current && step === 2) {
-      setGuardianValue('nationalIdType', kidGuardianSlice.current.nationalIdType);
-      setGuardianValue('nationalId', kidGuardianSlice.current.nationalId);
-      setGuardianValue('firstName', kidGuardianSlice.current.firstName);
-      setGuardianValue('lastName', kidGuardianSlice.current.lastName);
-      setGuardianValue('phone', kidGuardianSlice.current.phone);
-      setGuardianValue('gender', kidGuardianSlice.current.gender);
-      setGuardianValue('relation', kidGuardianSlice.current.relation || '');
+    if (existingGuardian && step === 2) {
+      setGuardianValue('nationalIdType', existingGuardian.nationalIdType);
+      setGuardianValue('nationalId', existingGuardian.nationalId);
+      setGuardianValue('firstName', existingGuardian.firstName);
+      setGuardianValue('lastName', existingGuardian.lastName);
+      setGuardianValue('phone', existingGuardian.phone);
+      setGuardianValue('gender', existingGuardian.gender);
+      setGuardianValue('relation', existingGuardian.relation || '');
       clearGuardianErrors(['nationalId', 'firstName', 'lastName', 'phone', 'gender']);
     }
-  }, [kidGuardianSlice.current, setGuardianValue, clearGuardianErrors, step]);
+  }, [existingGuardian, setGuardianValue, clearGuardianErrors, step]);
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -271,11 +270,11 @@ const NewKidView = () => {
         churchCampusSlice.church?.id ||
         churchCampusSlice.current?.churchId;
 
-      const kidPayload = {
+      const kidPayload: ICreateKid = {
         firstName: values.firstName,
         lastName: values.lastName,
         birthday: values.birthday,
-        gender: values.gender,
+        gender: values.gender as UserGenderCode,
         staticGroup: staticGroup,
         staticKidGroupId: staticGroup ? values.kidGroup : undefined,
         observations: values.observations || undefined,
@@ -285,22 +284,16 @@ const NewKidView = () => {
         churchId: resolvedChurchId,
       };
 
-      const resultAction = await dispatch(CreateKid(kidPayload as any));
-      
-      if (CreateKid.fulfilled.match(resultAction)) {
-        if (!resultAction.payload?.error) {
-           setStep(2);
-           scrollToTop();
-        } else {
-           toast.error(resultAction.payload?.error || "Error al guardar el niño");
-        }
-      } else {
-        toast.error("Error al guardar el niño");
-      }
-    } catch (error) {
-       toast.error("Error inesperado al guardar el niño");
+      const createdKid = await createKid(kidPayload).unwrap();
+      dispatch(updateCurrentKid(createdKid));
+      setStep(2);
+      scrollToTop();
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string }; message?: string };
+      const msg = err?.data?.message || err?.message || "Error al guardar el niño";
+      toast.error(msg);
     } finally {
-       setIsUploading(false);
+      setIsUploading(false);
     }
   };
 
@@ -328,8 +321,8 @@ const NewKidView = () => {
        return;
     }
     
-    const guardianPhone = (values.phone || kidGuardianSlice.current?.phone)?.trim();
-    const guardianDialCode = values.dialCodePhone || kidGuardianSlice.current?.dialCodePhone || '+57';
+    const guardianPhone = (values.phone || existingGuardian?.phone)?.trim();
+    const guardianDialCode = values.dialCodePhone || existingGuardian?.dialCodePhone || '+57';
     const phoneVal = validatePhoneNumber(guardianPhone, guardianDialCode);
     if (!phoneVal.isValid) {
       toast.error(phoneVal.error || `El número de teléfono de ${guardianTerm.toLowerCase()} no es válido. Debe preguntarle el número correcto y actualizarlo.`);
@@ -338,37 +331,31 @@ const NewKidView = () => {
 
     setIsUploading(true);
     try {
-       const guardianPayload = {
-         kidId: kidSlice.current.id,
-         nationalIdType: kidGuardianSlice.current?.nationalIdType || values.nationalIdType,
-         nationalId: (kidGuardianSlice.current?.nationalId || values.nationalId)?.trim(),
-         firstName: (kidGuardianSlice.current?.firstName || values.firstName)?.trim(),
-         lastName: (kidGuardianSlice.current?.lastName || values.lastName)?.trim(),
-         dialCodePhone: guardianDialCode,
-         phone: guardianPhone,
-         gender: kidGuardianSlice.current?.gender || values.gender,
-         relation: values.relation,
-       };
-       
-        const resultAction = await dispatch(CreateKidGuardian(guardianPayload as any));
-        if (CreateKidGuardian.fulfilled.match(resultAction)) {
-           if (!resultAction.payload?.error) {
-              allowNavigation();
-              toast.success(t('kidRegistration:form.success_kid_created'));
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              // Ir a check-in
-              navigate(APP_ROUTES.kidRegistration.checkIn(kidSlice.current.id), { replace: true });
-           } else {
-              toast.error(resultAction.payload?.error || `Error al guardar ${guardianTerm.toLowerCase()}`);
-           }
-        } else {
-           toast.error(t('kidRegistration:form.error_creating_kid'));
-        }
-     } catch(e) {
-        console.error('Error submitting guardian:', e);
-        toast.error(t('common:states.error_occurred'));
-     } finally {
-       setIsUploading(false);
+      const guardianPayload: ICreateKidGuardian = {
+        kidId: kidSlice.current.id,
+        nationalIdType: (existingGuardian?.nationalIdType || values.nationalIdType) as UserIdType,
+        nationalId: (existingGuardian?.nationalId || values.nationalId)?.trim(),
+        firstName: (existingGuardian?.firstName || values.firstName)?.trim(),
+        lastName: (existingGuardian?.lastName || values.lastName)?.trim(),
+        dialCodePhone: guardianDialCode,
+        phone: guardianPhone,
+        gender: (existingGuardian?.gender || values.gender) as UserGenderCode,
+        relation: values.relation as KidGuardianRelationEnum,
+      };
+
+      await createKidGuardian(guardianPayload).unwrap();
+      allowNavigation();
+      toast.success(t('kidRegistration:form.success_kid_created'));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Ir a check-in
+      navigate(APP_ROUTES.kidRegistration.checkIn(kidSlice.current.id), { replace: true });
+    } catch (e: unknown) {
+      console.error('Error submitting guardian:', e);
+      const err = e as { data?: { message?: string }; message?: string };
+      const msg = err?.data?.message || err?.message || t('kidRegistration:form.error_creating_kid');
+      toast.error(msg);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -409,7 +396,13 @@ const NewKidView = () => {
     if (doc && doc.trim().length > 0) {
       setIsSearchingGuardian(true);
       try {
-        await dispatch(GetKidGuardian(doc.trim()));
+        const data = await triggerGetGuardian({ nationalId: doc.trim() }).unwrap();
+        if (data) {
+          setExistingGuardian(data);
+          toast.success(`${guardianTerm} encontrado(a) en la base de datos`);
+        }
+      } catch {
+        setExistingGuardian(null);
       } finally {
         setIsSearchingGuardian(false);
       }
@@ -691,7 +684,7 @@ const NewKidView = () => {
               <h3 className="font-bold text-gray-800 border-b border-gray-100 pb-2">Información de {guardianTerm}</h3>
 
               {/* Banner if already exists in database */}
-              {kidGuardianSlice.current && (
+              {existingGuardian && (
                 <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 p-3.5 rounded-xl flex items-center justify-between text-xs font-semibold">
                   <div className="flex items-center gap-2">
                     <UserCheck size={18} className="text-emerald-600 shrink-0" />
@@ -700,7 +693,7 @@ const NewKidView = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      dispatch(cleanCurrentKidGuardian());
+                      setExistingGuardian(null);
                       setGuardianValue('nationalIdType', UserIdType.CC);
                       setGuardianValue('nationalId', '');
                       setGuardianValue('firstName', '');
@@ -729,7 +722,7 @@ const NewKidView = () => {
                     value={field.value}
                     onChange={field.onChange}
                     options={idTypeOptions}
-                    disabled={!!kidGuardianSlice.current}
+                    disabled={!!existingGuardian}
                     placeholder="Seleccionar tipo de documento..."
                   />
                 )}
@@ -738,14 +731,14 @@ const NewKidView = () => {
               {/* Documento y Búsqueda */}
               <div>
                 <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                  Número de Documento {!kidGuardianSlice.current && <span className="text-red-500">*</span>}
+                  Número de Documento {!existingGuardian && <span className="text-red-500">*</span>}
                 </label>
                 <div className="relative flex items-center">
                   <input
                     type="text"
-                    {...registerGuardian('nationalId', { required: !kidGuardianSlice.current ? 'Requerido' : false })}
+                    {...registerGuardian('nationalId', { required: !existingGuardian ? 'Requerido' : false })}
                     onBlur={checkNationalId}
-                    disabled={!!kidGuardianSlice.current}
+                    disabled={!!existingGuardian}
                     placeholder="Escribir número de documento..."
                     autoComplete="off"
                     autoCorrect="off"
@@ -753,7 +746,7 @@ const NewKidView = () => {
                     spellCheck={false}
                     className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 pl-3 pr-16 focus:border-primary focus:ring-0 outline-none text-base shadow-sm transition-colors disabled:bg-gray-100 disabled:text-gray-500"
                   />
-                  {watchGuardian('nationalId') && !kidGuardianSlice.current && (
+                  {watchGuardian('nationalId') && !existingGuardian && (
                     <button
                       type="button"
                       onClick={() => {
@@ -774,7 +767,7 @@ const NewKidView = () => {
                   <button
                     type="button"
                     onClick={checkNationalId}
-                    disabled={isSearchingGuardian || !!kidGuardianSlice.current}
+                    disabled={isSearchingGuardian || !!existingGuardian}
                     className="absolute right-2 text-gray-400 hover:text-primary p-1.5 transition-colors"
                   >
                     <Search size={18} />
@@ -786,22 +779,22 @@ const NewKidView = () => {
               {/* Nombre */}
               <Input
                 label="Nombre"
-                required={!kidGuardianSlice.current}
+                required={!existingGuardian}
                 placeholder={`Nombres de ${guardianTerm.toLowerCase()}`}
-                disabled={!!kidGuardianSlice.current}
-                {...registerGuardian('firstName', { required: !kidGuardianSlice.current ? 'Requerido' : false })}
+                disabled={!!existingGuardian}
+                {...registerGuardian('firstName', { required: !existingGuardian ? 'Requerido' : false })}
                 error={guardianErrors.firstName?.message as string}
               />
 
               {/* Apellidos */}
               <Input
                 label="Apellidos"
-                required={!kidGuardianSlice.current}
+                required={!existingGuardian}
                 placeholder={`Apellidos de ${guardianTerm.toLowerCase()}`}
-                disabled={!!kidGuardianSlice.current}
+                disabled={!!existingGuardian}
                 {...registerGuardian('lastName', { 
-                  required: !kidGuardianSlice.current ? 'Los apellidos son requeridos' : false,
-                  validate: (val) => (!kidGuardianSlice.current ? validateTwoLastNames(val) : true)
+                  required: !existingGuardian ? 'Los apellidos son requeridos' : false,
+                  validate: (val) => (!existingGuardian ? validateTwoLastNames(val) : true)
                 })}
                 error={guardianErrors.lastName?.message as string}
               />
@@ -811,10 +804,10 @@ const NewKidView = () => {
                 name="phone"
                 control={guardianControl}
                 rules={{
-                  required: !kidGuardianSlice.current || !isPhoneValid(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone) ? 'Requerido' : false,
+                  required: !existingGuardian || !isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone) ? 'Requerido' : false,
                   validate: (val) => {
                     const dialCode = watchGuardian('dialCodePhone') || '+57';
-                    const targetVal = val || (kidGuardianSlice.current ? kidGuardianSlice.current.phone : '');
+                    const targetVal = val || (existingGuardian ? existingGuardian.phone : '');
                     const res = validatePhoneNumber(targetVal, dialCode);
                     return res.isValid ? true : (res.error || 'Número de teléfono inválido');
                   },
@@ -822,10 +815,10 @@ const NewKidView = () => {
                 render={({ field }) => (
                   <PhoneInput
                     label="Teléfono"
-                    required={!kidGuardianSlice.current || !isPhoneValid(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}
+                    required={!existingGuardian || !isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
                     dialCode={watchGuardian('dialCodePhone') || '+57'}
                     phone={field.value}
-                    disabled={!!kidGuardianSlice.current && isPhoneValid(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}
+                    disabled={!!existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
                     onDialCodeChange={(code) => setGuardianValue('dialCodePhone', code)}
                     onPhoneChange={field.onChange}
                     error={guardianErrors.phone?.message as string}
@@ -833,12 +826,12 @@ const NewKidView = () => {
                 )}
               />
 
-              {kidGuardianSlice.current && !isPhoneValid(watchGuardian('phone') || kidGuardianSlice.current.phone, watchGuardian('dialCodePhone') || kidGuardianSlice.current.dialCodePhone) && (
+              {existingGuardian && !isPhoneValid(watchGuardian('phone') || existingGuardian.phone, watchGuardian('dialCodePhone') || existingGuardian.dialCodePhone) && (
                 <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
                   <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
                   <div className="leading-relaxed">
                     <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}:</strong>
-                    El número registrado para este {guardianTerm.toLowerCase()} ({formatPhoneDisplay(kidGuardianSlice.current.phone, kidGuardianSlice.current.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo de teléfono antes de continuar.
+                    El número registrado para este {guardianTerm.toLowerCase()} ({formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo de teléfono antes de continuar.
                   </div>
                 </div>
               )}
@@ -847,13 +840,13 @@ const NewKidView = () => {
               <Controller
                 name="gender"
                 control={guardianControl}
-                rules={{ required: !kidGuardianSlice.current ? 'Requerido' : false }}
+                rules={{ required: !existingGuardian ? 'Requerido' : false }}
                 render={({ field }) => (
                   <SelectSearch
                     label="Género"
-                    required={!kidGuardianSlice.current}
+                    required={!existingGuardian}
                     value={field.value}
-                    disabled={!!kidGuardianSlice.current}
+                    disabled={!!existingGuardian}
                     onChange={(val) => {
                       field.onChange(val);
                       setGuardianValue('relation', '');

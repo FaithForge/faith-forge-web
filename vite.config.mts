@@ -1,17 +1,22 @@
 import { webcrypto } from 'node:crypto';
 if (!globalThis.crypto) {
-  Object.defineProperty(globalThis, 'crypto', { value: webcrypto, writable: true, configurable: true });
+  Object.defineProperty(globalThis, 'crypto', {
+    value: webcrypto,
+    writable: true,
+    configurable: true,
+  });
 }
 if (!(global as any).crypto) {
   Object.defineProperty(global, 'crypto', { value: webcrypto, writable: true, configurable: true });
 }
 
-import { defineConfig } from 'vite';
-import react from '@vitejs/plugin-react';
+/// <reference types="vitest" />
 import tailwindcss from '@tailwindcss/vite';
-import { VitePWA } from 'vite-plugin-pwa';
-import path from 'path';
+import react from '@vitejs/plugin-react';
 import fs from 'node:fs';
+import path from 'path';
+import { VitePWA } from 'vite-plugin-pwa';
+import { defineConfig } from 'vitest/config';
 
 const currentBuildTime = Date.now();
 
@@ -147,6 +152,12 @@ export default defineConfig({
   define: {
     'process.env': {},
     'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV ?? 'production'),
-    '__APP_BUILD_TIME__': currentBuildTime,
+    __APP_BUILD_TIME__: currentBuildTime,
+  },
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/setupTests.ts'],
+    include: ['src/**/*.{test,spec}.{ts,tsx}'],
   },
 });

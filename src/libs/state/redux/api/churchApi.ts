@@ -41,7 +41,7 @@ export const churchApi = baseApi.injectEndpoints({
     getChurchCampuses: builder.query<IChurchCampus[], void>({
       query: () => ({
         microservice: MicroserviceEnum.Church,
-        url: '/church-campuses',
+        url: '/church-campus',
         method: HttpRequestMethod.GET,
       }),
       providesTags: (result) =>

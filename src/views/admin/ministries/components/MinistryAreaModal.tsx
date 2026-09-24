@@ -8,7 +8,7 @@ import {
   CreateMinistryArea,
   UpdateMinistryArea,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
+import { useGetKidGroupsQuery } from '@/libs/state/redux/api/kidChurchApi';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
 import { Layers, Sparkles, Check, Shield } from 'lucide-react';
@@ -40,7 +40,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
 
   const dispatch = useAppDispatch();
   const { loadingAction } = useAppSelector((state) => state.ministrySlice);
-  const availableKidGroups = useAppSelector((state) => state.kidGroupSlice.data);
+  const { data: availableKidGroups = [] } = useGetKidGroupsQuery();
   const parentMinistry = useAppSelector((state) =>
     state.ministrySlice.ministries.find((m) => m.id === ministryId),
   );
@@ -57,13 +57,6 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
   const [nameError, setNameError] = useState('');
 
   const isEditing = Boolean(areaToEdit);
-
-  // Load classrooms master catalog if empty
-  useEffect(() => {
-    if (open && (!availableKidGroups || availableKidGroups.length === 0)) {
-      dispatch(GetKidGroups({ force: false }));
-    }
-  }, [open, availableKidGroups, dispatch]);
 
   useEffect(() => {
     if (open) {

@@ -4,7 +4,7 @@ import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetMinistryAreas } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
+import { useGetKidGroupsQuery } from '@/libs/state/redux/api/kidChurchApi';
 import { IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum } from '@/libs/models';
 import { useMinistryTerm } from '@/libs/hooks/useTerm';
 import MinistryAreaModal from '../components/MinistryAreaModal';
@@ -23,7 +23,7 @@ interface MinistryAreasTabProps {
 export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }) => {
   const dispatch = useAppDispatch();
   const { areasByMinistry, loadingAreas } = useAppSelector((state) => state.ministrySlice);
-  const kidGroups = useAppSelector((state) => state.kidGroupSlice.data);
+  const { data: kidGroups = [] } = useGetKidGroupsQuery();
 
   const regTerm = useMinistryTerm(ministryId, 'registration', 'Registro de Niños');
   const moduleAlias = useMinistryTerm(ministryId, 'module_alias', 'Ministerio de Niños');
@@ -41,10 +41,7 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
 
   useEffect(() => {
     dispatch(GetMinistryAreas({ ministryId, force: false }));
-    if (!kidGroups || kidGroups.length === 0) {
-      dispatch(GetKidGroups({ force: false }));
-    }
-  }, [dispatch, ministryId, kidGroups]);
+  }, [dispatch, ministryId]);
 
   const handleOpenCreate = () => {
     setAreaToEdit(null);

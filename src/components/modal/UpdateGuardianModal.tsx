@@ -5,9 +5,7 @@ import PhoneInput from '@/components/ui/PhoneInput';
 import SelectSearch from '@/components/ui/SelectSearch';
 import { toast } from 'sonner';
 import { X, AlertTriangle } from 'lucide-react';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
-import { UpdateKidGuardianPhone } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
-import { GetKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
+import { useUpdateKidGuardianMutation } from '@/libs/state/redux/api/kidChurchApi';
 import { kidRelationSelect } from '@/libs/models/KidChurch';
 import { validatePhoneNumber, cleanPhoneDigits, isPhoneValid } from '@/libs/utils/phone';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
@@ -36,9 +34,8 @@ const sanitizePhoneDigits = (raw: string) => {
 };
 
 const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose, guardian }) => {
-  const dispatch = useAppDispatch();
   const guardianTerm = useKidsTerm('guardian');
-  const [isLoading, setIsLoading] = useState(false);
+  const [updateKidGuardian, { isLoading }] = useUpdateKidGuardianMutation();
   const [dialCode, setDialCode] = useState('+57');
   const [phone, setPhone] = useState('');
   const [relation, setRelation] = useState('');
@@ -84,17 +81,16 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
     }
 
     setError('');
-    setIsLoading(true);
 
     try {
       const cleanPhone = cleanPhoneDigits(phone, dialCode);
-      const response = await dispatch(UpdateKidGuardianPhone({
+      const response = await updateKidGuardian({
         id: guardian.id,
         dialCodePhone: dialCode,
         phone: cleanPhone,
         relation: relation as any,
         kidId: guardian.kidId,
-      })).unwrap();
+      }).unwrap();
 
       // If the API responds with an explicit error object
       if (response && (response as any).error) {
@@ -104,14 +100,10 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
       }
 
       toast.success(`Datos de ${guardian.fullName} actualizados con éxito`);
-      // Refresh view by re-fetching child details
-      await dispatch(GetKid({ id: guardian.kidId }));
       onClose();
     } catch (err: any) {
       const errMsg = err?.message || err?.error || err?.response?.data?.message || `Error al actualizar ${guardianTerm.toLowerCase()}`;
       toast.error(errMsg);
-    } finally {
-      setIsLoading(false);
     }
   };
 

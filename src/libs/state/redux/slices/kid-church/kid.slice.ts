@@ -1,19 +1,11 @@
-import { IApiErrorResponse, IKid, IKids, IUpdateKid } from '@/libs/models';
+import { IKid, IKids } from '@/libs/models';
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
-import { PayloadAction, createSlice } from '@reduxjs/toolkit';
+import { PayloadAction, createSlice, isAnyOf } from '@reduxjs/toolkit';
 import {
-  CreateKid,
-  DeleteKid,
-  GetKid,
   GetKids,
   GetMoreKids,
-  UpdateKid,
 } from '../../thunks/kid-church/kid.thunk';
-import {
-  CreateKidRegistration,
-  RemoveKidRegistration,
-} from '../../thunks/kid-church/kid-registration.thunk';
-import { DeleteKidGuardianRelation } from '../../thunks/kid-church/kid-guardian.thunk';
+import { kidChurchApi } from '../../api/kidChurchApi';
 
 const initialState: IKids = {
   data: [],
@@ -90,78 +82,31 @@ const kidSlice = createSlice({
       // Prevent infinite loops on failure
       state.totalPages = state.currentPage;
     });
-    builder.addCase(GetKid.pending, (state) => {
-      state.loading = true;
-    });
-    builder.addCase(GetKid.fulfilled, (state, action) => {
-      state.current = action.payload;
-      state.error = undefined;
-      state.loading = false;
-    });
-    builder.addCase(GetKid.rejected, (state, action) => {
-      state.current = undefined;
-      state.error = action.error.message;
-      state.loading = false;
-    });
-    builder.addCase(CreateKid.pending, (state) => {
-      state.error = undefined;
-      state.current = undefined;
-      state.loading = true;
-    });
-    builder.addCase(CreateKid.fulfilled, (state, action) => {
-      state.current = action.payload;
-      state.error = undefined;
-      state.loading = false;
-      state.needsRefresh = true;
-    });
-    builder.addCase(CreateKid.rejected, (state, action) => {
-      const apiError = action.payload as IApiErrorResponse;
-      state.current = undefined;
-      state.error = apiError.error.message;
-      state.loading = false;
-    });
-    builder.addCase(UpdateKid.pending, (state) => {
-      state.loading = true;
-    });
-    builder.addCase(UpdateKid.fulfilled, (state, action: PayloadAction<IUpdateKid>) => {
-      state.current = {
-        ...state.current,
-        ...action.payload,
-      };
-      state.error = undefined;
-      state.loading = false;
-      state.needsRefresh = true;
-    });
-    builder.addCase(UpdateKid.rejected, (state, action) => {
-      state.error = action.error.message;
-      state.loading = false;
-    });
-    builder.addCase(DeleteKid.pending, (state) => {
-      state.loading = true;
-    });
-    builder.addCase(DeleteKid.fulfilled, (state) => {
-      state.error = undefined;
-      state.loading = false;
-      state.needsRefresh = true;
-    });
-    builder.addCase(DeleteKid.rejected, (state, action) => {
-      state.error = action.error.message;
-      state.loading = false;
-    });
-    builder.addCase(CreateKidRegistration.fulfilled, (state) => {
-      state.needsRefresh = true;
-    });
-    builder.addCase(RemoveKidRegistration.fulfilled, (state) => {
-      state.needsRefresh = true;
-    });
-    builder.addCase(DeleteKidGuardianRelation.fulfilled, (state, action) => {
-      if (state.current?.relations) {
-        state.current.relations = state.current.relations.filter(
-          (rel: any) => (rel?.guardian?.id || rel?.guardianId || rel?.id) !== action.meta.arg.guardianId,
-        );
-      }
-      state.needsRefresh = true;
-    });
+    builder.addMatcher(
+      isAnyOf(
+        kidChurchApi.endpoints.createKid.matchFulfilled,
+        kidChurchApi.endpoints.updateKid.matchFulfilled,
+        kidChurchApi.endpoints.deleteKid.matchFulfilled,
+        kidChurchApi.endpoints.createKidRegistration.matchFulfilled,
+        kidChurchApi.endpoints.deleteKidRegistration.matchFulfilled,
+      ),
+      (state) => {
+        state.needsRefresh = true;
+      },
+    );
+    builder.addMatcher(
+      kidChurchApi.endpoints.deleteKidGuardianRelation.matchFulfilled,
+      (state, action) => {
+        if (state.current?.relations) {
+          const guardianId = action.meta.arg.originalArgs.guardianId;
+          state.current.relations = state.current.relations.filter(
+            (rel) => rel.id !== guardianId,
+          );
+        }
+        state.needsRefresh = true;
+      },
+    );
+
   },
 });
 

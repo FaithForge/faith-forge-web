@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, Info, AlertTriangle, ArrowLeftRight, Printer } from 'lucide-react';
+import { ArrowLeft, Check, ChevronRight, ChevronDown, Info, AlertTriangle, ArrowLeftRight, Printer } from 'lucide-react';
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { APP_ROUTES } from "@/config/routes";
 import clsx from 'clsx';
@@ -12,8 +12,8 @@ import TagKidGroup from '@/components/ui/TagKidGroup';
 import PageHeader from '@/components/ui/PageHeader';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { ScanCodeKidRegistration, CreateKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
-import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
+import { ScanCodeKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
+import { useGetKidGroupsQuery, useCreateKidRegistrationMutation } from '@/libs/state/redux/api/kidChurchApi';
 import { cleanScanQRSearch } from '@/libs/state/redux/slices/kid-church/scan-code-kid-registration.slice';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
@@ -37,7 +37,8 @@ const ScannerView = () => {
     t('kidRegistration:scanner.steps.observations')
   ], [t]);
   const { kidGuardian, relations, loading } = useAppSelector(state => state.scanQRKidGuardianSlice);
-  const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
+  const { data: kidGroups = [] } = useGetKidGroupsQuery();
+  const [createKidRegistration] = useCreateKidRegistrationMutation();
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
@@ -56,11 +57,6 @@ const ScannerView = () => {
   const [pendingNavigation, setPendingNavigation] = useState<'back' | 'home' | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [processingStep, setProcessingStep] = useState(t('kidRegistration:scanner.saving_records'));
-
-  // Load special groups (Yo Soy Iglekids)
-  useEffect(() => {
-    dispatch(GetKidGroups({ type: KidGroupType.SPECIAL }));
-  }, [dispatch]);
 
   // Clean on unmount
   useEffect(() => {
@@ -137,8 +133,8 @@ const ScannerView = () => {
   };
 
   const specialGroup = useMemo(
-    () => kidGroupSlice.data?.find((g: any) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroupSlice.data?.[0],
-    [kidGroupSlice.data]
+    () => kidGroups.find((g) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroups[0],
+    [kidGroups]
   );
   const specialGroupName = specialGroup?.name || 'Servidor Infantil';
 
@@ -168,6 +164,11 @@ const ScannerView = () => {
       setIsProcessing(true);
       setProcessingStep(t('kidRegistration:scanner.saving_records'));
 
+      if (!currentMeeting?.id) {
+        toast.error('No hay una reunión activa seleccionada.');
+        return;
+      }
+
       const promises = selectedKids.map(kidId => {
         const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
         const kid = relation?.kid || relation;
@@ -182,12 +183,13 @@ const ScannerView = () => {
           finalObs = obsType;
         }
 
-        return dispatch(CreateKidRegistration({ 
+        return createKidRegistration({ 
           kidId, 
           kidGuardianId: kidGuardian.id,
           kidGroupId,
-          observation: finalObs
-        })).unwrap();
+          observation: finalObs,
+          churchMeetingId: currentMeeting.id,
+        }).unwrap();
       });
       
       const results: any[] = await Promise.all(promises);
@@ -199,7 +201,7 @@ const ScannerView = () => {
           const kid = relation?.kid || relation;
           const isVol = volunteerKids.includes(kidId);
           const kidGroupId = isVol && specialGroup?.id ? specialGroup.id : (kid?.kidGroup?.id || '');
-          const group = kidGroupSlice.data?.find((g: any) => g.id === kidGroupId);
+          const group = kidGroups.find((g) => g.id === kidGroupId);
           const obsType = observationTypes[kidId] || 'NONE';
           const finalObs = obsType === 'OTHER' ? customObservations[kidId]?.trim() : (obsType !== 'NONE' ? obsType : undefined);
           const regRes = results[i];
@@ -447,13 +449,13 @@ const ScannerView = () => {
                     <div key={kid.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
                       <div 
                         onClick={() => setExpandedKid(isExpanded ? null : kid.id)}
-                        className="p-4 flex justify-between items-center cursor-pointer bg-white"
+                        className="p-4 flex justify-between items-center cursor-pointer bg-white hover:bg-gray-50/80 active:bg-gray-100 transition-colors select-none"
                       >
                         <h3 className="font-bold text-gray-800">
                           {capitalizeWords(`${kid.firstName} ${kid.lastName}`)}
                           <span className="block text-xs text-gray-500 font-medium mt-0.5">{displayedGroupName}</span>
                         </h3>
-                        <ChevronRight size={20} className={clsx("text-gray-400 transition-transform duration-300", isExpanded && "rotate-90")} />
+                        <ChevronDown size={20} className={clsx("text-gray-400 transition-transform duration-300", isExpanded && "rotate-180 text-primary")} />
                       </div>
                       
                       <div className={clsx(

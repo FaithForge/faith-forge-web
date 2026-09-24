@@ -337,6 +337,7 @@ export interface ICreateKidGuardian {
 export interface ICreateKidRegistration {
   kidId: string;
   kidGuardianId: string;
+  churchMeetingId: string;
   kidGroupId: string;
   observation?: string;
   skipServerPrint?: boolean;

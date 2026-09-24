@@ -1,35 +1,10 @@
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
-import { ICreateKid, IUpdateKid } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { parseEntitySearchParams } from '@/libs/utils/text';
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { AxiosError } from 'axios';
 import { RootState } from '../../store';
 
-export const GetKid = createAsyncThunk(
-  'kid-church/GetKid',
-  async (payload: { id: string }, { getState }) => {
-    const state = getState() as RootState;
-    const { token } = state.authSlice;
-    const churchMeeting = state.churchMeetingSlice;
-    const response = (
-      await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.GET,
-        url: `/kid/${payload.id}`,
-        options: {
-          params: {
-            registrationChurchMeetingId: churchMeeting.current?.id,
-          },
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      })
-    ).data;
-
-    return response;
-  },
-);
 
 export const GetKids = createAsyncThunk(
   'kid-church/GetKids',
@@ -93,75 +68,4 @@ export const GetMoreKids = createAsyncThunk(
   },
 );
 
-export const CreateKid = createAsyncThunk(
-  'kid-church/CreateKid',
-  async (payload: ICreateKid, { getState, rejectWithValue }) => {
-    const state = getState() as RootState;
-    const { token } = state.authSlice;
-
-    try {
-      const response = (
-        await microserviceApiRequest({
-          microservice: MS.KidChurch,
-          method: HttpRequestMethod.POST,
-          url: `/kid`,
-          options: {
-            data: {
-              ...payload,
-            },
-            headers: { Authorization: `Bearer ${token}` },
-          },
-        })
-      ).data;
-
-      return response;
-    } catch (err) {
-      const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Internal Error');
-    }
-  },
-);
-
-export const UpdateKid = createAsyncThunk(
-  'kid-church/UpdateKid',
-  async (payload: { id: string; updateKid: IUpdateKid }, { getState }) => {
-    const { id, updateKid } = payload;
-    const state = getState() as RootState;
-    const { token } = state.authSlice;
-
-    await microserviceApiRequest({
-      microservice: MS.KidChurch,
-      method: HttpRequestMethod.PUT,
-      url: `/kid/${id}`,
-      options: {
-        data: {
-          ...updateKid,
-        },
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    });
-
-    return updateKid;
-  },
-);
-
-export const DeleteKid = createAsyncThunk(
-  'kid-church/DeleteKid',
-  async (payload: { id: string; targetKidId?: string }, { getState }) => {
-    const state = getState() as RootState;
-    const { token } = state.authSlice;
-    const response = (
-      await microserviceApiRequest({
-        microservice: MS.KidChurch,
-        method: HttpRequestMethod.DELETE,
-        url: `/kid/${payload.id}`,
-        options: {
-          params: payload.targetKidId ? { targetKidId: payload.targetKidId } : undefined,
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      })
-    ).data;
-
-    return response;
-  },
-);
+// Note: GetKid, CreateKid, UpdateKid, and DeleteKid have been migrated to kidChurchApi RTK Query endpoints.

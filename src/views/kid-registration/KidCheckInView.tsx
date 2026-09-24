@@ -1,10 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetKid, DeleteKid } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
-import { DeleteKidGuardianRelation } from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
-import { GetKidGroups } from '@/libs/state/redux/thunks/kid-church/kid-group.thunk';
-import { CreateKidRegistration, ReprintKidRegistration, RemoveKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import { useGetKidQuery, useDeleteKidMutation, useCreateKidRegistrationMutation, useReprintKidRegistrationMutation, useDeleteKidRegistrationMutation } from '@/libs/state/redux/api/kidChurchApi';
+import { useDeleteKidGuardianRelationMutation, useGetKidGroupsQuery } from '@/libs/state/redux/api/kidChurchApi';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
 import { Loader2, ArrowLeft, QrCode, Printer, Trash2, Pencil, Cake, ShieldAlert, HeartPulse, FileText, MoreVertical, UserPlus, UserCheck, ArrowLeftRight, AlertTriangle, Eye } from 'lucide-react';
@@ -42,19 +40,24 @@ const KidCheckInView = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const [deleteGuardianRelation] = useDeleteKidGuardianRelationMutation();
+  const [createKidRegistration] = useCreateKidRegistrationMutation();
+  const [reprintKidRegistration] = useReprintKidRegistrationMutation();
+  const [deleteKidRegistration] = useDeleteKidRegistrationMutation();
+  const [deleteKid] = useDeleteKidMutation();
   const guardianTerm = useKidsTerm('guardian');
   const guardiansTerm = useKidsTerm('guardians');
 
-  const { current: kid, loading } = useAppSelector(state => state.kidSlice);
-  const kidGroupSlice = useAppSelector(state => state.kidGroupSlice);
-  const printerModeSlice = useAppSelector(state => state.printerModeSlice);
-  const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
-  const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
-  const user = useAppSelector(state => state.authSlice.user);
-  const currentRole = useAppSelector(state => state.authSlice.currentRole);
+  const { data: kid, isLoading: loading, refetch: refetchKid } = useGetKidQuery({ id: id || '' }, { skip: !id });
+  const { data: kidGroups = [] } = useGetKidGroupsQuery();
+
+  const printerModeSlice = useAppSelector((state) => state.printerModeSlice);
+  const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
+  const user = useAppSelector((state) => state.authSlice.user);
+  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const activeVolunteerRole = useAppSelector(
-    state => state.volunteerContextSlice.activeVolunteerRole
+    (state) => state.volunteerContextSlice.activeVolunteerRole
   );
   const userRoles = (user?.roles as AppRole[]) || [];
 
@@ -68,7 +71,8 @@ const KidCheckInView = () => {
     currentRole === UserRole.KID_REGISTER_ADMIN ||
     activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
 
-  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor } = useChurchMeetingStatus();
+  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor } =
+    useChurchMeetingStatus();
 
   const [selectedGuardian, setSelectedGuardian] = useState<string>('');
   const [observationType, setObservationType] = useState<string>('NONE');
@@ -92,13 +96,7 @@ const KidCheckInView = () => {
     setImageError(false);
   }, [kid?.photoUrl]);
 
-  // Always fetch detailed child info, special groups, and current meeting registration
-  useEffect(() => {
-    if (id) {
-      dispatch(GetKid({ id }));
-      dispatch(GetKidGroups({ type: KidGroupType.SPECIAL }));
-    }
-  }, [id, dispatch]);
+  // Fetch kid data via RTK Query hook; no manual dispatch needed
 
   const getTranslatedRelation = (code: string) => {
     if (!code) return guardianTerm;
@@ -232,7 +230,7 @@ const KidCheckInView = () => {
       return;
     }
 
-    const specialGroup = kidGroupSlice.data?.find((g: any) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroupSlice.data?.[0];
+    const specialGroup = kidGroups.find((g) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroups[0];
     const targetGroupId = isKidVolunteer && specialGroup?.id ? specialGroup.id : kid.kidGroup.id;
 
     let finalObservation = '';
@@ -242,32 +240,38 @@ const KidCheckInView = () => {
       finalObservation = observationType;
     }
 
+    if (!currentMeeting?.id) {
+      toast.error('No hay una reunión activa seleccionada.');
+      return;
+    }
+
     try {
       setIsProcessing(true);
       setProcessingStep('Guardando registro...');
-      const regResponse: any = await dispatch(CreateKidRegistration({
+      const registrationResponse = (await createKidRegistration({
         kidId: kid.id,
         observation: finalObservation || undefined,
         kidGuardianId: selectedGuardian,
-        kidGroupId: targetGroupId
-      })).unwrap();
+        kidGroupId: targetGroupId,
+        churchMeetingId: currentMeeting.id,
+      }).unwrap()) as { securityCode?: string; code?: string } | undefined;
 
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
         setProcessingStep('Imprimiendo etiqueta Bluetooth...');
-        const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
-        const group = kidGroupSlice.data?.find((g: any) => g.id === targetGroupId);
-        const currentReg = kid.currentKidRegistration as any;
+        const guardian = relationsList.find((g) => g.id === selectedGuardian || g.guardianId === selectedGuardian);
+        const group = kidGroups.find((g) => g.id === targetGroupId);
+        const currentReg = kid.currentKidRegistration as { securityCode?: string } | undefined;
         await bluetoothPrinter.printKidTicket({
           kidName: `${kid.firstName} ${kid.lastName}`.trim(),
           kidGroup: group?.name || kid.kidGroup?.name || 'General',
-          securityCode: regResponse?.securityCode || regResponse?.code || currentReg?.securityCode,
+          securityCode: registrationResponse?.securityCode || registrationResponse?.code || currentReg?.securityCode,
           guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : undefined,
           guardianPhone: guardian?.displayPhone || guardian?.rawPhone,
           observation: finalObservation || undefined,
           campusName: currentCampus?.name,
           meetingName: currentMeeting?.name,
           isVolunteer: isKidVolunteer,
-          gender: kid.gender || (kid as any).sex,
+          gender: kid.gender,
         });
         toast.success("¡Etiqueta impresa por Bluetooth con éxito!");
       } else {
@@ -314,7 +318,7 @@ const KidCheckInView = () => {
     try {
       setIsProcessing(true);
       setProcessingStep(t('kidRegistration:check_in.reprint_requesting'));
-      await dispatch(ReprintKidRegistration({ id: kid.currentKidRegistration.id })).unwrap();
+      await reprintKidRegistration({ id: kid.currentKidRegistration.id }).unwrap();
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
         setProcessingStep(t('kidRegistration:check_in.reprint_printing_bluetooth'));
         const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
@@ -345,7 +349,7 @@ const KidCheckInView = () => {
   const handleDelete = async () => {
     if (!kid?.currentKidRegistration) return;
     try {
-      await dispatch(RemoveKidRegistration({ id: kid.currentKidRegistration.id })).unwrap();
+      await deleteKidRegistration({ id: kid.currentKidRegistration.id }).unwrap();
       toast.success(t('kidRegistration:check_in.delete_registration_success'));
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
@@ -356,7 +360,7 @@ const KidCheckInView = () => {
   const handleDeleteKid = async (targetKidId?: string) => {
     if (!kid?.id) return;
     try {
-      await dispatch(DeleteKid({ id: kid.id, targetKidId })).unwrap();
+      await deleteKid({ id: kid.id, targetKidId }).unwrap();
       toast.success(
         targetKidId
           ? 'Niño eliminado e información transferida correctamente'
@@ -384,31 +388,26 @@ const KidCheckInView = () => {
     const guardianName = guardianRelationToDelete.fullName;
 
     try {
-      const actionResult = await dispatch(
-        DeleteKidGuardianRelation({
-          kidId: kid.id,
-          guardianId: targetGuardianId,
-        })
-      );
+      await deleteGuardianRelation({
+        kidId: kid.id,
+        guardianId: targetGuardianId,
+      }).unwrap();
 
-      if (DeleteKidGuardianRelation.fulfilled.match(actionResult)) {
-        toast.success(`Relación con ${guardianName || `el/la ${guardianTerm.toLowerCase()}`} eliminada con éxito`);
-        if (selectedGuardian === targetGuardianId) {
-          setSelectedGuardian('');
-        }
-        await dispatch(GetKid({ id: kid.id }));
-      } else {
-        const errorPayload: any = actionResult.payload;
-        toast.error(errorPayload?.message || errorPayload?.error || `Error al eliminar la relación con ${guardianTerm.toLowerCase()}`);
+      toast.success(`Relación con ${guardianName || `el/la ${guardianTerm.toLowerCase()}`} eliminada con éxito`);
+      if (selectedGuardian === targetGuardianId) {
+        setSelectedGuardian('');
       }
-    } catch {
-      toast.error(`Error de conexión al eliminar la relación con ${guardianTerm.toLowerCase()}`);
+      await refetchKid();
+    } catch (err: unknown) {
+      const errorResponse = err as { data?: { message?: string }; message?: string };
+      const msg = errorResponse?.data?.message || errorResponse?.message || `Error al eliminar la relación con ${guardianTerm.toLowerCase()}`;
+      toast.error(msg);
     } finally {
       setGuardianRelationToDelete(null);
     }
   };
 
-  const specialGroup = kidGroupSlice.data?.find((g: any) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroupSlice.data?.[0];
+  const specialGroup = kidGroups.find((g) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroups[0];
   const specialGroupName = specialGroup?.name || 'Servidor Infantil';
 
   const displayedGroupName = isRegistered
@@ -483,6 +482,8 @@ const KidCheckInView = () => {
     </div>
   );
 
+  const kidData = kid;
+
   return (
     <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader
@@ -492,9 +493,9 @@ const KidCheckInView = () => {
       />
 
       <div className="p-4 sm:p-6 max-w-4xl mx-auto w-full pb-16 animate-in fade-in slide-in-from-right-4 duration-300">
-        {(!kid || kid.id !== id || (loading && !kid.relations)) && <KidCheckInSkeleton />}
+        {(!kidData || kidData.id !== id || (loading && !kidData.relations)) && <KidCheckInSkeleton />}
 
-        {kid && kid.id === id && (!loading || !!kid.relations) && (
+        {kidData && kidData.id === id && (!loading || !!kidData.relations) && (
           <>
             {/* Banner de cumpleaños */}
             {isBirthdayToday && (

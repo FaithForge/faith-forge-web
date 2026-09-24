@@ -64,7 +64,7 @@ export const ClearCacheDrawer: React.FC<ClearCacheDrawerProps> = ({
       }
       if (scope === 'services' || scope === 'all') {
         invalidateHttpCachePattern('/church-meeting');
-        invalidateHttpCachePattern('/church-campuses');
+        invalidateHttpCachePattern('/church-campus');
       }
       if (scope === 'registrations' || scope === 'all') {
         invalidateHttpCachePattern('/kid-groups');

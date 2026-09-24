@@ -15,10 +15,24 @@ import {
   KidAttendanceFlowModeEnum,
   KidAttendanceStatusEnum,
   KidGroupType,
+  KidGuardianRelationCodeEnum,
 } from '@/libs/models';
 
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { baseApi } from './baseApi';
+
+export interface IUpdateKidGuardian {
+  id: string;
+  phone: string;
+  dialCodePhone?: string;
+  relation?: KidGuardianRelationCodeEnum | string;
+  kidId?: string;
+}
+
+export interface IDeleteKidGuardianRelation {
+  kidId: string;
+  guardianId: string;
+}
 
 export interface GetKidGroupsArgs {
   type?: KidGroupType;
@@ -58,15 +72,11 @@ export interface GetKidArgs {
 }
 
 export interface GetKidGuardianArgs {
-  nationalId?: string;
-  phone?: string;
+  nationalId: string;
 }
 
 export interface CreateKidRegistrationApiPayload extends ICreateKidRegistration {
-  churchId?: string;
-  churchMeetingId?: string;
   churchPrinterId?: string;
-  log?: string;
 }
 
 export interface GetKidLiveTrackingArgs {
@@ -216,11 +226,10 @@ export const kidChurchApi = baseApi.injectEndpoints({
     }),
 
     getKidGuardian: builder.query<IKidGuardian, GetKidGuardianArgs>({
-      query: (params) => ({
+      query: ({ nationalId }) => ({
         microservice: MicroserviceEnum.KidChurch,
-        url: '/kid-guardian',
+        url: `/kid-guardian/${encodeURIComponent(nationalId)}`,
         method: HttpRequestMethod.GET,
-        params,
       }),
       providesTags: (result) =>
         result?.id ? [{ type: 'KidGuardian', id: result.id }] : [{ type: 'KidGuardian', id: 'CURRENT' }],
@@ -234,7 +243,56 @@ export const kidChurchApi = baseApi.injectEndpoints({
         data: payload,
         queueIfOffline: true,
       }),
-      invalidatesTags: [{ type: 'KidGuardian', id: 'CURRENT' }, { type: 'Kid', id: 'LIST' }],
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'KidGuardian', id: 'CURRENT' },
+        { type: 'Kid', id: 'LIST' },
+        ...(arg.kidId ? [{ type: 'Kid' as const, id: arg.kidId }] : []),
+      ],
+    }),
+
+    updateKidGuardian: builder.mutation<unknown, IUpdateKidGuardian>({
+      query: ({ id, phone, dialCodePhone, relation, kidId }) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: `/kid-guardian/${id}`,
+        method: HttpRequestMethod.PUT,
+        data: {
+          phone,
+          dialCodePhone,
+          relation,
+          kidId,
+        },
+        queueIfOffline: true,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'KidGuardian', id: arg.id },
+        { type: 'KidGuardian', id: 'CURRENT' },
+        ...(arg.kidId ? [{ type: 'Kid' as const, id: arg.kidId }] : []),
+      ],
+    }),
+
+    deleteKidGuardianRelation: builder.mutation<unknown, IDeleteKidGuardianRelation>({
+      query: ({ kidId, guardianId }) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: `/kid/${kidId}/guardian/${guardianId}`,
+        method: HttpRequestMethod.DELETE,
+        queueIfOffline: true,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'Kid', id: arg.kidId },
+        { type: 'KidGuardian', id: arg.guardianId },
+      ],
+    }),
+
+    uploadQRCodeImage: builder.mutation<string, FormData>({
+      query: (formData) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/user/upload-qr-code',
+        method: HttpRequestMethod.POST,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
     }),
 
     createKidRegistration: builder.mutation<unknown, CreateKidRegistrationApiPayload>({
@@ -253,8 +311,22 @@ export const kidChurchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    deleteKidRegistration: builder.mutation<void, string>({
-      query: (id) => ({
+    deleteKid: builder.mutation<void, { id: string; targetKidId?: string }>({
+      query: ({ id, targetKidId }) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: `/kid/${id}`,
+        method: HttpRequestMethod.DELETE,
+        params: targetKidId ? { targetKidId } : undefined,
+        queueIfOffline: true,
+      }),
+      invalidatesTags: [
+        { type: 'Kid', id: 'LIST' },
+        { type: 'KidRegistered', id: 'LIST' },
+      ],
+    }),
+
+    deleteKidRegistration: builder.mutation<void, { id: string }>({
+      query: ({ id }) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: `/kid-registration/${id}`,
         method: HttpRequestMethod.DELETE,
@@ -266,6 +338,22 @@ export const kidChurchApi = baseApi.injectEndpoints({
         { type: 'KidGroup', id: 'LIST' },
         { type: 'Kid', id: 'LIST' },
       ],
+    }),
+
+    reprintKidRegistration: builder.mutation<
+      unknown,
+      { id: string; churchPrinterId?: string; skipServerPrint?: boolean }
+    >({
+      query: ({ id, churchPrinterId, skipServerPrint }) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid-registration/reprint',
+        method: HttpRequestMethod.POST,
+        data: {
+          id,
+          churchPrinterId,
+          skipServerPrint,
+        },
+      }),
     }),
 
     getMyGuardianAssignedKids: builder.query<IKidGuardianAssignedKidsResponse, void>({
@@ -423,11 +511,16 @@ export const {
   useLazyGetKidQuery,
   useCreateKidMutation,
   useUpdateKidMutation,
+  useDeleteKidMutation,
   useGetKidGuardianQuery,
   useLazyGetKidGuardianQuery,
   useCreateKidGuardianMutation,
+  useUpdateKidGuardianMutation,
+  useDeleteKidGuardianRelationMutation,
+  useUploadQRCodeImageMutation,
   useCreateKidRegistrationMutation,
   useDeleteKidRegistrationMutation,
+  useReprintKidRegistrationMutation,
   useGetMyGuardianAssignedKidsQuery,
   useLazyGetMyGuardianAssignedKidsQuery,
   useSendUrgentGuardianNoticeMutation,

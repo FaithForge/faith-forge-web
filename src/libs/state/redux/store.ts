@@ -23,11 +23,6 @@ import volunteerSlice from './slices/church/volunteer.slice';
 import volunteerApplicationSlice from './slices/church/volunteerApplication.slice';
 import volunteerAttendanceSlice from './slices/church/volunteerAttendance.slice';
 import volunteerContextSlice from './slices/church/volunteerContext.slice';
-import kidGroupRegisteredSlice from './slices/kid-church/kid-group-registered.slice';
-import kidGroupSlice from './slices/kid-church/kid-group.slice';
-import kidGuardianSlice from './slices/kid-church/kid-guardian.slice';
-import kidMedicalConditionSlice from './slices/kid-church/kid-medical-condition.slice';
-import kidRegistrationSlice from './slices/kid-church/kid-registration.slice';
 import kidSlice from './slices/kid-church/kid.slice';
 import scanQRKidGuardianSlice from './slices/kid-church/scan-code-kid-registration.slice';
 import accountSlice from './slices/user/account.slice';
@@ -47,14 +42,9 @@ const reducers = combineReducers({
   volunteerApplicationSlice,
   volunteerAttendanceSlice,
   volunteerContextSlice,
-  kidGroupSlice,
-  kidMedicalConditionSlice,
-  kidRegistrationSlice,
   kidSlice,
-  kidGuardianSlice,
   authSlice,
   accountSlice,
-  kidGroupRegisteredSlice,
   editUserSlice,
   userSlice,
   scanQRKidGuardianSlice,

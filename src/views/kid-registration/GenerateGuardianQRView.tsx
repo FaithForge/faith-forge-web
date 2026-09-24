@@ -17,12 +17,11 @@ import {
 import { FaWhatsapp } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { 
-  GetKidGuardian, 
-  UploadQRCodeImage 
-} from '@/libs/state/redux/thunks/kid-church/kid-guardian.thunk';
-import { cleanCurrentKidGuardian } from '@/libs/state/redux/slices/kid-church/kid-guardian.slice';
+  useLazyGetKidGuardianQuery, 
+  useUploadQRCodeImageMutation 
+} from '@/libs/state/redux/api/kidChurchApi';
+import { IKidGuardian } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Button from '@/components/ui/Button';
@@ -33,23 +32,18 @@ import { useTranslation } from 'react-i18next';
 const GenerateGuardianQRView: React.FC = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
+  const [triggerGetGuardian, { isFetching: guardianLoading }] = useLazyGetKidGuardianQuery();
+  const [uploadQRCode] = useUploadQRCodeImageMutation();
   const kidsModuleName = useKidsTerm('module_alias');
   const guardianTerm = useKidsTerm('guardian');
 
+  const [guardian, setGuardian] = useState<IKidGuardian | null>(null);
+  const [guardianError, setGuardianError] = useState<string | null>(null);
   const [nationalIdQuery, setNationalIdQuery] = useState('');
   const [hasSearched, setHasSearched] = useState(false);
   const [isGeneratingUrl, setIsGeneratingUrl] = useState(false);
   const [whatsappUrl, setWhatsappUrl] = useState<string | undefined>(undefined);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | undefined>(undefined);
-
-  const { current: guardian, loading: guardianLoading, error: guardianError } = useAppSelector(
-    (state) => state.kidGuardianSlice,
-  );
-
-  useEffect(() => {
-    dispatch(cleanCurrentKidGuardian());
-  }, [dispatch]);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -61,7 +55,20 @@ const GenerateGuardianQRView: React.FC = () => {
     setHasSearched(true);
     setWhatsappUrl(undefined);
     setQrCodeUrl(undefined);
-    dispatch(GetKidGuardian(cleanId));
+    setGuardianError(null);
+    try {
+      const data = await triggerGetGuardian({ nationalId: cleanId }).unwrap();
+      if (data) {
+        setGuardian(data);
+      } else {
+        setGuardian(null);
+        setGuardianError('No se encontró acudiente con este documento');
+      }
+    } catch (err: unknown) {
+      setGuardian(null);
+      const errorResponse = err as { data?: { message?: string }; message?: string };
+      setGuardianError(errorResponse?.data?.message || errorResponse?.message || 'Error al buscar acudiente');
+    }
   };
 
   useEffect(() => {
@@ -83,7 +90,7 @@ const GenerateGuardianQRView: React.FC = () => {
             formData.append('file', blob, `qr-${guardian.id}.png`);
             formData.append('qrCodeValue', guardian.id);
 
-            const photoUrl = (await dispatch(UploadQRCodeImage({ formData })).unwrap()) as string;
+            const photoUrl = (await uploadQRCode(formData).unwrap()) as string;
 
             const dialDigits = (guardian.dialCodePhone || '+57').replace('+', '');
             const phoneDigits = (guardian.phone || '').replace(/\D/g, '');
@@ -116,7 +123,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
     };
 
     generateWhatsappUrl();
-  }, [guardian, dispatch]);
+  }, [guardian, kidsModuleName, guardianTerm, uploadQRCode]);
 
   const downloadCode = () => {
     const canvas: HTMLCanvasElement | null = document.getElementById(
@@ -143,7 +150,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
   };
 
   const handleFinish = () => {
-    dispatch(cleanCurrentKidGuardian());
+    setGuardian(null);
     navigate(APP_ROUTES.kidRegistration.root);
   };
 
