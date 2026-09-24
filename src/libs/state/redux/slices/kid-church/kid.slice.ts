@@ -87,11 +87,48 @@ const kidSlice = createSlice({
         kidChurchApi.endpoints.createKid.matchFulfilled,
         kidChurchApi.endpoints.updateKid.matchFulfilled,
         kidChurchApi.endpoints.deleteKid.matchFulfilled,
-        kidChurchApi.endpoints.createKidRegistration.matchFulfilled,
-        kidChurchApi.endpoints.deleteKidRegistration.matchFulfilled,
       ),
       (state) => {
         state.needsRefresh = true;
+      },
+    );
+    builder.addMatcher(
+      kidChurchApi.endpoints.createKidRegistration.matchFulfilled,
+      (state, action) => {
+        state.needsRefresh = true;
+        const targetKidId = action.meta.arg.originalArgs.kidId;
+        const resultData = action.payload as any;
+        const kidToUpdate = state.data.find((k) => k.id === targetKidId);
+        if (kidToUpdate) {
+          kidToUpdate.currentKidRegistration = {
+            id: resultData?.id || 'temp-registered',
+            date: new Date().toISOString(),
+            guardianId: action.meta.arg.originalArgs.kidGuardianId,
+            groupId: action.meta.arg.originalArgs.kidGroupId,
+            churchMeetingId: action.meta.arg.originalArgs.churchMeetingId,
+            observation: action.meta.arg.originalArgs.observation,
+          } as any;
+        }
+        if (state.current && state.current.id === targetKidId) {
+          state.current.currentKidRegistration = kidToUpdate?.currentKidRegistration;
+        }
+      },
+    );
+    builder.addMatcher(
+      kidChurchApi.endpoints.deleteKidRegistration.matchFulfilled,
+      (state, action) => {
+        state.needsRefresh = true;
+        const targetKidId = action.meta.arg.originalArgs.kidId;
+        const regId = action.meta.arg.originalArgs.id;
+        const kidToUpdate = state.data.find(
+          (k) => (targetKidId && k.id === targetKidId) || k.currentKidRegistration?.id === regId,
+        );
+        if (kidToUpdate) {
+          kidToUpdate.currentKidRegistration = undefined;
+        }
+        if (state.current && ((targetKidId && state.current.id === targetKidId) || state.current.currentKidRegistration?.id === regId)) {
+          state.current.currentKidRegistration = undefined;
+        }
       },
     );
     builder.addMatcher(

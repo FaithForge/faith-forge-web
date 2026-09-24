@@ -303,11 +303,12 @@ export const kidChurchApi = baseApi.injectEndpoints({
         data: payload,
         queueIfOffline: true,
       }),
-      invalidatesTags: [
+      invalidatesTags: (_result, _error, arg) => [
         { type: 'KidRegistered', id: 'LIST' },
         { type: 'KidAttendanceTracking', id: 'LIST' },
         { type: 'KidGroup', id: 'LIST' },
         { type: 'Kid', id: 'LIST' },
+        ...(arg.kidId ? [{ type: 'Kid' as const, id: arg.kidId }] : []),
       ],
     }),
 
@@ -319,24 +320,26 @@ export const kidChurchApi = baseApi.injectEndpoints({
         params: targetKidId ? { targetKidId } : undefined,
         queueIfOffline: true,
       }),
-      invalidatesTags: [
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'Kid', id: arg.id },
         { type: 'Kid', id: 'LIST' },
         { type: 'KidRegistered', id: 'LIST' },
       ],
     }),
 
-    deleteKidRegistration: builder.mutation<void, { id: string }>({
+    deleteKidRegistration: builder.mutation<void, { id: string; kidId?: string }>({
       query: ({ id }) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: `/kid-registration/${id}`,
         method: HttpRequestMethod.DELETE,
         queueIfOffline: true,
       }),
-      invalidatesTags: [
+      invalidatesTags: (_result, _error, arg) => [
         { type: 'KidRegistered', id: 'LIST' },
         { type: 'KidAttendanceTracking', id: 'LIST' },
         { type: 'KidGroup', id: 'LIST' },
         { type: 'Kid', id: 'LIST' },
+        ...(arg.kidId ? [{ type: 'Kid' as const, id: arg.kidId }] : []),
       ],
     }),
 

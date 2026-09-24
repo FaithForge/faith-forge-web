@@ -48,10 +48,6 @@ const KidCheckInView = () => {
   const guardianTerm = useKidsTerm('guardian');
   const guardiansTerm = useKidsTerm('guardians');
 
-  const { data: kid, isLoading: loading, refetch: refetchKid } = useGetKidQuery({ id: id || '' }, { skip: !id });
-  const { data: kidGroups = [] } = useGetKidGroupsQuery();
-
-  const printerModeSlice = useAppSelector((state) => state.printerModeSlice);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
   const user = useAppSelector((state) => state.authSlice.user);
@@ -59,6 +55,14 @@ const KidCheckInView = () => {
   const activeVolunteerRole = useAppSelector(
     (state) => state.volunteerContextSlice.activeVolunteerRole
   );
+
+  const { data: kid, isLoading: loading, refetch: refetchKid } = useGetKidQuery(
+    { id: id || '', registrationChurchMeetingId: currentMeeting?.id },
+    { skip: !id }
+  );
+  const { data: kidGroups = [] } = useGetKidGroupsQuery();
+
+  const printerModeSlice = useAppSelector((state) => state.printerModeSlice);
   const userRoles = (user?.roles as AppRole[]) || [];
 
   const canViewCreatorInfo =
@@ -349,7 +353,7 @@ const KidCheckInView = () => {
   const handleDelete = async () => {
     if (!kid?.currentKidRegistration) return;
     try {
-      await deleteKidRegistration({ id: kid.currentKidRegistration.id }).unwrap();
+      await deleteKidRegistration({ id: kid.currentKidRegistration.id, kidId: kid.id }).unwrap();
       toast.success(t('kidRegistration:check_in.delete_registration_success'));
       navigate(APP_ROUTES.kidRegistration.root);
     } catch (err) {
