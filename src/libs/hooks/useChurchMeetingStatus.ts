@@ -4,15 +4,8 @@ import {
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
 } from '@/libs/common-types/constants/copy';
 import { IChurchCampus, IChurchMeeting, IChurchPrinter } from '@/libs/models/Church';
-import { VolunteerRole } from '@/libs/models/Volunteer';
 import { useAppSelector } from '@/libs/state/redux/hooks';
-import {
-  AppRole,
-  IsAdmin,
-  IsAdminKidChurch,
-  IsAdminKidRegisterChurch,
-  IsSupervisorRegisterKidChurch,
-} from '@/libs/utils/auth';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
@@ -112,11 +105,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
   const currentPrinter = useAppSelector((state) => state.churchPrinterSlice.current);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
-  const user = useAppSelector((state) => state.authSlice.user);
-  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const activeVolunteerRole = useAppSelector(
-    (state) => state.volunteerContextSlice.activeVolunteerRole,
-  );
+  const { isKidChurchRole, isAreaCoordinator, isSupervisor } = usePermissions();
+  const isAdmin = isAreaCoordinator;
 
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
@@ -129,24 +119,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     return () => clearInterval(timer);
   }, []);
 
-  const isKidChurchRole =
-    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
-    activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR ||
-    currentRole === 'MINISTRY_ADMIN' ||
-    currentRole === 'KID_GROUP_ADMIN' ||
-    currentRole === 'KID_GROUP_SUPERVISOR' ||
-    currentRole === 'KID_GROUP_USER';
-
   const printerMode = useAppSelector((state) => state.printerModeSlice?.mode || 'NETWORK');
   const bluetoothDevice = useAppSelector((state) => state.printerModeSlice?.bluetoothDevice);
-
-  const userRoles = (user?.roles as AppRole[]) || [];
-  const activeRoles = currentRole ? Array.from(new Set([...userRoles, currentRole])) : userRoles;
-  const isAdmin =
-    IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
-
-  // Supervisor or above: can delete registrations and see the registration log
-  const isSupervisor = isAdmin || IsSupervisorRegisterKidChurch(activeRoles);
 
   let isMeetingValid = true;
   let meetingErrorMsg = '';

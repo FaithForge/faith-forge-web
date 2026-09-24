@@ -30,7 +30,6 @@ import {
   ShieldCheck,
   Award,
   Inbox,
-  Calendar,
 } from 'lucide-react';
 import clsx from 'clsx';
 

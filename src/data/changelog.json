@@ -7,6 +7,7 @@
     "title": "Mejoras de estabilidad, calidad y navegación de roles",
     "changes": [
       "Mayor claridad en el selector de roles para servidores y voluntarios, mostrando únicamente las funciones operativas activas",
+      "Mayor estabilidad y consistencia en el acceso a las funciones del ministerio de niños y módulos de registro",
       "Mayor estabilidad y confiabilidad en la sincronización cuando no hay conexión a internet",
       "Optimizaciones de rendimiento y robustez general en toda la aplicación"
     ]

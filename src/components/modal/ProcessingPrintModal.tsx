@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Printer, Loader2, Bluetooth, CheckCircle2 } from 'lucide-react';
+import { Printer, Loader2, Bluetooth } from 'lucide-react';
 
 interface ProcessingPrintModalProps {
   open: boolean;

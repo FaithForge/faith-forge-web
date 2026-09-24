@@ -2,7 +2,6 @@ import {
   IPublicVolunteerCatalog,
   IVolunteerApplication,
   PaginationResponse,
-  VolunteerApplicationStatus,
 } from '@/libs/models';
 import {
   ApproveVolunteerApplication,

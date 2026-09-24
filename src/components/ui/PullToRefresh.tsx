@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef } from 'react';
 import { Loader2, ArrowDown } from 'lucide-react';
 import clsx from 'clsx';
 

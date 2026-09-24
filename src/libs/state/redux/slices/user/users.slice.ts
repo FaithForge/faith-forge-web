@@ -1,4 +1,4 @@
-import { IApiErrorResponse, IUpdateUser, IUser, IUsers } from '@/libs/models';
+import { IUser, IUsers } from '@/libs/models';
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { PayloadAction, createSlice } from '@reduxjs/toolkit';
 import {

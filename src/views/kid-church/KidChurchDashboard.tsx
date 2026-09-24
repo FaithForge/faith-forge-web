@@ -1,13 +1,12 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Search, Users, AlertCircle, Sparkles, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Users, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import Cell from '@/components/ui/Cell';
 import Alert from '@/components/ui/Alert';
 import Input from '@/components/ui/Input';
-import TagKidGroup from '@/components/ui/TagKidGroup';
 import KidDetailsDrawer from '@/components/modal/KidDetailsDrawer';
 import {
   useGetKidGroupsQuery,

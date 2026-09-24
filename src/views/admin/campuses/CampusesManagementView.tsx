@@ -9,9 +9,7 @@ import {
   CheckCircle2,
   XCircle,
   Sparkles,
-  Layers,
   Inbox,
-  ArrowUpDown,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';

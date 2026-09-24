@@ -24,6 +24,19 @@
   - **Nivel Iglesia**: Términos institucionales (`meeting`, `campus`, `volunteer`, `small_group`).
   - **Nivel Ministerio**: Scoped por `MinistryType` (`GENERAL` vs `KIDS`). En el contexto de niños, el término predeterminado es `Maestro(a)` (o configurable por la iglesia a `Servidor(a)`, `Tía/Tío`, etc.), y la estación de registro es configurable (ej. `Regikids` / `Registro de niños`). En ministerios generales se usa `Servidor`.
   - **Nivel Área de Servicio**: Scoped por `MinistryAreaScope`.
+- **Sentencias `if` de una sola línea sin `{ }` innecesario**:
+  - En guard clauses o sentencias simples de una sola línea (ej. `return`, `throw`, asignación simple o salida rápida), omitir las llaves `{ }`:
+    ```ts
+    // Correcto
+    if (!open) return null;
+    if (isServidor) return;
+
+    // Incorrecto
+    if (!open) {
+      return null;
+    }
+    ```
+  - Las llaves `{ }` se reservan estrictamente para bloques multilínea o bifurcaciones `else` / `else if`.
 
 ## Architecture
 

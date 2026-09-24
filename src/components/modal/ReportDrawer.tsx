@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { FileText, X, Share2, Copy } from 'lucide-react';
+import { FileText, Share2, Copy } from 'lucide-react';
 import { toast } from 'sonner';
 import Button from '@/components/ui/Button';
 import { churchGroupOptions } from '@/libs/common-types/constants/church';

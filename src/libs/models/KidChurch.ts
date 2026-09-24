@@ -1,4 +1,4 @@
-import { AppRole, UserExperienceEnum, UserRole } from '../utils/auth';
+import { AppRole, UserExperienceEnum } from '../utils/auth';
 import { EntityState, KidAttendanceFlowModeEnum } from './Church';
 
 import {
@@ -6,7 +6,7 @@ import {
   ReduxDefaultStateWithPagination,
   ReduxDefaultStateWithoutData,
 } from './Redux';
-import { IUser, UserGenderCode, UserIdType, UserState } from './User';
+import { IUser, UserGenderCode, UserIdType } from './User';
 
 // ENUMS
 

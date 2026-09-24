@@ -17,7 +17,6 @@ import {
   Award,
   Plus,
   Trash2,
-  Search,
   User as UserIcon,
   Phone,
   Inbox,

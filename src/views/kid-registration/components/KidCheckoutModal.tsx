@@ -3,11 +3,10 @@ import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Button from '@/components/ui/Button';
 import { IKidLiveTrackingItem } from '@/libs/models';
-import { Phone, QrCode, CheckCircle2, AlertTriangle, ShieldCheck, X } from 'lucide-react';
+import { Phone, QrCode, ShieldCheck, X } from 'lucide-react';
 import { FaWhatsapp, FaChild, FaChildDress } from 'react-icons/fa6';
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { toast } from 'sonner';
-import clsx from 'clsx';
 import { capitalizeWords } from '@/libs/utils/text';
 
 interface KidCheckoutModalProps {

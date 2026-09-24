@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crown, Shield, HeartHandshake, ChevronRight, LogOut, Sparkles } from 'lucide-react';
+import { Crown, Shield, ChevronRight, LogOut, Sparkles } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';

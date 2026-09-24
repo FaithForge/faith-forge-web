@@ -9,15 +9,12 @@ import {
   AlertCircle,
   Search,
   X,
-  Layers,
   ChevronRight,
   ChevronDown,
   FolderKanban,
   CheckCircle2,
-  Sparkles,
   Filter,
 } from 'lucide-react';
-import Button from '@/components/ui/Button';
 import SelectSearch from '@/components/ui/SelectSearch';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';

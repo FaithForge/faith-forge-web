@@ -43,7 +43,6 @@ import {
 } from '@/libs/state/redux/slices/church/volunteerContext.slice';
 import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurchPrinter, MinistryType } from '@/libs/models';
 import {
-  IVolunteerCampusContext,
   IVolunteerGroupConfigContext,
   VolunteerRole,
 } from '@/libs/models/Volunteer';
@@ -53,7 +52,7 @@ import { AppRole, ChurchRole, IsAdmin, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 import { formatPersonShortName } from '@/libs/utils/text';
-import { useChurchTerm, useKidsTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 
 interface SettingsDrawerProps {
   open: boolean;
@@ -117,13 +116,9 @@ const inferRoleFromGroup = (group: IVolunteerGroupConfigContext): AppRole | null
 
   const isRegistration = primaryArea?.scope === 'KID_REGISTRATION';
 
-  if (primaryRole === VolunteerRole.SUPERVISOR) {
-    return isRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
-  }
-  if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-    return UserRole.KID_GROUP_ADMIN;
-  }
-  return isRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+  if (primaryRole === VolunteerRole.SUPERVISOR) return isRegistration ? ChurchRole.KID_REGISTER_SUPERVISOR : ChurchRole.KID_CHURCH_SUPERVISOR;
+  if (primaryRole === VolunteerRole.GROUP_COORDINATOR) return ChurchRole.KID_CHURCH_GROUP_COORDINATOR;
+  return isRegistration ? ChurchRole.KID_REGISTER_USER : ChurchRole.KID_CHURCH_USER;
 };
 
 /**
@@ -178,7 +173,7 @@ const SettingsDrawer = ({
   const meetingTerm = useChurchTerm('meeting');
   const meetingsTerm = useChurchTerm('meetings');
 
-  const userRoles = (user?.roles as UserRole[]) || [];
+  const userRoles = (user?.roles as AppRole[]) || [];
   const isUserAdmin =
     IsAdmin(userRoles) ||
     currentRole === UserRole.SUPER_ADMIN ||
@@ -191,16 +186,16 @@ const SettingsDrawer = ({
 
   const isChurchRole =
     isChurchVolunteer &&
-    (!currentRole || !userMsRoles.includes(currentRole));
+    (!currentRole || !userMsRoles.includes(currentRole as UserRole));
 
-  const registrationRoles = [
-    UserRole.KID_REGISTER_ADMIN,
-    UserRole.KID_REGISTER_SUPERVISOR,
-    UserRole.KID_REGISTER_USER,
+  const registrationRoles: AppRole[] = [
+    ChurchRole.KID_REGISTER_COORDINATOR,
+    ChurchRole.KID_REGISTER_SUPERVISOR,
+    ChurchRole.KID_REGISTER_USER,
   ];
 
   const isRegistrationRole = currentRole
-    ? registrationRoles.includes(currentRole as UserRole)
+    ? registrationRoles.includes(currentRole)
     : userRoles.some((role) => registrationRoles.includes(role));
 
   const isActiveKidChurchVolunteerRole =
@@ -254,26 +249,26 @@ const SettingsDrawer = ({
     if (currentRole) {
       if (
         currentRole === ChurchRole.MINISTRY_ADMIN ||
-        currentRole === UserRole.KID_GROUP_ADMIN ||
-        currentRole === UserRole.KID_GROUP_SUPERVISOR ||
-        currentRole === UserRole.KID_GROUP_USER
+        currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+        currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+        currentRole === ChurchRole.KID_CHURCH_USER
       ) {
         return true;
       }
       if (
-        currentRole === UserRole.KID_REGISTER_ADMIN ||
-        currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
-        currentRole === UserRole.KID_REGISTER_USER
+        currentRole === ChurchRole.KID_REGISTER_COORDINATOR ||
+        currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+        currentRole === ChurchRole.KID_REGISTER_USER
       ) {
         return false;
       }
     }
     if (currentSelectedGroup) {
       const inferred = inferRoleFromGroup(currentSelectedGroup);
-      if (inferred && [UserRole.KID_GROUP_ADMIN, UserRole.KID_GROUP_SUPERVISOR, UserRole.KID_GROUP_USER].includes(inferred as UserRole)) {
+      if (inferred && [ChurchRole.KID_CHURCH_GROUP_COORDINATOR, ChurchRole.KID_CHURCH_SUPERVISOR, ChurchRole.KID_CHURCH_USER].includes(inferred as ChurchRole)) {
         return true;
       }
-      if (inferred && [UserRole.KID_REGISTER_ADMIN, UserRole.KID_REGISTER_SUPERVISOR, UserRole.KID_REGISTER_USER].includes(inferred as UserRole)) {
+      if (inferred && [ChurchRole.KID_REGISTER_COORDINATOR, ChurchRole.KID_REGISTER_SUPERVISOR, ChurchRole.KID_REGISTER_USER].includes(inferred as ChurchRole)) {
         return false;
       }
     }
@@ -402,9 +397,7 @@ const SettingsDrawer = ({
   useEffect(() => {
     if (!selectedCampusId || !open) return;
     if (availableMeetings.length === 0) {
-      if (selectedMeetingId !== '') {
-        setSelectedMeetingId('');
-      }
+      if (selectedMeetingId !== '') setSelectedMeetingId('');
     } else if (availableMeetings.length === 1 && selectedMeetingId !== availableMeetings[0].id) {
       setSelectedMeetingId(availableMeetings[0].id);
     } else if (availableMeetings.length > 1) {
@@ -432,13 +425,9 @@ const SettingsDrawer = ({
   useEffect(() => {
     if (!selectedCampusId || !open || selectedMode === 'BLUETOOTH') return;
     if (availablePrinters.length === 0) {
-      if (selectedPrinterId !== '') {
-        setSelectedPrinterId('');
-      }
+      if (selectedPrinterId !== '') setSelectedPrinterId('');
     } else if (availablePrinters.length === 1) {
-      if (selectedPrinterId !== availablePrinters[0].id) {
-        setSelectedPrinterId(availablePrinters[0].id);
-      }
+      if (selectedPrinterId !== availablePrinters[0].id) setSelectedPrinterId(availablePrinters[0].id);
     } else if (availablePrinters.length > 1) {
       const isValid = availablePrinters.some((p: IChurchPrinter) => p.id === selectedPrinterId);
       if (!isValid) {
@@ -516,11 +505,18 @@ const SettingsDrawer = ({
       );
       dispatch(setActiveVolunteerRole(null));
     } else if (currentSelectedGroup) {
+      const isCoordinatorRole =
+        currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+        currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
+      const isSupervisorRole =
+        currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+        currentRole === ChurchRole.KID_REGISTER_SUPERVISOR;
+
       const effectiveVolunteerRole =
         activeVolunteerRole ||
-        (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN
+        (isCoordinatorRole
           ? VolunteerRole.GROUP_COORDINATOR
-          : currentRole === UserRole.KID_GROUP_SUPERVISOR || currentRole === UserRole.KID_REGISTER_SUPERVISOR
+          : isSupervisorRole
           ? VolunteerRole.SUPERVISOR
           : currentSelectedGroup.areas[0]?.role || currentSelectedGroup.groupRole || VolunteerRole.VOLUNTEER);
 
@@ -689,9 +685,11 @@ const SettingsDrawer = ({
             <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-primary/10 text-primary shrink-0">
               {getVolunteerRoleLabel(
                 activeVolunteerRole ||
-                (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN
+                (currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+                currentRole === ChurchRole.KID_REGISTER_COORDINATOR
                   ? VolunteerRole.GROUP_COORDINATOR
-                  : currentRole === UserRole.KID_GROUP_SUPERVISOR || currentRole === UserRole.KID_REGISTER_SUPERVISOR
+                  : currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+                    currentRole === ChurchRole.KID_REGISTER_SUPERVISOR
                   ? VolunteerRole.SUPERVISOR
                   : availableGroups[0].areas[0]?.role || availableGroups[0].groupRole || VolunteerRole.VOLUNTEER),
                 {

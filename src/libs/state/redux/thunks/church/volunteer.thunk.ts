@@ -7,7 +7,6 @@ import {
   IVolunteerPermissionGrant,
   CreateVolunteerPermissionGrantPayload,
   MinistryVolunteerAssignmentStateEnum,
-  MinistryVolunteerStateEnum,
   PaginationResponse,
   VolunteerRole,
 } from '@/libs/models';
@@ -227,7 +226,7 @@ export const GetVolunteerAssignments = createAsyncThunk(
       ).data;
 
       const isArray = Array.isArray(response);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const rawAssignments = (isArray ? response : response?.data || []) as any[];
       const currentPage = isArray ? 1 : response?.currentPage || 1;
       const totalPages = isArray ? 1 : response?.totalPages || 1;
@@ -414,12 +413,12 @@ export const GetVolunteerWithAssignments = createAsyncThunk(
       ).data;
 
       // Backend returns either an array or an object with .assignments
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       const assignmentsList = Array.isArray(response)
         ? response
         : (response?.assignments || []);
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+       
       return assignmentsList.map((asg: any) => ({
         ...asg,
         volunteerId: asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId,

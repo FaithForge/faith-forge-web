@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import Select from '@/components/ui/Select';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { APP_ROUTES } from "@/config/routes";
-import { Camera, ChevronRight, Check, ArrowLeft, QrCode, Pencil, Trash2, Search, UserCheck, AlertTriangle, X } from 'lucide-react';
+import { Camera, ChevronRight, Check, Trash2, Search, UserCheck, AlertTriangle, X } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
@@ -30,22 +29,19 @@ import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 
 import { healthSecurityEntitySelect, IdType, UserIdType, UserGenderCode } from '@/libs/models/User';
-import { ID_TYPE_CODE_MAPPER, kidRelationSelect, ICreateKid, ICreateKidGuardian, KidGuardianRelationEnum, IKidGuardian } from '@/libs/models';
+import { kidRelationSelect, ICreateKid, ICreateKidGuardian, KidGuardianRelationEnum, IKidGuardian } from '@/libs/models';
 import { KidGroupType } from '@/libs/models/KidChurch';
 import { 
-  KID_MIN_AGE_MONTHS, 
   KID_MAX_AGE_YEARS, 
   KID_AGE_COPY, 
   isKidUnderMinAge 
 } from '@/libs/common-types/constants';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image/index';
-import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/utils/phone';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
-import Alert from '@/components/ui/Alert';
 import StepProgress from '@/components/ui/StepProgress';
 import { useTranslation } from 'react-i18next';
 

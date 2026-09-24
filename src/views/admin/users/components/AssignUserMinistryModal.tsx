@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { Layers, X, ShieldCheck, Crown, Users, Award, MapPin } from 'lucide-react';
+import { Layers, X, ShieldCheck, Crown, Users, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {

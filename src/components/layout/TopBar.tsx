@@ -83,48 +83,48 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     color: '#d97706',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
-  [UserRole.KID_GROUP_ADMIN]: {
-    id: UserRole.KID_GROUP_ADMIN,
+  [ChurchRole.KID_CHURCH_GROUP_COORDINATOR]: {
+    id: ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
     appTitle: 'KidChurch',
     label: 'Coordinador de Grupo',
-    themeClass: 'theme-KID_GROUP_ADMIN',
+    themeClass: 'theme-KID_CHURCH_GROUP_COORDINATOR',
     color: '#db2777',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
-  [UserRole.KID_GROUP_SUPERVISOR]: {
-    id: UserRole.KID_GROUP_SUPERVISOR,
+  [ChurchRole.KID_CHURCH_SUPERVISOR]: {
+    id: ChurchRole.KID_CHURCH_SUPERVISOR,
     appTitle: 'KidChurch',
     label: 'Supervisor',
-    themeClass: 'theme-KID_GROUP_SUPERVISOR',
+    themeClass: 'theme-KID_CHURCH_SUPERVISOR',
     color: '#9333ea',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
-  [UserRole.KID_GROUP_USER]: {
-    id: UserRole.KID_GROUP_USER,
+  [ChurchRole.KID_CHURCH_USER]: {
+    id: ChurchRole.KID_CHURCH_USER,
     appTitle: 'KidChurch',
     label: 'Servidor',
-    themeClass: 'theme-KID_GROUP_USER',
+    themeClass: 'theme-KID_CHURCH_USER',
     color: '#fbbf24',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
-  [UserRole.KID_REGISTER_ADMIN]: {
-    id: UserRole.KID_REGISTER_ADMIN,
+  [ChurchRole.KID_REGISTER_COORDINATOR]: {
+    id: ChurchRole.KID_REGISTER_COORDINATOR,
     appTitle: 'KidRegistration',
     label: 'Coordinador de Área',
-    themeClass: 'theme-KID_REGISTER_ADMIN',
+    themeClass: 'theme-KID_REGISTER_COORDINATOR',
     color: '#166534',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
-  [UserRole.KID_REGISTER_SUPERVISOR]: {
-    id: UserRole.KID_REGISTER_SUPERVISOR,
+  [ChurchRole.KID_REGISTER_SUPERVISOR]: {
+    id: ChurchRole.KID_REGISTER_SUPERVISOR,
     appTitle: 'KidRegistration',
     label: 'Supervisor',
     themeClass: 'theme-KID_REGISTER_SUPERVISOR',
     color: '#15803d',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
-  [UserRole.KID_REGISTER_USER]: {
-    id: UserRole.KID_REGISTER_USER,
+  [ChurchRole.KID_REGISTER_USER]: {
+    id: ChurchRole.KID_REGISTER_USER,
     appTitle: 'KidRegistration',
     label: 'Servidor',
     themeClass: 'theme-KID_REGISTER_USER',
@@ -135,7 +135,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     id: ChurchRole.KID_SECURITY_COORDINATOR,
     appTitle: 'KidRegistration',
     label: 'Coordinador de Seguridad',
-    themeClass: 'theme-KID_REGISTER_ADMIN',
+    themeClass: 'theme-KID_REGISTER_COORDINATOR',
     color: '#047857',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
@@ -172,13 +172,15 @@ export const getRoleIcon = (roleId?: string, label?: string, appTitle?: string) 
   const isCoord =
     (label && label.includes('Coordinador')) ||
     roleId === ChurchRole.MINISTRY_ADMIN ||
-    roleId === UserRole.KID_REGISTER_ADMIN ||
-    roleId === UserRole.KID_GROUP_ADMIN;
+    roleId === ChurchRole.KID_REGISTER_COORDINATOR ||
+    roleId === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+    roleId === ChurchRole.KID_SECURITY_COORDINATOR;
   if (isCoord) return Crown;
   const isSupervisor =
     (label && label.includes('Supervisor')) ||
-    roleId === UserRole.KID_GROUP_SUPERVISOR ||
-    roleId === UserRole.KID_REGISTER_SUPERVISOR;
+    roleId === ChurchRole.KID_CHURCH_SUPERVISOR ||
+    roleId === ChurchRole.KID_REGISTER_SUPERVISOR ||
+    roleId === ChurchRole.KID_SECURITY_SUPERVISOR;
   if (isSupervisor) return Shield;
   return UsersIcon;
 };
@@ -210,29 +212,29 @@ const findAssignedGroupForRole = (
 ): IVolunteerGroupConfigContext | null => {
   if (!groups || groups.length === 0) return null;
   const matches = groups.filter((group) => {
-    if (roleId === UserRole.KID_GROUP_ADMIN) {
+    if (roleId === ChurchRole.KID_CHURCH_GROUP_COORDINATOR) {
       if (group.groupRole === VolunteerRole.GROUP_COORDINATOR) return true;
       return group.areas?.some(
         (a) => !isAreaRegistration(a) && a.role === VolunteerRole.GROUP_COORDINATOR
       );
     }
-    if (roleId === UserRole.KID_GROUP_SUPERVISOR) {
+    if (roleId === ChurchRole.KID_CHURCH_SUPERVISOR) {
       if (group.groupRole === VolunteerRole.SUPERVISOR) return true;
       return group.areas?.some(
         (a) => !isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR
       );
     }
-    if (roleId === UserRole.KID_GROUP_USER) {
+    if (roleId === ChurchRole.KID_CHURCH_USER) {
       return group.areas?.some(
         (a) => !isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER
       );
     }
-    if (roleId === UserRole.KID_REGISTER_SUPERVISOR) {
+    if (roleId === ChurchRole.KID_REGISTER_SUPERVISOR) {
       return group.areas?.some(
         (a) => isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR
       );
     }
-    if (roleId === UserRole.KID_REGISTER_USER) {
+    if (roleId === ChurchRole.KID_REGISTER_USER) {
       return group.areas?.some(
         (a) => isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER
       );
@@ -332,7 +334,7 @@ const TopBar = () => {
   const hasAreaCoordinatorAssignment = areaCoordinates.length > 0;
   const userRoles = (user?.roles as AppRole[]) || [];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
-  const hasAreaCoordinatorRole = userRoles.includes(UserRole.KID_REGISTER_ADMIN);
+  const hasAreaCoordinatorRole = userRoles.includes(ChurchRole.KID_REGISTER_COORDINATOR);
 
   const hasMultipleGroups = availableGroups.length > 1;
   const hasAreaCoordinatorOption = hasAreaCoordinatorAssignment || hasAreaCoordinatorRole;
@@ -342,7 +344,7 @@ const TopBar = () => {
     isChurchVolunteer &&
     (!currentRole || !userMsRoles.includes(currentRole));
 
-  const isAreaCoordinatorActive = currentRole === UserRole.KID_REGISTER_ADMIN;
+  const isAreaCoordinatorActive = currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
 
   const handleGroupChange = (group: IVolunteerGroupConfigContext) => {
     const primaryArea = group.areas[0];
@@ -361,19 +363,18 @@ const TopBar = () => {
 
     let targetRole: AppRole;
     const isCurrentRegistrationRole =
-      currentRole === UserRole.KID_REGISTER_ADMIN ||
-      currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
-      currentRole === UserRole.KID_REGISTER_USER;
+      currentRole === ChurchRole.KID_REGISTER_COORDINATOR ||
+      currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+      currentRole === ChurchRole.KID_REGISTER_USER;
 
     if (isCurrentRegistrationRole) {
       targetRole = currentRole;
     } else if (primaryRole === VolunteerRole.SUPERVISOR) {
-      targetRole = isKidRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+      targetRole = isKidRegistration ? ChurchRole.KID_REGISTER_SUPERVISOR : ChurchRole.KID_CHURCH_SUPERVISOR;
     } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-      // GROUP_COORDINATOR manages a specific group, never the full area → always KID_GROUP_ADMIN
-      targetRole = UserRole.KID_GROUP_ADMIN;
+      targetRole = ChurchRole.KID_CHURCH_GROUP_COORDINATOR;
     } else {
-      targetRole = isKidRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+      targetRole = isKidRegistration ? ChurchRole.KID_REGISTER_USER : ChurchRole.KID_CHURCH_USER;
     }
 
     if (targetRole && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
@@ -409,7 +410,7 @@ const TopBar = () => {
   };
 
   const handleAreaCoordinatorSelect = () => {
-    const targetRole = UserRole.KID_REGISTER_ADMIN;
+    const targetRole = ChurchRole.KID_REGISTER_COORDINATOR;
     dispatch(changeCurrentRole(targetRole));
     dispatch(setActiveVolunteerRole(VolunteerRole.AREA_GENERAL_COORDINATOR));
     dispatch(
@@ -423,7 +424,7 @@ const TopBar = () => {
       {
         roleTitle: 'Coordinador de Área',
         moduleName: kidsRegistrationName,
-        themeClass: 'theme-KID_REGISTER_ADMIN',
+        themeClass: 'theme-KID_REGISTER_COORDINATOR',
         icon: Crown,
       },
       () => {
@@ -456,19 +457,18 @@ const TopBar = () => {
       const isGroupRegistration = primaryArea?.scope === 'KID_REGISTRATION';
       let targetRole: AppRole;
       if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
-        // GROUP_COORDINATOR manages a specific group, never the full area → always KID_GROUP_ADMIN
-        targetRole = UserRole.KID_GROUP_ADMIN;
+        targetRole = ChurchRole.KID_CHURCH_GROUP_COORDINATOR;
       } else if (primaryRole === VolunteerRole.SUPERVISOR) {
-        targetRole = isGroupRegistration ? UserRole.KID_REGISTER_SUPERVISOR : UserRole.KID_GROUP_SUPERVISOR;
+        targetRole = isGroupRegistration ? ChurchRole.KID_REGISTER_SUPERVISOR : ChurchRole.KID_CHURCH_SUPERVISOR;
       } else {
-        targetRole = isGroupRegistration ? UserRole.KID_REGISTER_USER : UserRole.KID_GROUP_USER;
+        targetRole = isGroupRegistration ? ChurchRole.KID_REGISTER_USER : ChurchRole.KID_CHURCH_USER;
       }
       if (!roles.includes(targetRole) && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
         roles.push(targetRole);
       }
     });
-    if (hasAreaCoordinatorAssignment && !roles.includes(UserRole.KID_REGISTER_ADMIN) && isRoleEnabled(UserRole.KID_REGISTER_ADMIN)) {
-      roles.push(UserRole.KID_REGISTER_ADMIN);
+    if (hasAreaCoordinatorAssignment && !roles.includes(ChurchRole.KID_REGISTER_COORDINATOR) && isRoleEnabled(ChurchRole.KID_REGISTER_COORDINATOR)) {
+      roles.push(ChurchRole.KID_REGISTER_COORDINATOR);
     }
     return roles;
   }, [currentVolunteerCampus, hasAreaCoordinatorAssignment]);
@@ -526,18 +526,20 @@ const TopBar = () => {
 
     // 1. Determine corresponding VolunteerRole
     let newVolunteerRole: VolunteerRole | null = null;
-    if (roleId === UserRole.KID_REGISTER_ADMIN) {
+    if (roleId === ChurchRole.KID_REGISTER_COORDINATOR) {
       newVolunteerRole = VolunteerRole.AREA_GENERAL_COORDINATOR;
-    } else if (roleId === UserRole.KID_GROUP_ADMIN) {
+    } else if (roleId === ChurchRole.KID_CHURCH_GROUP_COORDINATOR) {
       newVolunteerRole = VolunteerRole.GROUP_COORDINATOR;
     } else if (
-      roleId === UserRole.KID_REGISTER_SUPERVISOR ||
-      roleId === UserRole.KID_GROUP_SUPERVISOR
+      roleId === ChurchRole.KID_REGISTER_SUPERVISOR ||
+      roleId === ChurchRole.KID_CHURCH_SUPERVISOR ||
+      roleId === ChurchRole.KID_SECURITY_SUPERVISOR
     ) {
       newVolunteerRole = VolunteerRole.SUPERVISOR;
     } else if (
-      roleId === UserRole.KID_REGISTER_USER ||
-      roleId === UserRole.KID_GROUP_USER
+      roleId === ChurchRole.KID_REGISTER_USER ||
+      roleId === ChurchRole.KID_CHURCH_USER ||
+      roleId === ChurchRole.KID_SECURITY_USER
     ) {
       newVolunteerRole = VolunteerRole.VOLUNTEER;
     } else if (roleId === ChurchRole.MINISTRY_ADMIN) {
@@ -547,7 +549,7 @@ const TopBar = () => {
 
     // 2. Manage group context
     const isNewRoleAdmin = isSystemAdminRole(roleId, roleItem.appTitle);
-    const isNewRoleAreaCoordinator = roleId === UserRole.KID_REGISTER_ADMIN;
+    const isNewRoleAreaCoordinator = roleId === ChurchRole.KID_REGISTER_COORDINATOR;
     let targetGroupName = '';
 
     if (isNewRoleAdmin) {
@@ -638,9 +640,7 @@ const TopBar = () => {
   /** Dispatches logout action and redirects to login page. */
   const handleLogout = () => {
     dispatch(logout());
-    if (typeof document !== 'undefined') {
-      document.body.className = 'antialiased';
-    }
+    if (typeof document !== 'undefined') document.body.className = 'antialiased';
     navigate(APP_ROUTES.auth.login, { replace: true });
     toast.success('Se ha cerrado su sesión', {
       duration: 5000,
@@ -659,16 +659,14 @@ const TopBar = () => {
   React.useEffect(() => {
     if (availableRoles.length > 0 && availableRoles[0].id !== UserRole.USER) {
       const isCurrentValid = currentRole && availableRoles.some((r) => r.id === currentRole);
-      if (!isCurrentValid || !isRoleEnabled(currentRole)) {
-        dispatch(changeCurrentRole(availableRoles[0].id));
-      }
+      if (!isCurrentValid || !isRoleEnabled(currentRole)) dispatch(changeCurrentRole(availableRoles[0].id));
     }
   }, [currentRole, availableRoles, dispatch]);
 
   // Synchronize and clean group context when role or campus changes
   React.useEffect(() => {
     const isCurrentAdmin = isSystemAdminRole(currentRole, activeVisualRole.appTitle);
-    const isCurrentAreaCoord = currentRole === UserRole.KID_REGISTER_ADMIN;
+    const isCurrentAreaCoord = currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
 
     if (isCurrentAdmin) {
       // Admins do not have groups
@@ -763,7 +761,7 @@ const TopBar = () => {
     dispatch,
   ]);
 
-  const isAreaCoordinator = currentRole === UserRole.KID_REGISTER_ADMIN;
+  const isAreaCoordinator = currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
   const isCurrentVisualRoleAdmin = isSystemAdminRole(activeVisualRole.id, activeVisualRole.appTitle);
 
   const hasMultipleRoles = availableRoles.length > 1;
@@ -782,9 +780,9 @@ const TopBar = () => {
       return 'Administración';
     }
     if (
-      roleId === UserRole.KID_REGISTER_ADMIN ||
-      roleId === UserRole.KID_REGISTER_SUPERVISOR ||
-      roleId === UserRole.KID_REGISTER_USER
+      roleId === ChurchRole.KID_REGISTER_COORDINATOR ||
+      roleId === ChurchRole.KID_REGISTER_SUPERVISOR ||
+      roleId === ChurchRole.KID_REGISTER_USER
     ) {
       return kidsRegistrationName;
     }
@@ -797,10 +795,10 @@ const TopBar = () => {
     : currentAppTitle;
 
   const getDynamicRoleLabel = (roleId: AppRole) => {
-    if (roleId === UserRole.KID_GROUP_USER) {
+    if (roleId === ChurchRole.KID_CHURCH_USER) {
       return kidsTeacherName;
     }
-    if (roleId === UserRole.KID_REGISTER_USER) {
+    if (roleId === ChurchRole.KID_REGISTER_USER) {
       return churchVolunteerName;
     }
     return activeVisualRole.label;
@@ -818,19 +816,13 @@ const TopBar = () => {
     const kidChurchRoles = availableRoles.filter((r) => r.appTitle === 'KidChurch');
     const kidRegistrationRoles = availableRoles.filter((r) => r.appTitle === 'KidRegistration');
 
-    if (kidChurchRoles.length > 0) {
-      sections.push({ title: `${kidsModuleName} · ${kidsClassroomsName}`, roles: kidChurchRoles });
-    }
-    if (kidRegistrationRoles.length > 0) {
-      sections.push({ title: `${kidsRegistrationName} · Punto de Entrada`, roles: kidRegistrationRoles });
-    }
+    if (kidChurchRoles.length > 0) sections.push({ title: `${kidsModuleName} · ${kidsClassroomsName}`, roles: kidChurchRoles });
+    if (kidRegistrationRoles.length > 0) sections.push({ title: `${kidsRegistrationName} · Punto de Entrada`, roles: kidRegistrationRoles });
 
     const otherRoles = availableRoles.filter(
       (r) => r.appTitle !== 'Admin' && r.appTitle !== 'KidChurch' && r.appTitle !== 'KidRegistration'
     );
-    if (otherRoles.length > 0) {
-      sections.push({ title: 'Roles Disponibles', roles: otherRoles });
-    }
+    if (otherRoles.length > 0) sections.push({ title: 'Roles Disponibles', roles: otherRoles });
 
     return sections;
   }, [availableRoles, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
@@ -1033,14 +1025,16 @@ const TopBar = () => {
                           {section.roles.map((role) => {
                             const isRoleActive = activeVisualRole.id === role.id;
                             const isRoleAdmin = isSystemAdminRole(role.id, role.appTitle);
-                            const isRegistrationAreaCoord = role.id === UserRole.KID_REGISTER_ADMIN;
+                            const isRegistrationAreaCoord = role.id === ChurchRole.KID_REGISTER_COORDINATOR;
                             const isCoordinatorRole =
                               role.id === ChurchRole.MINISTRY_ADMIN ||
-                              role.id === UserRole.KID_REGISTER_ADMIN ||
-                              role.id === UserRole.KID_GROUP_ADMIN;
+                              role.id === ChurchRole.KID_REGISTER_COORDINATOR ||
+                              role.id === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+                              role.id === ChurchRole.KID_SECURITY_COORDINATOR;
                             const isSupervisorRole =
-                              role.id === UserRole.KID_REGISTER_SUPERVISOR ||
-                              role.id === UserRole.KID_GROUP_SUPERVISOR;
+                              role.id === ChurchRole.KID_REGISTER_SUPERVISOR ||
+                              role.id === ChurchRole.KID_CHURCH_SUPERVISOR ||
+                              role.id === ChurchRole.KID_SECURITY_SUPERVISOR;
                             const RoleIcon = role.appTitle === 'Admin'
                               ? Sliders
                               : isCoordinatorRole
@@ -1050,9 +1044,9 @@ const TopBar = () => {
                               : UsersIcon;
 
                             let roleTitle = role.label;
-                            if (role.id === UserRole.KID_GROUP_USER) {
+                            if (role.id === ChurchRole.KID_CHURCH_USER) {
                               roleTitle = kidsTeacherName;
-                            } else if (role.id === UserRole.KID_REGISTER_USER) {
+                            } else if (role.id === ChurchRole.KID_REGISTER_USER) {
                               roleTitle = churchVolunteerName;
                             }
 
@@ -1089,7 +1083,7 @@ const TopBar = () => {
                               subtitle = 'Control global del sistema';
                             } else if (role.id === UserRole.ADMIN) {
                               subtitle = `Administración de ${churchCampusTerm.toLowerCase()} y usuarios`;
-                            } else if (role.id === UserRole.KID_REGISTER_ADMIN) {
+                            } else if (role.id === ChurchRole.KID_REGISTER_COORDINATOR) {
                               subtitle = `Todos los grupos de ${kidsRegistrationName.toLowerCase()}`;
                             } else if (isRoleAdminAcquired) {
                               subtitle = 'Poderes de administración';

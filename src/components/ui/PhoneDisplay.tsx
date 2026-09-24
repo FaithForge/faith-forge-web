@@ -1,7 +1,7 @@
 import React from 'react';
 import clsx from 'clsx';
 import { AlertTriangle } from 'lucide-react';
-import { formatPhoneDisplay, validatePhoneNumber, isPhoneValid } from '@/libs/utils/phone';
+import { formatPhoneDisplay, validatePhoneNumber } from '@/libs/utils/phone';
 
 export interface PhoneDisplayProps {
   phone?: string;

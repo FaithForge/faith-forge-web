@@ -1,7 +1,6 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { IAttendanceReportData, IAttendanceReportAttendee, IAttendanceReportSummary } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
-import dayjs from 'dayjs';
 
 /**
  * Parameters to request attendance report details from the kid-church microservice.

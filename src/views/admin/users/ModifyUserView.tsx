@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { 
-  ArrowLeft, 
   Search, 
   Loader2, 
   User as UserIcon, 
@@ -39,7 +38,6 @@ import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber } from '@/libs/utils/phone';
 import { toDateOnlyInputValue } from '@/libs/utils/date';
 import { APP_ROUTES } from '@/config/routes';
-import dayjs from 'dayjs';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';

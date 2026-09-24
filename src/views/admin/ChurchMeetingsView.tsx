@@ -2,7 +2,6 @@ import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
-  ArrowLeft, 
   CalendarClock, 
   MapPin, 
   Clock, 
@@ -159,7 +158,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
     },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+   
   const m = meeting as any;
   const initTime = formatTime(m.initialRegistrationHour ?? m.initialHour);
   const finalTime = formatTime(m.finalRegistrationHour ?? m.finalHour);

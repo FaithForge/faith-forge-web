@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, ShieldPlus, ShieldCheck, CheckCircle2, Layers } from 'lucide-react';
+import { ShieldPlus, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { AssignUserRole } from '@/libs/state/redux/thunks/user/user.thunk';

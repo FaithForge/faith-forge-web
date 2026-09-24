@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm, Controller } from 'react-hook-form';
 import { 
-  ArrowLeft, 
   Camera, 
   Trash2, 
   Loader2, 
@@ -10,13 +9,10 @@ import {
   Shield, 
   KeyRound, 
   Eye, 
-  EyeOff, 
-  Sparkles,
+  EyeOff,
   Check,
   Copy,
-  CheckCheck,
-  AlertCircle,
-  ExternalLink
+  CheckCheck
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'sonner';

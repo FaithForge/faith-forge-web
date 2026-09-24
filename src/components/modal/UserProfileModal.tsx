@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
-import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, Lock, BellRing } from 'lucide-react';
+import { User, X, Mail, Smartphone, RotateCcw, Fingerprint, BellRing } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords } from '@/libs/utils/text';

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { QRCode } from 'react-qrcode-logo';
 import { 
-  ArrowLeft, 
   Search, 
   Download, 
   Printer, 

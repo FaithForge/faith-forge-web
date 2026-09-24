@@ -5,7 +5,7 @@ import { useGetKidQuery, useDeleteKidMutation, useCreateKidRegistrationMutation,
 import { useDeleteKidGuardianRelationMutation, useGetKidGroupsQuery } from '@/libs/state/redux/api/kidChurchApi';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
-import { Loader2, ArrowLeft, QrCode, Printer, Trash2, Pencil, Cake, ShieldAlert, HeartPulse, FileText, MoreVertical, UserPlus, UserCheck, ArrowLeftRight, AlertTriangle, Eye } from 'lucide-react';
+import { Printer, Trash2, Pencil, Cake, MoreVertical, UserPlus, ArrowLeftRight, AlertTriangle, Eye } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -23,10 +23,9 @@ import { getRegistrationLogInfo } from '@/libs/utils/registrationLog';
 import { formatPhoneDisplay, isPhoneValid } from '@/libs/utils/phone';
 import { formatDateOnly, isDateToday, toDateOnlyInputValue } from '@/libs/utils/date';
 import { KID_RELATION_CODE_MAPPER, KidGroupType } from '@/libs/models/KidChurch';
-import { VolunteerRole } from '@/libs/models';
-import { AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Alert from '@/components/ui/Alert';
 import { KidCheckInSkeleton } from '@/components/ui/DetailSkeleton';
@@ -50,11 +49,7 @@ const KidCheckInView = () => {
 
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
-  const user = useAppSelector((state) => state.authSlice.user);
-  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const activeVolunteerRole = useAppSelector(
-    (state) => state.volunteerContextSlice.activeVolunteerRole
-  );
+  const { canViewCreatorInfo } = usePermissions();
 
   const { data: kid, isLoading: loading, refetch: refetchKid } = useGetKidQuery(
     { id: id || '', registrationChurchMeetingId: currentMeeting?.id },
@@ -63,17 +58,6 @@ const KidCheckInView = () => {
   const { data: kidGroups = [] } = useGetKidGroupsQuery();
 
   const printerModeSlice = useAppSelector((state) => state.printerModeSlice);
-  const userRoles = (user?.roles as AppRole[]) || [];
-
-  const canViewCreatorInfo =
-    userRoles.includes(UserRole.SUPER_ADMIN) ||
-    userRoles.includes(UserRole.ADMIN) ||
-    userRoles.includes(UserRole.KID_REGISTER_ADMIN) ||
-    currentRole === UserRole.SUPER_ADMIN ||
-    currentRole === UserRole.ADMIN ||
-    (currentRole as any) === ChurchRole.MINISTRY_ADMIN ||
-    currentRole === UserRole.KID_REGISTER_ADMIN ||
-    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
 
   const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor } =
     useChurchMeetingStatus();
@@ -170,9 +154,7 @@ const KidCheckInView = () => {
 
   // Automatically select the first guardian when relationships are loaded
   useEffect(() => {
-    if (relationsList.length > 0 && !selectedGuardian) {
-      setSelectedGuardian(relationsList[0].id);
-    }
+    if (relationsList.length > 0 && !selectedGuardian) setSelectedGuardian(relationsList[0].id);
   }, [relationsList, selectedGuardian]);
 
   const isRegistered = !!kid?.currentKidRegistration;
@@ -1076,9 +1058,7 @@ const KidCheckInView = () => {
       <ConfirmModal
         open={!!guardianRelationToDelete}
         onOpenChange={(open) => {
-          if (!open) {
-            setGuardianRelationToDelete(null);
-          }
+          if (!open) setGuardianRelationToDelete(null);
         }}
         title={`¿Eliminar relación de ${guardianTerm.toLowerCase()}?`}
         description={`¿Estás seguro de que deseas desvincular a ${guardianRelationToDelete?.fullName || `este(a) ${guardianTerm.toLowerCase()}`} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}

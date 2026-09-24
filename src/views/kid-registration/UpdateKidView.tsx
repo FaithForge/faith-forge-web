@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Camera, Loader2, AlertTriangle } from 'lucide-react';
+import { Camera, AlertTriangle } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { useAppDispatch } from '@/libs/state/redux/hooks';
 import {
   useGetKidQuery,
   useUpdateKidMutation,
@@ -14,12 +14,9 @@ import {
   useGetKidMedicalConditionsQuery,
 } from '@/libs/state/redux/api/kidChurchApi';
 import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
-import { ID_TYPE_CODE_MAPPER, userGenderSelect, healthSecurityEntitySelect } from '@/libs/models';
+import { userGenderSelect, healthSecurityEntitySelect } from '@/libs/models';
 import { KidGroupType } from '@/libs/models/KidChurch';
-import { UserIdType } from '@/libs/models/User';
 import { 
-  KID_MIN_AGE_MONTHS, 
-  KID_MAX_AGE_YEARS, 
   KID_AGE_COPY, 
   isKidUnderMinAge 
 } from '@/libs/common-types/constants';

@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, UserPlus, Users, Sparkles, Award, ChevronDown } from 'lucide-react';
+import { Loader2, UserPlus, Users, Award, ChevronDown } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Cell from '@/components/ui/Cell';
 import Button from '@/components/ui/Button';

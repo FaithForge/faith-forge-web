@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { Clock, ShieldAlert, X, Calendar, AlertCircle } from 'lucide-react';
+import { Clock, ShieldAlert, X, Calendar } from 'lucide-react';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import { useAppDispatch } from '@/libs/state/redux/hooks';

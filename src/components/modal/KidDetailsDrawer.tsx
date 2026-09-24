@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Button from '@/components/ui/Button';
-import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, FileText, BellRing } from 'lucide-react';
+import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, BellRing } from 'lucide-react';
 import { FaWhatsapp, FaChild, FaChildDress } from 'react-icons/fa6';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
@@ -15,7 +15,6 @@ import {
   KID_RELATION_CODE_MAPPER,
   IKidGuardian,
   KidGuardianRelationCodeEnum,
-  VolunteerRole,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
 import { getRegistrationLogInfo } from '@/libs/utils/registrationLog';
@@ -24,6 +23,7 @@ import { formatDateOnly, isDateToday } from '@/libs/utils/date';
 import { isKidOverage, KID_AGE_COPY } from '@/libs/common-types/constants';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { UserRole, ChurchRole, AppRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { useGetKidQuery, useSendUrgentGuardianNoticeMutation } from '@/libs/state/redux/api/kidChurchApi';
@@ -73,28 +73,13 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
   const kid = fetchedKid || propKid;
 
-  const user = useAppSelector((state) => state.authSlice.user);
-  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const activeVolunteerRole = useAppSelector(
-    (state) => state.volunteerContextSlice.activeVolunteerRole,
-  );
-  const userRoles = (user?.roles as AppRole[]) || [];
+  const { user, currentRole, canViewCreatorInfo, isSupervisor } = usePermissions();
 
   const kidsModuleName = useKidsTerm('module_alias');
   const kidsTeacherTerm = useKidsTerm('teacher');
   const guardianTerm = useKidsTerm('guardian');
   const guardiansTerm = useKidsTerm('guardians');
   const churchVolunteerTerm = useChurchTerm('volunteer');
-
-  const canViewCreatorInfo =
-    userRoles.includes(UserRole.SUPER_ADMIN) ||
-    userRoles.includes(UserRole.ADMIN) ||
-    userRoles.includes(UserRole.KID_REGISTER_ADMIN) ||
-    currentRole === UserRole.SUPER_ADMIN ||
-    currentRole === UserRole.ADMIN ||
-    (currentRole as any) === ChurchRole.MINISTRY_ADMIN ||
-    currentRole === UserRole.KID_REGISTER_ADMIN ||
-    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
 
   const registeredGuardianId = kid?.currentKidRegistration?.guardianId;
   const kidRelations = kid?.relations;
@@ -125,29 +110,19 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
   const senderName = user ? capitalizeWords(`${user.firstName || ''} ${user.lastName || ''}`.trim()) : `un(a) ${churchVolunteerTerm.toLowerCase()}`;
   let roleTitle = churchVolunteerTerm;
-  if (currentRole === UserRole.KID_GROUP_USER) {
+  if (currentRole === ChurchRole.KID_CHURCH_USER) {
     roleTitle = kidsTeacherTerm;
-  } else if (currentRole === UserRole.KID_REGISTER_USER) {
+  } else if (currentRole === ChurchRole.KID_REGISTER_USER) {
     roleTitle = churchVolunteerTerm;
-  } else if (currentRole === UserRole.KID_GROUP_SUPERVISOR || currentRole === UserRole.KID_REGISTER_SUPERVISOR) {
+  } else if (currentRole === ChurchRole.KID_CHURCH_SUPERVISOR || currentRole === ChurchRole.KID_REGISTER_SUPERVISOR) {
     roleTitle = 'Supervisor(a)';
-  } else if (currentRole === UserRole.KID_GROUP_ADMIN || currentRole === UserRole.KID_REGISTER_ADMIN) {
+  } else if (currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR || currentRole === ChurchRole.KID_REGISTER_COORDINATOR) {
     roleTitle = 'Coordinador(a)';
-  } else if (currentRole === UserRole.ADMIN || currentRole === UserRole.SUPER_ADMIN || (currentRole as any) === ChurchRole.MINISTRY_ADMIN) {
+  } else if (currentRole === UserRole.ADMIN || currentRole === UserRole.SUPER_ADMIN || currentRole === ChurchRole.MINISTRY_ADMIN) {
     roleTitle = 'Administrador(a)';
   } else if (currentRole && ALL_SYSTEM_ROLES_METADATA[currentRole as AppRole]?.name) {
     roleTitle = ALL_SYSTEM_ROLES_METADATA[currentRole as AppRole].name;
   }
-
-  // Supervisor+ can see the registration log
-  const isSupervisor =
-    currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
-    currentRole === UserRole.KID_REGISTER_ADMIN ||
-    currentRole === UserRole.KID_GROUP_ADMIN ||
-    currentRole === UserRole.KID_GROUP_SUPERVISOR ||
-    currentRole === UserRole.ADMIN ||
-    currentRole === UserRole.SUPER_ADMIN ||
-    (currentRole as any) === ChurchRole.MINISTRY_ADMIN;
 
   const isBirthdayToday = isDateToday(kid.birthday);
 
@@ -162,9 +137,9 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
   // La alerta de EPS "NO SABE" solo aplica para el personal de registro de niños (quienes reciben a los acudientes).
   // No debe mostrarse a coordinadores de grupo, supervisores de iglekids o maestros de salón.
   const isRegisterRole =
-    currentRole === UserRole.KID_REGISTER_USER ||
-    currentRole === UserRole.KID_REGISTER_SUPERVISOR ||
-    currentRole === UserRole.KID_REGISTER_ADMIN;
+    currentRole === ChurchRole.KID_REGISTER_USER ||
+    currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+    currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
 
   const shouldShowEpsAlert = showEpsAlert ?? isRegisterRole;
 

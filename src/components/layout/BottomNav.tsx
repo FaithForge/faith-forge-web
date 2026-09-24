@@ -12,8 +12,8 @@ import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
-import { VolunteerRole } from '@/libs/models/Volunteer';
 import { toast } from 'sonner';
 
 const BottomNav = () => {
@@ -40,6 +40,7 @@ const BottomNav = () => {
 
   const meetingTerm = useChurchTerm('meeting');
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
+  const { isServidor, canViewTeam, isKidChurchRole } = usePermissions();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
@@ -66,35 +67,7 @@ const BottomNav = () => {
   }, [isAdminRole, isConfigured, openSettings]);
 
   // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
-  if (isAdminRole) {
-    return null;
-  }
-
-  // Determine if the current role is a "Servidor" (USER) role
-  const isServidor =
-    currentRole === 'KID_REGISTER_USER' ||
-    currentRole === 'KID_GROUP_USER' ||
-    activeVolunteerRole === VolunteerRole.VOLUNTEER;
-
-  const canViewTeam =
-    !isServidor &&
-    (currentRole === 'KID_GROUP_SUPERVISOR' ||
-      currentRole === 'KID_REGISTER_SUPERVISOR' ||
-      currentRole === 'KID_GROUP_ADMIN' ||
-      currentRole === 'KID_REGISTER_ADMIN' ||
-      currentRole === 'MINISTRY_ADMIN' ||
-      activeVolunteerRole === VolunteerRole.SUPERVISOR ||
-      activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
-      activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR ||
-      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR);
-  
-  const isKidChurchRole =
-    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
-    activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR ||
-    currentRole === 'MINISTRY_ADMIN' ||
-    currentRole === 'KID_GROUP_ADMIN' ||
-    currentRole === 'KID_GROUP_SUPERVISOR' ||
-    currentRole === 'KID_GROUP_USER';
+  if (isAdminRole) return null;
 
   interface BottomNavItem {
     path: string;
@@ -111,12 +84,8 @@ const BottomNav = () => {
       { path: APP_ROUTES.kidChurch.root, icon: Users, label: t('navigation.registered_kids'), action: 'link' },
       { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
-    if (!isServidor) {
-      navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
-    }
-    if (canViewTeam) {
-      navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
-    }
+    if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
+    if (canViewTeam) navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
   } else {
     // Tabs for Kid Registration (KidRegistrationLayout)
     navItems = [
@@ -125,12 +94,8 @@ const BottomNav = () => {
       { path: APP_ROUTES.kidRegistration.scanner, icon: QrCode, label: t('navigation.scan_qr'), action: 'link' },
       { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
-    if (!isServidor) {
-      navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
-    }
-    if (canViewTeam) {
-      navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
-    }
+    if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
+    if (canViewTeam) navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
   }
 
   return (
@@ -191,9 +156,7 @@ const BottomNav = () => {
               }
 
               // Check navigation guard before navigating
-              if (requestNavigation(item.path)) {
-                navigate(item.path);
-              }
+              if (requestNavigation(item.path)) navigate(item.path);
             };
 
             return (

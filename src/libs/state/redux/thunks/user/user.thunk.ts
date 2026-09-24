@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+ 
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { IAssignUserRelationRole, ICreateUser, ICreateUserAccount, IUpdateUser, IUpdateUserAccount } from '@/libs/models';

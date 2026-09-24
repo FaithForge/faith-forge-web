@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import { 
-  X, 
   KeyRound, 
   UserCheck, 
   Eye, 

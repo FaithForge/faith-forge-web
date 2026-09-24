@@ -8,7 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateChurchPrinter, UpdateChurchPrinter } from '@/libs/state/redux/thunks/church/church.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
-import { Printer, MapPin, CheckCircle2, XCircle } from 'lucide-react';
+import { Printer, CheckCircle2, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 
 interface PrinterModalProps {

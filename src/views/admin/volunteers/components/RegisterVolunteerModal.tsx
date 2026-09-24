@@ -9,7 +9,7 @@ import { CreateVolunteer, GetVolunteers } from '@/libs/state/redux/thunks/church
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { toast } from 'sonner';
-import { UserPlus, User as UserIcon, Check } from 'lucide-react';
+import { UserPlus, User as UserIcon } from 'lucide-react';
 
 interface RegisterVolunteerModalProps {
   open: boolean;

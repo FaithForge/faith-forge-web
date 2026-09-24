@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  Network,
   Plus,
   Wand2,
   MapPin,

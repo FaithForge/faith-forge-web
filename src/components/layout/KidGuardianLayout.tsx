@@ -1,7 +1,7 @@
 import React from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import { LogOut, LayoutGrid, HeartHandshake, User, Bell } from 'lucide-react';
+import { LogOut, LayoutGrid, User, Bell } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';

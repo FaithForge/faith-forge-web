@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  ArrowLeft, 
   Search, 
   Loader2, 
   User as UserIcon, 
   ShieldCheck, 
-  ShieldPlus, 
-  Sparkles,
+  ShieldPlus,
   Phone,
   Mail,
   CheckCircle2,

@@ -63,29 +63,29 @@ export const findAssignedGroup = (
   if (!groups || groups.length === 0) return null;
 
   const matches = groups.filter((group) => {
-    if (roleId === UserRole.KID_GROUP_ADMIN) {
+    if (roleId === ChurchRole.KID_CHURCH_GROUP_COORDINATOR) {
       if (group.groupRole === VolunteerRole.GROUP_COORDINATOR) return true;
       return group.areas?.some(
         (a) => !isRegistrationArea(a) && a.role === VolunteerRole.GROUP_COORDINATOR,
       );
     }
-    if (roleId === UserRole.KID_GROUP_SUPERVISOR) {
+    if (roleId === ChurchRole.KID_CHURCH_SUPERVISOR) {
       if (group.groupRole === VolunteerRole.SUPERVISOR) return true;
       return group.areas?.some(
         (a) => !isRegistrationArea(a) && a.role === VolunteerRole.SUPERVISOR,
       );
     }
-    if (roleId === UserRole.KID_GROUP_USER) {
+    if (roleId === ChurchRole.KID_CHURCH_USER) {
       return group.areas?.some(
         (a) => !isRegistrationArea(a) && a.role === VolunteerRole.VOLUNTEER,
       );
     }
-    if (roleId === UserRole.KID_REGISTER_SUPERVISOR) {
+    if (roleId === ChurchRole.KID_REGISTER_SUPERVISOR) {
       return group.areas?.some(
         (a) => isRegistrationArea(a) && a.role === VolunteerRole.SUPERVISOR,
       );
     }
-    if (roleId === UserRole.KID_REGISTER_USER) {
+    if (roleId === ChurchRole.KID_REGISTER_USER) {
       return group.areas?.some(
         (a) => isRegistrationArea(a) && a.role === VolunteerRole.VOLUNTEER,
       );
@@ -151,16 +151,11 @@ export const buildRegistrationLog = ({
   const isSuperAdmin = currentRole === UserRole.SUPER_ADMIN;
   const isAdmin = currentRole === UserRole.ADMIN || currentRole === UserRole.STAFF;
   const isAreaCoord =
-    currentRole === UserRole.KID_REGISTER_ADMIN ||
+    currentRole === ChurchRole.KID_REGISTER_COORDINATOR ||
     currentRole === ChurchRole.MINISTRY_ADMIN;
 
-  if (isSuperAdmin || isAdmin) {
-    return `Registrado por ${fullName} (Administrador)`;
-  }
-
-  if (isAreaCoord) {
-    return `Registrado por ${fullName} (Coordinación)`;
-  }
+  if (isSuperAdmin || isAdmin) return `Registrado por ${fullName} (Administrador)`;
+  if (isAreaCoord) return `Registrado por ${fullName} (Coordinación)`;
 
   // Volunteers with temporary permissions or ad-hoc support without a group
   return `Registrado por ${fullName} (Apoyo)`;

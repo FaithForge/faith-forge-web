@@ -4,9 +4,21 @@ import { RootState } from '../state/redux';
 /** Church and Ministry domain roles */
 export enum ChurchRole {
   MINISTRY_ADMIN = 'MINISTRY_ADMIN',
+
+  // Kid Security
   KID_SECURITY_USER = 'KID_SECURITY_USER',
   KID_SECURITY_SUPERVISOR = 'KID_SECURITY_SUPERVISOR',
   KID_SECURITY_COORDINATOR = 'KID_SECURITY_COORDINATOR',
+
+  // Kid Registration
+  KID_REGISTER_USER = 'KID_REGISTER_USER',
+  KID_REGISTER_SUPERVISOR = 'KID_REGISTER_SUPERVISOR',
+  KID_REGISTER_COORDINATOR = 'KID_REGISTER_COORDINATOR',
+
+  // Kid Church (Classrooms / Activities)
+  KID_CHURCH_USER = 'KID_CHURCH_USER',
+  KID_CHURCH_SUPERVISOR = 'KID_CHURCH_SUPERVISOR',
+  KID_CHURCH_GROUP_COORDINATOR = 'KID_CHURCH_GROUP_COORDINATOR',
 }
 
 /** User Roles Enum */
@@ -14,16 +26,7 @@ export enum UserRole {
   SUPER_ADMIN = 'SUPER_ADMIN',
   ADMIN = 'ADMIN',
   STAFF = 'STAFF',
-
   USER = 'USER',
-
-  // Kid MS Roles
-  KID_REGISTER_ADMIN = 'KID_REGISTER_ADMIN',
-  KID_REGISTER_SUPERVISOR = 'KID_REGISTER_SUPERVISOR',
-  KID_REGISTER_USER = 'KID_REGISTER_USER',
-  KID_GROUP_ADMIN = 'KID_GROUP_ADMIN',
-  KID_GROUP_SUPERVISOR = 'KID_GROUP_SUPERVISOR',
-  KID_GROUP_USER = 'KID_GROUP_USER',
 }
 
 export type AppRole = UserRole | ChurchRole;
@@ -36,14 +39,14 @@ export enum UserExperienceEnum {
   KID_GUARDIAN = 'KID_GUARDIAN',
 }
 
-
 // ADMIN ROLES
 export const AdminRoles = [UserRole.SUPER_ADMIN, UserRole.ADMIN];
-export const ChurchRoles = [...AdminRoles, UserRole.STAFF];
+export const StaffRoles = [...AdminRoles, UserRole.STAFF];
 
 export const KidChurchRegisterAdminRoles: AppRole[] = [
   ...AdminRoles,
-  UserRole.KID_REGISTER_ADMIN,
+  ChurchRole.MINISTRY_ADMIN,
+  ChurchRole.KID_REGISTER_COORDINATOR,
 ];
 export const KidChurchAdminRoles: AppRole[] = [
   ...AdminRoles,
@@ -52,28 +55,28 @@ export const KidChurchAdminRoles: AppRole[] = [
 
 export const KidGroupAdminRoles: AppRole[] = [
   ...KidChurchAdminRoles,
-  UserRole.KID_GROUP_ADMIN,
+  ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
 ];
 
 export const KidChurchSupervisorRoles: AppRole[] = [
   ...KidChurchAdminRoles,
   ...KidGroupAdminRoles,
-  UserRole.KID_GROUP_SUPERVISOR,
+  ChurchRole.KID_CHURCH_SUPERVISOR,
 ];
 
 // Kid Registration
 export const KidChurchRegisterSupervisorRoles: AppRole[] = [
   ...KidChurchRegisterAdminRoles,
-  UserRole.KID_REGISTER_SUPERVISOR,
+  ChurchRole.KID_REGISTER_SUPERVISOR,
 ];
 export const KidChurchRegisterRoles: AppRole[] = [
   ...KidChurchRegisterSupervisorRoles,
-  UserRole.KID_REGISTER_USER,
+  ChurchRole.KID_REGISTER_USER,
 ];
 
 export const KidChurchGroupRoles: AppRole[] = [
   ...KidChurchSupervisorRoles,
-  UserRole.KID_GROUP_USER,
+  ChurchRole.KID_CHURCH_USER,
 ];
 
 export const KidChurchSecurityRoles: AppRole[] = [
@@ -180,12 +183,15 @@ export const ALL_SYSTEM_ROLES_ORDER: AppRole[] = [
   UserRole.ADMIN,
   UserRole.STAFF,
   ChurchRole.MINISTRY_ADMIN,
-  UserRole.KID_GROUP_ADMIN,
-  UserRole.KID_GROUP_SUPERVISOR,
-  UserRole.KID_GROUP_USER,
-  UserRole.KID_REGISTER_ADMIN,
-  UserRole.KID_REGISTER_SUPERVISOR,
-  UserRole.KID_REGISTER_USER,
+  ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
+  ChurchRole.KID_CHURCH_SUPERVISOR,
+  ChurchRole.KID_CHURCH_USER,
+  ChurchRole.KID_REGISTER_COORDINATOR,
+  ChurchRole.KID_REGISTER_SUPERVISOR,
+  ChurchRole.KID_REGISTER_USER,
+  ChurchRole.KID_SECURITY_COORDINATOR,
+  ChurchRole.KID_SECURITY_SUPERVISOR,
+  ChurchRole.KID_SECURITY_USER,
 ];
 
 const userRolePriority: Record<string, number> = {
@@ -193,12 +199,15 @@ const userRolePriority: Record<string, number> = {
   ADMIN: 2,
   STAFF: 3,
   MINISTRY_ADMIN: 4,
-  KID_GROUP_ADMIN: 5,
-  KID_REGISTER_ADMIN: 5,
-  KID_GROUP_SUPERVISOR: 6,
+  KID_CHURCH_GROUP_COORDINATOR: 5,
+  KID_REGISTER_COORDINATOR: 5,
+  KID_SECURITY_COORDINATOR: 5,
+  KID_CHURCH_SUPERVISOR: 6,
   KID_REGISTER_SUPERVISOR: 6,
-  KID_GROUP_USER: 7,
+  KID_SECURITY_SUPERVISOR: 6,
+  KID_CHURCH_USER: 7,
   KID_REGISTER_USER: 7,
+  KID_SECURITY_USER: 7,
   USER: 8,
 };
 
@@ -282,43 +291,43 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<AppRole, RoleMetadata> = {
     description: 'Administrador general del ministerio infantil',
     badgeColor: 'bg-amber-100 text-amber-700 border-amber-200',
   },
-  [UserRole.KID_REGISTER_ADMIN]: {
-    id: UserRole.KID_REGISTER_ADMIN,
+  [ChurchRole.KID_REGISTER_COORDINATOR]: {
+    id: ChurchRole.KID_REGISTER_COORDINATOR,
     name: 'Registro - Coordinador',
     category: 'Registro de Niños',
     description: 'Coordinador del módulo de registro de niños',
     badgeColor: 'bg-sky-100 text-sky-700 border-sky-200',
   },
-  [UserRole.KID_REGISTER_SUPERVISOR]: {
-    id: UserRole.KID_REGISTER_SUPERVISOR,
+  [ChurchRole.KID_REGISTER_SUPERVISOR]: {
+    id: ChurchRole.KID_REGISTER_SUPERVISOR,
     name: 'Registro - Supervisor',
     category: 'Registro de Niños',
     description: 'Supervisión y control del flujo de registro',
     badgeColor: 'bg-cyan-100 text-cyan-700 border-cyan-200',
   },
-  [UserRole.KID_REGISTER_USER]: {
-    id: UserRole.KID_REGISTER_USER,
+  [ChurchRole.KID_REGISTER_USER]: {
+    id: ChurchRole.KID_REGISTER_USER,
     name: 'Registro - Servidor',
     category: 'Registro de Niños',
     description: 'Atención y registro en mesas de entrada',
     badgeColor: 'bg-teal-100 text-teal-700 border-teal-200',
   },
-  [UserRole.KID_GROUP_ADMIN]: {
-    id: UserRole.KID_GROUP_ADMIN,
-    name: 'Niños - Coordinador',
+  [ChurchRole.KID_CHURCH_GROUP_COORDINATOR]: {
+    id: ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
+    name: 'Niños - Coordinador de Grupo',
     category: 'Ministerio de Niños',
     description: 'Coordinador de actividades y salones infantiles',
     badgeColor: 'bg-emerald-100 text-emerald-700 border-emerald-200',
   },
-  [UserRole.KID_GROUP_SUPERVISOR]: {
-    id: UserRole.KID_GROUP_SUPERVISOR,
+  [ChurchRole.KID_CHURCH_SUPERVISOR]: {
+    id: ChurchRole.KID_CHURCH_SUPERVISOR,
     name: 'Niños - Supervisor',
     category: 'Ministerio de Niños',
     description: 'Supervisor de salones y asistencia',
     badgeColor: 'bg-green-100 text-green-700 border-green-200',
   },
-  [UserRole.KID_GROUP_USER]: {
-    id: UserRole.KID_GROUP_USER,
+  [ChurchRole.KID_CHURCH_USER]: {
+    id: ChurchRole.KID_CHURCH_USER,
     name: 'Niños - Servidor',
     category: 'Ministerio de Niños',
     description: 'Servidor de salón y pase de lista',
@@ -367,9 +376,9 @@ export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
     label: 'Registro de Niños',
     description: 'Módulo de registro, recepción y acreditación de niños',
     roles: [
-      UserRole.KID_REGISTER_USER,
-      UserRole.KID_REGISTER_SUPERVISOR,
-      UserRole.KID_REGISTER_ADMIN,
+      ChurchRole.KID_REGISTER_USER,
+      ChurchRole.KID_REGISTER_SUPERVISOR,
+      ChurchRole.KID_REGISTER_COORDINATOR,
     ],
   },
   {
@@ -377,10 +386,20 @@ export const MINISTRY_ROLE_GROUPS: MinistryRoleGroup[] = [
     label: 'Ministerio de Niños',
     description: 'Módulo de clases infantiles, salones y actividades',
     roles: [
-      UserRole.KID_GROUP_USER,
-      UserRole.KID_GROUP_SUPERVISOR,
-      UserRole.KID_GROUP_ADMIN,
+      ChurchRole.KID_CHURCH_USER,
+      ChurchRole.KID_CHURCH_SUPERVISOR,
+      ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
       ChurchRole.MINISTRY_ADMIN,
+    ],
+  },
+  {
+    id: 'KID_SECURITY',
+    label: 'Seguridad Infantil',
+    description: 'Módulo de seguridad, acceso y entrega de niños',
+    roles: [
+      ChurchRole.KID_SECURITY_USER,
+      ChurchRole.KID_SECURITY_SUPERVISOR,
+      ChurchRole.KID_SECURITY_COORDINATOR,
     ],
   },
   {

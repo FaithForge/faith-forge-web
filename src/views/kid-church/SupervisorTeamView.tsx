@@ -21,6 +21,8 @@ import { EntityState, MinistryType, MinistryAreaScope } from '@/libs/models';
 import { toast } from 'sonner';
 import { APP_ROUTES } from '@/config/routes';
 import { useChurchTerm, useKidsTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import { usePermissions } from '@/libs/hooks/usePermissions';
+import { ChurchRole } from '@/libs/utils/auth';
 
 const ROLE_LABEL: Record<VolunteerRole, string> = {
   [VolunteerRole.VOLUNTEER]: 'Servidor(a)',
@@ -161,34 +163,20 @@ export const SupervisorTeamView: React.FC = () => {
     campuses,
   } = useAppSelector((state) => state.volunteerContextSlice);
 
-  const isSuperAdmin = currentRole === 'SUPER_ADMIN' || currentRole === 'ADMIN';
+  const {
+    isSuperAdmin,
+    isServidor,
+    isAreaCoordinator,
+    isGroupCoordinator,
+    isSupervisor,
+    canViewTeam: canAccessTeam,
+    hasRole,
+  } = usePermissions();
 
-  const isServidor =
-    currentRole === 'KID_REGISTER_USER' ||
-    currentRole === 'KID_GROUP_USER' ||
-    activeVolunteerRole === VolunteerRole.VOLUNTEER;
-
-  const isAreaCoordinator =
-    currentRole === 'KID_REGISTER_ADMIN' ||
-    activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR;
-
-  const isGroupCoordinator =
-    currentRole === 'KID_GROUP_ADMIN' ||
-    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR;
-
-  const isSupervisor =
-    currentRole === 'KID_REGISTER_SUPERVISOR' ||
-    currentRole === 'KID_GROUP_SUPERVISOR' ||
-    activeVolunteerRole === VolunteerRole.SUPERVISOR;
-
-  const isCoordinator = isAreaCoordinator || isGroupCoordinator || currentRole === 'MINISTRY_ADMIN';
-
-  const canAccessTeam =
-    !isServidor &&
-    (isSuperAdmin ||
-      isCoordinator ||
-      isSupervisor ||
-      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR);
+  const isCoordinator =
+    isAreaCoordinator ||
+    isGroupCoordinator ||
+    hasRole(ChurchRole.MINISTRY_ADMIN);
 
   useEffect(() => {
     if (!canAccessTeam) {
@@ -462,9 +450,10 @@ export const SupervisorTeamView: React.FC = () => {
     searchTerm,
   ]);
 
-  const isRegistrationUser =
-    currentRole === 'KID_REGISTER_ADMIN' ||
-    currentRole === 'KID_REGISTER_SUPERVISOR';
+  const isRegistrationUser = hasRole(
+    ChurchRole.KID_REGISTER_COORDINATOR,
+    ChurchRole.KID_REGISTER_SUPERVISOR,
+  );
 
   const headerBadgeStyle = useMemo(() => {
     if (isRegistrationUser || isAreaCoordinator) {
@@ -476,9 +465,7 @@ export const SupervisorTeamView: React.FC = () => {
     return 'bg-purple-100 text-purple-700';
   }, [isRegistrationUser, isAreaCoordinator, isCoordinator]);
 
-  if (!canAccessTeam) {
-    return null;
-  }
+  if (!canAccessTeam) return null;
 
   return (
     <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-5 pb-28 sm:pb-32">

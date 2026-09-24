@@ -32,12 +32,10 @@ import {
   userStateSelect 
 } from '@/libs/models/User';
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
-import { capitalizeWords } from '@/libs/utils/text';
 import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber } from '@/libs/utils/phone';
 import { toDateOnlyInputValue } from '@/libs/utils/date';
 import { APP_ROUTES } from '@/config/routes';
-import dayjs from 'dayjs';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';

@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { FileText, MapPin, CalendarClock, Download, X, Loader2, Users, UserPlus, Sparkles } from 'lucide-react';
+import { FileText, MapPin, CalendarClock, Download, Loader2, Users, Sparkles } from 'lucide-react';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import Button from '@/components/ui/Button';

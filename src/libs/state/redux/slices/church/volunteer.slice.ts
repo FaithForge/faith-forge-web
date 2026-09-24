@@ -346,7 +346,7 @@ export const volunteerSlice = createSlice({
       })
       .addCase(
         GetVolunteerWithAssignments.fulfilled,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+         
         (state, action: PayloadAction<any>) => {
           state.loadingCurrentAssignments = false;
           state.currentVolunteerAssignments = Array.isArray(action.payload)

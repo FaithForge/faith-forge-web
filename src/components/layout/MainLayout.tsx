@@ -17,7 +17,7 @@ import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
 import { ChurchMeetingStateEnum } from '@/libs/models';
-import { VolunteerRole } from '@/libs/models/Volunteer';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { APP_ROUTES } from '@/config/routes';
 import { toast } from 'sonner';
 
@@ -47,8 +47,7 @@ const MainLayoutContent = () => {
   const { isTransitioning } = useRoleTransition();
 
   const { token, refreshToken } = useAppSelector((state) => state.authSlice);
-  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const activeVolunteerRole = useAppSelector((state) => state.volunteerContextSlice.activeVolunteerRole);
+  const { currentRole, isKidChurchRole, isKidRegistrationRole } = usePermissions();
   const volunteerCampuses = useAppSelector((state) => state.volunteerContextSlice.campuses || []);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
@@ -57,9 +56,7 @@ const MainLayoutContent = () => {
   useEffect(() => {
     if (isAdminRole || volunteerCampuses.length !== 1) return;
     const assignedCampus = volunteerCampuses[0];
-    if (currentCampus?.id !== assignedCampus.id) {
-      dispatch(updateCurrentChurchCampus(assignedCampus.id));
-    }
+    if (currentCampus?.id !== assignedCampus.id) dispatch(updateCurrentChurchCampus(assignedCampus.id));
   }, [isAdminRole, volunteerCampuses, currentCampus?.id, dispatch]);
 
   useEffect(() => {
@@ -144,23 +141,6 @@ const MainLayoutContent = () => {
     const config = userRolesNavBarConfig[currentRole];
     if (!config) return;
 
-    const isActiveKidChurchContext =
-      activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
-      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR;
-    const isKidChurchRole =
-      isActiveKidChurchContext ||
-      currentRole === 'MINISTRY_ADMIN' ||
-      currentRole === 'KID_GROUP_ADMIN' ||
-      currentRole === 'KID_GROUP_SUPERVISOR' ||
-      currentRole === 'KID_GROUP_USER';
-
-    const isKidRegistrationRole =
-      !isActiveKidChurchContext &&
-      (currentRole === 'KID_REGISTER_ADMIN' ||
-        currentRole === 'KID_REGISTER_SUPERVISOR' ||
-        currentRole === 'KID_REGISTER_USER' ||
-        currentRole === 'USER');
-
     let isMismatch = false;
     if (isKidChurchRole && (pathname.startsWith('/kid-registration') || pathname.startsWith('/admin'))) {
       isMismatch = true;
@@ -170,10 +150,8 @@ const MainLayoutContent = () => {
       isMismatch = true;
     }
 
-    if (isMismatch) {
-      navigate(config.dashboardUrl, { replace: true });
-    }
-  }, [pathname, currentRole, activeVolunteerRole, navigate, isAdminRole]);
+    if (isMismatch) navigate(config.dashboardUrl, { replace: true });
+  }, [pathname, currentRole, isKidChurchRole, isKidRegistrationRole, navigate, isAdminRole]);
 
   // Restore scroll position when returning to a previous route, or scroll to top for singular views
   useEffect(() => {

@@ -24,7 +24,6 @@ import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import {
   CreateVolunteer,
   CreateVolunteerAssignment,
-  GetVolunteers,
   GetVolunteerAssignments,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
@@ -33,8 +32,6 @@ import { microserviceApiRequest } from '@/libs/utils/http';
 import { toast } from 'sonner';
 import {
   ShieldCheck,
-  UserCheck,
-  Search,
   Check,
   User as UserIcon,
   Crown,

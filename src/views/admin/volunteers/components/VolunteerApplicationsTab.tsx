@@ -2,7 +2,6 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Check,
   X,
-  Search,
   RotateCcw,
   Clock,
   CheckCircle2,
@@ -10,11 +9,6 @@ import {
   Phone,
   Mail,
   Calendar,
-  MapPin,
-  Layers,
-  Users,
-  Shield,
-  Loader2,
   Inbox,
   AlertCircle,
 } from 'lucide-react';

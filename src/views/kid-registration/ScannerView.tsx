@@ -1,10 +1,9 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Check, ChevronRight, ChevronDown, Info, AlertTriangle, ArrowLeftRight, Printer } from 'lucide-react';
+import { Check, ChevronRight, ChevronDown, Info, ArrowLeftRight, Printer } from 'lucide-react';
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { APP_ROUTES } from "@/config/routes";
 import clsx from 'clsx';
-import dayjs from 'dayjs';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';

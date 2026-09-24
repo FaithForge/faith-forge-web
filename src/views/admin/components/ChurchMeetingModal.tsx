@@ -9,8 +9,7 @@ import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CreateChurchMeeting, UpdateChurchMeeting } from '@/libs/state/redux/thunks/church/church.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
-import { CalendarClock, Clock, CalendarDays, CheckCircle2, EyeOff, XCircle } from 'lucide-react';
-import clsx from 'clsx';
+import { CalendarClock, Clock, CalendarDays } from 'lucide-react';
 
 interface ChurchMeetingModalProps {
   open: boolean;

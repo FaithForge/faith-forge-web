@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, Search, UserCheck, AlertTriangle } from 'lucide-react';
+import { Search, UserCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   useLazyGetKidGuardianQuery,

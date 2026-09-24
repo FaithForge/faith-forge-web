@@ -2,14 +2,11 @@ import React, { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
   Search,
   Users,
-  CheckCircle2,
   Clock,
   LogOut,
   DoorOpen,
-  Filter,
   RefreshCw,
   Phone,
   ShieldAlert,

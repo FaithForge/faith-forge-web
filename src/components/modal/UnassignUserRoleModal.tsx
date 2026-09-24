@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
-import { X, ShieldAlert, Trash2, AlertTriangle, ShieldCheck } from 'lucide-react';
+import { ShieldAlert, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import { useAppDispatch } from '@/libs/state/redux/hooks';

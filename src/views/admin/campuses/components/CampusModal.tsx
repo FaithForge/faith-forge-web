@@ -8,7 +8,7 @@ import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CreateChurchCampus, UpdateChurchCampus } from '@/libs/state/redux/thunks/church/church.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
-import { MapPin, Sparkles, CheckCircle2, XCircle } from 'lucide-react';
+import { MapPin, CheckCircle2, XCircle } from 'lucide-react';
 import clsx from 'clsx';
 
 interface CampusModalProps {
