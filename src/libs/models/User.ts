@@ -310,7 +310,7 @@ export interface IInAppNotification {
   status?: 'PENDING' | 'ACKNOWLEDGED';
   read: boolean;
   createdAt: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
 }
 
 export interface IInAppNotificationsResponse {

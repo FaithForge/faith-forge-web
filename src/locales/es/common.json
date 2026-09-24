@@ -90,5 +90,13 @@
     "finish": "Finalizar",
     "printer_linked_success": "Impresora \"{{name}}\" vinculada correctamente",
     "printer_connect_error": "Error al conectar impresora Bluetooth"
+  },
+  "offline": {
+    "saved_locally": "Sin conexión. Operación guardada localmente para sincronizar al volver a conectarse.",
+    "syncing_pending": "Sincronizando {{count}} operaciones pendientes...",
+    "syncing_pending_one": "Sincronizando 1 operación pendiente...",
+    "sync_completed": "¡Sincronización completada! {{count}} operaciones guardadas en el servidor.",
+    "sync_completed_one": "¡Sincronización completada! 1 operación guardada en el servidor.",
+    "sync_failed": "No se pudieron sincronizar algunas operaciones pendientes. Se reintentará más tarde."
   }
 }

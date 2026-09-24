@@ -9,7 +9,7 @@ export interface MicroserviceBaseQueryArgs {
   url: string;
   method?: HttpRequestMethod;
   data?: unknown;
-  params?: any;
+  params?: Record<string, unknown>;
   headers?: Record<string, string>;
   idempotencyKey?: string;
   queueIfOffline?: boolean;
@@ -24,6 +24,20 @@ export interface ApiCustomError {
   code?: string;
   detail?: string;
   problemDetails?: ProblemDetails;
+}
+
+interface HttpErrorResponse {
+  code?: string;
+  message?: string;
+  status?: number;
+  problemDetails?: ProblemDetails;
+  response?: {
+    status?: number;
+    data?: {
+      error?: ProblemDetails;
+      [key: string]: unknown;
+    };
+  };
 }
 
 /**
@@ -71,7 +85,7 @@ export const microserviceBaseQuery: BaseQueryFn<
 
     return { data: response.data };
   } catch (err: unknown) {
-    const errorObj = err as any;
+    const errorObj = err as HttpErrorResponse;
 
     const isOffline =
       (typeof navigator !== 'undefined' && !navigator.onLine) ||

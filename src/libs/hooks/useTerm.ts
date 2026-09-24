@@ -9,11 +9,11 @@ import {
 import { MinistryType, VolunteerRole } from '@/libs/models';
 
 /**
- * Resuelve un término institucional de nivel Iglesia con soporte de personalización por tenant.
+ * Resolves an institutional Church-level terminology term with tenant customization support.
  *
- * @param {ChurchTermKey} key - Clave del término institucional (ej. 'meeting', 'campus', 'volunteer').
- * @param {Record<string, string>} [overrides] - Overrides directos opcionales (para contextos no reactivos).
- * @returns {string} El término personalizado o el valor universal predeterminado.
+ * @param {ChurchTermKey} key - The institutional term key (e.g., 'meeting', 'campus', 'volunteer').
+ * @param {Record<string, string>} [overrides] - Optional direct term overrides (for non-reactive contexts).
+ * @returns {string} The customized term or the universal default fallback.
  */
 export function getChurchTerm(
   key: ChurchTermKey,
@@ -23,12 +23,12 @@ export function getChurchTerm(
 }
 
 /**
- * Resuelve un término operativo de nivel Ministerio Infantil con soporte de personalización por ministerio.
+ * Resolves an operational Kids Ministry-level term with per-ministry customization support.
  *
- * @param {KidsTermKey} key - Clave del término de niños (ej. 'teacher', 'registration', 'guardian').
- * @param {Record<string, string>} [overrides] - Overrides directos del ministerio.
- * @param {string} [ministryName] - Nombre del ministerio como fallback de module_alias.
- * @returns {string} El término personalizado o el valor predeterminado de escuela infantil.
+ * @param {KidsTermKey} key - Kids term key (e.g., 'teacher', 'registration', 'guardian').
+ * @param {Record<string, string>} [overrides] - Direct ministry terminology overrides.
+ * @param {string} [ministryName] - Ministry name used as fallback for module_alias.
+ * @returns {string} The customized term or the default kid church fallback.
  */
 export function getKidsTerm(
   key: KidsTermKey,
@@ -38,7 +38,7 @@ export function getKidsTerm(
   if (overrides?.[key]) {
     return overrides[key];
   }
-  // Si no hay override específico de module_alias pero el ministerio tiene nombre configurado en BD, usarlo
+  // If there is no specific module_alias override but the ministry has a configured name, use it
   if (key === 'module_alias' && ministryName?.trim()) {
     return ministryName.trim();
   }
@@ -46,11 +46,11 @@ export function getKidsTerm(
 }
 
 /**
- * Hook reactivo para obtener términos institucionales de nivel Iglesia.
- * Reactivo a cambios en la configuración de la iglesia activa en Redux.
+ * Reactive hook to obtain Church-level institutional terms.
+ * Subscribes to changes in the active church configuration within Redux.
  *
- * @param {ChurchTermKey} key - Clave del término de la iglesia (ej. 'meeting', 'campus', 'volunteer').
- * @returns {string} Término institucional configurado por la iglesia o default universal.
+ * @param {ChurchTermKey} key - Church term key (e.g., 'meeting', 'campus', 'volunteer').
+ * @returns {string} Church-configured institutional term or universal default.
  */
 export function useChurchTerm(key: ChurchTermKey): string {
   const overrides = useSelector(
@@ -62,12 +62,12 @@ export function useChurchTerm(key: ChurchTermKey): string {
 }
 
 /**
- * Hook reactivo para obtener términos del Ministerio de Niños.
- * Detecta automáticamente el ministerio de tipo KIDS de la sede activa en Redux y aplica sus personalizaciones.
- * Incluye resolución contextual por sede, fallback al nombre del ministerio y fallback inteligente a áreas de registro.
+ * Reactive hook to obtain Kids Ministry terminology.
+ * Automatically detects the KIDS ministry for the active campus in Redux and applies customizations.
+ * Includes contextual campus resolution, ministry name fallback, and intelligent registration area fallback.
  *
- * @param {KidsTermKey} key - Clave del término de niños (ej. 'teacher', 'registration', 'guardian', 'classroom').
- * @returns {string} Término del ministerio de niños (ej. 'Iglekids', 'Regikids', 'Servidor(a)').
+ * @param {KidsTermKey} key - Kids term key (e.g., 'teacher', 'registration', 'guardian', 'classroom').
+ * @returns {string} Resolved kids ministry term (e.g., 'Iglekids', 'Regikids', 'Servidor(a)').
  */
 export function useKidsTerm(key: KidsTermKey): string {
   const activeCampusId = useSelector(
@@ -83,7 +83,7 @@ export function useKidsTerm(key: KidsTermKey): string {
   const kidsMinistry = useSelector((state: RootState) => {
     const ministries = state.ministrySlice.ministries || [];
 
-    // 1. Priorizar el ministerio KIDS de la sede activa
+    // 1. Prioritize KIDS ministry for the active campus
     if (activeCampusId) {
       const campusMatch = ministries.find(
         (m) => m.churchCampusId === activeCampusId && m.type === MinistryType.KIDS,
@@ -91,11 +91,11 @@ export function useKidsTerm(key: KidsTermKey): string {
       if (campusMatch) return campusMatch;
     }
 
-    // 2. Fallback a cualquier ministerio KIDS cargado
+    // 2. Fallback to any loaded KIDS ministry
     return ministries.find((m) => m.type === MinistryType.KIDS);
   });
 
-  // 3. Fallback de nombre de ministerio si Redux aún no ha hidratado ministries
+  // 3. Ministry name fallback if Redux has not yet hydrated ministries array
   const fallbackMinistryName = useSelector((state: RootState) => {
     if (kidsMinistry?.name) return kidsMinistry.name;
     const currentVolunteerCampus =
@@ -107,7 +107,7 @@ export function useKidsTerm(key: KidsTermKey): string {
     return undefined;
   });
 
-  // 4. Fallback de 'registration' si hay un área con scope KID_REGISTRATION en el contexto del campus
+  // 4. Fallback for 'registration' if an area with KID_REGISTRATION scope exists in campus context
   const registrationAreaFallback = useSelector((state: RootState) => {
     if (key !== 'registration') return undefined;
     const currentVolunteerCampus =
@@ -136,12 +136,12 @@ export function useKidsTerm(key: KidsTermKey): string {
 }
 
 /**
- * Hook reactivo general para resolver términos de un ministerio específico por ID o tipo.
+ * General reactive hook to resolve terminology for a specific ministry by ID or type.
  *
- * @param {string | undefined} ministryId - ID del ministerio a consultar.
- * @param {string} key - Clave del término a consultar.
- * @param {string} [fallback] - Texto alternativo en caso de no encontrarse.
- * @returns {string} Término resuelto.
+ * @param {string | undefined} ministryId - ID of the ministry to query.
+ * @param {string} key - Terminology key to look up.
+ * @param {string} [fallback] - Alternative fallback text if not found.
+ * @returns {string} The resolved term.
  */
 export function useMinistryTerm(
   ministryId: string | undefined,
@@ -169,7 +169,7 @@ export function useMinistryTerm(
 }
 
 /**
- * Opciones para resolver la etiqueta de un rol de voluntario.
+ * Configuration options for resolving volunteer role labels.
  */
 export interface VolunteerRoleLabelOptions {
   ministryType?: MinistryType;
@@ -180,14 +180,14 @@ export interface VolunteerRoleLabelOptions {
 }
 
 /**
- * Resuelve la etiqueta de un rol de servicio según el contexto del ministerio y la iglesia.
- * Por ejemplo:
- * - En un ministerio de niños (KIDS), el rol base VOLUNTEER se resuelve al término configurado (por defecto 'Servidor(a)' o personalizable a 'Maestro(a)').
- * - En un ministerio general, se resuelve a 'Servidor' (o el término institucional configurado).
+ * Resolves the display label for a service role contextualized by ministry and church.
+ * For example:
+ * - In a KIDS ministry, the base role VOLUNTEER resolves to the configured kids term ('Servidor(a)' or 'Maestro(a)').
+ * - In a general ministry, it resolves to 'Servidor' (or the church configured institutional term).
  *
- * @param {VolunteerRole} role - Rol operativo del voluntario.
- * @param {VolunteerRoleLabelOptions} [options] - Opciones de contexto (tipo de ministerio, overrides, abreviación, plural).
- * @returns {string} Etiqueta contextualizada del rol.
+ * @param {VolunteerRole} role - Operational volunteer role enum.
+ * @param {VolunteerRoleLabelOptions} [options] - Contextual options (ministry type, overrides, short form, plural).
+ * @returns {string} Contextualized role display label.
  */
 export function getVolunteerRoleLabel(
   role: VolunteerRole,
@@ -267,12 +267,12 @@ export function getVolunteerRoleLabel(
 }
 
 /**
- * Hook reactivo para obtener la etiqueta de un VolunteerRole contextualizado a un ministerio.
+ * Reactive hook to obtain the display label of a VolunteerRole contextualized to a ministry.
  *
- * @param {VolunteerRole} role - Rol operativo.
- * @param {string | undefined} [ministryId] - ID del ministerio para inferir tipo y overrides.
- * @param {Omit<VolunteerRoleLabelOptions, 'ministryType' | 'ministryOverrides' | 'churchOverrides'>} [options] - Opciones de formato.
- * @returns {string} Etiqueta contextualizada reactiva.
+ * @param {VolunteerRole} role - Operational volunteer role.
+ * @param {string | undefined} [ministryId] - Ministry ID used to infer type and overrides.
+ * @param {Omit<VolunteerRoleLabelOptions, 'ministryType' | 'ministryOverrides' | 'churchOverrides'>} [options] - Formatting options.
+ * @returns {string} Reactive contextualized role label.
  */
 export function useVolunteerRoleLabel(
   role: VolunteerRole,
@@ -297,4 +297,3 @@ export function useVolunteerRoleLabel(
     churchOverrides,
   });
 }
-

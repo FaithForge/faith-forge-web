@@ -3,9 +3,16 @@ import {
   REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING,
   REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING,
 } from '@/libs/common-types/constants/copy';
+import { IChurchCampus, IChurchMeeting, IChurchPrinter } from '@/libs/models/Church';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 import { useAppSelector } from '@/libs/state/redux/hooks';
-import { IsAdmin, IsAdminKidChurch, IsAdminKidRegisterChurch, IsSupervisorRegisterKidChurch } from '@/libs/utils/auth';
+import {
+  AppRole,
+  IsAdmin,
+  IsAdminKidChurch,
+  IsAdminKidRegisterChurch,
+  IsSupervisorRegisterKidChurch,
+} from '@/libs/utils/auth';
 import dayjs from 'dayjs';
 import { useEffect, useState } from 'react';
 
@@ -29,9 +36,12 @@ const DAYS_MAP: Record<string, number> = {
 };
 
 /**
- * Normaliza cualquier formato de hora (string "HH:mm:ss", "HH:mm" o fecha ISO) a formato "HH:mm:ss".
+ * Normalizes any date or time value (string "HH:mm:ss", "HH:mm", or ISO timestamp) to standard "HH:mm:ss" format.
+ *
+ * @param {unknown} val - Raw time representation to normalize.
+ * @returns {string} Formatted "HH:mm:ss" string, or empty string if invalid.
  */
-const normalizeTime = (val: any): string => {
+const normalizeTime = (val: unknown): string => {
   if (!val) return '';
   if (typeof val === 'string') {
     // If already in "HH:mm" or "HH:mm:ss" format
@@ -63,6 +73,9 @@ const normalizeTime = (val: any): string => {
   return '';
 };
 
+/**
+ * Meeting state validation snapshot returned by useChurchMeetingStatus.
+ */
 export interface MeetingStatus {
   isConfigured: boolean;
   isMeetingValid: boolean;
@@ -71,9 +84,20 @@ export interface MeetingStatus {
   isAdmin: boolean;
   /** True when the active role is KID_REGISTER_SUPERVISOR (or above). Supervisor+ can delete registrations and view the registration log. */
   isSupervisor: boolean;
-  currentMeeting: any;
-  currentPrinter: any;
-  currentCampus: any;
+  currentMeeting: IChurchMeeting | null;
+  currentPrinter: IChurchPrinter | null;
+  currentCampus: IChurchCampus | null;
+}
+
+/**
+ * Extended meeting interface accounting for potential legacy property aliases.
+ */
+interface IExtendedMeetingProperties extends IChurchMeeting {
+  initial_registration_hour?: string;
+  registrationInitialHour?: string;
+  final_registration_hour?: string;
+  registrationFinalHour?: string;
+  final_hour?: string;
 }
 
 /**
@@ -82,7 +106,7 @@ export interface MeetingStatus {
  * `isMeetingValid` immediately switches to false and `shouldBlockKids` blocks registrations in real time
  * without needing the user to refresh the page.
  *
- * @returns {MeetingStatus} Current meeting validation and blocking status.
+ * @returns {MeetingStatus} Current meeting validation and blocking status snapshot.
  */
 export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
@@ -116,7 +140,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const printerMode = useAppSelector((state) => state.printerModeSlice?.mode || 'NETWORK');
   const bluetoothDevice = useAppSelector((state) => state.printerModeSlice?.bluetoothDevice);
 
-  const userRoles = (user?.roles as any[]) || [];
+  const userRoles = (user?.roles as AppRole[]) || [];
   const activeRoles = currentRole ? Array.from(new Set([...userRoles, currentRole])) : userRoles;
   const isAdmin =
     IsAdmin(activeRoles) || IsAdminKidChurch(activeRoles) || IsAdminKidRegisterChurch(activeRoles);
@@ -139,7 +163,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
       const currentTimeStr = currentTime.format('HH:mm:ss');
 
       // Specifically use registration hour fields (initialRegistrationHour / finalRegistrationHour)
-      const m = currentMeeting as any;
+      const m = currentMeeting as IExtendedMeetingProperties;
       const initRaw =
         m.initialRegistrationHour ?? m.initial_registration_hour ?? m.registrationInitialHour;
 
@@ -154,11 +178,11 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
       const finalTimeStr = normalizeTime(finalRaw);
 
       if (initTimeStr && currentTimeStr < initTimeStr) {
-        // La hora actual es ANTERIOR a la hora inicial de registro del servicio (servicio posterior)
+        // Current time is before the initial registration hour of the meeting (future meeting)
         isMeetingValid = false;
         meetingErrorMsg = REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING.message;
       } else if (finalTimeStr && currentTimeStr >= finalTimeStr) {
-        // La hora actual es POSTERIOR a la hora final de registro del servicio (servicio ya finalizó)
+        // Current time is after the final registration hour of the meeting (meeting has concluded)
         isMeetingValid = false;
         meetingErrorMsg = REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING.message;
       }
@@ -178,8 +202,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     shouldBlockKids,
     isAdmin,
     isSupervisor,
-    currentMeeting,
-    currentPrinter,
-    currentCampus,
+    currentMeeting: currentMeeting ?? null,
+    currentPrinter: currentPrinter ?? null,
+    currentCampus: currentCampus ?? null,
   };
 };

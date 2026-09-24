@@ -1,10 +1,14 @@
 import { HttpRequestMethod, MicroserviceEnum, API_BASE_URL } from '@/libs/common-types/global';
+import i18n from '@/libs/i18n';
 import axios from 'axios';
 import { toast } from 'sonner';
 
 export const OFFLINE_QUEUE_STORAGE_KEY = 'app_offline_mutation_queue';
 export const OFFLINE_QUEUE_CHANGED_EVENT = 'offlineQueue:changed';
 
+/**
+ * Structure of a queued offline mutation payload.
+ */
 export interface QueuedMutation {
   id: string;
   microservice: MicroserviceEnum;
@@ -21,7 +25,7 @@ export interface QueuedMutation {
 /**
  * Generates a cryptographically secure or pseudo-random UUID v4 string.
  *
- * @returns {string} UUID v4 identifier.
+ * @returns {string} Standard UUID v4 identifier.
  */
 export const generateUUID = (): string => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -35,9 +39,9 @@ export const generateUUID = (): string => {
 };
 
 /**
- * Retrieves the current offline queue from localStorage.
+ * Retrieves the current offline mutation queue from persistent storage (localStorage).
  *
- * @returns {QueuedMutation[]} Array of queued mutations.
+ * @returns {QueuedMutation[]} Array of pending queued mutations.
  */
 export const getOfflineQueue = (): QueuedMutation[] => {
   if (typeof window === 'undefined') return [];
@@ -51,9 +55,10 @@ export const getOfflineQueue = (): QueuedMutation[] => {
 };
 
 /**
- * Persists the offline queue to localStorage and notifies listeners.
+ * Persists the offline mutation queue to localStorage and dispatches a change event.
  *
- * @param {QueuedMutation[]} queue - Array of queued mutations.
+ * @param {QueuedMutation[]} queue - Array of queued mutations to persist.
+ * @returns {void}
  */
 export const saveOfflineQueue = (queue: QueuedMutation[]): void => {
   if (typeof window === 'undefined') return;
@@ -68,12 +73,9 @@ export const saveOfflineQueue = (queue: QueuedMutation[]): void => {
 };
 
 /**
- * Adds a mutation request to the offline queue with an idempotency key.
- *
- * @param {object} mutation - Mutation payload details.
- * @returns {QueuedMutation} The created queue item.
+ * Payload parameters required to schedule an offline mutation.
  */
-export const enqueueOfflineMutation = (mutation: {
+export interface EnqueueMutationOptions {
   microservice: MicroserviceEnum;
   method: HttpRequestMethod;
   url: string;
@@ -81,7 +83,15 @@ export const enqueueOfflineMutation = (mutation: {
   params?: Record<string, unknown>;
   description?: string;
   idempotencyKey?: string;
-}): QueuedMutation => {
+}
+
+/**
+ * Enqueues a server mutation request to be executed or synchronized when connectivity resumes.
+ *
+ * @param {EnqueueMutationOptions} mutation - Mutation payload details.
+ * @returns {QueuedMutation} The created queue mutation item.
+ */
+export const enqueueOfflineMutation = (mutation: EnqueueMutationOptions): QueuedMutation => {
   const queue = getOfflineQueue();
   const newItem: QueuedMutation = {
     id: generateUUID(),
@@ -99,7 +109,7 @@ export const enqueueOfflineMutation = (mutation: {
   queue.push(newItem);
   saveOfflineQueue(queue);
 
-  toast.info('Sin conexión. Operación guardada localmente para sincronizar al volver a conectarse.', {
+  toast.info(i18n.t('offline.saved_locally', { defaultValue: 'Sin conexión. Operación guardada localmente para sincronizar al volver a conectarse.' }), {
     duration: 4000,
   });
 
@@ -107,18 +117,19 @@ export const enqueueOfflineMutation = (mutation: {
 };
 
 /**
- * Returns the current number of pending items in the offline queue.
+ * Returns the current count of pending operations awaiting synchronization.
  *
- * @returns {number} Pending queue count.
+ * @returns {number} Pending queue item count.
  */
 export const getPendingQueueCount = (): number => {
   return getOfflineQueue().length;
 };
 
 /**
- * Removes a specific mutation from the offline queue by its unique ID.
+ * Removes a specific mutation from the offline queue by its unique identifier.
  *
- * @param {string} id - The ID of the queued mutation.
+ * @param {string} id - The unique ID of the queued mutation item.
+ * @returns {void}
  */
 export const removeOfflineMutation = (id: string): void => {
   const queue = getOfflineQueue();
@@ -127,7 +138,9 @@ export const removeOfflineMutation = (id: string): void => {
 };
 
 /**
- * Clears the entire offline mutation queue.
+ * Clears all pending mutations from the persistent offline queue.
+ *
+ * @returns {void}
  */
 export const clearOfflineQueue = (): void => {
   if (typeof window === 'undefined') return;
@@ -141,19 +154,28 @@ export const clearOfflineQueue = (): void => {
   }
 };
 
-// Singleton lock to prevent parallel executions of queue draining
+// Singleton execution lock to prevent concurrent queue draining routines
 let isProcessingQueue = false;
 
 /**
- * Sequentially drains and processes all pending mutations in the offline queue.
+ * Summary outcome of the offline queue synchronization cycle.
+ */
+export interface OfflineProcessSummary {
+  total: number;
+  succeeded: number;
+  failed: number;
+}
+
+/**
+ * Sequentially drains and processes all pending mutations stored in the offline queue.
  * Executes each request with its corresponding `Idempotency-Key` header.
  *
- * @param {Function} [getToken] - Function to retrieve the active JWT token.
- * @returns {Promise<{ total: number; succeeded: number; failed: number }>} Sync summary.
+ * @param {() => string | undefined} [getToken] - Optional resolver function for the active JWT bearer token.
+ * @returns {Promise<OfflineProcessSummary>} Sync operation outcome counters.
  */
 export const processOfflineQueue = async (
   getToken?: () => string | undefined
-): Promise<{ total: number; succeeded: number; failed: number }> => {
+): Promise<OfflineProcessSummary> => {
   if (isProcessingQueue) {
     return { total: 0, succeeded: 0, failed: 0 };
   }
@@ -171,7 +193,12 @@ export const processOfflineQueue = async (
   let succeeded = 0;
   let failed = 0;
 
-  toast.loading(`Sincronizando ${initialQueue.length} ${initialQueue.length === 1 ? 'operación pendiente' : 'operaciones pendientes'}...`, {
+  const count = initialQueue.length;
+  const loadingMsg = count === 1
+    ? i18n.t('offline.syncing_pending_one', { defaultValue: 'Sincronizando 1 operación pendiente...' })
+    : i18n.t('offline.syncing_pending', { count, defaultValue: `Sincronizando ${count} operaciones pendientes...` });
+
+  toast.loading(loadingMsg, {
     id: 'offline-sync-toast',
   });
 
@@ -222,7 +249,7 @@ export const processOfflineQueue = async (
           const remaining = getOfflineQueue().map((q) => (q.id === item.id ? item : q));
           saveOfflineQueue(remaining);
           failed++;
-          // Abort further processing for now if network dropped again
+          // Abort further processing for now if network connection dropped again
           if (!navigator.onLine) {
             break;
           }
@@ -231,19 +258,20 @@ export const processOfflineQueue = async (
     }
 
     if (succeeded > 0) {
-      toast.success(
-        `¡Sincronización completada! ${succeeded} ${succeeded === 1 ? 'operación guardada' : 'operaciones guardadas'} en el servidor.`,
-        { id: 'offline-sync-toast', duration: 4000 }
-      );
-      // Emit event so queries and UI refresh their data
+      const successMsg = succeeded === 1
+        ? i18n.t('offline.sync_completed_one', { defaultValue: '¡Sincronización completada! 1 operación guardada en el servidor.' })
+        : i18n.t('offline.sync_completed', { count: succeeded, defaultValue: `¡Sincronización completada! ${succeeded} operaciones guardadas en el servidor.` });
+
+      toast.success(successMsg, { id: 'offline-sync-toast', duration: 4000 });
+      // Emit event so queries and UI refresh their active state
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('offlineQueue:synced', { detail: { succeeded } }));
       }
     } else if (failed > 0) {
-      toast.error('No se pudieron sincronizar algunas operaciones pendientes. Se reintentará más tarde.', {
-        id: 'offline-sync-toast',
-        duration: 5000,
-      });
+      toast.error(
+        i18n.t('offline.sync_failed', { defaultValue: 'No se pudieron sincronizar algunas operaciones pendientes. Se reintentará más tarde.' }),
+        { id: 'offline-sync-toast', duration: 5000 }
+      );
     } else {
       toast.dismiss('offline-sync-toast');
     }

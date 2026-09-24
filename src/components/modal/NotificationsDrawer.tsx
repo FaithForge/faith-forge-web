@@ -81,7 +81,7 @@ const renderNotificationBody = (
   if (isResponse) {
     let guardian = notif.guardianName ? capitalizeWords(notif.guardianName) : '';
     let kid = notif.kidName ? capitalizeWords(notif.kidName) : '';
-    let classroom = notif.data?.classroomName || notif.kidGroupName || '';
+    let classroom: string = (notif.data?.classroomName as string | undefined) || notif.kidGroupName || '';
 
     if (!guardian || !kid) {
       const match = notif.body?.match(
@@ -101,7 +101,7 @@ const renderNotificationBody = (
     }
 
     const childArticle =
-      notif.data?.childArticle ||
+      (notif.data?.childArticle as string | undefined) ||
       (notif.data?.kidGender === 'FEMALE' ? 'la niña' : 'el niño');
     const isFemale = notif.data?.kidGender === 'FEMALE' || childArticle === 'la niña';
     const locatedWord = isFemale ? 'ubicada' : 'ubicado';

@@ -1,10 +1,15 @@
 /**
  * @fileoverview ESC/POS Command generator and ticket formatter for portable thermal printers (58mm/80mm).
+ * Produces byte command streams conforming to the standard ESC/POS protocol for text formatting,
+ * alignment, font scaling, bar/QR codes, line feeding, and paper cutting.
  */
 
 export type EscPosAlign = 'left' | 'center' | 'right';
 export type EscPosFontSize = 'normal' | 'double-height' | 'double-width' | 'large' | 'title';
 
+/**
+ * Data payload required to render a kid registration ticket and voucher.
+ */
 export interface KidTicketData {
   kidName: string;
   kidGroup: string;
@@ -22,6 +27,7 @@ export interface KidTicketData {
 
 /**
  * Helper class to construct binary ESC/POS byte commands for thermal printers.
+ * Supports chaining syntax for concise ticket construction.
  */
 export class EscPosBuilder {
   private buffer: number[] = [];
@@ -31,21 +37,23 @@ export class EscPosBuilder {
   }
 
   /**
-   * Initializes the printer with default settings.
+   * Initializes the printer with default hardware settings and selects character code table CP437.
+   *
    * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public init(): EscPosBuilder {
-    // ESC @ (Initialize printer)
+    // ESC @ (Initialize printer hardware)
     this.buffer.push(0x1b, 0x40);
-    // Code table CP437 or UTF-8 depending on printer
+    // ESC t 0 (Code table CP437 default)
     this.buffer.push(0x1b, 0x74, 0x00);
     return this;
   }
 
   /**
-   * Sets text alignment (left, center, right).
-   * @param {EscPosAlign} align Alignment option.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Sets text alignment mode (left, center, right).
+   *
+   * @param {EscPosAlign} align - Alignment option: 'left', 'center', or 'right'.
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public align(align: EscPosAlign): EscPosBuilder {
     const val = align === 'center' ? 1 : align === 'right' ? 2 : 0;
@@ -54,9 +62,10 @@ export class EscPosBuilder {
   }
 
   /**
-   * Toggles bold text.
-   * @param {boolean} enable Whether bold is active.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Toggles emphasized (bold) text formatting.
+   *
+   * @param {boolean} [enable=true] - Whether bold mode is enabled.
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public bold(enable = true): EscPosBuilder {
     this.buffer.push(0x1b, 0x45, enable ? 1 : 0);
@@ -64,9 +73,10 @@ export class EscPosBuilder {
   }
 
   /**
-   * Toggles inverted colors (white on black).
-   * @param {boolean} enable Whether inversion is active.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Toggles inverted colors (white text on black background).
+   *
+   * @param {boolean} [enable=true] - Whether inverted mode is enabled.
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public invert(enable = true): EscPosBuilder {
     this.buffer.push(0x1d, 0x42, enable ? 1 : 0);
@@ -74,9 +84,10 @@ export class EscPosBuilder {
   }
 
   /**
-   * Sets font size scaling.
-   * @param {EscPosFontSize} size Font size scale.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Sets font scaling mode (normal, double-height, double-width, large, title).
+   *
+   * @param {EscPosFontSize} size - Desired font size preset.
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public size(size: EscPosFontSize): EscPosBuilder {
     let byte = 0x00;
@@ -103,10 +114,11 @@ export class EscPosBuilder {
   }
 
   /**
-   * Appends raw text encoded as latin1 / ASCII byte values.
-   * Replaces common accented characters to ensure clean display on thermal printers.
-   * @param {string} text Text string to write.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Appends raw text encoded as Latin1 / ASCII bytes.
+   * Diacritics and accented characters are automatically normalized to ensure clean rendering.
+   *
+   * @param {string} text - The text string to write.
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public text(text: string): EscPosBuilder {
     const sanitized = this.sanitizeText(text);
@@ -117,9 +129,10 @@ export class EscPosBuilder {
   }
 
   /**
-   * Appends text followed by a newline.
-   * @param {string} text Text to print.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Appends text followed by a standard line feed (0x0A).
+   *
+   * @param {string} [text=''] - Text line to print. Defaults to an empty line.
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public line(text = ''): EscPosBuilder {
     this.text(text);
@@ -128,10 +141,11 @@ export class EscPosBuilder {
   }
 
   /**
-   * Appends a horizontal separator line.
-   * @param {string} [char='-'] Character to repeat.
-   * @param {number} [length=32] Width (32 for 58mm, 48 for 80mm).
-   * @returns {EscPosBuilder} Current builder instance.
+   * Appends a centered horizontal separator line using the specified character.
+   *
+   * @param {string} [char='-'] - Single character to repeat.
+   * @param {number} [length=32] - Total width count (32 characters for 58mm, 48 for 80mm).
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public separator(char = '-', length = 32): EscPosBuilder {
     this.align('center');
@@ -142,10 +156,11 @@ export class EscPosBuilder {
   }
 
   /**
-   * Appends ESC/POS standard QR code commands.
-   * @param {string} data Content string for QR.
-   * @param {number} [size=6] Module size (1-16).
-   * @returns {EscPosBuilder} Current builder instance.
+   * Appends ESC/POS standard Model 2 QR code generation commands.
+   *
+   * @param {string} data - Content string to encode into the QR code.
+   * @param {number} [size=6] - Module size in dots (range 1-16).
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public qrCode(data: string, size = 6): EscPosBuilder {
     this.align('center');
@@ -160,20 +175,21 @@ export class EscPosBuilder {
     this.buffer.push(0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x43, size);
     // 3. Set Error Correction Level M (0x31)
     this.buffer.push(0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x45, 0x31);
-    // 4. Store Data
+    // 4. Store Data in QR Symbol Storage Area
     this.buffer.push(0x1d, 0x28, 0x6b, pL, pH, 0x31, 0x50, 0x30);
     for (let i = 0; i < sanitized.length; i++) {
       this.buffer.push(sanitized.charCodeAt(i) & 0xff);
     }
-    // 5. Print QR Code
+    // 5. Print QR Code from Symbol Storage Area
     this.buffer.push(0x1d, 0x28, 0x6b, 0x03, 0x00, 0x31, 0x51, 0x30);
     return this;
   }
 
   /**
-   * Feeds paper by specified lines.
-   * @param {number} [lines=3] Line feed count.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Feeds paper by the specified number of lines.
+   *
+   * @param {number} [lines=3] - Line feed count (minimum 1).
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public feed(lines = 3): EscPosBuilder {
     this.buffer.push(0x1b, 0x64, Math.max(1, lines));
@@ -181,26 +197,32 @@ export class EscPosBuilder {
   }
 
   /**
-   * Sends partial/full cut command.
-   * @returns {EscPosBuilder} Current builder instance.
+   * Sends line feeds followed by a paper cut command (GS V 66 0).
+   *
+   * @returns {EscPosBuilder} Current builder instance for chaining.
    */
   public cut(): EscPosBuilder {
     this.feed(3);
-    // GS V 66 0 (Cut paper)
+    // GS V 66 0 (Cut paper command)
     this.buffer.push(0x1d, 0x56, 0x42, 0x00);
     return this;
   }
 
   /**
-   * Returns generated byte array.
-   * @returns {Uint8Array} Binary commands ready for Bluetooth GATT transmission.
+   * Returns the generated binary command sequence as a Uint8Array.
+   *
+   * @returns {Uint8Array} Binary commands ready for Bluetooth GATT transmission or raw socket output.
    */
   public getBuffer(): Uint8Array {
     return new Uint8Array(this.buffer);
   }
 
   /**
-   * Cleans text to prevent character encoding issues on thermal printers.
+   * Sanitizes text to prevent character encoding issues on thermal printers.
+   * Replaces common Latin accented characters and strips unsupported non-ASCII glyphs.
+   *
+   * @param {string} str - Raw input string.
+   * @returns {string} Sanitized string safe for thermal CP437 output.
    * @private
    */
   private sanitizeText(str: string): string {
@@ -223,19 +245,24 @@ export class EscPosBuilder {
 }
 
 /**
- * Builds standard registration label.
- * @param {KidTicketData} data Information of the registered child.
- * @returns {Uint8Array} Byte buffer ready to print.
+ * Builds the standard kid identification sticker / ticket.
+ * Includes child name, classroom / group, volunteer badge if applicable, security code,
+ * medical warnings / observations, guardian contact, and date.
+ *
+ * @param {KidTicketData} data - Information of the registered child.
+ * @returns {Uint8Array} Byte buffer ready for thermal printer transmission.
  */
 export const buildKidRegistrationTicket = (data: KidTicketData): Uint8Array => {
   const builder = new EscPosBuilder();
-  const dateStr = data.date || new Date().toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const dateStr =
+    data.date ||
+    new Date().toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   // Header
   const headerTitle = (data.campusName || 'REGISTRO DE NINOS').toUpperCase();
@@ -325,19 +352,23 @@ export const buildKidRegistrationTicket = (data: KidTicketData): Uint8Array => {
 };
 
 /**
- * Builds guardian voucher ticket (for picking up the child).
- * @param {KidTicketData} data Child and security code info.
- * @returns {Uint8Array} Byte buffer ready to print.
+ * Builds the guardian claim voucher ticket containing child name, classroom,
+ * guardian details, and prominently displayed pickup security code.
+ *
+ * @param {KidTicketData} data - Child and security code information.
+ * @returns {Uint8Array} Byte buffer ready for thermal printer transmission.
  */
 export const buildGuardianVoucherTicket = (data: KidTicketData): Uint8Array => {
   const builder = new EscPosBuilder();
-  const dateStr = data.date || new Date().toLocaleDateString('es-CO', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+  const dateStr =
+    data.date ||
+    new Date().toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
 
   builder
     .align('center')
@@ -370,9 +401,11 @@ export const buildGuardianVoucherTicket = (data: KidTicketData): Uint8Array => {
 };
 
 /**
- * Builds a diagnostic test print ticket for Bluetooth printer verification.
- * @param {string} [printerName] Device name.
- * @returns {Uint8Array} Byte buffer ready to print.
+ * Builds a diagnostic test print ticket for Bluetooth thermal printer verification.
+ * Verifies character set, text alignment, inversion, font sizing, and cut capabilities.
+ *
+ * @param {string} [printerName='Impresora Bluetooth'] - Device identifier or name.
+ * @returns {Uint8Array} Byte buffer ready for thermal printer transmission.
  */
 export const buildTestPrintTicket = (printerName = 'Impresora Bluetooth'): Uint8Array => {
   const builder = new EscPosBuilder();
@@ -389,7 +422,7 @@ export const buildTestPrintTicket = (printerName = 'Impresora Bluetooth'): Uint8
     .separator('=', 32)
     .align('left')
     .line(`Dispositivo: ${printerName}`)
-    .line(`Estado: CONECTADO OK`)
+    .line('Estado: CONECTADO OK')
     .line(`Fecha: ${now}`)
     .separator('-', 32)
     .align('center')

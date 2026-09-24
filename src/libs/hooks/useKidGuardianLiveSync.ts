@@ -19,11 +19,12 @@ export interface UseKidGuardianLiveSyncOptions {
  * and triggers an in-app visual and haptic notification.
  *
  * @param {UseKidGuardianLiveSyncOptions} options - Options containing guardianId and enabled flag.
+ * @returns {void}
  */
 export const useKidGuardianLiveSync = ({
   guardianId,
   enabled = true,
-}: UseKidGuardianLiveSyncOptions) => {
+}: UseKidGuardianLiveSyncOptions): void => {
   const dispatch = useAppDispatch();
   const { t } = useTranslation(['kidGuardian', 'common']);
 
@@ -82,7 +83,7 @@ export const useKidGuardianLiveSync = ({
             ])
           );
         } else if (payload?.type === 'URGENT_NOTICE') {
-          // Vibración háptica continua en primer plano
+          // Continuous haptic vibration in foreground
           try {
             if (typeof navigator !== 'undefined' && 'vibrate' in navigator) {
               navigator.vibrate([1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000]);

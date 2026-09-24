@@ -128,6 +128,33 @@ const AttendanceTrackingView: React.FC = () => {
     }
   };
 
+  const summary = trackingData?.summary || {
+    totalRegistered: 0,
+    pendingEntry: 0,
+    inArea: 0,
+    checkedOut: 0,
+  };
+
+  const filteredItems = useMemo(() => {
+    let list = trackingData?.data || [];
+    if (activeTab !== 'ALL') {
+      list = list.filter((i) => i.attendanceStatus === activeTab);
+    }
+    if (selectedGroupId) {
+      list = list.filter((i) => i.groupId === selectedGroupId);
+    }
+    if (searchText.trim()) {
+      const q = searchText.trim().toLowerCase();
+      list = list.filter(
+        (i) =>
+          i.kidFullName.toLowerCase().includes(q) ||
+          i.guardianFullName.toLowerCase().includes(q) ||
+          (i.faithForgeId && i.faithForgeId.toString().includes(q)),
+      );
+    }
+    return list;
+  }, [trackingData?.data, activeTab, selectedGroupId, searchText]);
+
   // If campus is in ONLY_CHECK_IN mode
   if (isOnlyCheckIn) {
     return (
@@ -157,33 +184,6 @@ const AttendanceTrackingView: React.FC = () => {
       </div>
     );
   }
-
-  const summary = trackingData?.summary || {
-    totalRegistered: 0,
-    pendingEntry: 0,
-    inArea: 0,
-    checkedOut: 0,
-  };
-
-  const filteredItems = useMemo(() => {
-    let list = trackingData?.data || [];
-    if (activeTab !== 'ALL') {
-      list = list.filter((i) => i.attendanceStatus === activeTab);
-    }
-    if (selectedGroupId) {
-      list = list.filter((i) => i.groupId === selectedGroupId);
-    }
-    if (searchText.trim()) {
-      const q = searchText.trim().toLowerCase();
-      list = list.filter(
-        (i) =>
-          i.kidFullName.toLowerCase().includes(q) ||
-          i.guardianFullName.toLowerCase().includes(q) ||
-          (i.faithForgeId && i.faithForgeId.toString().includes(q)),
-      );
-    }
-    return list;
-  }, [trackingData?.data, activeTab, selectedGroupId, searchText]);
 
   const loading = loadingTracking && filteredItems.length === 0;
 

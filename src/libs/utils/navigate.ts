@@ -1,11 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { NavigateFunction } from 'react-router-dom';
+
 /**
- * Navigate to a different screen using the provided navigation object.
+ * Navigates to a different screen using the provided router navigate function.
  *
- * @param {any} navigation - The navigation object (router or navigator instance).
- * @param {string} screen - The target screen name.
+ * @param {NavigateFunction} navigate - The react-router-dom navigate function instance.
+ * @param {string} screen - The target route path.
  * @returns {void}
  */
-export const navigateScreen = (navigation: any, screen: string) => {
-  navigation.navigate(screen);
+export const navigateScreen = (navigate: NavigateFunction, screen: string): void => {
+  navigate(screen);
 };

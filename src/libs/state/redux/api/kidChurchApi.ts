@@ -79,6 +79,13 @@ export interface CreateKidRegistrationApiPayload extends ICreateKidRegistration 
   churchPrinterId?: string;
 }
 
+export interface CreateKidRegistrationResponse {
+  id?: string;
+  securityCode?: string;
+  code?: string;
+  [key: string]: unknown;
+}
+
 export interface GetKidLiveTrackingArgs {
   churchMeetingId: string;
   date: string;
@@ -91,6 +98,25 @@ export interface ConfirmKidCheckoutApiPayload {
   id: string;
   guardianId?: string;
   observation?: string;
+}
+
+export interface IRawLiveTrackingKid extends Partial<IKid> {
+  guardians?: IKidGuardian[];
+  currentKidRegistration?: IKidRegistration;
+  relations?: IKidGuardian[];
+}
+
+export interface IRawLiveTrackingResponse {
+  flowMode?: KidAttendanceFlowModeEnum;
+  pendingEntry?: IRawLiveTrackingKid[];
+  inArea?: IRawLiveTrackingKid[];
+  checkedOut?: IRawLiveTrackingKid[];
+  summary?: {
+    totalRegistered?: number;
+    totalPendingEntry?: number;
+    totalInArea?: number;
+    totalCheckedOut?: number;
+  };
 }
 
 /**
@@ -295,7 +321,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
       }),
     }),
 
-    createKidRegistration: builder.mutation<unknown, CreateKidRegistrationApiPayload>({
+    createKidRegistration: builder.mutation<CreateKidRegistrationResponse, CreateKidRegistrationApiPayload>({
       query: (payload) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: '/kid-registration',
@@ -398,7 +424,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
           ...(args.groupId ? { kidGroupId: args.groupId } : {}),
         },
       }),
-      transformResponse: (raw: any): IKidLiveTrackingResponse => {
+      transformResponse: (raw: IRawLiveTrackingResponse | null | undefined): IKidLiveTrackingResponse => {
         if (!raw) {
           return {
             flowMode: KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
@@ -407,7 +433,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
           };
         }
 
-        const mapKidToItem = (k: any, defaultStatus: KidAttendanceStatusEnum): IKidLiveTrackingItem => {
+        const mapKidToItem = (k: IRawLiveTrackingKid, defaultStatus: KidAttendanceStatusEnum): IKidLiveTrackingItem => {
           const reg = k.currentKidRegistration;
           const stages = reg?.attendanceStages || {};
           const checkIn = stages[KidAttendanceStatusEnum.CHECKED_IN];
@@ -423,11 +449,11 @@ export const kidChurchApi = baseApi.injectEndpoints({
             : undefined;
 
           return {
-            id: reg?.id || k.id,
-            kidId: k.id,
+            id: reg?.id || k.id || '',
+            kidId: k.id || '',
             kidFullName: `${k.firstName || ''} ${k.lastName || ''}`.trim(),
             faithForgeId: k.faithForgeId,
-            gender: k.gender,
+            gender: k.gender || '',
             photoUrl: k.photoUrl,
             birthday: k.birthday,
             age: k.age,
@@ -450,9 +476,9 @@ export const kidChurchApi = baseApi.injectEndpoints({
           };
         };
 
-        const pendingItems = (raw.pendingEntry || []).map((k: any) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_IN));
-        const inAreaItems = (raw.inArea || []).map((k: any) => mapKidToItem(k, KidAttendanceStatusEnum.IN_AREA));
-        const checkedOutItems = (raw.checkedOut || []).map((k: any) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_OUT));
+        const pendingItems = (raw.pendingEntry || []).map((k: IRawLiveTrackingKid) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_IN));
+        const inAreaItems = (raw.inArea || []).map((k: IRawLiveTrackingKid) => mapKidToItem(k, KidAttendanceStatusEnum.IN_AREA));
+        const checkedOutItems = (raw.checkedOut || []).map((k: IRawLiveTrackingKid) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_OUT));
         const allItems = [...pendingItems, ...inAreaItems, ...checkedOutItems];
 
         return {

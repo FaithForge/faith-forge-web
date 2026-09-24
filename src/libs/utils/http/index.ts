@@ -1,13 +1,12 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { HttpRequestMethod, MicroserviceEnum, API_BASE_URL } from '@/libs/common-types/global';
-import axios, { AxiosResponse } from 'axios';
+import axios, { AxiosResponse, ResponseType } from 'axios';
 import { isTokenExpiringSoon } from '../jwt';
 
 export interface ApiRequestOptions {
-  params?: any;
-  data?: any;
-  headers?: any;
-  responseType?: any;
+  params?: Record<string, unknown>;
+  data?: unknown;
+  headers?: Record<string, string>;
+  responseType?: ResponseType;
   cache?: boolean;
   forceRefresh?: boolean;
   _retry?: boolean;
@@ -27,7 +26,7 @@ const CATALOG_ENDPOINTS = [
 ];
 
 // In-memory cache for catalog GET requests
-const memoryHttpCache = new Map<string, AxiosResponse<any, any>>();
+const memoryHttpCache = new Map<string, AxiosResponse<unknown, unknown>>();
 
 /**
  * Clears the entire in-memory HTTP cache (e.g. on logout or app reset).
@@ -212,16 +211,17 @@ const executeApiRequest = async (
           ...headers,
           Authorization: `Bearer ${freshToken}`,
         };
-      } catch (err: any) {
+      } catch (err: unknown) {
+        const error = err as { code?: string; message?: string; response?: { status?: number } };
         const isNetworkDrop =
           (typeof navigator !== 'undefined' && !navigator.onLine) ||
-          err?.code === 'ERR_NETWORK' ||
-          err?.message?.includes('Network Error') ||
-          err?.code === 'ECONNABORTED' ||
-          (err?.response?.status && err.response.status >= 500);
+          error?.code === 'ERR_NETWORK' ||
+          error?.message?.includes('Network Error') ||
+          error?.code === 'ECONNABORTED' ||
+          (error?.response?.status && error.response.status >= 500);
 
         // If refresh token is definitively invalid/expired (401/403), emit unauthorized
-        if (!isNetworkDrop && (err?.response?.status === 401 || err?.response?.status === 403)) {
+        if (!isNetworkDrop && (error?.response?.status === 401 || error?.response?.status === 403)) {
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('auth:unauthorized'));
           }
@@ -235,7 +235,7 @@ const executeApiRequest = async (
   const instance = axios.create({ baseURL, timeout: 20000 });
 
   try {
-    let response: AxiosResponse<any, any>;
+    let response: AxiosResponse;
     switch (method) {
       case HttpRequestMethod.GET:
         response = await instance.get(url, { params, headers, responseType });

@@ -206,7 +206,7 @@ export interface IKid {
 }
 
 export interface IKidGuardian {
-  id?: string;
+  id: string;
   nationalId: string;
   nationalIdType: UserIdType;
   firstName: string;

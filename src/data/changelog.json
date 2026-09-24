@@ -1,5 +1,17 @@
 [
   {
+    "version": "3.9.3",
+    "type": "patch",
+    "timestamp": "2026-09-24T20:17:26.794Z",
+    "dateFormatted": "24/09/2026 03:17 PM",
+    "title": "Mejoras de estabilidad, calidad y navegación de roles",
+    "changes": [
+      "Mayor claridad en el selector de roles para servidores y voluntarios, mostrando únicamente las funciones operativas activas",
+      "Mayor estabilidad y confiabilidad en la sincronización cuando no hay conexión a internet",
+      "Optimizaciones de rendimiento y robustez general en toda la aplicación"
+    ]
+  },
+  {
     "version": "3.9.2",
     "type": "patch",
     "timestamp": "2026-09-24T03:21:04.014Z",

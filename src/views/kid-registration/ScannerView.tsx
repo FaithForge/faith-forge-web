@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { ScanCodeKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
 import { useGetKidGroupsQuery, useCreateKidRegistrationMutation } from '@/libs/state/redux/api/kidChurchApi';
-import { cleanScanQRSearch } from '@/libs/state/redux/slices/kid-church/scan-code-kid-registration.slice';
+import { cleanScanQRSearch, IScanCodeKidRelation } from '@/libs/state/redux/slices/kid-church/scan-code-kid-registration.slice';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
 import { KidGroupType } from '@/libs/models/KidChurch';
@@ -192,12 +192,12 @@ const ScannerView = () => {
         }).unwrap();
       });
       
-      const results: any[] = await Promise.all(promises);
+      const results = await Promise.all(promises);
 
       if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
         for (let i = 0; i < selectedKids.length; i++) {
           const kidId = selectedKids[i];
-          const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
+          const relation = relations.find((r: IScanCodeKidRelation) => (r.kid?.id || r.id) === kidId);
           const kid = relation?.kid || relation;
           const isVol = volunteerKids.includes(kidId);
           const kidGroupId = isVol && specialGroup?.id ? specialGroup.id : (kid?.kidGroup?.id || '');
@@ -331,12 +331,13 @@ const ScannerView = () => {
             </div>
 
             <div className="flex flex-col gap-3 mb-6">
-              {relations.map((relation: any) => {
+              {relations.map((relation: IScanCodeKidRelation) => {
                 const kid = relation.kid || relation;
                 if (!kid || !kid.id) return null;
+                const kidId = kid.id;
                 const isRegistered = !!kid.currentKidRegistration;
-                const isSelected = selectedKids.includes(kid.id);
-                const isKidVolunteer = volunteerKids.includes(kid.id);
+                const isSelected = selectedKids.includes(kidId);
+                const isKidVolunteer = volunteerKids.includes(kidId);
                 const displayedGroupName = isKidVolunteer ? specialGroupName : (kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom'));
                 const isStatic = isKidVolunteer ? false : !!kid.staticGroup;
                 const hasMaxAge = isKidOverage(kid);
@@ -345,8 +346,8 @@ const ScannerView = () => {
 
                 return (
                   <div 
-                    key={kid.id}
-                    onClick={() => handleToggleKid(kid.id, isRegistered, isBlockedByAge)}
+                    key={kidId}
+                    onClick={() => handleToggleKid(kidId, isRegistered, isBlockedByAge)}
                     className={clsx(
                       "p-4 rounded-xl border-2 transition-all flex justify-between items-center",
                       isRegistered ? "bg-gray-100 border-gray-200 opacity-70 cursor-not-allowed" 

@@ -438,10 +438,11 @@ const TopBar = () => {
     currentRole === UserRole.SUPER_ADMIN ||
     currentRole === UserRole.ADMIN;
 
-  // Filter out USER and inactive roles so base account or unfinished roles are never selectable in the switcher
+  // Filter out USER, system admin roles, and inactive roles so base account or unfinished roles are never selectable in the switcher
   const operationalRoles = userRoles.filter(
     (role: AppRole) =>
       role !== UserRole.USER &&
+      !isSystemAdminRole(role) &&
       userRolesNavBarConfig[role] !== undefined &&
       isRoleEnabled(role)
   );
@@ -480,37 +481,29 @@ const TopBar = () => {
     return combined;
   }, [operationalRoles, volunteerGroupRoles]);
 
-  // Super Admin and Admin can view and switch to all ENABLED system roles when not strictly in KID_CHURCH_STAFF space.
-  // In KID_CHURCH_STAFF space, we isolate operational roles for kids church and registration.
+  // TopBar lives strictly in the operational/volunteer space (MainLayout).
+  // System admin workspace is completely decoupled under /admin (AdminLayout).
+  // Therefore, TopBar only presents operational roles (KidChurch and KidRegistration).
+  // Admins have access to all operational roles with the 'Grupo Admin' badge for testing/management.
   const availableRoles: ThemeRole[] = useMemo(() => {
-    if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF) {
-      const opRoles = allOperationalRoleIds
-        .map((role: AppRole) => userRolesNavBarConfig[role]!)
-        .filter(Boolean);
-
-      if (opRoles.length > 0) return opRoles;
-
-      return ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
-        .filter((r) => r !== UserRole.SUPER_ADMIN && r !== UserRole.ADMIN && r !== UserRole.STAFF)
-        .map((role) => userRolesNavBarConfig[role])
-        .filter(Boolean) as ThemeRole[];
-    }
-
-    if (isAdminUser) {
-      return ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
-        .map((role) => userRolesNavBarConfig[role])
-        .filter(Boolean) as ThemeRole[];
-    }
-
-    const defaultRoles = allOperationalRoleIds
+    // If the user has explicitly assigned operational roles (or group assignments)
+    const opRoles = allOperationalRoleIds
+      .filter((role: AppRole) => !isSystemAdminRole(role))
       .map((role: AppRole) => userRolesNavBarConfig[role]!)
       .filter(Boolean);
 
-    if (defaultRoles.length === 0) {
-      defaultRoles.push(userRolesNavBarConfig[UserRole.USER]);
+    if (opRoles.length > 0) return opRoles;
+
+    // For admin users without specific operational assignments, provide all enabled operational roles
+    if (isAdminUser) {
+      return ALL_SYSTEM_ROLES_ORDER.filter(isRoleEnabled)
+        .filter((r) => !isSystemAdminRole(r))
+        .map((role) => userRolesNavBarConfig[role])
+        .filter(Boolean) as ThemeRole[];
     }
-    return defaultRoles;
-  }, [activeExperience, isAdminUser, allOperationalRoleIds]);
+
+    return [userRolesNavBarConfig[UserRole.USER]].filter(Boolean);
+  }, [isAdminUser, allOperationalRoleIds]);
 
   // Find the active visual role based on Redux currentRole (defaults to the first available role)
   let activeVisualRole = availableRoles[0];
@@ -822,13 +815,9 @@ const TopBar = () => {
 
   const roleSections = useMemo(() => {
     const sections: { title: string; roles: ThemeRole[] }[] = [];
-    const adminRoles = availableRoles.filter((r) => r.appTitle === 'Admin');
     const kidChurchRoles = availableRoles.filter((r) => r.appTitle === 'KidChurch');
     const kidRegistrationRoles = availableRoles.filter((r) => r.appTitle === 'KidRegistration');
 
-    if (adminRoles.length > 0 && activeExperience !== UserExperienceEnum.KID_CHURCH_STAFF) {
-      sections.push({ title: 'Administración', roles: adminRoles });
-    }
     if (kidChurchRoles.length > 0) {
       sections.push({ title: `${kidsModuleName} · ${kidsClassroomsName}`, roles: kidChurchRoles });
     }
@@ -844,7 +833,7 @@ const TopBar = () => {
     }
 
     return sections;
-  }, [availableRoles, activeExperience, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
+  }, [availableRoles, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
 
   const roleTriggerContent = (
     <div className={clsx(

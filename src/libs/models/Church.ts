@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-empty-object-type */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Days } from '../common-types/constants';
 import { ReduxDefaultState } from './Redux';
 
@@ -65,10 +64,10 @@ export interface IChurchMeeting {
   name: string;
   description?: string;
   day: Days;
-  initialHour: any;
-  finalHour: any;
-  initialRegistrationHour: any;
-  finalRegistrationHour: any;
+  initialHour: string;
+  finalHour: string;
+  initialRegistrationHour: string;
+  finalRegistrationHour: string;
   position?: number;
   state?: ChurchMeetingStateEnum;
 }
@@ -87,4 +86,3 @@ export interface IChurchCampuses extends ReduxDefaultState<IChurchCampus> {
 }
 export interface IChurchMeetings extends ReduxDefaultState<IChurchMeeting> {}
 export interface IChurchPrinters extends ReduxDefaultState<IChurchPrinter> {}
-
