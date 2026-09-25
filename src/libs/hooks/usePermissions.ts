@@ -64,39 +64,69 @@ export const usePermissions = () => {
     hasVolunteerRole(VolunteerRole.SUPERVISOR);
 
   const isServidor =
-    hasRole(
-      ChurchRole.KID_REGISTER_USER,
-      ChurchRole.KID_CHURCH_USER,
-      ChurchRole.KID_SECURITY_USER,
-    ) || hasVolunteerRole(VolunteerRole.VOLUNTEER);
-
-  const isKidChurchRole =
-    isMinistryAdmin ||
-    hasRole(
-      ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
-      ChurchRole.KID_CHURCH_SUPERVISOR,
-      ChurchRole.KID_CHURCH_USER,
-    ) ||
-    hasVolunteerRole(
-      VolunteerRole.GROUP_COORDINATOR,
-      VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
-    );
-
-  const isKidRegistrationRole =
-    !isKidChurchRole &&
+    !isSupervisor &&
     (hasRole(
-      ChurchRole.KID_REGISTER_COORDINATOR,
-      ChurchRole.KID_REGISTER_SUPERVISOR,
       ChurchRole.KID_REGISTER_USER,
-      ChurchRole.KID_SECURITY_COORDINATOR,
-      ChurchRole.KID_SECURITY_SUPERVISOR,
+      ChurchRole.KID_CHURCH_USER,
       ChurchRole.KID_SECURITY_USER,
-      UserRole.USER,
-    ) ||
-      hasVolunteerRole(
-        VolunteerRole.AREA_GENERAL_COORDINATOR,
-        VolunteerRole.VOLUNTEER,
-      ));
+    ) || hasVolunteerRole(VolunteerRole.VOLUNTEER));
+
+  const isKidChurchRole = useMemo(() => {
+    if (currentRole) {
+      return (
+        currentRole === ChurchRole.MINISTRY_ADMIN ||
+        currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+        currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+        currentRole === ChurchRole.KID_CHURCH_USER
+      );
+    }
+    if (activeVolunteerRole) {
+      return (
+        activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
+        activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR
+      );
+    }
+    return (
+      activeRoles.has(ChurchRole.MINISTRY_ADMIN) ||
+      hasRole(
+        ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
+        ChurchRole.KID_CHURCH_SUPERVISOR,
+        ChurchRole.KID_CHURCH_USER,
+      )
+    );
+  }, [currentRole, activeVolunteerRole, activeRoles, hasRole]);
+
+  const isKidRegistrationRole = useMemo(() => {
+    if (currentRole) {
+      return (
+        currentRole === ChurchRole.KID_REGISTER_COORDINATOR ||
+        currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+        currentRole === ChurchRole.KID_REGISTER_USER ||
+        currentRole === ChurchRole.KID_SECURITY_COORDINATOR ||
+        currentRole === ChurchRole.KID_SECURITY_SUPERVISOR ||
+        currentRole === ChurchRole.KID_SECURITY_USER ||
+        currentRole === UserRole.USER
+      );
+    }
+    if (activeVolunteerRole) {
+      return (
+        activeVolunteerRole === VolunteerRole.AREA_GENERAL_COORDINATOR ||
+        activeVolunteerRole === VolunteerRole.VOLUNTEER
+      );
+    }
+    return (
+      !isKidChurchRole &&
+      hasRole(
+        ChurchRole.KID_REGISTER_COORDINATOR,
+        ChurchRole.KID_REGISTER_SUPERVISOR,
+        ChurchRole.KID_REGISTER_USER,
+        ChurchRole.KID_SECURITY_COORDINATOR,
+        ChurchRole.KID_SECURITY_SUPERVISOR,
+        ChurchRole.KID_SECURITY_USER,
+        UserRole.USER,
+      )
+    );
+  }, [currentRole, activeVolunteerRole, isKidChurchRole, hasRole]);
 
   const canViewTeam =
     !isServidor &&

@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.11.1",
+    "type": "patch",
+    "timestamp": "2026-09-25T13:04:16.297Z",
+    "dateFormatted": "25/09/2026 08:04 AM",
+    "title": "Corrección en el acceso al detalle y registro de niños",
+    "changes": [
+      "Corrección que permite acceder al detalle y registro del niño sin cierres o regresos involuntarios",
+      "Mayor estabilidad al navegar entre módulos según la función activa"
+    ]
+  },
+  {
     "version": "3.11.0",
     "type": "minor",
     "timestamp": "2026-09-25T03:07:04.545Z",
