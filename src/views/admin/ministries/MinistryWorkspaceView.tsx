@@ -313,7 +313,7 @@ export const MinistryWorkspaceView: React.FC = () => {
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-200/80 shadow-2xs flex flex-col gap-3">
           {/* Top Row: Full Width Campus Dropdown */}
           <div className="flex items-center gap-2.5 w-full">
-            <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-200/80 flex items-center justify-center shrink-0">
+            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
               <MapPin size={15} />
             </div>
             <div className="flex-1 min-w-0">
@@ -334,7 +334,7 @@ export const MinistryWorkspaceView: React.FC = () => {
           <div className="flex flex-col gap-1.5 pt-2.5 border-t border-gray-100">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                <FolderKanban size={13} className="text-indigo-600" />
+                <FolderKanban size={13} className="text-primary" />
                 {t('ministry_workspace.ministries_section_title', {
                   count: campusMinistries.length,
                   campus: campusTerm.toLowerCase(),
@@ -357,18 +357,18 @@ export const MinistryWorkspaceView: React.FC = () => {
                     className={clsx(
                       'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs select-none',
                       isSelected
-                        ? 'bg-slate-900 text-white shadow-xs scale-[1.02]'
+                        ? 'bg-primary text-white shadow-xs scale-[1.02]'
                         : 'bg-slate-100 hover:bg-slate-200/70 text-gray-700',
                     )}
                   >
                     {isKids ? (
-                      <FaChild className={clsx('w-3 h-3', isSelected ? 'text-teal-300' : 'text-teal-600')} />
+                      <FaChild className={clsx('w-3 h-3', isSelected ? 'text-teal-200' : 'text-teal-600')} />
                     ) : (
-                      <Layers size={13} className={clsx(isSelected ? 'text-indigo-300' : 'text-indigo-600')} />
+                      <Layers size={13} className={clsx(isSelected ? 'text-white/80' : 'text-primary')} />
                     )}
                     <span>{min.name}</span>
                     {min.state === MinistryStateEnum.ACTIVE ? (
-                      <span className={clsx('w-1.5 h-1.5 rounded-full', isSelected ? 'bg-emerald-400' : 'bg-emerald-500')} />
+                      <span className={clsx('w-1.5 h-1.5 rounded-full', isSelected ? 'bg-emerald-300' : 'bg-emerald-500')} />
                     ) : (
                       <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
                     )}
@@ -426,15 +426,14 @@ export const MinistryWorkspaceView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
-                  {/* Prominent Download Organization PDF Action Button */}
                   <Button
-                    variant="primary"
+                    variant="default"
                     size="sm"
                     onClick={() => setPdfModalOpen(true)}
-                    className="flex items-center gap-1.5 text-xs font-extrabold bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs px-3 py-1.5 rounded-xl transition-all cursor-pointer shrink-0 active:scale-95"
+                    className="gap-1.5 cursor-pointer shrink-0 text-xs"
                     title={t('ministry_workspace.download_pdf_tooltip')}
                   >
-                    <FileDown size={14} className="text-white" />
+                    <FileDown size={14} className="text-gray-500" />
                     <span>{t('ministry_workspace.download_pdf_btn')}</span>
                   </Button>
 
@@ -475,7 +474,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                     {t('ministry_workspace.kpi_supervision')}
                   </span>
                   <div className="flex items-center justify-center gap-1 mt-0.5">
-                    <span className="text-lg font-black text-indigo-700">
+                    <span className="text-lg font-black text-gray-900">
                       {workspace?.summary.teamsWithSupervisor ?? 0}
                     </span>
                     <span className="text-xs font-bold text-gray-400">
@@ -488,7 +487,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                   <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
                     {t('ministry_workspace.kpi_workforce')}
                   </span>
-                  <span className="text-lg font-black text-teal-700 mt-0.5 block">
+                  <span className="text-lg font-black text-gray-900 mt-0.5 block">
                     {workspace?.summary.totalVolunteers ?? 0}
                   </span>
                 </div>
@@ -520,7 +519,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                             ? 'text-teal-600'
                             : tab.key === 'leadership'
                             ? 'text-amber-500'
-                            : 'text-indigo-600'
+                            : 'text-primary'
                           : 'text-gray-400',
                       )}
                     />
@@ -569,7 +568,7 @@ export const MinistryWorkspaceView: React.FC = () => {
         {/* Empty Campus Ministries State */}
         {!loadingWorkspace && (!activeMinistry || campusMinistries.length === 0) && (
           <div className="bg-white rounded-2xl p-8 border border-gray-200/80 shadow-2xs text-center flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-200 flex items-center justify-center">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
               <FolderKanban size={24} />
             </div>
             <h3 className="text-sm font-extrabold text-gray-900">

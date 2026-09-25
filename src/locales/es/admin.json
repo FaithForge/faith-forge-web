@@ -119,7 +119,7 @@
     "no_campus_selected": "{{campus}} no seleccionada",
     "ministries_count_singular": "{{count}} ministerio en {{campus}}",
     "ministries_count_plural": "{{count}} ministerios en {{campus}}",
-    "ministries_section_title": "Ministerios en esta {{campus}} ({{count}})",
+    "ministries_section_title": "Ministerios de la {{campus}} ({{count}})",
     "ministries_section_subtitle": "Selecciona un ministerio para ver o editar su estructura",
     "new_ministry_btn": "Nuevo Ministerio",
     "status_active": "Activo",

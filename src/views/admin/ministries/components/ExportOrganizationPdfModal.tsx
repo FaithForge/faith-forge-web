@@ -853,7 +853,7 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
             type="checkbox"
             checked={maskSensitiveData}
             onChange={(e) => setMaskSensitiveData(e.target.checked)}
-            className="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+            className="mt-0.5 rounded text-primary focus:ring-primary w-4 h-4 cursor-pointer"
           />
           <div className="flex-1">
             <span className="text-xs font-extrabold text-gray-900 block flex items-center gap-1.5">
