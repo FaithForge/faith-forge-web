@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
@@ -7,8 +8,9 @@ import { ChurchPrinterStateEnum, IChurchPrinter } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateChurchPrinter, UpdateChurchPrinter } from '@/libs/state/redux/thunks/church/church.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { toast } from 'sonner';
-import { Printer, CheckCircle2, XCircle } from 'lucide-react';
+import { Printer, MapPin } from 'lucide-react';
 import clsx from 'clsx';
 
 interface PrinterModalProps {
@@ -34,6 +36,8 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
 }) => {
   useModalBackClose(open, () => onOpenChange(false));
 
+  const { t } = useTranslation(['admin', 'common']);
+  const campusTerm = useChurchTerm('campus');
   const dispatch = useAppDispatch();
   const campuses = useAppSelector((state) => state.churchCampusSlice.data);
 
@@ -47,19 +51,19 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
   const isEditing = Boolean(printerToEdit);
 
   useEffect(() => {
-    if (open) {
-      if (printerToEdit) {
-        setName(printerToEdit.name);
-        setSelectedCampusId(printerToEdit.churchCampusId || churchCampusId || '');
-        setState(printerToEdit.state ?? ChurchPrinterStateEnum.ACTIVE);
-      } else {
-        setName('');
-        setSelectedCampusId(churchCampusId || (campuses.length > 0 ? campuses[0].id : ''));
-        setState(ChurchPrinterStateEnum.ACTIVE);
-      }
-      setNameError('');
-      setCampusError('');
+    if (!open) return;
+
+    if (printerToEdit) {
+      setName(printerToEdit.name);
+      setSelectedCampusId(printerToEdit.churchCampusId || churchCampusId || '');
+      setState(printerToEdit.state ?? ChurchPrinterStateEnum.ACTIVE);
+    } else {
+      setName('');
+      setSelectedCampusId(churchCampusId || (campuses.length > 0 ? campuses[0].id : ''));
+      setState(ChurchPrinterStateEnum.ACTIVE);
     }
+    setNameError('');
+    setCampusError('');
   }, [open, printerToEdit, churchCampusId, campuses]);
 
   const campusOptions = campuses.map((c) => ({
@@ -72,11 +76,11 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
     let hasError = false;
 
     if (!name.trim()) {
-      setNameError('El nombre de la impresora es requerido');
+      setNameError(t('admin:printers.field_name_required'));
       hasError = true;
     }
     if (!selectedCampusId) {
-      setCampusError('Debes seleccionar una sede');
+      setCampusError(t('admin:printers.field_campus_required', { campus: campusTerm }));
       hasError = true;
     }
 
@@ -93,7 +97,7 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
             state,
           }),
         ).unwrap();
-        toast.success('Impresora actualizada correctamente');
+        toast.success(t('admin:printers.updated_success'));
       } else {
         await dispatch(
           CreateChurchPrinter({
@@ -102,15 +106,13 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
             state,
           }),
         ).unwrap();
-        toast.success('Impresora registrada exitosamente');
+        toast.success(t('admin:printers.created_success'));
       }
       onOpenChange(false);
       onSuccess?.();
     } catch (err: any) {
       const errMsg =
-        typeof err === 'string'
-          ? err
-          : err?.message || 'Error al procesar la impresora';
+        typeof err === 'string' ? err : err?.message || t('admin:printers.delete_error');
       toast.error(errMsg);
     } finally {
       setLoading(false);
@@ -121,17 +123,19 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      title={isEditing ? 'Editar Impresora' : 'Registrar Impresora'}
+      title={
+        isEditing
+          ? t('admin:printers.modal_edit_title')
+          : t('admin:printers.modal_create_title')
+      }
+      icon={<Printer size={20} className="text-cyan-600" />}
     >
-      <form onSubmit={handleSubmit} className="flex flex-col gap-5 pt-2 pb-6 px-1">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-5 sm:p-6">
         {/* Campus Selection */}
-        <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Sede Asignada <span className="text-rose-500">*</span>
-          </label>
+        <div className="flex flex-col gap-1.5">
           <SelectSearch
-            label="Sede"
-            placeholder="Selecciona una sede..."
+            label={t('admin:printers.field_campus_label', { campus: campusTerm })}
+            placeholder={t('admin:printers.field_campus_placeholder', { campus: campusTerm })}
             options={campusOptions}
             value={selectedCampusId}
             onChange={(val) => {
@@ -139,101 +143,109 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
               if (campusError) setCampusError('');
             }}
             disabled={loading}
+            required
+            error={campusError}
           />
-          {campusError && (
-            <p className="text-xs text-rose-600 mt-1.5 font-medium">{campusError}</p>
-          )}
         </div>
 
         {/* Name Input */}
-        <div>
-          <label className="block text-xs font-bold text-gray-700 uppercase tracking-wider mb-1.5">
-            Nombre de la Impresora <span className="text-rose-500">*</span>
+        <div className="flex flex-col gap-1.5">
+          <label className="text-xs font-bold text-gray-700">
+            {t('admin:printers.field_name_label')}{' '}
+            <span className="text-rose-500 font-bold">*</span>
           </label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
-              <Printer size={17} />
-            </div>
-            <Input
-              value={name}
-              onChange={(e) => {
-                setName(e.target.value);
-                if (nameError) setNameError('');
-              }}
-              placeholder="Ej: MPT-II, Impresora Entrada 1, RPP02N..."
-              className="pl-10 placeholder:text-gray-400"
-              disabled={loading}
-              autoFocus
-            />
-          </div>
-          <p className="text-[11px] text-gray-400 mt-1">
-            Usa el nombre Bluetooth del dispositivo o un identificador claro para los voluntarios.
+          <Input
+            value={name}
+            onChange={(e) => {
+              setName(e.target.value);
+              if (nameError) setNameError('');
+            }}
+            placeholder={t('admin:printers.field_name_placeholder')}
+            className="placeholder:text-gray-400"
+            disabled={loading}
+            error={nameError}
+            autoFocus
+          />
+          <p className="text-[11px] text-gray-400 leading-normal">
+            {t('admin:printers.field_name_hint')}
           </p>
-          {nameError && (
-            <p className="text-xs text-rose-600 mt-1.5 font-medium">{nameError}</p>
-          )}
         </div>
 
-        {/* State Toggle */}
-        <div className="flex items-center justify-between p-3.5 rounded-xl border border-gray-100 bg-slate-50/80">
-          <div>
-            <span className="text-sm font-semibold text-gray-800 block">
-              Estado de la Impresora
-            </span>
-            <span className="text-xs text-gray-500">
+        {/* State Toggle Switch Card */}
+        <div
+          onClick={() =>
+            !loading &&
+            setState((prev) =>
+              prev === ChurchPrinterStateEnum.ACTIVE
+                ? ChurchPrinterStateEnum.INACTIVE
+                : ChurchPrinterStateEnum.ACTIVE,
+            )
+          }
+          className="p-4 rounded-2xl border border-gray-200/80 bg-slate-50/70 hover:bg-slate-50 transition-colors flex items-center justify-between gap-4 cursor-pointer select-none"
+        >
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-gray-800">
+                {t('admin:printers.field_status_label')}
+              </span>
+              <span
+                className={clsx(
+                  'text-[10px] font-bold px-2 py-0.5 rounded-full transition-colors',
+                  state === ChurchPrinterStateEnum.ACTIVE
+                    ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                    : 'bg-gray-200 text-gray-600',
+                )}
+              >
+                {state === ChurchPrinterStateEnum.ACTIVE
+                  ? t('admin:printers.status_active')
+                  : t('admin:printers.status_inactive')}
+              </span>
+            </div>
+            <span className="text-[11px] text-gray-500 block mt-0.5 leading-normal">
               {state === ChurchPrinterStateEnum.ACTIVE
-                ? 'Impresora activa y visible para emparejar'
-                : 'Impresora deshabilitada (no disponible en check-in)'}
+                ? t('admin:printers.status_active_desc')
+                : t('admin:printers.status_inactive_desc')}
             </span>
           </div>
+
+          {/* Standard Toggle Switch */}
           <button
             type="button"
-            onClick={() =>
-              setState((prev) =>
-                prev === ChurchPrinterStateEnum.ACTIVE
-                  ? ChurchPrinterStateEnum.INACTIVE
-                  : ChurchPrinterStateEnum.ACTIVE,
-              )
-            }
+            role="switch"
+            aria-checked={state === ChurchPrinterStateEnum.ACTIVE}
             disabled={loading}
             className={clsx(
-              'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all',
-              state === ChurchPrinterStateEnum.ACTIVE
-                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-                : 'bg-rose-100 text-rose-700 border border-rose-200',
+              'relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-emerald-500/20',
+              state === ChurchPrinterStateEnum.ACTIVE ? 'bg-emerald-600' : 'bg-gray-300',
             )}
           >
-            {state === ChurchPrinterStateEnum.ACTIVE ? (
-              <>
-                <CheckCircle2 size={14} />
-                <span>Activa</span>
-              </>
-            ) : (
-              <>
-                <XCircle size={14} />
-                <span>Inactiva</span>
-              </>
-            )}
+            <span
+              aria-hidden="true"
+              className={clsx(
+                'pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out',
+                state === ChurchPrinterStateEnum.ACTIVE ? 'translate-x-5' : 'translate-x-0',
+              )}
+            />
           </button>
         </div>
 
-        {/* Actions */}
-        <div className="flex items-center gap-3 pt-3">
+        {/* Actions Footer */}
+        <div className="flex items-center gap-3 pt-3 border-t border-gray-100">
           <Button
             type="button"
             variant="ghost"
             onClick={() => onOpenChange(false)}
             disabled={loading}
-            className="flex-1"
+            className="flex-1 text-xs py-2.5"
           >
-            Cancelar
+            {t('admin:printers.cancel_btn')}
           </Button>
           <Button
             type="submit"
             loading={loading}
-            className="flex-1"
+            className="flex-1 text-xs py-2.5 shadow-sm active:scale-98"
           >
-            {isEditing ? 'Guardar Cambios' : 'Registrar'}
+            {isEditing ? t('admin:printers.save_btn') : t('admin:printers.create_btn')}
           </Button>
         </div>
       </form>
