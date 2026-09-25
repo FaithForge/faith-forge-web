@@ -20,6 +20,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import { formatDateTime } from '@/libs/utils/date';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import {
@@ -401,7 +402,7 @@ export const VolunteerApplicationsTab: React.FC<VolunteerApplicationsTabProps> =
                   )}
                   <span className="flex items-center gap-1 text-gray-400">
                     <Calendar size={12} />
-                    Postulado: {dayjs(app.createdAt).format('DD MMM YYYY, HH:mm')}
+                    Postulado: {formatDateTime(app.createdAt, 'DD MMM YYYY, HH:mm')}
                   </span>
                 </div>
 

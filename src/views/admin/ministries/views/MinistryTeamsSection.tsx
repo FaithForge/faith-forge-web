@@ -48,6 +48,8 @@ interface MinistryTeamsSectionProps {
   workspaceGroups?: IMinistryGroupConfig[];
   workspaceAreas?: IMinistryArea[];
   onRefreshWorkspace?: () => void;
+  /** Whether to hide the top metrics bar (useful when parent view already renders KPIs) */
+  hideMetrics?: boolean;
 }
 
 /**
@@ -65,6 +67,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   workspaceGroups,
   workspaceAreas,
   onRefreshWorkspace,
+  hideMetrics = false,
 }) => {
   const dispatch = useAppDispatch();
 
@@ -324,17 +327,6 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     return result;
   }, [groups, filteredTeams, areas, ministryId]);
 
-  // Initialize expanded state on load (first group open by default)
-  useEffect(() => {
-    if (teamsGroupedByGroup.length > 0) {
-      setExpandedGroups((prev) => {
-        // If already set by user interaction, preserve state
-        if (Object.keys(prev).length > 0) return prev;
-        // Expand the first group by default
-        return { [teamsGroupedByGroup[0].group.id]: true };
-      });
-    }
-  }, [teamsGroupedByGroup]);
 
   // Auto-expand group if filtered specifically
   useEffect(() => {
@@ -430,22 +422,24 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   return (
     <div className="flex flex-col gap-3.5">
       {/* QUICK METRICS BAR */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
-          <p className="text-[10.5px] font-semibold text-gray-400">Total Equipos</p>
-          <p className="text-lg sm:text-xl font-black text-gray-900 mt-0.5">{totalTeamsCount}</p>
+      {!hideMetrics && (
+        <div className="grid grid-cols-3 gap-2">
+          <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+            <p className="text-[10.5px] font-semibold text-gray-400">Total Equipos</p>
+            <p className="text-lg sm:text-xl font-black text-gray-900 mt-0.5">{totalTeamsCount}</p>
+          </div>
+          <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+            <p className="text-[10.5px] font-semibold text-gray-400">Con Supervisor</p>
+            <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
+              {teamsWithSupervisorCount}/{totalTeamsCount || 1}
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+            <p className="text-[10.5px] font-semibold text-gray-400">Total Plantilla</p>
+            <p className="text-lg sm:text-xl font-black text-teal-700 mt-0.5">{totalMembersCount}</p>
+          </div>
         </div>
-        <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
-          <p className="text-[10.5px] font-semibold text-gray-400">Con Supervisor</p>
-          <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
-            {teamsWithSupervisorCount}/{totalTeamsCount || 1}
-          </p>
-        </div>
-        <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
-          <p className="text-[10.5px] font-semibold text-gray-400">Total Plantilla</p>
-          <p className="text-lg sm:text-xl font-black text-teal-700 mt-0.5">{totalMembersCount}</p>
-        </div>
-      </div>
+      )}
 
       {/* SEARCH AND COLLAPSIBLE FILTERS BAR */}
       <div className="bg-white rounded-2xl p-3 border border-gray-200/80 shadow-2xs flex flex-col gap-2.5">

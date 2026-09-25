@@ -8,9 +8,6 @@ import {
   Trash2,
 } from 'lucide-react';
 import clsx from 'clsx';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
-import 'dayjs/locale/es';
 import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { toast } from 'sonner';
@@ -29,11 +26,9 @@ import {
 import { IInAppNotification } from '@/libs/models';
 import { UserExperienceEnum } from '@/libs/utils/auth';
 import { capitalizeWords } from '@/libs/utils/text';
+import { formatRelativeTime } from '@/libs/utils/date';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
-
-dayjs.extend(relativeTime);
-dayjs.locale('es');
 
 /**
  * Formats notification title cleanly:
@@ -321,15 +316,6 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
       toast.success('¡Aviso enviado! El equipo ya sabe que vas en camino.');
     } catch {
       toast.error('No se pudo enviar la confirmación. Por favor intenta de nuevo.');
-    }
-  };
-
-  const formatRelativeTime = (isoString: string) => {
-    if (!isoString) return '';
-    try {
-      return dayjs(isoString).fromNow();
-    } catch {
-      return '';
     }
   };
 

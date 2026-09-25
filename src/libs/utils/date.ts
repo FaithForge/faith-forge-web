@@ -1,8 +1,16 @@
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import 'dayjs/locale/es';
 
 dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.extend(relativeTime);
+dayjs.locale('es');
+
+export const DEFAULT_CHURCH_TIMEZONE = 'America/Bogota';
+dayjs.tz.setDefault(DEFAULT_CHURCH_TIMEZONE);
 
 export const MONTH_NUMBER_TO_LETTER: { [key: number]: string } = {
   1: 'Enero',
@@ -107,3 +115,41 @@ export const labelRendererCalendar = (type: string, data: number): string => {
       return data.toString();
   }
 };
+
+/**
+ * Safely formats a timestamp (UTC from server, ISO string, or Date) into the church/Colombia timezone.
+ *
+ * @param {string | Date | number | null | undefined} date - The timestamp to format.
+ * @param {string} [formatStr='DD MMM YYYY, HH:mm'] - Target dayjs format.
+ * @param {string} [timezoneStr=DEFAULT_CHURCH_TIMEZONE] - Target IANA timezone name.
+ * @returns {string} Formatted datetime string in Spanish locale, or empty string if invalid.
+ */
+export const formatDateTime = (
+  date?: string | Date | number | null,
+  formatStr: string = 'DD MMM YYYY, HH:mm',
+  timezoneStr: string = DEFAULT_CHURCH_TIMEZONE
+): string => {
+  if (!date) return '';
+  const parsed = dayjs.utc(date);
+  if (!parsed.isValid()) return '';
+  return parsed.tz(timezoneStr).locale('es').format(formatStr);
+};
+
+/**
+ * Safely formats a timestamp (UTC from server, ISO string, or Date) as a relative time string.
+ *
+ * @param {string | Date | number | null | undefined} date - The timestamp to format.
+ * @param {string} [timezoneStr=DEFAULT_CHURCH_TIMEZONE] - Target IANA timezone name.
+ * @returns {string} Relative time string in Spanish (e.g. "hace 5 minutos"), or empty string if invalid.
+ */
+export const formatRelativeTime = (
+  date?: string | Date | number | null,
+  timezoneStr: string = DEFAULT_CHURCH_TIMEZONE
+): string => {
+  if (!date) return '';
+  const parsed = dayjs.utc(date);
+  if (!parsed.isValid()) return '';
+  return parsed.tz(timezoneStr).locale('es').fromNow();
+};
+
+

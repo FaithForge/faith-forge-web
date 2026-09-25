@@ -16,6 +16,10 @@ export interface GetChurchPrintersArgs {
   churchCampusId?: string;
 }
 
+export interface GetChurchCampusesArgs {
+  churchId?: string;
+}
+
 export type CacheScope = 'all' | 'printers' | 'services' | 'registrations';
 
 export interface ClearCacheArgs {
@@ -66,12 +70,16 @@ export const churchApi = baseApi.injectEndpoints({
           : [{ type: 'ChurchMeeting', id: 'LIST' }],
     }),
 
-    getChurchCampuses: builder.query<IChurchCampus[], void>({
-      query: () => ({
-        microservice: MicroserviceEnum.Church,
-        url: '/church-campus',
-        method: HttpRequestMethod.GET,
-      }),
+    getChurchCampuses: builder.query<IChurchCampus[], GetChurchCampusesArgs | void>({
+      query: (args) => {
+        const churchId = args?.churchId || import.meta.env.VITE_CHURCH_ID;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/church-campus',
+          method: HttpRequestMethod.GET,
+          params: churchId ? { churchId } : {},
+        };
+      },
       providesTags: (result) =>
         result
           ? [

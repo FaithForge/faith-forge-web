@@ -119,7 +119,9 @@
     "no_campus_selected": "{{campus}} no seleccionada",
     "ministries_count_singular": "{{count}} ministerio en {{campus}}",
     "ministries_count_plural": "{{count}} ministerios en {{campus}}",
-    "new_ministry_btn": "Nuevo",
+    "ministries_section_title": "Ministerios en esta {{campus}} ({{count}})",
+    "ministries_section_subtitle": "Selecciona un ministerio para ver o editar su estructura",
+    "new_ministry_btn": "Nuevo Ministerio",
     "status_active": "Activo",
     "status_inactive": "Inactivo",
     "kpi_teams": "Equipos",
@@ -129,12 +131,31 @@
       "teams": "Equipos y Plantilla",
       "teams_short": "Equipos",
       "leadership": "Liderazgo",
-      "structure": "Estructura",
-      "organigram": "Organigrama"
+      "structure": "Estructura"
     },
     "empty_title": "No hay ministerios configurados en {{campus}}",
     "empty_desc": "Crea tu primer ministerio (ej. Ministerio de Niños, Alabanza, Servidores) para empezar a organizar equipos y {{volunteers}}.",
-    "create_ministry_btn": "Crear Ministerio"
+    "create_ministry_btn": "Crear Ministerio",
+    "download_pdf_btn": "Descargar PDF",
+    "download_pdf_tooltip": "Descargar Reporte Oficial de Organización en PDF"
+  },
+  "export_pdf_modal": {
+    "title": "Reporte Oficial de Organización",
+    "subtitle": "Genera un documento PDF ejecutivo con las estadísticas, liderazgo responsable y plantillas de equipos organizadas por grupo.",
+    "privacy_label": "Proteger datos personales (enmascarar documento y teléfono)",
+    "privacy_subtitle": "Oculta los primeros dígitos de la cédula y teléfono en el documento para proteger la privacidad.",
+    "area_filter_label": "Área de Servicio",
+    "all_areas": "Todas las Áreas ({{count}})",
+    "group_filter_label": "Grupo de Servicio",
+    "all_groups": "Todos los Grupos ({{count}})",
+    "coverage_filter_label": "Estado de Cobertura",
+    "all_teams": "Todos los Equipos",
+    "covered_only": "Solo con Supervisor asignado",
+    "uncovered_only": "Sin Supervisor (Pendientes)",
+    "download_btn": "Descargar Reporte PDF",
+    "generating": "Generando documento...",
+    "success_toast": "Reporte PDF generado y descargado exitosamente",
+    "error_toast": "Error al generar el reporte PDF"
   }
 }
 
