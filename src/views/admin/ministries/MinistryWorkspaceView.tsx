@@ -124,6 +124,7 @@ export const MinistryWorkspaceView: React.FC = () => {
   const {
     data: workspace,
     isLoading: loadingWorkspace,
+    isFetching: fetchingWorkspace,
     refetch: refetchWorkspace,
   } = useGetMinistryWorkspaceOverviewQuery(
     selectedCampusId || activeMinistryIdParam
@@ -132,8 +133,26 @@ export const MinistryWorkspaceView: React.FC = () => {
     { skip: !selectedCampusId && !activeMinistryIdParam },
   );
 
-  const activeMinistry = workspace?.ministry;
-  const campusMinistries = workspace?.campusMinistries || [];
+  // Check if current workspace data in cache belongs to the currently selected campus
+  const isWorkspaceStale = Boolean(
+    workspace?.ministry?.churchCampusId &&
+      selectedCampusId &&
+      workspace.ministry.churchCampusId !== selectedCampusId,
+  );
+
+  const activeMinistry = isWorkspaceStale ? undefined : workspace?.ministry;
+  const campusMinistries = isWorkspaceStale ? [] : workspace?.campusMinistries || [];
+  const currentWorkspace = isWorkspaceStale ? undefined : workspace;
+  const isBusy = loadingWorkspace || fetchingWorkspace || isWorkspaceStale;
+
+  // Sync selectedCampusId whenever URL campusId changes
+  useEffect(() => {
+    const urlCampus = searchParams.get('campusId');
+    if (urlCampus && urlCampus !== selectedCampusId && campuses.some((c) => c.id === urlCampus)) {
+      setSelectedCampusId(urlCampus);
+      sessionStorage.setItem('ministries_selected_campus_id', urlCampus);
+    }
+  }, [searchParams, selectedCampusId, campuses]);
 
   // Keep campus selection in sync once campuses or workspace load
   useEffect(() => {
@@ -173,20 +192,30 @@ export const MinistryWorkspaceView: React.FC = () => {
     sessionStorage.setItem('ministries_selected_campus_id', newCampusId);
     dispatch(updateCurrentChurchCampus(newCampusId));
 
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('campusId', newCampusId);
-        next.delete('ministryId');
-        return next;
-      },
-      { replace: true },
-    );
+    if (urlMinistryId) {
+      navigate(`${APP_ROUTES.admin.ministries}?campusId=${newCampusId}`, { replace: true });
+    } else {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          next.set('campusId', newCampusId);
+          next.delete('ministryId');
+          return next;
+        },
+        { replace: true },
+      );
+    }
   };
 
-  // Update URL ministryId if backend auto-resolved default ministry
+  // Update URL ministryId only when activeMinistry actually belongs to the selected campus
   useEffect(() => {
-    if (activeMinistry?.id && !urlMinistryId && searchParams.get('ministryId') !== activeMinistry.id) {
+    if (
+      !isWorkspaceStale &&
+      activeMinistry?.id &&
+      (!selectedCampusId || activeMinistry.churchCampusId === selectedCampusId) &&
+      !urlMinistryId &&
+      searchParams.get('ministryId') !== activeMinistry.id
+    ) {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
@@ -197,7 +226,15 @@ export const MinistryWorkspaceView: React.FC = () => {
         { replace: true },
       );
     }
-  }, [activeMinistry?.id, urlMinistryId, searchParams, setSearchParams, selectedCampusId]);
+  }, [
+    activeMinistry?.id,
+    activeMinistry?.churchCampusId,
+    isWorkspaceStale,
+    urlMinistryId,
+    searchParams,
+    setSearchParams,
+    selectedCampusId,
+  ]);
 
   // 5. Active Tab Management (3 streamlined tabs)
   const activeTab: WorkspaceTabKey = useMemo(() => {
@@ -389,14 +426,14 @@ export const MinistryWorkspaceView: React.FC = () => {
         </div>
 
         {/* Loading Skeleton */}
-        {loadingWorkspace && !workspace && (
+        {isBusy && !currentWorkspace && (
           <div className="p-4 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
             <CellListSkeleton count={4} />
           </div>
         )}
 
         {/* Active Ministry Details & KPI Bar */}
-        {!loadingWorkspace && activeMinistry && (
+        {!isBusy && activeMinistry && currentWorkspace && (
           <>
             {/* Ministry Summary & KPIs Card */}
             <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-2xs flex flex-col gap-3">
@@ -478,7 +515,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                       {workspace?.summary.teamsWithSupervisor ?? 0}
                     </span>
                     <span className="text-xs font-bold text-gray-400">
-                      / {workspace?.summary.totalTeams ?? 0}
+                      / {workspace?.summary.teamsRequiringSupervisor ?? workspace?.summary.totalTeams ?? 0}
                     </span>
                   </div>
                 </div>
@@ -536,9 +573,9 @@ export const MinistryWorkspaceView: React.FC = () => {
                 <MinistryTeamsSection
                   ministryId={activeMinistry.id}
                   churchCampusId={selectedCampusId}
-                  workspaceTeams={workspace?.teams}
-                  workspaceGroups={workspace?.groups}
-                  workspaceAreas={workspace?.areas}
+                  workspaceTeams={currentWorkspace?.teams}
+                  workspaceGroups={currentWorkspace?.groups}
+                  workspaceAreas={currentWorkspace?.areas}
                   onRefreshWorkspace={refetchWorkspace}
                   hideMetrics={true}
                 />
@@ -548,9 +585,9 @@ export const MinistryWorkspaceView: React.FC = () => {
                 <MinistryLeadershipSection
                   ministryId={activeMinistry.id}
                   churchCampusId={selectedCampusId}
-                  workspaceLeadership={workspace?.leadership}
-                  workspaceAreas={workspace?.areas}
-                  workspaceGroups={workspace?.groups}
+                  workspaceLeadership={currentWorkspace?.leadership}
+                  workspaceAreas={currentWorkspace?.areas}
+                  workspaceGroups={currentWorkspace?.groups}
                   onRefreshWorkspace={refetchWorkspace}
                 />
               )}
@@ -559,6 +596,9 @@ export const MinistryWorkspaceView: React.FC = () => {
                 <MinistryStructureSection
                   ministryId={activeMinistry.id}
                   churchCampusId={selectedCampusId}
+                  workspaceAreas={currentWorkspace?.areas}
+                  workspaceGroups={currentWorkspace?.groups}
+                  onRefreshWorkspace={refetchWorkspace}
                 />
               )}
             </div>
@@ -566,7 +606,7 @@ export const MinistryWorkspaceView: React.FC = () => {
         )}
 
         {/* Empty Campus Ministries State */}
-        {!loadingWorkspace && (!activeMinistry || campusMinistries.length === 0) && (
+        {!isBusy && (!activeMinistry || campusMinistries.length === 0) && (
           <div className="bg-white rounded-2xl p-8 border border-gray-200/80 shadow-2xs text-center flex flex-col items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
               <FolderKanban size={24} />

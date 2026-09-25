@@ -72,6 +72,7 @@ export interface IMinistryArea {
   description?: string;
   scope?: MinistryAreaScope | null;
   state?: MinistryAreaStateEnum;
+  requiresSupervisor?: boolean;
   kidGroupId?: string;
   kidGroupIds?: string[];
   kidGroups?: IMinistryAreaKidGroupRelation[];
@@ -107,6 +108,7 @@ export interface IServiceAreaGroups extends ReduxDefaultState<IServiceAreaGroup>
 export interface IMinistryWorkspaceSummary {
   totalTeams: number;
   teamsWithSupervisor: number;
+  teamsRequiringSupervisor?: number;
   totalVolunteers: number;
   totalSupervisors: number;
 }
@@ -127,6 +129,7 @@ export interface IMinistryWorkspaceTeam {
   ministryAreaId: string;
   ministryAreaName: string;
   ministryAreaScope?: MinistryAreaScope | null;
+  requiresSupervisor?: boolean;
   ministryGroupConfigId: string;
   ministryGroupConfigName: string;
   churchCampusId: string;

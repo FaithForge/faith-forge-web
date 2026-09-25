@@ -7,7 +7,13 @@
     "title": "Corrección en el acceso al detalle y registro de niños",
     "changes": [
       "Corrección que permite acceder al detalle y registro del niño sin cierres o regresos involuntarios",
-      "Mayor estabilidad al navegar entre módulos según la función activa"
+      "Mayor estabilidad al navegar entre módulos según la función activa",
+      "Actualización instantánea de ministerios, equipos y servidores al cambiar de sede",
+      "Visualización y armado inmediato de equipos sin necesidad de ingresar previamente a otras pestañas",
+      "Configuración personalizada de supervisión por área para evitar avisos innecesarios en equipos que no la requieren",
+      "Métricas de supervisión más precisas calculadas únicamente sobre los equipos con supervisión requerida",
+      "Rediseño visual y modernización de la gestión de sedes con tarjetas compactas y mayor fluidez",
+      "Selector interactivo y descriptivo del modo de registro de asistencia infantil al crear o editar sedes"
     ]
   },
   {

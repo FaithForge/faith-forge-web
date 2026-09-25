@@ -12,6 +12,8 @@ import clsx from 'clsx';
 
 interface MinistryAreasTabProps {
   ministryId: string;
+  workspaceAreas?: IMinistryArea[];
+  onRefreshWorkspace?: () => void;
 }
 
 /**
@@ -20,7 +22,11 @@ interface MinistryAreasTabProps {
  * @param {MinistryAreasTabProps} props - Component props with ministryId.
  * @returns {JSX.Element} Rendered tab content.
  */
-export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }) => {
+export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({
+  ministryId,
+  workspaceAreas,
+  onRefreshWorkspace,
+}) => {
   const dispatch = useAppDispatch();
   const { areasByMinistry, loadingAreas } = useAppSelector((state) => state.ministrySlice);
   const { data: kidGroups = [] } = useGetKidGroupsQuery();
@@ -31,13 +37,14 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
   const [modalOpen, setModalOpen] = useState(false);
   const [areaToEdit, setAreaToEdit] = useState<IMinistryArea | null>(null);
 
-  const areas: IMinistryArea[] = useMemo(
-    () =>
-      (areasByMinistry[ministryId] || [])
-        .filter((a) => a.state !== MinistryAreaStateEnum.DELETED)
-        .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' })),
-    [areasByMinistry, ministryId],
-  );
+  const areas: IMinistryArea[] = useMemo(() => {
+    const list = areasByMinistry[ministryId]?.length
+      ? areasByMinistry[ministryId]
+      : workspaceAreas || [];
+    return list
+      .filter((a) => a.state !== MinistryAreaStateEnum.DELETED)
+      .sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+  }, [areasByMinistry, ministryId, workspaceAreas]);
 
   useEffect(() => {
     dispatch(GetMinistryAreas({ ministryId, force: false }));
@@ -188,6 +195,13 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
                         </span>
                       )}
 
+                      {/* Optional Supervision Badge */}
+                      {area.requiresSupervisor === false && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
+                          Supervisión opcional
+                        </span>
+                      )}
+
                       {/* Classroom Assignment Bullet Badge (Only rendered when assigned) */}
                       {hasClassroom && (
                         <span
@@ -226,7 +240,10 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({ ministryId }
         onOpenChange={setModalOpen}
         ministryId={ministryId}
         areaToEdit={areaToEdit}
-        onSuccess={() => dispatch(GetMinistryAreas({ ministryId, force: true }))}
+        onSuccess={() => {
+          dispatch(GetMinistryAreas({ ministryId, force: true }));
+          onRefreshWorkspace?.();
+        }}
       />
     </div>
   );

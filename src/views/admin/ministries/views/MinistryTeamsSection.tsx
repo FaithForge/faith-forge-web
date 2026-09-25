@@ -119,8 +119,15 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   );
   const campuses = campusesState.data;
 
-  const campusTeamsKey = `campus_teams_${ministryId}_${selectedCampusId}`;
-  const loadingCampusTeams = loadingByPartition[campusTeamsKey] ?? false;
+  const effectiveCampusId = churchCampusId || selectedCampusId;
+  const campusTeamsKey = effectiveCampusId ? `campus_teams_${ministryId}_${effectiveCampusId}` : '';
+  const loadingCampusTeams = campusTeamsKey ? (loadingByPartition[campusTeamsKey] ?? false) : false;
+
+  // Workspace teams fast lookup map
+  const workspaceTeamsMap = useMemo(() => {
+    if (!workspaceTeams) return new Map<string, IMinistryWorkspaceTeam>();
+    return new Map(workspaceTeams.map((wt) => [wt.id, wt]));
+  }, [workspaceTeams]);
 
   // Set default campus
   useEffect(() => {
@@ -148,35 +155,37 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
   // Load Campus Teams Assignments with limit=500 to prevent pagination cuts
   const fetchCampusAssignments = useCallback(() => {
-    if (selectedCampusId) {
+    if (effectiveCampusId && campusTeamsKey) {
       dispatch(
         GetVolunteerAssignments({
           ministryId,
-          churchCampusId: selectedCampusId,
+          churchCampusId: effectiveCampusId,
           partitionKey: campusTeamsKey,
           limit: 500,
           force: true,
         }),
       );
     }
-  }, [dispatch, ministryId, selectedCampusId, campusTeamsKey]);
+  }, [dispatch, ministryId, effectiveCampusId, campusTeamsKey]);
 
   useEffect(() => {
-    if (selectedCampusId) {
+    if (effectiveCampusId && campusTeamsKey) {
       dispatch(
         GetVolunteerAssignments({
           ministryId,
-          churchCampusId: selectedCampusId,
+          churchCampusId: effectiveCampusId,
           partitionKey: campusTeamsKey,
           limit: 500,
           force: false,
         }),
       );
     }
-  }, [dispatch, ministryId, selectedCampusId, campusTeamsKey]);
+  }, [dispatch, ministryId, effectiveCampusId, campusTeamsKey]);
 
   useEffect(() => {
-    dispatch(GetVolunteers({ ministryId, limit: 500, force: false }));
+    if (ministryId) {
+      dispatch(GetVolunteers({ ministryId, limit: 500, force: false }));
+    }
   }, [dispatch, ministryId]);
 
   const campusOptions = useMemo(() => {
@@ -200,6 +209,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           ministryId,
           name: wt.ministryAreaName,
           scope: wt.ministryAreaScope,
+          requiresSupervisor: wt.requiresSupervisor,
         },
         ministryGroupConfig: {
           id: wt.ministryGroupConfigId,
@@ -211,13 +221,14 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     }
     const areaIdSet = new Set(areas.map((a) => a.id));
     return serviceAreaGroups.filter(
-      (sag) => sag.churchCampusId === selectedCampusId && areaIdSet.has(sag.ministryAreaId),
+      (sag) => sag.churchCampusId === effectiveCampusId && areaIdSet.has(sag.ministryAreaId),
     );
-  }, [workspaceTeams, serviceAreaGroups, selectedCampusId, areas, ministryId]);
+  }, [workspaceTeams, serviceAreaGroups, effectiveCampusId, areas, ministryId]);
 
   const campusTeamAssignments = useMemo(() => {
-    return assignmentsByPartition[campusTeamsKey] || assignments;
-  }, [assignmentsByPartition, campusTeamsKey, assignments]);
+    if (!campusTeamsKey) return [];
+    return assignmentsByPartition[campusTeamsKey] || [];
+  }, [assignmentsByPartition, campusTeamsKey]);
 
   // Area Options for Filter
   const areaFilterOptions = useMemo(() => {
@@ -402,19 +413,36 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   // KPIs
   const totalTeamsCount = currentCampusTeams.length;
   const teamsWithSupervisorCount = useMemo(() => {
-    return currentCampusTeams.filter((team) =>
-      campusTeamAssignments.some(
+    return currentCampusTeams.filter((team) => {
+      const hasAssignmentSup = campusTeamAssignments.some(
         (a) => a.serviceAreaGroupId === team.id && a.role === VolunteerRole.SUPERVISOR,
-      ),
-    ).length;
-  }, [currentCampusTeams, campusTeamAssignments]);
+      );
+      if (hasAssignmentSup) return true;
+      const wt = workspaceTeamsMap.get(team.id);
+      return wt && wt.supervisors && wt.supervisors.length > 0;
+    }).length;
+  }, [currentCampusTeams, campusTeamAssignments, workspaceTeamsMap]);
+
+  const totalTeamsRequiringSupervisorCount = useMemo(() => {
+    return currentCampusTeams.filter((team) => {
+      const area = areas.find((a) => a.id === team.ministryAreaId) || team.ministryArea;
+      const wt = workspaceTeamsMap.get(team.id);
+      return (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? true) !== false;
+    }).length;
+  }, [currentCampusTeams, areas, workspaceTeamsMap]);
 
   const totalMembersCount = useMemo(() => {
-    const campusTeamIds = new Set(currentCampusTeams.map((t) => t.id));
-    return campusTeamAssignments.filter(
-      (a) => a.serviceAreaGroupId && campusTeamIds.has(a.serviceAreaGroupId),
-    ).length;
-  }, [currentCampusTeams, campusTeamAssignments]);
+    if (campusTeamAssignments.length > 0) {
+      const campusTeamIds = new Set(currentCampusTeams.map((t) => t.id));
+      return campusTeamAssignments.filter(
+        (a) => a.serviceAreaGroupId && campusTeamIds.has(a.serviceAreaGroupId),
+      ).length;
+    }
+    return currentCampusTeams.reduce(
+      (acc, t) => acc + (workspaceTeamsMap.get(t.id)?.totalMembersCount || 0),
+      0,
+    );
+  }, [currentCampusTeams, campusTeamAssignments, workspaceTeamsMap]);
 
   const activeFiltersCount =
     (selectedAreaId !== 'ALL' ? 1 : 0) + (selectedGroupId !== 'ALL' ? 1 : 0);
@@ -431,7 +459,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
             <p className="text-[10.5px] font-semibold text-gray-400">Con Supervisor</p>
             <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
-              {teamsWithSupervisorCount}/{totalTeamsCount || 1}
+              {teamsWithSupervisorCount}/{totalTeamsRequiringSupervisorCount || totalTeamsCount || 1}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
@@ -665,13 +693,32 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
               (a) => a.role === VolunteerRole.VOLUNTEER,
             );
 
-            const teamsWithSupervisor = teams.filter((t) =>
-              campusTeamAssignments.some(
-                (a) => a.serviceAreaGroupId === t.id && a.role === VolunteerRole.SUPERVISOR,
-              ),
-            ).length;
+            const totalVolunteersCount =
+              groupVolunteers.length > 0
+                ? groupVolunteers.length
+                : teams.reduce((acc, t) => acc + (workspaceTeamsMap.get(t.id)?.servidoresCount || 0), 0);
 
-            const allTeamsCovered = teamsWithSupervisor === teams.length && teams.length > 0;
+            const totalSupervisorsCount =
+              groupSupervisors.length > 0
+                ? groupSupervisors.length
+                : teams.reduce((acc, t) => acc + (workspaceTeamsMap.get(t.id)?.supervisors?.length || 0), 0);
+
+            const teamsRequiringSupervisorInGroup = teams.filter((t) => {
+              const area = areas.find((a) => a.id === t.ministryAreaId) || t.ministryArea;
+              const wt = workspaceTeamsMap.get(t.id);
+              return (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? true) !== false;
+            });
+
+            const uncoveredRequiredTeamsCount = teamsRequiringSupervisorInGroup.filter((t) => {
+              const hasAssignmentSup = campusTeamAssignments.some(
+                (a) => a.serviceAreaGroupId === t.id && a.role === VolunteerRole.SUPERVISOR,
+              );
+              if (hasAssignmentSup) return false;
+              const wt = workspaceTeamsMap.get(t.id);
+              return !(wt && wt.supervisors && wt.supervisors.length > 0);
+            }).length;
+
+            const allTeamsCovered = uncoveredRequiredTeamsCount === 0;
 
             return (
               <div
@@ -710,16 +757,16 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/70 shrink-0">
-                            <AlertCircle size={11} /> {teams.length - teamsWithSupervisor} sin supervisor
+                            <AlertCircle size={11} /> {uncoveredRequiredTeamsCount} sin supervisor
                           </span>
                         )}
                       </div>
                       <p className="text-[11px] font-medium text-gray-500 mt-0.5">
                         <span className="font-bold text-gray-700">{teams.length}</span>{' '}
                         {teams.length === 1 ? 'área / equipo' : 'áreas / equipos'} •{' '}
-                        <span className="font-bold text-teal-700">{groupVolunteers.length}</span>{' '}
-                        {groupVolunteers.length === 1 ? volunteerTerm.toLowerCase() : volunteersTerm.toLowerCase()} •{' '}
-                        <span className="font-bold text-indigo-700">{groupSupervisors.length}</span> supervisores
+                        <span className="font-bold text-teal-700">{totalVolunteersCount}</span>{' '}
+                        {totalVolunteersCount === 1 ? volunteerTerm.toLowerCase() : volunteersTerm.toLowerCase()} •{' '}
+                        <span className="font-bold text-indigo-700">{totalSupervisorsCount}</span> supervisores
                       </p>
                     </div>
                   </div>
@@ -755,8 +802,14 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                         {/* Teams under this group */}
                         <div className="grid grid-cols-1 gap-3">
                           {teams.map((team) => {
+                            const wt = workspaceTeamsMap.get(team.id);
                             const area =
-                              areas.find((a) => a.id === team.ministryAreaId) || team.ministryArea;
+                              areas.find((a) => a.id === team.ministryAreaId) ||
+                              areasByMinistry[ministryId]?.find((a) => a.id === team.ministryAreaId) ||
+                              team.ministryArea;
+
+                            const teamRequiresSupervisor =
+                              (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? team.ministryArea?.requiresSupervisor ?? true) !== false;
 
                             const allTeamAssignments = campusTeamAssignments.filter(
                               (a) => a.serviceAreaGroupId === team.id,
@@ -769,11 +822,29 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                               (a) => a.role === VolunteerRole.VOLUNTEER,
                             );
 
+                            const effectiveSupervisorNames =
+                              supervisors.length > 0
+                                ? supervisors
+                                    .map((s) => getVolunteerDetails(s).fullName)
+                                    .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
+                                : (wt?.supervisors || []).map((s) => s.fullName);
+
+                            const effectiveTotalMembers =
+                              allTeamAssignments.length > 0
+                                ? allTeamAssignments.length
+                                : wt?.totalMembersCount || 0;
+
+                            const effectiveSupervisorsCount =
+                              supervisors.length > 0 ? supervisors.length : wt?.supervisors?.length || 0;
+
+                            const effectiveVolunteersCount =
+                              volunteers.length > 0 ? volunteers.length : wt?.servidoresCount || 0;
+
                             // Search filtering
                             const q = searchMemberTerm.toLowerCase().trim();
                             if (q) {
-                              const hasSupervisorMatch = supervisors.some((s) =>
-                                getVolunteerDetails(s).fullName.toLowerCase().includes(q),
+                              const hasSupervisorMatch = effectiveSupervisorNames.some((name) =>
+                                name.toLowerCase().includes(q),
                               );
                               const hasVolunteerMatch = volunteers.some((v) =>
                                 getVolunteerDetails(v).fullName.toLowerCase().includes(q),
@@ -782,10 +853,6 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                 return null;
                               }
                             }
-
-                            const supervisorNames = supervisors
-                              .map((s) => getVolunteerDetails(s).fullName)
-                              .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }));
 
                             return (
                               <div
@@ -807,8 +874,8 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
                                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200/80 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all shrink-0 shadow-2xs">
                                     <span>
-                                      {allTeamAssignments.length}{' '}
-                                      {allTeamAssignments.length === 1 ? 'miembro' : 'miembros'}
+                                      {effectiveTotalMembers}{' '}
+                                      {effectiveTotalMembers === 1 ? 'miembro' : 'miembros'}
                                     </span>
                                     <ChevronRight
                                       size={13}
@@ -817,39 +884,51 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                   </div>
                                 </div>
 
-                                {/* Supervisor Summary (List with bullets) */}
-                                <div className="text-xs bg-slate-50/70 p-3 rounded-2xl border border-gray-100 group-hover:bg-slate-100/60 transition-colors">
-                                  {supervisorNames.length > 0 ? (
-                                    <div className="flex flex-col gap-1.5 text-gray-700">
-                                      <div className="flex items-center gap-1.5 text-indigo-900 font-bold">
-                                        <ShieldCheck
-                                          size={14}
-                                          className="text-indigo-600 shrink-0"
-                                        />
-                                        <span>
-                                          Supervisores ({supervisorNames.length}):
-                                        </span>
+                                {/* Supervisor Summary (List with bullets or Warning if required) */}
+                                {(() => {
+                                  if (effectiveSupervisorNames.length > 0) {
+                                    return (
+                                      <div className="text-xs bg-slate-50/70 p-3 rounded-2xl border border-gray-100 group-hover:bg-slate-100/60 transition-colors">
+                                        <div className="flex flex-col gap-1.5 text-gray-700">
+                                          <div className="flex items-center gap-1.5 text-indigo-900 font-bold">
+                                            <ShieldCheck
+                                              size={14}
+                                              className="text-indigo-600 shrink-0"
+                                            />
+                                            <span>
+                                              Supervisores ({effectiveSupervisorNames.length}):
+                                            </span>
+                                          </div>
+                                          <ul className="flex flex-col gap-1 pl-4 list-disc text-gray-800 font-medium marker:text-indigo-500">
+                                            {effectiveSupervisorNames.map((name, sIdx) => (
+                                              <li key={sIdx} className="leading-snug">
+                                                {name}
+                                              </li>
+                                            ))}
+                                          </ul>
+                                        </div>
                                       </div>
-                                      <ul className="flex flex-col gap-1 pl-4 list-disc text-gray-800 font-medium marker:text-indigo-500">
-                                        {supervisorNames.map((name, sIdx) => (
-                                          <li key={sIdx} className="leading-snug">
-                                            {name}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center gap-1.5 text-amber-700 font-bold">
-                                      <AlertCircle size={14} className="shrink-0 text-amber-600" />
-                                      <span>Sin supervisor asignado</span>
-                                    </div>
-                                  )}
-                                </div>
+                                    );
+                                  }
+
+                                  if (teamRequiresSupervisor) {
+                                    return (
+                                      <div className="text-xs bg-slate-50/70 p-3 rounded-2xl border border-gray-100 group-hover:bg-slate-100/60 transition-colors">
+                                        <div className="flex items-center gap-1.5 text-amber-700 font-bold">
+                                          <AlertCircle size={14} className="shrink-0 text-amber-600" />
+                                          <span>Sin supervisor asignado</span>
+                                        </div>
+                                      </div>
+                                    );
+                                  }
+
+                                  return null;
+                                })()}
 
                                 {/* Card Click Hint */}
                                 <div className="flex items-center justify-end text-[11px] text-gray-400 font-medium -mt-1 px-1">
                                   <span className="group-hover:text-primary font-semibold transition-colors flex items-center gap-1">
-                                    <span>Ver plantilla completa ({allTeamAssignments.length})</span>
+                                    <span>Ver plantilla completa ({effectiveTotalMembers})</span>
                                     <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
                                   </span>
                                 </div>
@@ -857,12 +936,16 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                 {/* Totals Breakdown and Actions */}
                                 <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-gray-100 flex-wrap">
                                   <div className="flex items-center gap-2.5 text-xs text-gray-500 font-semibold">
-                                    <span className="inline-flex items-center gap-1 text-indigo-700 font-bold">
-                                      <ShieldCheck size={13} /> {supervisors.length} sup.
-                                    </span>
-                                    <span>•</span>
+                                    {(teamRequiresSupervisor || effectiveSupervisorsCount > 0) && (
+                                      <>
+                                        <span className="inline-flex items-center gap-1 text-indigo-700 font-bold">
+                                          <ShieldCheck size={13} /> {effectiveSupervisorsCount} sup.
+                                        </span>
+                                        <span>•</span>
+                                      </>
+                                    )}
                                     <span className="inline-flex items-center gap-1 text-teal-700 font-bold">
-                                      <Users size={13} /> {volunteers.length} serv.
+                                      <Users size={13} /> {effectiveVolunteersCount} serv.
                                     </span>
                                   </div>
 

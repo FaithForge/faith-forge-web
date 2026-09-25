@@ -280,10 +280,15 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
   const kpiStats = useMemo(() => {
     const totalTeams = filteredCampusTeams.length;
     let coveredTeams = 0;
+    let teamsRequiringSupervisorCount = 0;
     const supervisorIds = new Set<string>();
     const volunteerIds = new Set<string>();
 
     filteredCampusTeams.forEach((team) => {
+      const area = areas.find((a) => a.id === team.ministryAreaId) || team.ministryArea;
+      const requiresSupervisor = (area?.requiresSupervisor ?? true) !== false;
+      if (requiresSupervisor) teamsRequiringSupervisorCount++;
+
       const teamAssignments = allAssignments.filter((a) => a.serviceAreaGroupId === team.id);
       const sups = teamAssignments.filter((a) => a.role === VolunteerRole.SUPERVISOR);
       if (sups.length > 0) coveredTeams++;
@@ -296,17 +301,21 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
     const supervisorsCount = supervisorIds.size;
     const volunteersCount = volunteerIds.size;
     const totalMembersCount = supervisorsCount + volunteersCount;
-    const coveragePct = totalTeams > 0 ? Math.round((coveredTeams / totalTeams) * 100) : 0;
+    const effectiveTotalRequiring =
+      teamsRequiringSupervisorCount > 0 ? teamsRequiringSupervisorCount : totalTeams;
+    const coveragePct =
+      effectiveTotalRequiring > 0 ? Math.round((coveredTeams / effectiveTotalRequiring) * 100) : 0;
 
     return {
       totalTeams,
+      teamsRequiringSupervisorCount,
       coveredTeams,
       coveragePct,
       supervisorsCount,
       volunteersCount,
       totalMembersCount,
     };
-  }, [filteredCampusTeams, allAssignments]);
+  }, [filteredCampusTeams, allAssignments, areas]);
 
   // Active filter description string
   const activeFilterTitle = useMemo(() => {
@@ -469,11 +478,12 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
       doc.setTextColor(covColor[0], covColor[1], covColor[2]);
       doc.text(`${covPct}%`, chartAX, chartsBoxY + 11.5);
 
+      const totalCoverTarget = kpiStats.teamsRequiringSupervisorCount || kpiStats.totalTeams || 1;
       doc.setFont('helvetica', 'normal');
       doc.setFontSize(6.5);
       doc.setTextColor(100, 116, 139);
       doc.text(
-        `(${kpiStats.coveredTeams} de ${kpiStats.totalTeams || 1} equipos con supervisor)`,
+        `(${kpiStats.coveredTeams} de ${totalCoverTarget} equipos con supervisor)`,
         chartAX + 15,
         chartsBoxY + 11.5,
       );
@@ -604,10 +614,19 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
       const teamRows: string[][] = [];
       organigramAreas.forEach((oa) => {
         oa.teams.forEach((t) => {
+          const isSupRequired = oa.area.requiresSupervisor !== false;
           const supNames =
             t.supervisors.length > 0
               ? t.supervisors.map((s) => getVolunteerDetails(s, maskSensitiveData).name).join(', ')
-              : 'SIN SUPERVISOR';
+              : isSupRequired
+                ? 'SIN SUPERVISOR'
+                : 'NO REQUERIDO';
+
+          const status = t.hasSupervisor
+            ? 'CUBIERTO'
+            : isSupRequired
+              ? 'PENDIENTE'
+              : 'OPCIONAL';
 
           teamRows.push([
             oa.area.name,
@@ -615,7 +634,7 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
             supNames,
             `${t.volunteers.length} serv.`,
             `${t.totalCount} miembros`,
-            t.hasSupervisor ? 'CUBIERTO' : 'PENDIENTE',
+            status,
           ]);
         });
       });

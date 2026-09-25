@@ -102,6 +102,19 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
     return assignments.filter((a) => a.serviceAreaGroupId === team.id);
   }, [assignments, team]);
 
+  const allAreas = useAppSelector((state) => state.ministrySlice.areasByMinistry);
+  const resolvedArea = useMemo(() => {
+    if (team?.ministryArea) return team.ministryArea;
+    if (!team?.ministryAreaId) return undefined;
+    for (const list of Object.values(allAreas)) {
+      const match = list.find((a) => a.id === team.ministryAreaId);
+      if (match) return match;
+    }
+    return undefined;
+  }, [team, allAreas]);
+
+  const requiresSupervisor = resolvedArea ? resolvedArea.requiresSupervisor !== false : true;
+
   const getPersonName = React.useCallback(
     (asg: IVolunteerAssignment): string => {
       const vId = asg.volunteerId || asg.ministryVolunteerId;
@@ -246,6 +259,11 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
             <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 uppercase tracking-wide">
               <ShieldCheck size={15} />
               <span>Supervisor de Equipo</span>
+              {!requiresSupervisor && (
+                <span className="text-[10.5px] font-medium lowercase text-gray-400">
+                  (opcional)
+                </span>
+              )}
             </div>
             {supervisors.length === 0 && (
               <Button
@@ -260,21 +278,40 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
           </div>
 
           {supervisors.length === 0 ? (
-            <div className="p-3.5 bg-amber-50/60 border border-dashed border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-amber-800">
-              <div className="text-xs">
-                <p className="font-bold">Sin supervisor asignado</p>
-                <p className="text-amber-700 text-[11px]">
-                  Este equipo requiere un supervisor responsable de la operación.
-                </p>
+            requiresSupervisor ? (
+              <div className="p-3.5 bg-amber-50/60 border border-dashed border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-amber-800">
+                <div className="text-xs">
+                  <p className="font-bold">Sin supervisor asignado</p>
+                  <p className="text-amber-700 text-[11px]">
+                    Este equipo requiere un supervisor responsable de la operación.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => onAssignClick(VolunteerRole.SUPERVISOR)}
+                  size="sm"
+                  className="text-xs py-1 px-3 gap-1 shrink-0"
+                >
+                  <Plus size={13} /> Asignar
+                </Button>
               </div>
-              <Button
-                onClick={() => onAssignClick(VolunteerRole.SUPERVISOR)}
-                size="sm"
-                className="text-xs py-1 px-3 gap-1 shrink-0"
-              >
-                <Plus size={13} /> Asignar
-              </Button>
-            </div>
+            ) : (
+              <div className="p-3 bg-slate-50/80 border border-dashed border-gray-200/90 rounded-2xl flex items-center justify-between gap-3 text-gray-600">
+                <div className="text-xs">
+                  <p className="font-semibold text-gray-700">Sin supervisor asignado (Opcional)</p>
+                  <p className="text-gray-400 text-[11px]">
+                    Esta área no requiere supervisión obligatoria.
+                  </p>
+                </div>
+                <Button
+                  onClick={() => onAssignClick(VolunteerRole.SUPERVISOR)}
+                  size="sm"
+                  variant="default"
+                  className="text-xs py-1 px-3 gap-1 shrink-0"
+                >
+                  <Plus size={13} /> Asignar
+                </Button>
+              </div>
+            )
           ) : (
             <div className="flex flex-col gap-2">
               {supervisors.map((s) => renderPersonRow(s, 'Supervisor'))}

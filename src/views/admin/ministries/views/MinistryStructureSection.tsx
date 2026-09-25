@@ -1,8 +1,15 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Layers, Users2, Network } from 'lucide-react';
 import { MinistryAreasTab } from '../tabs/MinistryAreasTab';
 import { MinistryGroupsTab } from '../tabs/MinistryGroupsTab';
 import { ServiceAreaGroupsTab } from '../tabs/ServiceAreaGroupsTab';
+import { useAppDispatch } from '@/libs/state/redux/hooks';
+import {
+  GetMinistryAreas,
+  GetMinistryGroupConfigs,
+} from '@/libs/state/redux/thunks/church/ministry.thunk';
+import { IMinistryArea, IMinistryGroupConfig } from '@/libs/models';
 import clsx from 'clsx';
 
 type StructureTabKey = 'groups' | 'areas' | 'teams';
@@ -22,6 +29,9 @@ const STRUCTURE_TABS: TabItem[] = [
 interface MinistryStructureSectionProps {
   ministryId: string;
   churchCampusId?: string;
+  workspaceAreas?: IMinistryArea[];
+  workspaceGroups?: IMinistryGroupConfig[];
+  onRefreshWorkspace?: () => void;
 }
 
 /**
@@ -34,8 +44,44 @@ interface MinistryStructureSectionProps {
 export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> = ({
   ministryId,
   churchCampusId,
+  workspaceAreas,
+  workspaceGroups,
+  onRefreshWorkspace,
 }) => {
-  const [activeTab, setActiveTab] = useState<StructureTabKey>('groups');
+  const dispatch = useAppDispatch();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const subTabFromUrl = searchParams.get('subTab') as StructureTabKey | null;
+  const initialTab =
+    subTabFromUrl && ['groups', 'areas', 'teams'].includes(subTabFromUrl)
+      ? subTabFromUrl
+      : 'groups';
+
+  const [activeTab, setActiveTab] = useState<StructureTabKey>(initialTab);
+
+  // Proactively fetch areas and groups when entering structure section
+  useEffect(() => {
+    if (ministryId) {
+      dispatch(GetMinistryAreas({ ministryId, force: false }));
+      dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));
+    }
+  }, [dispatch, ministryId]);
+
+  const handleTabChange = (key: StructureTabKey) => {
+    setActiveTab(key);
+    setSearchParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        if (key === 'groups') {
+          next.delete('subTab');
+        } else {
+          next.set('subTab', key);
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  };
 
   return (
     <div className="flex flex-col gap-4">
@@ -48,7 +94,7 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
             <button
               key={tab.key}
               type="button"
-              onClick={() => setActiveTab(tab.key)}
+              onClick={() => handleTabChange(tab.key)}
               className={clsx(
                 'flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition-all duration-150 cursor-pointer select-none',
                 isSelected
@@ -65,15 +111,25 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
 
       {/* Tab Panels */}
       <div className="mt-1">
-        {activeTab === 'groups' && <MinistryGroupsTab ministryId={ministryId} />}
-        {activeTab === 'areas' && <MinistryAreasTab ministryId={ministryId} />}
+        {activeTab === 'groups' && (
+          <MinistryGroupsTab ministryId={ministryId} workspaceGroups={workspaceGroups} />
+        )}
+        {activeTab === 'areas' && (
+          <MinistryAreasTab
+            ministryId={ministryId}
+            workspaceAreas={workspaceAreas}
+            onRefreshWorkspace={onRefreshWorkspace}
+          />
+        )}
         {activeTab === 'teams' && (
           <ServiceAreaGroupsTab
             ministryId={ministryId}
             churchCampusId={churchCampusId}
+            workspaceAreas={workspaceAreas}
+            workspaceGroups={workspaceGroups}
             onNavigateToTab={(target) => {
               if (target === 'areas' || target === 'groups') {
-                setActiveTab(target);
+                handleTabChange(target);
               }
             }}
           />

@@ -20,10 +20,13 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import {
   CreateServiceAreaGroup,
+  GetMinistryAreas,
+  GetMinistryGroupConfigs,
   GetServiceAreaGroups,
   UpdateServiceAreaGroup,
 } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import {
+  IMinistryArea,
   IMinistryGroupConfig,
   IServiceAreaGroup,
   MinistryAreaStateEnum,
@@ -50,6 +53,8 @@ interface AreaGroupSection {
 interface ServiceAreaGroupsTabProps {
   ministryId: string;
   churchCampusId?: string;
+  workspaceAreas?: IMinistryArea[];
+  workspaceGroups?: IMinistryGroupConfig[];
   onNavigateToTab?: (tab: string) => void;
 }
 
@@ -62,13 +67,21 @@ interface ServiceAreaGroupsTabProps {
 export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
   ministryId,
   churchCampusId,
+  workspaceAreas,
+  workspaceGroups,
   onNavigateToTab,
 }) => {
   const dispatch = useAppDispatch();
 
   const campusesState = useAppSelector((state) => state.churchCampusSlice);
-  const { areasByMinistry, groupsByMinistry, serviceAreaGroups, loadingServiceAreaGroups } =
-    useAppSelector((state) => state.ministrySlice);
+  const {
+    areasByMinistry,
+    groupsByMinistry,
+    serviceAreaGroups,
+    loadingAreas,
+    loadingGroups,
+    loadingServiceAreaGroups,
+  } = useAppSelector((state) => state.ministrySlice);
 
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [modalOpen, setModalOpen] = useState(false);
@@ -77,20 +90,32 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
   const [isBulkGenerating, setIsBulkGenerating] = useState(false);
   const [togglingId, setTogglingId] = useState<string | null>(null);
 
-  const areas = useMemo(
-    () =>
-      [...(areasByMinistry[ministryId] || [])].sort((a, b) =>
-        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
-      ),
-    [areasByMinistry, ministryId],
-  );
-  const groups = useMemo(
-    () =>
-      [...(groupsByMinistry[ministryId] || [])].sort((a, b) =>
-        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
-      ),
-    [groupsByMinistry, ministryId],
-  );
+  // Proactively fetch areas and groups if they are not yet loaded for this ministry
+  useEffect(() => {
+    if (ministryId) {
+      dispatch(GetMinistryAreas({ ministryId, force: false }));
+      dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));
+    }
+  }, [dispatch, ministryId]);
+
+  const areas = useMemo(() => {
+    const list = areasByMinistry[ministryId]?.length
+      ? areasByMinistry[ministryId]
+      : workspaceAreas || [];
+    return [...list].sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+    );
+  }, [areasByMinistry, ministryId, workspaceAreas]);
+
+  const groups = useMemo(() => {
+    const list = groupsByMinistry[ministryId]?.length
+      ? groupsByMinistry[ministryId]
+      : workspaceGroups || [];
+    return [...list].sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+    );
+  }, [groupsByMinistry, ministryId, workspaceGroups]);
+
   const campuses = campusesState.data;
 
   // Load campuses if not yet available
@@ -111,18 +136,21 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
   // Load service area groups for all areas in this ministry
   const fetchAllTeams = useCallback(() => {
+    if (selectedCampusId && ministryId) {
+      dispatch(GetServiceAreaGroups({ churchCampusId: selectedCampusId, ministryId }));
+    }
     if (areas.length > 0) {
       areas.forEach((area) => {
         dispatch(GetServiceAreaGroups({ ministryAreaId: area.id }));
       });
     }
-  }, [dispatch, areas]);
+  }, [dispatch, selectedCampusId, ministryId, areas]);
 
   useEffect(() => {
-    if (selectedCampusId && areas.length > 0) {
+    if (selectedCampusId) {
       fetchAllTeams();
     }
-  }, [selectedCampusId, areas, fetchAllTeams]);
+  }, [selectedCampusId, fetchAllTeams]);
 
   const campusOptions = useMemo(() => {
     return campuses.map((c) => ({
@@ -341,12 +369,16 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
     }
   };
 
+  const isPrerequisitesLoading =
+    (loadingAreas && areas.length === 0) ||
+    (loadingGroups && groups.length === 0);
+
   const hasPrerequisites = areas.length > 0 && groups.length > 0;
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Prerequisites warning if no areas or groups */}
-      {!hasPrerequisites && (
+      {/* Prerequisites warning if no areas or groups (only when not loading) */}
+      {!isPrerequisitesLoading && !hasPrerequisites && (
         <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-4 flex items-start gap-3 text-amber-800 shadow-xs">
           <AlertCircle className="shrink-0 mt-0.5 text-amber-600" size={18} />
           <div className="text-xs">
@@ -454,7 +486,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       )}
 
       {/* Teams list */}
-      {loadingServiceAreaGroups && currentTeams.length === 0 ? (
+      {(loadingServiceAreaGroups || isPrerequisitesLoading) && currentTeams.length === 0 ? (
         <CellListSkeleton count={4} />
       ) : currentTeams.length === 0 ? (
         <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-xs">

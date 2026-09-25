@@ -10,6 +10,7 @@ import clsx from 'clsx';
 
 interface MinistryGroupsTabProps {
   ministryId: string;
+  workspaceGroups?: IMinistryGroupConfig[];
 }
 
 /**
@@ -18,16 +19,21 @@ interface MinistryGroupsTabProps {
  * @param {MinistryGroupsTabProps} props - Component props with ministryId.
  * @returns {JSX.Element} Rendered tab content.
  */
-export const MinistryGroupsTab: React.FC<MinistryGroupsTabProps> = ({ ministryId }) => {
+export const MinistryGroupsTab: React.FC<MinistryGroupsTabProps> = ({
+  ministryId,
+  workspaceGroups,
+}) => {
   const dispatch = useAppDispatch();
   const { groupsByMinistry, loadingGroups } = useAppSelector((state) => state.ministrySlice);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [groupToEdit, setGroupToEdit] = useState<IMinistryGroupConfig | null>(null);
 
-  const rawGroups = (groupsByMinistry[ministryId] || []).filter(
-    (g) => g.state !== MinistryGroupConfigStateEnum.DELETED,
-  );
+  const rawGroups = (
+    groupsByMinistry[ministryId]?.length
+      ? groupsByMinistry[ministryId]
+      : workspaceGroups || []
+  ).filter((g) => g.state !== MinistryGroupConfigStateEnum.DELETED);
 
   useEffect(() => {
     dispatch(GetMinistryGroupConfigs({ ministryId, force: false }));

@@ -14,6 +14,7 @@ import {
 import { microserviceApiRequest } from '@/libs/utils/http';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import { AxiosError } from 'axios';
+import { churchApi } from '@/libs/state/redux/api/churchApi';
 import { RootState } from '../../store';
 
 /**
@@ -206,6 +207,7 @@ export const CreateMinistryArea = createAsyncThunk(
       name: string;
       description?: string;
       scope?: MinistryAreaScope | null;
+      requiresSupervisor?: boolean;
       kidGroupId?: string;
       kidGroupIds?: string[];
     },
@@ -229,6 +231,7 @@ export const CreateMinistryArea = createAsyncThunk(
 
       // Backend returns void on POST /ministry-area. Refresh the areas list from server immediately.
       await dispatch(GetMinistryAreas({ ministryId: payload.ministryId, force: true }));
+      dispatch(churchApi.util.invalidateTags([{ type: 'Ministry', id: 'WORKSPACE' }]));
 
       return (response || { ...payload }) as IMinistryArea;
     } catch (err) {
@@ -261,6 +264,7 @@ export const UpdateMinistryArea = createAsyncThunk(
       description?: string;
       scope?: MinistryAreaScope | null;
       state?: MinistryAreaStateEnum;
+      requiresSupervisor?: boolean;
       ministryId?: string;
       kidGroupId?: string;
       kidGroupIds?: string[];
@@ -287,6 +291,7 @@ export const UpdateMinistryArea = createAsyncThunk(
       if (ministryId) {
         await dispatch(GetMinistryAreas({ ministryId, force: true }));
       }
+      dispatch(churchApi.util.invalidateTags([{ type: 'Ministry', id: 'WORKSPACE' }]));
 
       return response as IMinistryArea;
     } catch (err) {

@@ -54,6 +54,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
   const [description, setDescription] = useState('');
   const [scope, setScope] = useState<MinistryAreaScope | null>(null);
   const [active, setActive] = useState(true);
+  const [requiresSupervisor, setRequiresSupervisor] = useState(true);
   const [selectedKidGroupIds, setSelectedKidGroupIds] = useState<string[]>([]);
   const [nameError, setNameError] = useState('');
 
@@ -66,6 +67,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
         const currentScope = areaToEdit.scope || null;
         setScope(currentScope);
         setActive(areaToEdit.state === MinistryAreaStateEnum.ACTIVE);
+        setRequiresSupervisor(areaToEdit.requiresSupervisor !== false);
 
         // Pre-populate already assigned classrooms strictly matching valid availableKidGroups
         const validGroupIds = new Set((availableKidGroups || []).map((g) => g.id));
@@ -108,6 +110,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
         setDescription('');
         setScope(null);
         setActive(true);
+        setRequiresSupervisor(true);
         setSelectedKidGroupIds([]);
       }
       setNameError('');
@@ -141,6 +144,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             description: description.trim() || undefined,
             scope: scope ?? null,
             state: active ? MinistryAreaStateEnum.ACTIVE : MinistryAreaStateEnum.INACTIVE,
+            requiresSupervisor,
             kidGroupId: primaryKidGroupId,
             kidGroupIds: kidGroupIdsPayload,
           }),
@@ -152,6 +156,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             name: name.trim(),
             description: description.trim() || undefined,
             scope: scope ?? undefined,
+            requiresSupervisor,
             kidGroupId: primaryKidGroupId,
             kidGroupIds: kidGroupIdsPayload,
           }),
@@ -346,6 +351,27 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             </div>
           </div>
         )}
+
+        {/* Supervisión de Equipos */}
+        <div className="flex items-center justify-between p-3 bg-slate-50 border border-gray-100 rounded-xl">
+          <div className="pr-3">
+            <p className="text-sm font-semibold text-gray-800">Supervisión de Equipos</p>
+            <p className="text-xs text-gray-500">
+              {requiresSupervisor
+                ? 'Requiere supervisor de equipo obligatorio'
+                : 'Supervisión opcional (no genera alertas)'}
+            </p>
+          </div>
+          <label className="relative inline-flex items-center cursor-pointer shrink-0">
+            <input
+              type="checkbox"
+              checked={requiresSupervisor}
+              onChange={(e) => setRequiresSupervisor(e.target.checked)}
+              className="sr-only peer"
+            />
+            <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+          </label>
+        </div>
 
         {isEditing && (
           <div className="flex items-center justify-between p-3 bg-slate-50 border border-gray-100 rounded-xl">
