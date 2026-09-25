@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -7,8 +7,7 @@ import {
   KIDS_TERMINOLOGY_FIELDS,
 } from '@/libs/constants/defaultTerminology';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetChurchCampuses, UpdateChurch } from '@/libs/state/redux/thunks/church/church.thunk';
-import { GetMinistries, UpdateMinistry } from '@/libs/state/redux/thunks/church/ministry.thunk';
+import { GetChurchById, UpdateChurch } from '@/libs/state/redux/thunks/church/church.thunk';
 import { MinistryType } from '@/libs/models';
 import { toast } from 'sonner';
 import {
@@ -69,56 +68,40 @@ export const TerminologyDrawer: React.FC<TerminologyDrawerProps> = ({
   const stateChurchOverrides = useAppSelector(
     (state) => state.churchCampusSlice.churchTerminologyOverrides,
   );
-  const campuses = useAppSelector((state) => state.churchCampusSlice.data);
-  const ministries = useAppSelector((state) => state.ministrySlice.ministries);
+  const stateMinistryOverrides = useAppSelector(
+    (state) => state.churchCampusSlice.ministryTerminologyOverrides,
+  );
 
   const [activeTab, setActiveTab] = useState<'church' | 'kids'>('church');
   const [churchTerms, setChurchTerms] = useState<Record<string, string>>({});
   const [kidsTerms, setKidsTerms] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const targetChurchId = church?.id || import.meta.env.VITE_CHURCH_ID;
 
-  const kidsMinistry = useMemo(() => {
-    if (currentCampus?.id) {
-      const match = ministries.find(
-        (m) => m.churchCampusId === currentCampus.id && m.type === MinistryType.KIDS,
-      );
-      if (match) return match;
+  // Asegura la carga de datos de la iglesia al abrir el drawer
+  useEffect(() => {
+    if (open && targetChurchId && !church) {
+      dispatch(GetChurchById(targetChurchId));
     }
-    return ministries.find((m) => m.type === MinistryType.KIDS);
-  }, [ministries, currentCampus?.id]);
+  }, [open, targetChurchId, church, dispatch]);
 
-  // Asegura la carga de datos maestros al abrir el drawer
+  // Sincroniza el estado local con los overrides de la iglesia
   useEffect(() => {
     if (open) {
-      if (!campuses || campuses.length === 0) {
-        dispatch(GetChurchCampuses({ force: false }));
-      }
-      if (!ministries || ministries.length === 0) {
-        dispatch(GetMinistries({ force: false }));
-      }
-
-      // Inicializa términos de iglesia
-      const overrides =
+      const churchOverrides =
         church?.terminologyOverrides ||
         stateChurchOverrides ||
         {};
-      setChurchTerms({ ...overrides });
+      setChurchTerms({ ...churchOverrides });
 
-      // Inicializa términos de niños
-      if (kidsMinistry?.terminologyOverrides) {
-        setKidsTerms({ ...kidsMinistry.terminologyOverrides });
-      }
+      const kidsOverrides =
+        church?.ministryTerminologyOverrides?.[MinistryType.KIDS] ||
+        stateMinistryOverrides?.[MinistryType.KIDS] ||
+        {};
+      setKidsTerms({ ...kidsOverrides });
     }
-  }, [open, dispatch]);
-
-  // Si el ministerio infantil se resuelve después de la carga inicial, sincroniza sus términos
-  useEffect(() => {
-    if (open && kidsMinistry && Object.keys(kidsTerms).length === 0) {
-      setKidsTerms({ ...(kidsMinistry.terminologyOverrides || {}) });
-    }
-  }, [kidsMinistry, open]);
+  }, [open, church, stateChurchOverrides, stateMinistryOverrides]);
 
   const handleChurchTermChange = (key: string, value: string) => {
     setChurchTerms((prev) => ({
@@ -151,49 +134,38 @@ export const TerminologyDrawer: React.FC<TerminologyDrawerProps> = ({
   };
 
   const handleSave = async () => {
+    if (!targetChurchId) {
+      toast.warning('No se encontró el identificador de la organización');
+      return;
+    }
+
     setIsSubmitting(true);
     try {
-      let savedAny = false;
-      const targetChurchId = church?.id || import.meta.env.VITE_CHURCH_ID;
+      const cleanChurchTerms: Record<string, string> = {};
+      Object.entries(churchTerms).forEach(([k, v]) => {
+        if (v && v.trim()) cleanChurchTerms[k] = v.trim();
+      });
 
-      // 1. Guardar términos a nivel de iglesia
-      if (targetChurchId) {
-        const cleanChurchTerms: Record<string, string> = {};
-        Object.entries(churchTerms).forEach(([k, v]) => {
-          if (v && v.trim()) cleanChurchTerms[k] = v.trim();
-        });
+      const cleanKidsTerms: Record<string, string> = {};
+      Object.entries(kidsTerms).forEach(([k, v]) => {
+        if (v && v.trim()) cleanKidsTerms[k] = v.trim();
+      });
 
-        await dispatch(
-          UpdateChurch({
-            id: targetChurchId,
-            terminologyOverrides: cleanChurchTerms,
-          }),
-        ).unwrap();
-        savedAny = true;
-      }
+      const currentMinistryOverrides =
+        church?.ministryTerminologyOverrides || stateMinistryOverrides || {};
 
-      // 2. Guardar términos del ministerio de niños si existe
-      if (kidsMinistry) {
-        const cleanKidsTerms: Record<string, string> = {};
-        Object.entries(kidsTerms).forEach(([k, v]) => {
-          if (v && v.trim()) cleanKidsTerms[k] = v.trim();
-        });
+      await dispatch(
+        UpdateChurch({
+          id: targetChurchId,
+          terminologyOverrides: cleanChurchTerms,
+          ministryTerminologyOverrides: {
+            ...currentMinistryOverrides,
+            [MinistryType.KIDS]: cleanKidsTerms,
+          },
+        }),
+      ).unwrap();
 
-        await dispatch(
-          UpdateMinistry({
-            id: kidsMinistry.id,
-            type: MinistryType.KIDS,
-            terminologyOverrides: cleanKidsTerms,
-          }),
-        ).unwrap();
-        savedAny = true;
-      }
-
-      if (savedAny) {
-        toast.success('Vocabulario actualizado correctamente');
-      } else {
-        toast.warning('No se encontraron datos para guardar');
-      }
+      toast.success('Vocabulario actualizado correctamente');
       onOpenChange(false);
     } catch (err: any) {
       toast.error(err?.message || 'Error al guardar el vocabulario');

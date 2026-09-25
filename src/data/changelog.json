@@ -1,11 +1,45 @@
 [
   {
+    "version": "3.11.0",
+    "type": "minor",
+    "timestamp": "2026-09-25T03:07:04.545Z",
+    "dateFormatted": "24/09/2026 10:07 PM",
+    "title": "Espacio de trabajo unificado para ministerios",
+    "changes": [
+      "Mayor rapidez y fluidez al administrar ministerios, equipos y voluntarios en una sola vista",
+      "Visualización clara del liderazgo, la estructura y el organigrama sin tiempos de espera"
+    ]
+  },
+  {
+    "version": "3.10.0",
+    "type": "minor",
+    "timestamp": "2026-09-25T02:54:17.024Z",
+    "dateFormatted": "24/09/2026 09:54 PM",
+    "title": "Espacio de trabajo unificado para ministerios",
+    "changes": [
+      "Gestión ágil y directa de ministerios, equipos y servidores desde una sola vista",
+      "Mayor rapidez y fluidez al consultar la estructura y plantilla de servidores"
+    ]
+  },
+  {
+    "version": "3.9.4",
+    "type": "patch",
+    "timestamp": "2026-09-25T02:19:10.686Z",
+    "dateFormatted": "24/09/2026 09:19 PM",
+    "title": "Unificación de vocabulario institucional",
+    "changes": [
+      "Configuración de términos personalizada a nivel general para toda la iglesia",
+      "Simplificación del formulario de ministerios para una administración más rápida y limpia"
+    ]
+  },
+  {
     "version": "3.9.3",
     "type": "patch",
     "timestamp": "2026-09-24T20:17:26.794Z",
     "dateFormatted": "24/09/2026 03:17 PM",
     "title": "Mejoras de estabilidad, calidad y navegación de roles",
     "changes": [
+      "Gestión y revisión de solicitudes de servidores directamente desde la pestaña Mi Equipo para coordinadores de grupo",
       "Mayor claridad en el selector de roles para servidores y voluntarios, mostrando únicamente las funciones operativas activas",
       "Mayor estabilidad y consistencia en el acceso a las funciones del ministerio de niños y módulos de registro",
       "Mayor estabilidad y confiabilidad en la sincronización cuando no hay conexión a internet",

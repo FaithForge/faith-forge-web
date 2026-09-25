@@ -103,3 +103,71 @@ export interface IMinistries extends ReduxDefaultState<IMinistry> {}
 export interface IMinistryAreas extends ReduxDefaultState<IMinistryArea> {}
 export interface IMinistryGroupConfigs extends ReduxDefaultState<IMinistryGroupConfig> {}
 export interface IServiceAreaGroups extends ReduxDefaultState<IServiceAreaGroup> {}
+
+export interface IMinistryWorkspaceSummary {
+  totalTeams: number;
+  teamsWithSupervisor: number;
+  totalVolunteers: number;
+  totalSupervisors: number;
+}
+
+export interface IMinistryWorkspaceSupervisor {
+  assignmentId: string;
+  volunteerId: string;
+  churchMemberId: string;
+  fullName: string;
+  dialCodePhone?: string;
+  phone?: string;
+  photoUrl?: string;
+  role: string;
+}
+
+export interface IMinistryWorkspaceTeam {
+  id: string;
+  ministryAreaId: string;
+  ministryAreaName: string;
+  ministryAreaScope?: MinistryAreaScope | null;
+  ministryGroupConfigId: string;
+  ministryGroupConfigName: string;
+  churchCampusId: string;
+  state?: ServiceAreaGroupStateEnum;
+  supervisors: IMinistryWorkspaceSupervisor[];
+  servidoresCount: number;
+  totalMembersCount: number;
+}
+
+export interface IMinistryWorkspaceCoordinator {
+  assignmentId: string;
+  volunteerId: string;
+  churchMemberId: string;
+  fullName: string;
+  dialCodePhone?: string;
+  phone?: string;
+  photoUrl?: string;
+  role: string;
+  ministryAreaId?: string;
+  ministryAreaName?: string;
+  ministryGroupConfigId?: string;
+  ministryGroupConfigName?: string;
+}
+
+export interface IMinistryWorkspaceLeadership {
+  generalCoordinators: IMinistryWorkspaceCoordinator[];
+  areaCoordinators: IMinistryWorkspaceCoordinator[];
+  groupCoordinators: IMinistryWorkspaceCoordinator[];
+}
+
+export interface IMinistryWorkspaceOverview {
+  ministry?: IMinistry;
+  campusMinistries: IMinistry[];
+  summary: IMinistryWorkspaceSummary;
+  groups: IMinistryGroupConfig[];
+  areas: IMinistryArea[];
+  teams: IMinistryWorkspaceTeam[];
+  leadership: IMinistryWorkspaceLeadership;
+}
+
+export interface GetMinistryWorkspaceArgs {
+  churchCampusId?: string;
+  ministryId?: string;
+}

@@ -584,6 +584,7 @@ export const UpdateChurch = createAsyncThunk(
       name?: string;
       description?: string;
       terminologyOverrides?: Record<string, string>;
+      ministryTerminologyOverrides?: Record<string, Record<string, string>>;
     },
     { getState, rejectWithValue },
   ) => {
@@ -608,6 +609,40 @@ export const UpdateChurch = createAsyncThunk(
     } catch (err) {
       if (axios.isAxiosError(err)) {
         return rejectWithValue(err.response?.data ?? 'Error al actualizar la iglesia');
+      }
+      return rejectWithValue('Error desconocido');
+    }
+  },
+);
+
+/**
+ * Fetches church details and terminology overrides via GET /church/:id.
+ *
+ * @param {string} id - Target church ID.
+ * @returns {Promise<IChurch>} Church object.
+ */
+export const GetChurchById = createAsyncThunk(
+  'church/GetChurchById',
+  async (id: string, { getState, rejectWithValue }) => {
+    const state = getState() as RootState;
+    const { token } = state.authSlice;
+
+    try {
+      const response = (
+        await microserviceApiRequest({
+          microservice: MS.Church,
+          method: HttpRequestMethod.GET,
+          url: `/church/${id}`,
+          options: {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        })
+      ).data;
+
+      return response as IChurch;
+    } catch (err) {
+      if (axios.isAxiosError(err)) {
+        return rejectWithValue(err.response?.data ?? 'Error al obtener la iglesia');
       }
       return rejectWithValue('Error desconocido');
     }

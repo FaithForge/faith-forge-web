@@ -23,6 +23,9 @@ import { APP_ROUTES } from '@/config/routes';
 import { useChurchTerm, useKidsTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { ChurchRole } from '@/libs/utils/auth';
+import { VolunteerApplicationsTab } from '@/views/admin/volunteers/components/VolunteerApplicationsTab';
+import { GetVolunteerApplications } from '@/libs/state/redux/thunks/church/volunteerApplication.thunk';
+import { VolunteerApplicationStatus } from '@/libs/models/Volunteer';
 
 const ROLE_LABEL: Record<VolunteerRole, string> = {
   [VolunteerRole.VOLUNTEER]: 'Servidor(a)',
@@ -289,6 +292,39 @@ export const SupervisorTeamView: React.FC = () => {
     loadTeamData();
   }, [loadTeamData]);
 
+  const [activeMainTab, setActiveMainTab] = useState<'TEAM' | 'APPLICATIONS'>('TEAM');
+
+  const rawApplications = useAppSelector(
+    (state) => state.volunteerApplicationSlice.applications.data,
+  );
+
+  const pendingApplicationsCount = useMemo(() => {
+    return rawApplications.filter((app) => {
+      if (app.status !== VolunteerApplicationStatus.PENDING) return false;
+      if (effectiveCampusId && app.churchCampusId !== effectiveCampusId) return false;
+      if (isGroupCoordinator && !isAreaCoordinator && effectiveGroupId) {
+        return app.ministryGroupConfigId === effectiveGroupId;
+      }
+      return true;
+    }).length;
+  }, [rawApplications, effectiveCampusId, isGroupCoordinator, isAreaCoordinator, effectiveGroupId]);
+
+  const refreshApplicationsCount = React.useCallback(() => {
+    if (!effectiveCampusId || (!isGroupCoordinator && !isAreaCoordinator)) return;
+    dispatch(
+      GetVolunteerApplications({
+        churchCampusId: effectiveCampusId,
+        ministryGroupConfigId: isGroupCoordinator && !isAreaCoordinator ? effectiveGroupId : undefined,
+        status: VolunteerApplicationStatus.PENDING,
+        limit: 50,
+      }),
+    );
+  }, [dispatch, effectiveCampusId, isGroupCoordinator, isAreaCoordinator, effectiveGroupId]);
+
+  useEffect(() => {
+    refreshApplicationsCount();
+  }, [refreshApplicationsCount]);
+
   // Available groups for filtering when in Area Coordinator mode
   const availableGroups = useMemo(() => {
     const groupMap = new Map<string, string>();
@@ -530,8 +566,67 @@ export const SupervisorTeamView: React.FC = () => {
         </button>
       </div>
 
-      {/* Search & metric bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+      {/* Tab Switcher: Equipo Activo vs Solicitudes */}
+      {(isGroupCoordinator || isAreaCoordinator) && (
+        <div className="flex items-center gap-1.5 p-1 bg-white border border-gray-100 rounded-2xl shadow-xs w-full sm:w-auto self-start">
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('TEAM')}
+            className={clsx(
+              'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer',
+              activeMainTab === 'TEAM'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
+            )}
+          >
+            <Users size={15} />
+            <span>{t('supervisor_team.tabs.active_team')}</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveMainTab('APPLICATIONS')}
+            className={clsx(
+              'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 relative cursor-pointer',
+              activeMainTab === 'APPLICATIONS'
+                ? 'bg-primary text-white shadow-xs'
+                : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
+            )}
+          >
+            <UserCheck size={15} />
+            <span>{t('supervisor_team.tabs.applications')}</span>
+            {pendingApplicationsCount > 0 && (
+              <span
+                className={clsx(
+                  'min-w-[18px] h-4.5 px-1.5 rounded-full text-[10px] font-black flex items-center justify-center shadow-xs',
+                  activeMainTab === 'APPLICATIONS'
+                    ? 'bg-white text-primary'
+                    : 'bg-rose-500 text-white animate-pulse',
+                )}
+              >
+                {pendingApplicationsCount}
+              </span>
+            )}
+          </button>
+        </div>
+      )}
+
+      {activeMainTab === 'APPLICATIONS' ? (
+        <div className="pt-1">
+          <VolunteerApplicationsTab
+            initialCampusId={effectiveCampusId}
+            initialGroupId={effectiveGroupId}
+            lockGroup={isGroupCoordinator && !isAreaCoordinator}
+            onApplicationProcessed={() => {
+              loadTeamData();
+              refreshApplicationsCount();
+            }}
+          />
+        </div>
+      ) : (
+        <>
+          {/* Search & metric bar */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
         <div className="relative flex-1">
           <Search
             size={16}
@@ -889,6 +984,8 @@ export const SupervisorTeamView: React.FC = () => {
             );
           })}
         </div>
+      )}
+        </>
       )}
 
       {/* Safe bottom spacer so the last card is never obscured by the floating navigation */}

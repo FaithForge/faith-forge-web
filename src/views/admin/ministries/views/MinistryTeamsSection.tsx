@@ -31,6 +31,9 @@ import {
   IVolunteerAssignment,
   VolunteerRole,
   MinistryGroupConfigStateEnum,
+  IMinistryWorkspaceTeam,
+  IMinistryGroupConfig,
+  IMinistryArea,
 } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
@@ -41,6 +44,10 @@ import { toast } from 'sonner';
 interface MinistryTeamsSectionProps {
   ministryId: string;
   churchCampusId?: string;
+  workspaceTeams?: IMinistryWorkspaceTeam[];
+  workspaceGroups?: IMinistryGroupConfig[];
+  workspaceAreas?: IMinistryArea[];
+  onRefreshWorkspace?: () => void;
 }
 
 /**
@@ -54,6 +61,10 @@ interface MinistryTeamsSectionProps {
 export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   ministryId,
   churchCampusId,
+  workspaceTeams,
+  workspaceGroups,
+  workspaceAreas,
+  onRefreshWorkspace,
 }) => {
   const dispatch = useAppDispatch();
 
@@ -91,17 +102,17 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
   const areas = useMemo(
     () =>
-      [...(areasByMinistry[ministryId] || [])].sort((a, b) =>
+      [...(workspaceAreas || areasByMinistry[ministryId] || [])].sort((a, b) =>
         a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       ),
-    [areasByMinistry, ministryId],
+    [workspaceAreas, areasByMinistry, ministryId],
   );
   const groups = useMemo(
     () =>
-      [...(groupsByMinistry[ministryId] || [])].sort((a, b) =>
+      [...(workspaceGroups || groupsByMinistry[ministryId] || [])].sort((a, b) =>
         a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       ),
-    [groupsByMinistry, ministryId],
+    [workspaceGroups, groupsByMinistry, ministryId],
   );
   const campuses = campusesState.data;
 
@@ -123,14 +134,14 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     }
   }, [churchCampusId, campuses, selectedCampusId]);
 
-  // Load Service Area Groups for each Area
+  // Load Service Area Groups for each Area (only fallback if workspaceTeams not provided)
   useEffect(() => {
-    if (areas.length > 0) {
+    if (!workspaceTeams && areas.length > 0) {
       areas.forEach((area) => {
         dispatch(GetServiceAreaGroups({ ministryAreaId: area.id }));
       });
     }
-  }, [dispatch, areas]);
+  }, [dispatch, areas, workspaceTeams]);
 
   // Load Campus Teams Assignments with limit=500 to prevent pagination cuts
   const fetchCampusAssignments = useCallback(() => {
@@ -173,12 +184,33 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   }, [campuses]);
 
   // Campus teams
-  const currentCampusTeams = useMemo(() => {
+  const currentCampusTeams = useMemo<IServiceAreaGroup[]>(() => {
+    if (workspaceTeams) {
+      return workspaceTeams.map((wt) => ({
+        id: wt.id,
+        ministryAreaId: wt.ministryAreaId,
+        ministryGroupConfigId: wt.ministryGroupConfigId,
+        churchCampusId: wt.churchCampusId,
+        state: wt.state,
+        ministryArea: {
+          id: wt.ministryAreaId,
+          ministryId,
+          name: wt.ministryAreaName,
+          scope: wt.ministryAreaScope,
+        },
+        ministryGroupConfig: {
+          id: wt.ministryGroupConfigId,
+          ministryId,
+          name: wt.ministryGroupConfigName,
+          position: 0,
+        },
+      }));
+    }
     const areaIdSet = new Set(areas.map((a) => a.id));
     return serviceAreaGroups.filter(
       (sag) => sag.churchCampusId === selectedCampusId && areaIdSet.has(sag.ministryAreaId),
     );
-  }, [serviceAreaGroups, selectedCampusId, areas]);
+  }, [workspaceTeams, serviceAreaGroups, selectedCampusId, areas, ministryId]);
 
   const campusTeamAssignments = useMemo(() => {
     return assignmentsByPartition[campusTeamsKey] || assignments;
@@ -364,6 +396,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
       toast.success('Asignación removida exitosamente');
       setAssignmentToDelete(null);
       fetchCampusAssignments();
+      onRefreshWorkspace?.();
     } catch {
       toast.error('Error al remover la asignación');
     }
@@ -371,6 +404,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
   const handleAssignSuccess = () => {
     fetchCampusAssignments();
+    onRefreshWorkspace?.();
   };
 
   // KPIs

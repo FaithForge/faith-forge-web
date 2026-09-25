@@ -11,7 +11,7 @@ import PageLoader from '@/components/layout/PageLoader';
 import { APP_ROUTES } from '@/config/routes';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { logout, updateTokens } from '@/libs/state/redux/slices/user/auth.slice';
-import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
+import { GetChurchById, GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { setHttpAuthHandlers } from '@/libs/utils/http';
 import { store } from '@/libs/state/redux/store';
@@ -44,11 +44,9 @@ const CampusesManagementView = lazy(
 const PrintersManagementView = lazy(
   () => import('@/views/admin/printers/PrintersManagementView'),
 );
-const MinistriesManagementView = lazy(
-
-  () => import('@/views/admin/ministries/MinistriesManagementView'),
+const MinistryWorkspaceView = lazy(
+  () => import('@/views/admin/ministries/MinistryWorkspaceView'),
 );
-const MinistryDetailView = lazy(() => import('@/views/admin/ministries/MinistryDetailView'));
 const VolunteerDirectoryView = lazy(
   () => import('@/views/admin/volunteers/VolunteerDirectoryView'),
 );
@@ -156,10 +154,12 @@ function App() {
   const token = useAppSelector((state) => state.authSlice.token);
   useScreenWakeLock();
 
-  // Global bootstrap: Ensure campuses, church settings, and ministries (custom terminology)
+  // Global bootstrap: Ensure church settings, campuses, and ministries (custom terminology)
   // are loaded as soon as an authenticated session is active.
   useEffect(() => {
     if (!token) return;
+    const churchId = import.meta.env.VITE_CHURCH_ID;
+    if (churchId) dispatch(GetChurchById(churchId));
     dispatch(GetChurchCampuses());
     dispatch(GetMinistries());
   }, [dispatch, token]);
@@ -261,16 +261,15 @@ function App() {
                 <Route path={APP_ROUTES.admin.printers} element={<PrintersManagementView />} />
                 <Route
                   path={APP_ROUTES.admin.ministries}
-                  element={<MinistriesManagementView />}
+                  element={<MinistryWorkspaceView />}
                 />
-
                 <Route
                   path={APP_ROUTES.admin.ministryDetailDynamic}
-                  element={<MinistryDetailView />}
+                  element={<MinistryWorkspaceView />}
                 />
                 <Route
                   path={APP_ROUTES.admin.ministrySectionDynamic}
-                  element={<MinistryDetailView />}
+                  element={<MinistryWorkspaceView />}
                 />
                 <Route
                   path={APP_ROUTES.admin.volunteers}

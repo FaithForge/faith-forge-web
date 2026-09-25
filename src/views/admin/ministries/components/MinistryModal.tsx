@@ -6,12 +6,8 @@ import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateMinistry, UpdateMinistry } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-import {
-  KIDS_TERMINOLOGY_FIELDS,
-  GENERAL_MINISTRY_TERMINOLOGY_FIELDS,
-} from '@/libs/constants/defaultTerminology';
 import { toast } from 'sonner';
-import { Layers, MapPin, Sparkles, ChevronDown, ChevronUp, RotateCcw } from 'lucide-react';
+import { Layers, MapPin } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
 import clsx from 'clsx';
 
@@ -24,7 +20,7 @@ interface MinistryModalProps {
 }
 
 /**
- * Drawer modal to create or edit a Ministry, including its MinistryType and Terminology.
+ * Drawer modal to create or edit a Ministry, focusing strictly on its operational attributes.
  *
  * @param {MinistryModalProps} props - Component properties.
  * @returns {JSX.Element} The rendered modal drawer.
@@ -45,8 +41,6 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [type, setType] = useState<MinistryType>(MinistryType.GENERAL);
-  const [terminologyOverrides, setTerminologyOverrides] = useState<Record<string, string>>({});
-  const [showTerminology, setShowTerminology] = useState(false);
   const [active, setActive] = useState(true);
   const [nameError, setNameError] = useState('');
 
@@ -60,34 +54,16 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
         setName(ministryToEdit.name);
         setDescription(ministryToEdit.description || '');
         setType(ministryToEdit.type || MinistryType.GENERAL);
-        setTerminologyOverrides(ministryToEdit.terminologyOverrides || {});
         setActive(ministryToEdit.state === MinistryStateEnum.ACTIVE);
       } else {
         setName('');
         setDescription('');
         setType(MinistryType.GENERAL);
-        setTerminologyOverrides({});
         setActive(true);
       }
       setNameError('');
-      setShowTerminology(false);
     }
   }, [open, ministryToEdit]);
-
-  const handleTermChange = (key: string, value: string) => {
-    setTerminologyOverrides((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
-
-  const handleResetTerm = (key: string) => {
-    setTerminologyOverrides((prev) => {
-      const next = { ...prev };
-      delete next[key];
-      return next;
-    });
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -95,12 +71,6 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       setNameError('El nombre del ministerio es requerido');
       return;
     }
-
-    // Clean empty terminology overrides
-    const cleanTerms: Record<string, string> = {};
-    Object.entries(terminologyOverrides).forEach(([k, v]) => {
-      if (v && v.trim()) cleanTerms[k] = v.trim();
-    });
 
     try {
       if (isEditing && ministryToEdit) {
@@ -110,7 +80,6 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
             name: name.trim(),
             description: description.trim() || undefined,
             type,
-            terminologyOverrides: cleanTerms,
             state: active ? MinistryStateEnum.ACTIVE : MinistryStateEnum.INACTIVE,
           }),
         ).unwrap();
@@ -127,7 +96,6 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
             name: name.trim(),
             description: description.trim() || undefined,
             type,
-            terminologyOverrides: cleanTerms,
           }),
         ).unwrap();
         toast.success('Ministerio creado exitosamente');
@@ -142,11 +110,6 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
       toast.error(errMsg);
     }
   };
-
-  const activeFields =
-    type === MinistryType.KIDS
-      ? KIDS_TERMINOLOGY_FIELDS
-      : GENERAL_MINISTRY_TERMINOLOGY_FIELDS;
 
   return (
     <AppDrawer
@@ -262,96 +225,7 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
           />
         </div>
 
-        {/* Sección de Nomenclatura del Ministerio */}
-        <div className="border border-indigo-100 rounded-2xl bg-indigo-50/30 overflow-hidden transition-all">
-          <button
-            type="button"
-            onClick={() => setShowTerminology(!showTerminology)}
-            className="w-full flex items-center justify-between p-3.5 text-left hover:bg-indigo-50/60 transition-colors cursor-pointer select-none"
-          >
-            <div className="flex items-center gap-2">
-              <Sparkles size={15} className="text-indigo-600" />
-              <div>
-                <p className="text-xs font-bold text-gray-900">
-                  Vocabulario y Nomenclatura de este Ministerio
-                </p>
-                <p className="text-[11px] text-gray-500">
-                  {Object.keys(terminologyOverrides).length > 0
-                    ? `${Object.keys(terminologyOverrides).length} término(s) personalizado(s)`
-                    : 'Usa los términos predeterminados'}
-                </p>
-              </div>
-            </div>
-            {showTerminology ? (
-              <ChevronUp size={16} className="text-gray-400" />
-            ) : (
-              <ChevronDown size={16} className="text-gray-400" />
-            )}
-          </button>
 
-          {showTerminology && (
-            <div className="p-3.5 pt-1 space-y-3 border-t border-indigo-100/70 bg-white">
-              <p className="text-[11px] text-gray-500 leading-snug">
-                Personaliza cómo se llamarán los roles y estaciones operativas dentro de este ministerio:
-              </p>
-
-              {activeFields.map((field) => {
-                const currentValue = terminologyOverrides[field.key] || '';
-                const isOverridden = !!terminologyOverrides[field.key];
-
-                return (
-                  <div
-                    key={field.key}
-                    className="p-3 bg-slate-50/70 border border-gray-100 rounded-xl space-y-2"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-[11.5px] font-bold text-gray-800">
-                        {field.label}
-                      </span>
-                      {isOverridden && (
-                        <button
-                          type="button"
-                          onClick={() => handleResetTerm(field.key)}
-                          className="text-[10px] text-gray-400 hover:text-gray-600 flex items-center gap-1 transition-colors"
-                        >
-                          <RotateCcw className="w-2.5 h-2.5" />
-                          <span>Por defecto</span>
-                        </button>
-                      )}
-                    </div>
-
-                    {field.suggestedOptions && (
-                      <div className="flex flex-wrap gap-1">
-                        {field.suggestedOptions.map((opt) => (
-                          <button
-                            key={opt}
-                            type="button"
-                            onClick={() => handleTermChange(field.key, opt)}
-                            className={clsx(
-                              'text-[10.5px] px-2 py-0.5 rounded-md border transition-all',
-                              (currentValue || field.defaultValue) === opt
-                                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-semibold'
-                                : 'bg-white border-gray-200 text-gray-600 hover:bg-gray-100',
-                            )}
-                          >
-                            {opt}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-
-                    <Input
-                      value={currentValue}
-                      onChange={(e) => handleTermChange(field.key, e.target.value)}
-                      placeholder={`Por defecto: "${field.defaultValue}"`}
-                      className="text-xs placeholder:text-gray-400"
-                    />
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
 
         {isEditing && (
           <div className="flex items-center justify-between p-3 bg-slate-50 border border-gray-100 rounded-xl">

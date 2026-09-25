@@ -110,5 +110,31 @@
       "friday": "Viernes",
       "saturday": "Sábado"
     }
+  },
+  "ministry_workspace": {
+    "title": "Gestión de Ministerios",
+    "create_ministry_tooltip": "Crear Nuevo Ministerio",
+    "edit_ministry_tooltip": "Editar nombre o descripción",
+    "select_campus_placeholder": "Seleccionar {{campus}}...",
+    "no_campus_selected": "{{campus}} no seleccionada",
+    "ministries_count_singular": "{{count}} ministerio en {{campus}}",
+    "ministries_count_plural": "{{count}} ministerios en {{campus}}",
+    "new_ministry_btn": "Nuevo",
+    "status_active": "Activo",
+    "status_inactive": "Inactivo",
+    "kpi_teams": "Equipos",
+    "kpi_supervision": "Supervisión",
+    "kpi_workforce": "Plantilla",
+    "tabs": {
+      "teams": "Equipos y Plantilla",
+      "teams_short": "Equipos",
+      "leadership": "Liderazgo",
+      "structure": "Estructura",
+      "organigram": "Organigrama"
+    },
+    "empty_title": "No hay ministerios configurados en {{campus}}",
+    "empty_desc": "Crea tu primer ministerio (ej. Ministerio de Niños, Alabanza, Servidores) para empezar a organizar equipos y {{volunteers}}.",
+    "create_ministry_btn": "Crear Ministerio"
   }
 }
+

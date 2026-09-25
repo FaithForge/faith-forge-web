@@ -42,6 +42,7 @@ export interface IChurch {
   description?: string;
   state?: EntityState;
   terminologyOverrides?: Record<string, string>;
+  ministryTerminologyOverrides?: Record<string, Record<string, string>>;
   campuses?: IChurchCampus[];
 }
 
@@ -83,6 +84,7 @@ export interface IChurchPrinter {
 export interface IChurchCampuses extends ReduxDefaultState<IChurchCampus> {
   church?: IChurch;
   churchTerminologyOverrides?: Record<string, string>;
+  ministryTerminologyOverrides?: Record<string, Record<string, string>>;
 }
 export interface IChurchMeetings extends ReduxDefaultState<IChurchMeeting> {}
 export interface IChurchPrinters extends ReduxDefaultState<IChurchPrinter> {}

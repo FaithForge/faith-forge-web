@@ -22,6 +22,11 @@
     "toast_refresh_error": "Error al actualizar los registros"
   },
   "supervisor_team": {
+    "tabs": {
+      "active_team": "Equipo Activo",
+      "applications": "Solicitudes",
+      "pending_count": "{{count}} pendientes"
+    },
     "role_area_coordinator": "Coordinador(a) de Área",
     "role_group_coordinator": "Coordinador(a) de Grupo",
     "role_supervisor": "Supervisor(a)",

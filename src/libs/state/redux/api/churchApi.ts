@@ -1,5 +1,11 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
-import { IChurchCampus, IChurchMeeting, IChurchPrinter } from '@/libs/models';
+import {
+  GetMinistryWorkspaceArgs,
+  IChurchCampus,
+  IChurchMeeting,
+  IChurchPrinter,
+  IMinistryWorkspaceOverview,
+} from '@/libs/models';
 import { baseApi } from './baseApi';
 
 export interface GetChurchMeetingsArgs {
@@ -22,6 +28,28 @@ export interface ClearCacheArgs {
  */
 export const churchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    getMinistryWorkspaceOverview: builder.query<
+      IMinistryWorkspaceOverview,
+      GetMinistryWorkspaceArgs | void
+    >({
+      query: (args) => {
+        const params: Record<string, string> = {};
+        if (args?.churchCampusId) params.churchCampusId = args.churchCampusId;
+        if (args?.ministryId) params.ministryId = args.ministryId;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/ministry/workspace',
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      providesTags: (result) => [
+        { type: 'Ministry', id: 'WORKSPACE' },
+        ...(result?.ministry ? [{ type: 'Ministry' as const, id: result.ministry.id }] : []),
+        { type: 'VolunteerAssignment', id: 'LIST' },
+      ],
+    }),
+
     getChurchMeetings: builder.query<IChurchMeeting[], GetChurchMeetingsArgs | void>({
       query: (args) => ({
         microservice: MicroserviceEnum.Church,
@@ -69,6 +97,18 @@ export const churchApi = baseApi.injectEndpoints({
           : [{ type: 'ChurchPrinter', id: 'LIST' }],
     }),
 
+    deleteVolunteerAssignment: builder.mutation<void, string>({
+      query: (assignmentId) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/volunteer-assignment/${assignmentId}`,
+        method: HttpRequestMethod.DELETE,
+      }),
+      invalidatesTags: [
+        { type: 'Ministry', id: 'WORKSPACE' },
+        { type: 'VolunteerAssignment', id: 'LIST' },
+      ],
+    }),
+
     clearCache: builder.mutation<{ success: boolean; scope: CacheScope }, ClearCacheArgs | void>({
       query: (args) => ({
         microservice: MicroserviceEnum.Church,
@@ -86,6 +126,8 @@ export const churchApi = baseApi.injectEndpoints({
               { type: 'ChurchMeeting', id: 'LIST' },
               { type: 'ChurchCampus', id: 'LIST' },
               { type: 'Volunteer', id: 'LIST' },
+              { type: 'VolunteerAssignment', id: 'LIST' },
+              { type: 'Ministry', id: 'WORKSPACE' },
             ];
           case 'registrations':
             return [
@@ -102,6 +144,8 @@ export const churchApi = baseApi.injectEndpoints({
               { type: 'ChurchMeeting', id: 'LIST' },
               { type: 'ChurchCampus', id: 'LIST' },
               { type: 'Volunteer', id: 'LIST' },
+              { type: 'VolunteerAssignment', id: 'LIST' },
+              { type: 'Ministry', id: 'WORKSPACE' },
               { type: 'Kid', id: 'LIST' },
               { type: 'KidGroup', id: 'LIST' },
               { type: 'KidRegistered', id: 'LIST' },
@@ -116,12 +160,15 @@ export const churchApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useGetMinistryWorkspaceOverviewQuery,
+  useLazyGetMinistryWorkspaceOverviewQuery,
   useGetChurchMeetingsQuery,
   useLazyGetChurchMeetingsQuery,
   useGetChurchCampusesQuery,
   useLazyGetChurchCampusesQuery,
   useGetChurchPrintersQuery,
   useLazyGetChurchPrintersQuery,
+  useDeleteVolunteerAssignmentMutation,
   useClearCacheMutation,
 } = churchApi;
 

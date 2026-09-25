@@ -37,6 +37,8 @@
     }
     ```
   - Las llaves `{ }` se reservan estrictamente para bloques multilínea o bifurcaciones `else` / `else if`.
+- **Uso obligatorio de `Promise.all` para operaciones asíncronas independientes**:
+  - Toda operación asíncrona (lecturas de storage, llamadas independientes, mutaciones o preparación de datos) cuyas promesas no dependan secuencialmente unas de otras DEBE ejecutarse en concurrencia mediante `Promise.all`.
 
 ## Architecture
 

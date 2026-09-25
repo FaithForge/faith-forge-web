@@ -19,7 +19,14 @@ import {
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { IVolunteerAssignment, VolunteerRole } from '@/libs/models';
+import {
+  IVolunteerAssignment,
+  VolunteerRole,
+  IMinistryWorkspaceLeadership,
+  IMinistryWorkspaceCoordinator,
+  IMinistryArea,
+  IMinistryGroupConfig,
+} from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
 import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
 import { toast } from 'sonner';
@@ -28,6 +35,10 @@ import clsx from 'clsx';
 interface MinistryLeadershipSectionProps {
   ministryId: string;
   churchCampusId?: string;
+  workspaceLeadership?: IMinistryWorkspaceLeadership;
+  workspaceAreas?: IMinistryArea[];
+  workspaceGroups?: IMinistryGroupConfig[];
+  onRefreshWorkspace?: () => void;
 }
 
 type LeadershipCategoryFilter = 'ALL' | 'GENERAL' | 'AREAS' | 'GROUPS';
@@ -55,6 +66,10 @@ const LEADERSHIP_FILTER_TABS: FilterTab[] = [
 export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps> = ({
   ministryId,
   churchCampusId,
+  workspaceLeadership,
+  workspaceAreas,
+  workspaceGroups,
+  onRefreshWorkspace,
 }) => {
   const dispatch = useAppDispatch();
 
@@ -81,17 +96,17 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
 
   const areas = useMemo(
     () =>
-      [...(areasByMinistry[ministryId] || [])].sort((a, b) =>
+      [...(workspaceAreas || areasByMinistry[ministryId] || [])].sort((a, b) =>
         a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       ),
-    [areasByMinistry, ministryId],
+    [workspaceAreas, areasByMinistry, ministryId],
   );
   const groups = useMemo(
     () =>
-      [...(groupsByMinistry[ministryId] || [])].sort((a, b) =>
+      [...(workspaceGroups || groupsByMinistry[ministryId] || [])].sort((a, b) =>
         a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       ),
-    [groupsByMinistry, ministryId],
+    [workspaceGroups, groupsByMinistry, ministryId],
   );
   const campuses = campusesState.data;
 
@@ -103,7 +118,7 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   const loadingMinistryCoords = loadingByPartition[ministryCoordsKey] ?? false;
   const loadingAreaCoords = loadingByPartition[areaCoordsKey] ?? false;
   const loadingGroupCoords = loadingByPartition[groupCoordsKey] ?? false;
-  const isLoading = loadingMinistryCoords || loadingAreaCoords || loadingGroupCoords;
+  const isLoading = workspaceLeadership ? false : loadingMinistryCoords || loadingAreaCoords || loadingGroupCoords;
 
   // Fetch Coordinators with limit=500
   const fetchCoordinators = useCallback(
@@ -140,12 +155,48 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   );
 
   useEffect(() => {
-    fetchCoordinators(false);
-    dispatch(GetVolunteers({ ministryId, limit: 500, force: false }));
-  }, [fetchCoordinators, dispatch, ministryId]);
+    if (!workspaceLeadership) {
+      fetchCoordinators(false);
+      dispatch(GetVolunteers({ ministryId, limit: 500, force: false }));
+    }
+  }, [fetchCoordinators, dispatch, ministryId, workspaceLeadership]);
 
   // Combine All Coordinators with strict deduplication by ID
   const allCoordinators = useMemo(() => {
+    if (workspaceLeadership) {
+      const list: IVolunteerAssignment[] = [];
+      const mapItem = (item: IMinistryWorkspaceCoordinator): IVolunteerAssignment => ({
+        id: item.assignmentId,
+        volunteerId: item.volunteerId,
+        churchMemberId: item.churchMemberId,
+        role: item.role as VolunteerRole,
+        ministryId,
+        ministryAreaId: item.ministryAreaId,
+        ministryGroupConfigId: item.ministryGroupConfigId,
+        volunteer: {
+          id: item.volunteerId,
+          userId: item.volunteerId,
+          user: {
+            id: item.volunteerId,
+            firstName: item.fullName,
+            lastName: '',
+            phone: item.phone,
+            dialCodePhone: item.dialCodePhone,
+            photoUrl: item.photoUrl,
+            faithForgeId: 0,
+            gender: 'M' as any,
+            state: 'ACTIVE' as any,
+            roles: [],
+          },
+        },
+      });
+
+      workspaceLeadership.generalCoordinators.forEach((c) => list.push(mapItem(c)));
+      workspaceLeadership.areaCoordinators.forEach((c) => list.push(mapItem(c)));
+      workspaceLeadership.groupCoordinators.forEach((c) => list.push(mapItem(c)));
+      return list;
+    }
+
     const list1 = assignmentsByPartition[ministryCoordsKey] || [];
     const list2 = assignmentsByPartition[areaCoordsKey] || [];
     const list3 = assignmentsByPartition[groupCoordsKey] || [];
@@ -312,6 +363,7 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
       toast.success('Asignación de liderazgo eliminada exitosamente');
       setAssignmentToDelete(null);
       fetchCoordinators();
+      onRefreshWorkspace?.();
     } catch {
       toast.error('Error al remover la asignación');
     }
@@ -672,7 +724,10 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
         serviceAreaGroups={serviceAreaGroups}
         existingAssignments={allCoordinators}
         defaultRole={defaultRoleToAssign}
-        onSuccess={fetchCoordinators}
+        onSuccess={() => {
+          fetchCoordinators();
+          onRefreshWorkspace?.();
+        }}
       />
 
       {/* DELETE CONFIRM MODAL */}

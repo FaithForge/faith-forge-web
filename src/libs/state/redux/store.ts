@@ -62,6 +62,7 @@ const activeContextOnlyTransform = createTransform(
       return {
         current: inboundState?.current,
         churchTerminologyOverrides: inboundState?.churchTerminologyOverrides,
+        ministryTerminologyOverrides: inboundState?.ministryTerminologyOverrides,
         church: inboundState?.church,
       };
     }

@@ -6,6 +6,7 @@ import {
   IServiceAreaGroup,
   IVolunteer,
   IVolunteerAssignment,
+  MinistryType,
   VolunteerRole,
 } from '@/libs/models';
 import { useAppSelector } from '@/libs/state/redux/hooks';
@@ -69,16 +70,21 @@ export const TeamRosterDrawer: React.FC<TeamRosterDrawerProps> = ({
       state.churchCampusSlice.churchTerminologyOverrides ||
       state.churchCampusSlice.church?.terminologyOverrides,
   );
+  const resolvedMinistryType = ministry?.type || team?.ministryArea?.ministry?.type || MinistryType.GENERAL;
+  const ministryOverrides = useAppSelector((state) => {
+    return (
+      state.churchCampusSlice.ministryTerminologyOverrides?.[resolvedMinistryType] ||
+      state.churchCampusSlice.church?.ministryTerminologyOverrides?.[resolvedMinistryType]
+    );
+  });
   const volunteerRoleLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
-    ministryType: ministry?.type || team?.ministryArea?.ministry?.type,
-    ministryOverrides:
-      ministry?.terminologyOverrides || team?.ministryArea?.ministry?.terminologyOverrides,
+    ministryType: resolvedMinistryType,
+    ministryOverrides,
     churchOverrides,
   });
   const volunteersRoleLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
-    ministryType: ministry?.type || team?.ministryArea?.ministry?.type,
-    ministryOverrides:
-      ministry?.terminologyOverrides || team?.ministryArea?.ministry?.terminologyOverrides,
+    ministryType: resolvedMinistryType,
+    ministryOverrides,
     churchOverrides,
     plural: true,
   });

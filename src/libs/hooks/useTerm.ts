@@ -63,8 +63,8 @@ export function useChurchTerm(key: ChurchTermKey): string {
 
 /**
  * Reactive hook to obtain Kids Ministry terminology.
- * Automatically detects the KIDS ministry for the active campus in Redux and applies customizations.
- * Includes contextual campus resolution, ministry name fallback, and intelligent registration area fallback.
+ * Automatically resolves the centralized KIDS ministry terminology configured at church level.
+ * Includes fallback to ministry name and intelligent registration area fallback.
  *
  * @param {KidsTermKey} key - Kids term key (e.g., 'teacher', 'registration', 'guardian', 'classroom').
  * @returns {string} Resolved kids ministry term (e.g., 'Iglekids', 'Regikids', 'Servidor(a)').
@@ -80,22 +80,24 @@ export function useKidsTerm(key: KidsTermKey): string {
     (state: RootState) => state.volunteerContextSlice.campuses || [],
   );
 
+  const kidsOverrides = useSelector(
+    (state: RootState) =>
+      state.churchCampusSlice.ministryTerminologyOverrides?.[MinistryType.KIDS] ||
+      state.churchCampusSlice.church?.ministryTerminologyOverrides?.[MinistryType.KIDS],
+  );
+
   const kidsMinistry = useSelector((state: RootState) => {
     const ministries = state.ministrySlice.ministries || [];
-
-    // 1. Prioritize KIDS ministry for the active campus
     if (activeCampusId) {
       const campusMatch = ministries.find(
         (m) => m.churchCampusId === activeCampusId && m.type === MinistryType.KIDS,
       );
       if (campusMatch) return campusMatch;
     }
-
-    // 2. Fallback to any loaded KIDS ministry
     return ministries.find((m) => m.type === MinistryType.KIDS);
   });
 
-  // 3. Ministry name fallback if Redux has not yet hydrated ministries array
+  // Ministry name fallback if module_alias is requested and no override is present
   const fallbackMinistryName = useSelector((state: RootState) => {
     if (kidsMinistry?.name) return kidsMinistry.name;
     const currentVolunteerCampus =
@@ -107,7 +109,7 @@ export function useKidsTerm(key: KidsTermKey): string {
     return undefined;
   });
 
-  // 4. Fallback for 'registration' if an area with KID_REGISTRATION scope exists in campus context
+  // Fallback for 'registration' if an area with KID_REGISTRATION scope exists in campus context
   const registrationAreaFallback = useSelector((state: RootState) => {
     if (key !== 'registration') return undefined;
     const currentVolunteerCampus =
@@ -128,7 +130,7 @@ export function useKidsTerm(key: KidsTermKey): string {
     return undefined;
   });
 
-  const resolved = getKidsTerm(key, kidsMinistry?.terminologyOverrides, fallbackMinistryName);
+  const resolved = getKidsTerm(key, kidsOverrides, fallbackMinistryName);
   if (key === 'registration' && resolved === DEFAULT_MINISTRY_TERMINOLOGY.KIDS.registration && registrationAreaFallback) {
     return registrationAreaFallback;
   }
@@ -153,9 +155,16 @@ export function useMinistryTerm(
       ? state.ministrySlice.ministries.find((m) => m.id === ministryId)
       : undefined,
   );
+  const ministryType = ministry?.type || MinistryType.GENERAL;
 
-  if (ministry?.terminologyOverrides?.[key]) {
-    return ministry.terminologyOverrides[key];
+  const ministryTypeOverrides = useSelector(
+    (state: RootState) =>
+      state.churchCampusSlice.ministryTerminologyOverrides?.[ministryType] ||
+      state.churchCampusSlice.church?.ministryTerminologyOverrides?.[ministryType],
+  );
+
+  if (ministryTypeOverrides?.[key]) {
+    return ministryTypeOverrides[key];
   }
 
   if (ministry?.type === MinistryType.KIDS) {
@@ -289,11 +298,18 @@ export function useVolunteerRoleLabel(
       ? state.ministrySlice.ministries.find((m) => m.id === ministryId)
       : undefined,
   );
+  const ministryType = ministry?.type || MinistryType.GENERAL;
+
+  const ministryOverrides = useSelector(
+    (state: RootState) =>
+      state.churchCampusSlice.ministryTerminologyOverrides?.[ministryType] ||
+      state.churchCampusSlice.church?.ministryTerminologyOverrides?.[ministryType],
+  );
 
   return getVolunteerRoleLabel(role, {
     ...options,
     ministryType: ministry?.type,
-    ministryOverrides: ministry?.terminologyOverrides,
+    ministryOverrides,
     churchOverrides,
   });
 }

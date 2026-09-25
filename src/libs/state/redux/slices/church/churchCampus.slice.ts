@@ -1,6 +1,6 @@
 import { IChurch, IChurchCampus, IChurchCampuses } from '@/libs/models';
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { GetChurchCampuses, UpdateChurch } from '../../thunks/church/church.thunk';
+import { GetChurchById, GetChurchCampuses, UpdateChurch } from '../../thunks/church/church.thunk';
 
 const initialState: IChurchCampuses = {
   data: [],
@@ -31,12 +31,14 @@ const churchCampusSlice = createSlice({
     setChurch: (state, action: PayloadAction<IChurch>) => {
       state.church = action.payload;
       state.churchTerminologyOverrides = action.payload.terminologyOverrides || {};
+      state.ministryTerminologyOverrides = action.payload.ministryTerminologyOverrides || {};
     },
     resetChurchCampusState: (state) => {
       state.data = initialState.data;
       state.current = initialState.current;
       state.church = undefined;
       state.churchTerminologyOverrides = undefined;
+      state.ministryTerminologyOverrides = undefined;
       state.error = initialState.error;
       state.loading = initialState.loading;
     },
@@ -74,6 +76,15 @@ const churchCampusSlice = createSlice({
       if (action.payload) {
         state.church = action.payload;
         state.churchTerminologyOverrides = action.payload.terminologyOverrides || {};
+        state.ministryTerminologyOverrides = action.payload.ministryTerminologyOverrides || {};
+      }
+    });
+
+    builder.addCase(GetChurchById.fulfilled, (state, action) => {
+      if (action.payload) {
+        state.church = action.payload;
+        state.churchTerminologyOverrides = action.payload.terminologyOverrides || {};
+        state.ministryTerminologyOverrides = action.payload.ministryTerminologyOverrides || {};
       }
     });
 

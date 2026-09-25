@@ -46,7 +46,26 @@ const STATUS_TABS: { label: string; value: VolunteerApplicationStatus | 'ALL' }[
  *
  * @returns {JSX.Element} Rendered applications review tab.
  */
-export const VolunteerApplicationsTab: React.FC = () => {
+export interface VolunteerApplicationsTabProps {
+  initialCampusId?: string;
+  initialGroupId?: string;
+  lockGroup?: boolean;
+  onApplicationProcessed?: () => void;
+}
+
+/**
+ * Tab component for coordinators and admins to review, approve, and reject volunteer applications.
+ * Maintains full visual trace of approvals and rejections according to hierarchy scope.
+ *
+ * @param {VolunteerApplicationsTabProps} props - Component properties.
+ * @returns {JSX.Element} Rendered applications review tab.
+ */
+export const VolunteerApplicationsTab: React.FC<VolunteerApplicationsTabProps> = ({
+  initialCampusId,
+  initialGroupId,
+  lockGroup = false,
+  onApplicationProcessed,
+}) => {
   const dispatch = useAppDispatch();
   const volunteerTerm = useChurchTerm('volunteer');
 
@@ -71,8 +90,15 @@ export const VolunteerApplicationsTab: React.FC = () => {
   );
   const [searchText, setSearchText] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [selectedCampusFilter, setSelectedCampusFilter] = useState('ALL');
+  const [selectedCampusFilter, setSelectedCampusFilter] = useState(initialCampusId || 'ALL');
   const [selectedAreaFilter, setSelectedAreaFilter] = useState('ALL');
+
+  // Keep campus filter synchronized if initialCampusId changes
+  useEffect(() => {
+    if (initialCampusId) {
+      setSelectedCampusFilter(initialCampusId);
+    }
+  }, [initialCampusId]);
 
   // Approval modal state
   const [applicationToApprove, setApplicationToApprove] = useState<IVolunteerApplication | null>(
@@ -96,18 +122,36 @@ export const VolunteerApplicationsTab: React.FC = () => {
   // Fetch applications
   const fetchApplications = useCallback(
     (page = 1) => {
+      const effectiveCampusId = lockGroup && initialCampusId
+        ? initialCampusId
+        : selectedCampusFilter !== 'ALL'
+        ? selectedCampusFilter
+        : undefined;
+
+      const effectiveGroupId = lockGroup && initialGroupId ? initialGroupId : undefined;
+
       dispatch(
         GetVolunteerApplications({
           page,
           limit: 30,
           status: statusFilter,
           search: debouncedSearch || undefined,
-          churchCampusId: selectedCampusFilter !== 'ALL' ? selectedCampusFilter : undefined,
+          churchCampusId: effectiveCampusId,
+          ministryGroupConfigId: effectiveGroupId,
           ministryAreaId: selectedAreaFilter !== 'ALL' ? selectedAreaFilter : undefined,
         })
       );
     },
-    [dispatch, statusFilter, debouncedSearch, selectedCampusFilter, selectedAreaFilter]
+    [
+      dispatch,
+      statusFilter,
+      debouncedSearch,
+      selectedCampusFilter,
+      selectedAreaFilter,
+      lockGroup,
+      initialCampusId,
+      initialGroupId,
+    ]
   );
 
   useEffect(() => {
@@ -122,6 +166,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
       toast.success(`Postulación aprobada y ${volunteerTerm.toLowerCase()} asignado(a) correctamente`);
       setApplicationToApprove(null);
       fetchApplications(currentPage);
+      onApplicationProcessed?.();
     } catch (err: any) {
       const msg = typeof err === 'string' ? err : err?.message || 'Error al aprobar la postulación';
       toast.error(msg);
@@ -142,6 +187,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
       setApplicationToReject(null);
       setRejectionReason('');
       fetchApplications(currentPage);
+      onApplicationProcessed?.();
     } catch (err: any) {
       const msg = typeof err === 'string' ? err : err?.message || 'Error al rechazar la postulación';
       toast.error(msg);
@@ -200,7 +246,7 @@ export const VolunteerApplicationsTab: React.FC = () => {
             />
           </div>
 
-          {campuses && campuses.length > 1 && (
+          {!lockGroup && campuses && campuses.length > 1 && (
             <Select
               value={selectedCampusFilter}
               onChange={(e) => setSelectedCampusFilter(e.target.value)}

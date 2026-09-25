@@ -134,13 +134,20 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       state.churchCampusSlice.churchTerminologyOverrides ||
       state.churchCampusSlice.church?.terminologyOverrides,
   );
+  const ministryOverrides = useAppSelector((state) => {
+    const minType = currentMinistry?.type || MinistryType.GENERAL;
+    return (
+      state.churchCampusSlice.ministryTerminologyOverrides?.[minType] ||
+      state.churchCampusSlice.church?.ministryTerminologyOverrides?.[minType]
+    );
+  });
   const volunteerTerm = useChurchTerm('volunteer');
 
   const roleDefinitions = useMemo(() => {
     const isKids = currentMinistry?.type === MinistryType.KIDS;
     const volunteerLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
       ministryType: currentMinistry?.type,
-      ministryOverrides: currentMinistry?.terminologyOverrides,
+      ministryOverrides,
       churchOverrides,
     });
     const volunteerDesc = isKids

@@ -13,6 +13,7 @@ import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { toast } from 'sonner';
 import { Layers, Sparkles, Check, Shield } from 'lucide-react';
 import clsx from 'clsx';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 
 interface MinistryAreaModalProps {
   open: boolean;
@@ -45,9 +46,9 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
     state.ministrySlice.ministries.find((m) => m.id === ministryId),
   );
   const isKidsMinistry = parentMinistry?.type === MinistryType.KIDS;
-  const regTerm = parentMinistry?.terminologyOverrides?.registration || 'Registro de niños';
-  const modAlias = parentMinistry?.terminologyOverrides?.module_alias || 'Ministerio de Niños';
-  const classroomTerm = parentMinistry?.terminologyOverrides?.classroom || 'Salón';
+  const regTerm = useKidsTerm('registration');
+  const modAlias = useKidsTerm('module_alias');
+  const classroomTerm = useKidsTerm('classroom');
 
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
