@@ -1,5 +1,17 @@
 [
   {
+    "version": "3.11.2",
+    "type": "patch",
+    "timestamp": "2026-09-26T19:01:12.942Z",
+    "dateFormatted": "26/09/2026 02:01 PM",
+    "title": "Corrección en envío de impresión de etiquetas",
+    "changes": [
+      "Corrección del despacho de órdenes de impresión para estaciones de red y controlador de escritorio",
+      "Sincronización de impresora activa y sede en los registros de asistencia",
+      "Identificación visual en el panel de registro con iconos descriptivos para impresora y reunión"
+    ]
+  },
+  {
     "version": "3.11.1",
     "type": "patch",
     "timestamp": "2026-09-25T13:04:16.297Z",

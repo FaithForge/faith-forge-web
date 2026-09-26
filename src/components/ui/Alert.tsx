@@ -4,9 +4,10 @@ import { AlertCircle, CheckCircle2, Info, AlertTriangle } from 'lucide-react';
 
 interface AlertProps {
   type: 'error' | 'success' | 'info' | 'warning';
-  title?: string;
-  message: string;
+  title?: React.ReactNode;
+  message?: React.ReactNode;
   className?: string;
+  hideIcon?: boolean;
 }
 
 const iconMap = {
@@ -23,15 +24,15 @@ const colorMap = {
   warning: 'bg-yellow-100 text-yellow-800 border-yellow-200',
 };
 
-const Alert = ({ type, title, message, className }: AlertProps) => {
+const Alert = ({ type, title, message, className, hideIcon = false }: AlertProps) => {
   const Icon = iconMap[type];
 
   return (
     <div className={clsx('flex items-start gap-3 p-3 rounded-xl border text-sm', colorMap[type], className)}>
-      <Icon size={18} className="shrink-0 mt-0.5" />
-      <div className="flex-1">
-        {title && <h4 className="font-bold mb-0.5">{title}</h4>}
-        <p className="opacity-90 leading-tight">{message}</p>
+      {!hideIcon && <Icon size={18} className="shrink-0 mt-0.5" />}
+      <div className="flex-1 min-w-0">
+        {title && <div className="font-bold mb-0.5">{title}</div>}
+        {message && <div className="opacity-90 leading-tight">{message}</div>}
       </div>
     </div>
   );

@@ -41,7 +41,7 @@ const ScannerView = () => {
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
-  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin } = useChurchMeetingStatus();
+  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, currentPrinter } = useChurchMeetingStatus();
   
   const [step, setStep] = useState(1);
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -168,6 +168,8 @@ const ScannerView = () => {
         return;
       }
 
+      const isBluetooth = printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected();
+
       const promises = selectedKids.map(kidId => {
         const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
         const kid = relation?.kid || relation;
@@ -188,12 +190,14 @@ const ScannerView = () => {
           kidGroupId,
           observation: finalObs,
           churchMeetingId: currentMeeting.id,
+          churchPrinterId: isBluetooth ? undefined : (currentPrinter?.id || undefined),
+          skipServerPrint: isBluetooth,
         }).unwrap();
       });
       
       const results = await Promise.all(promises);
 
-      if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+      if (isBluetooth) {
         for (let i = 0; i < selectedKids.length; i++) {
           const kidId = selectedKids[i];
           const relation = relations.find((r: IScanCodeKidRelation) => (r.kid?.id || r.id) === kidId);

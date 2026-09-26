@@ -7,7 +7,7 @@ import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2, SearchX, RotateCcw, Plus, Lightbulb, ChevronDown, DoorOpen, ChevronRight } from 'lucide-react';
+import { Loader2, SearchX, RotateCcw, Plus, Lightbulb, ChevronDown, DoorOpen, ChevronRight, Printer, CalendarClock, AlertCircle } from 'lucide-react';
 import dayjs from 'dayjs';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
@@ -208,8 +208,22 @@ const RegistrationDashboard = () => {
       {isConfigured && currentPrinter && currentMeeting && (
         <Alert 
           type="info"
-          title={t('kidRegistration:dashboard.printer_info', { printer: currentPrinter.name })}
-          message={t('kidRegistration:dashboard.meeting_info', { meeting: currentMeeting.name, campus: currentCampus?.name || '' })}
+          hideIcon
+          title={
+            <div className="flex items-center gap-1.5 font-bold">
+              <Printer size={13.5} className="shrink-0 -translate-y-[0.5px]" />
+              <span className="truncate">{currentPrinter.name}</span>
+            </div>
+          }
+          message={
+            <div className="flex items-center gap-1.5">
+              <CalendarClock size={13.5} className="shrink-0 -translate-y-[0.5px]" />
+              <span className="truncate">
+                {currentMeeting.name}
+                {currentCampus?.name && ` (${currentCampus.name})`}
+              </span>
+            </div>
+          }
           className="bg-cyan-100 text-cyan-800 border-cyan-200"
         />
       )}
@@ -246,7 +260,13 @@ const RegistrationDashboard = () => {
       {isConfigured && !isMeetingValid && (
         <Alert 
           type="error"
-          message={meetingErrorMsg}
+          hideIcon
+          message={
+            <div className="flex items-start gap-1.5">
+              <AlertCircle size={13.5} className="shrink-0 mt-0.5" />
+              <span>{meetingErrorMsg}</span>
+            </div>
+          }
         />
       )}
 

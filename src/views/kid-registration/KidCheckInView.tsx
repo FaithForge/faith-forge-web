@@ -59,7 +59,7 @@ const KidCheckInView = () => {
 
   const printerModeSlice = useAppSelector((state) => state.printerModeSlice);
 
-  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor } =
+  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, isSupervisor, currentPrinter } =
     useChurchMeetingStatus();
 
   const [selectedGuardian, setSelectedGuardian] = useState<string>('');
@@ -234,15 +234,18 @@ const KidCheckInView = () => {
     try {
       setIsProcessing(true);
       setProcessingStep('Guardando registro...');
+      const isBluetooth = printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected();
       const registrationResponse = (await createKidRegistration({
         kidId: kid.id,
         observation: finalObservation || undefined,
         kidGuardianId: selectedGuardian,
         kidGroupId: targetGroupId,
         churchMeetingId: currentMeeting.id,
+        churchPrinterId: isBluetooth ? undefined : (currentPrinter?.id || undefined),
+        skipServerPrint: isBluetooth,
       }).unwrap()) as { securityCode?: string; code?: string } | undefined;
 
-      if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+      if (isBluetooth) {
         setProcessingStep('Imprimiendo etiqueta Bluetooth...');
         const guardian = relationsList.find((g) => g.id === selectedGuardian || g.guardianId === selectedGuardian);
         const group = kidGroups.find((g) => g.id === targetGroupId);
@@ -304,8 +307,13 @@ const KidCheckInView = () => {
     try {
       setIsProcessing(true);
       setProcessingStep(t('kidRegistration:check_in.reprint_requesting'));
-      await reprintKidRegistration({ id: kid.currentKidRegistration.id }).unwrap();
-      if (printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected()) {
+      const isBluetooth = printerModeSlice?.mode === 'BLUETOOTH' && bluetoothPrinter.isConnected();
+      await reprintKidRegistration({
+        id: kid.currentKidRegistration.id,
+        churchPrinterId: isBluetooth ? undefined : (currentPrinter?.id || undefined),
+        skipServerPrint: isBluetooth,
+      }).unwrap();
+      if (isBluetooth) {
         setProcessingStep(t('kidRegistration:check_in.reprint_printing_bluetooth'));
         const guardian = relationsList.find((g: any) => g.id === selectedGuardian || g.kidGuardianId === selectedGuardian);
         const currentReg = kid.currentKidRegistration as any;
