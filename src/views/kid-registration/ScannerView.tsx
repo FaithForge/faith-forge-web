@@ -250,12 +250,12 @@ const ScannerView = () => {
   };
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50 pb-6">
+    <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader title={t('kidRegistration:scanner.title')} onBack={handleCancelClick} />
 
       <StepProgress currentStep={step} steps={scanSteps} />
 
-      <div className="p-4 max-w-xl mx-auto w-full">
+      <div className="p-4 max-w-xl mx-auto w-full pb-36">
         
         {step === 1 && (
           <div className="animate-in fade-in slide-in-from-right-4 duration-300 w-full flex flex-col items-center">
@@ -315,7 +315,8 @@ const ScannerView = () => {
                 {t('kidRegistration:scanner.btn_generate_guardian_qr', { guardian: guardianTerm })}
               </Button>
             </div>
-
+            {/* Espaciador para evitar que el BottomNav flotante tape el contenido */}
+            <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </div>
         )}
 
@@ -422,6 +423,8 @@ const ScannerView = () => {
             >
               {t('kidRegistration:scanner.btn_next')} <ChevronRight size={18} className="ml-2 inline" />
             </Button>
+            {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+            <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </div>
         )}
 
@@ -513,6 +516,8 @@ const ScannerView = () => {
             >
               <Printer size={20} className="mr-2 shrink-0" /> {t('kidRegistration:scanner.btn_register_kids')}
             </Button>
+            {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+            <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </form>
         )}
       </div>

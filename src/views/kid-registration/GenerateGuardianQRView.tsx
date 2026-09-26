@@ -156,10 +156,10 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
   const isLoading = guardianLoading || isGeneratingUrl;
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50 pb-6">
+    <div className="min-h-full bg-gray-50 flex flex-col flex-1 pb-6 sm:pb-8">
       <PageHeader title={t('kidRegistration:guardian_qr.title', { guardian: guardianTerm })} onBack={() => navigate(-1)} />
 
-      <div className="p-4 max-w-md mx-auto flex flex-col gap-4 animate-in fade-in duration-300">
+      <div className="p-4 max-w-md mx-auto flex flex-col gap-4 animate-in fade-in duration-300 pb-36">
         {/* Buscador de Documento */}
         <div className="bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
           <label className="block text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
@@ -301,6 +301,8 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
                 </Button>
               </div>
             </div>
+            {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
+            <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </div>
         )}
 
