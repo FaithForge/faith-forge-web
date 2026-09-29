@@ -152,6 +152,7 @@ export const baseApi = createApi({
     'ChurchPrinter',
     'Volunteer',
     'VolunteerAssignment',
+    'VolunteerAttendance',
     'Ministry',
     'User',
     'UserOverview',

@@ -129,5 +129,28 @@
     "urgent_notice_sending": "Enviando alerta...",
     "urgent_notice_toast_success": "¡Aviso urgente enviado al celular de {{guardian}}!",
     "urgent_notice_toast_not_delivered": "El acudiente no tiene notificaciones activas en su celular en este momento."
+  },
+  "volunteer_attendance": {
+    "title": "Tomar Asistencia",
+    "subtitle": "Asistencia de servidores para este servicio",
+    "missing_alert": "Pendiente tomar asistencia para este servicio",
+    "partial_alert": "Faltan {{count}} maestros por tomar asistencia",
+    "completed_alert": "Asistencia de maestros completada",
+    "take_button": "Tomar asistencia",
+    "status_label": "Estado",
+    "status": {
+      "ATTENDED": "Asistió",
+      "LATE": "Tarde",
+      "EXCUSED": "No asistió (Con excusa)",
+      "UNEXCUSED": "No asistió (Sin excusa)",
+      "EXEMPT": "No aplica"
+    },
+    "progress": "{{taken}} de {{total}} completados",
+    "no_volunteers": "No hay servidores asignados a tu equipo",
+    "save_success": "Asistencia actualizada correctamente",
+    "save_error": "Error al actualizar la asistencia",
+    "search_placeholder": "Buscar servidor por nombre o documento...",
+    "unmarked": "Sin marcar",
+    "active_meeting": "Servicio activo"
   }
 }

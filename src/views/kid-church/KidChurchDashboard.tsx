@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { RefreshCw, Users, ShieldAlert } from 'lucide-react';
+import { RefreshCw, Users, ShieldAlert, ClipboardCheck, CheckCircle2, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
@@ -12,6 +13,14 @@ import {
   useGetKidGroupsQuery,
   useGetKidGroupAttendanceQuery,
 } from '@/libs/state/redux/api/kidChurchApi';
+import {
+  useGetVolunteerAttendanceSummaryQuery,
+} from '@/libs/state/redux/api/churchApi';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import { usePermissions } from '@/libs/hooks/usePermissions';
+import { useVolunteerAttendanceLiveSync } from '@/libs/hooks/useVolunteerAttendanceLiveSync';
+import { isFeatureEnabled } from '@/config/features';
+import { APP_ROUTES } from '@/config/routes';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
@@ -31,9 +40,32 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
  */
 const KidChurchDashboard: React.FC = () => {
   const { t } = useTranslation(['kidChurch', 'common']);
+  const navigate = useNavigate();
   const { currentMeeting, currentCampus, isConfigured } = useChurchMeetingStatus();
   const kidsClassroomsName = useKidsTerm('classrooms');
   const kidsModuleName = useKidsTerm('module_alias');
+
+  const isVolunteerAttendanceEnabled = isFeatureEnabled('volunteerAttendance');
+  const { isSupervisor, isGroupCoordinator, isAreaCoordinator } = usePermissions();
+  const isCoordinatorUser = isSupervisor || isGroupCoordinator || isAreaCoordinator;
+  const { activeGroupConfigId } = useAppSelector((state) => state.volunteerContextSlice);
+
+  // RTK Query: Query attendance summary for the active service and group
+  const { data: attendanceSummary } = useGetVolunteerAttendanceSummaryQuery(
+    {
+      churchMeetingId: currentMeeting?.id || '',
+      ministryGroupConfigId: activeGroupConfigId || undefined,
+    },
+    {
+      skip: !isVolunteerAttendanceEnabled || !isCoordinatorUser || !currentMeeting?.id,
+    },
+  );
+
+  // Realtime Live Sync: Keep coordinator's attendance counters updated via SSE
+  useVolunteerAttendanceLiveSync({
+    churchMeetingId: currentMeeting?.id,
+    enabled: Boolean(isVolunteerAttendanceEnabled && isCoordinatorUser && currentMeeting?.id),
+  });
 
   const [searchText, setSearchText] = useState('');
   const [selectedKidGroupId, setSelectedKidGroupId] = useState<string>('');
@@ -212,6 +244,79 @@ const KidChurchDashboard: React.FC = () => {
           title={t('dashboard.missing_config_title')}
           message={t('dashboard.missing_config_desc')}
         />
+      )}
+
+      {/* Volunteer Attendance Alert Banner for Coordinators */}
+      {isVolunteerAttendanceEnabled && isCoordinatorUser && currentMeeting && attendanceSummary && attendanceSummary.total > 0 && (
+        <div className="mt-1">
+          {attendanceSummary.counts.taken === 0 ? (
+            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <ClipboardCheck className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-amber-950 truncate">
+                    {t('volunteer_attendance.missing_alert')}
+                  </h3>
+                  <p className="text-[11px] text-amber-800/90 font-medium truncate">
+                    {t('volunteer_attendance.subtitle')}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 transition-all active:scale-95 shadow-xs cursor-pointer"
+              >
+                <span>{t('volunteer_attendance.take_button')}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : attendanceSummary.counts.pending > 0 ? (
+            <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
+                  <ClipboardCheck className="w-5 h-5" />
+                </div>
+                <div className="min-w-0">
+                  <h3 className="text-xs sm:text-sm font-bold text-amber-950 truncate">
+                    {t('volunteer_attendance.partial_alert', { count: attendanceSummary.counts.pending })}
+                  </h3>
+                  <p className="text-[11px] text-amber-800 font-medium truncate">
+                    {t('volunteer_attendance.progress', {
+                      taken: attendanceSummary.counts.taken,
+                      total: attendanceSummary.total,
+                    })}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+                className="bg-primary hover:bg-primary-dark text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 transition-all active:scale-95 shadow-xs cursor-pointer"
+              >
+                <span>{t('volunteer_attendance.take_button')}</span>
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div
+              onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+              className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-2.5 px-3.5 flex items-center justify-between gap-2 shadow-2xs cursor-pointer hover:bg-emerald-50 transition-colors"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                <span className="text-xs font-semibold text-emerald-900 truncate">
+                  {t('volunteer_attendance.completed_alert')}
+                </span>
+              </div>
+              <ChevronRight className="w-4 h-4 text-emerald-600 shrink-0" />
+            </div>
+          )}
+        </div>
       )}
 
       {/* Loading State for Classrooms */}

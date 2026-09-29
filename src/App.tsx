@@ -60,10 +60,14 @@ const TermsOfServiceView = lazy(() => import('@/views/legal/TermsOfServiceView')
 const PrivacyPolicyView = lazy(() => import('@/views/legal/PrivacyPolicyView'));
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
+const VolunteerAttendanceView = lazy(
+  () => import('@/views/kid-church/VolunteerAttendanceView')
+);
 const HubView = lazy(() => import('@/views/hub/HubView'));
 const KidGuardianDashboardView = lazy(
   () => import('@/views/kid-guardian/KidGuardianDashboardView')
 );
+import { isFeatureEnabled } from '@/config/features';
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
 import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
@@ -286,6 +290,16 @@ function App() {
                 <Route index element={<IndexRedirect />} />
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
                 <Route path={APP_ROUTES.kidChurch.myTeam} element={<SupervisorTeamView />} />
+                <Route
+                  path={APP_ROUTES.kidChurch.volunteerAttendance}
+                  element={
+                    isFeatureEnabled('volunteerAttendance') ? (
+                      <VolunteerAttendanceView />
+                    ) : (
+                      <Navigate to={APP_ROUTES.kidChurch.root} replace />
+                    )
+                  }
+                />
                 <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />
                 <Route path={APP_ROUTES.kidRegistration.myTeam} element={<SupervisorTeamView />} />
                 <Route path={APP_ROUTES.kidRegistration.new} element={<NewKidView />} />

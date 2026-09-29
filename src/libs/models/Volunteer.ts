@@ -73,14 +73,57 @@ export interface IVolunteerAssignment {
   updatedAt?: string | Date;
 }
 
+/**
+ * Volunteer attendance status recorded during a church meeting.
+ */
+export enum VolunteerAttendanceStatus {
+  ATTENDED = 'ATTENDED',
+  LATE = 'LATE',
+  EXCUSED = 'EXCUSED',
+  UNEXCUSED = 'UNEXCUSED',
+  EXEMPT = 'EXEMPT',
+}
+
 export interface IVolunteerAttendance {
   id: string;
   volunteerAssignmentId: string;
   churchMeetingId: string;
   attendanceDate: string | Date;
   attendanceTakeDate?: string | Date;
+  attendanceStatus: VolunteerAttendanceStatus;
   meeting?: IChurchMeeting;
   volunteerAssignment?: IVolunteerAssignment;
+}
+
+/**
+ * Summary response containing attendance metrics and counters for a meeting and group.
+ */
+export interface IVolunteerAttendanceSummary {
+  churchMeetingId: string;
+  ministryGroupConfigId?: string;
+  total: number;
+  counts: {
+    taken: number;
+    pending: number;
+    attended: number;
+    late: number;
+    excused: number;
+    unexcused: number;
+    exempt: number;
+  };
+}
+
+export interface CreateVolunteerAttendancePayload {
+  id?: string;
+  churchMeetingId: string;
+  volunteerAssignmentId: string;
+  attendanceDate: string;
+  attendanceTakeDate?: string;
+  attendanceStatus?: VolunteerAttendanceStatus;
+}
+
+export interface BatchCreateVolunteerAttendancePayload {
+  items: CreateVolunteerAttendancePayload[];
 }
 
 export interface GetVolunteersPayload {
@@ -117,6 +160,7 @@ export interface GetVolunteerAttendancePayload {
   ministryId?: string;
   ministryAreaId?: string;
   serviceAreaGroupId?: string;
+  ministryGroupConfigId?: string;
   volunteerAssignmentId?: string;
   attendanceDate?: string;
   from?: string;
