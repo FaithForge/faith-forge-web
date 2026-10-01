@@ -170,11 +170,13 @@ export const GetVolunteerApplications = createAsyncThunk(
       const rawApps: IVolunteerApplication[] = isArray ? response : response?.data || [];
       const currentPage: number = isArray ? 1 : response?.currentPage || 1;
       const totalPages: number = isArray ? 1 : response?.totalPages || 1;
+      const totalItems: number = isArray ? rawApps.length : response?.totalItems ?? rawApps.length;
 
       return {
         data: rawApps,
         currentPage,
         totalPages,
+        totalItems,
       } as PaginationResponse<IVolunteerApplication>;
     } catch (err) {
       return rejectWithValue(

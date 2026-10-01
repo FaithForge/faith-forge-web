@@ -2,6 +2,7 @@ import {
   IPublicVolunteerCatalog,
   IVolunteerApplication,
   PaginationResponse,
+  VolunteerApplicationStatus,
 } from '@/libs/models';
 import {
   ApproveVolunteerApplication,
@@ -16,6 +17,8 @@ export interface VolunteerApplicationSliceState {
   catalog: IPublicVolunteerCatalog | null;
   loadingCatalog: boolean;
   errorCatalog: string | null;
+
+  pendingCount: number;
 
   applications: {
     data: IVolunteerApplication[];
@@ -36,6 +39,8 @@ const initialState: VolunteerApplicationSliceState = {
   catalog: null,
   loadingCatalog: false,
   errorCatalog: null,
+
+  pendingCount: 0,
 
   applications: {
     data: [],
@@ -64,6 +69,9 @@ export const volunteerApplicationSlice = createSlice({
         loading: false,
         error: null,
       };
+    },
+    setPendingApplicationsCount: (state, action: PayloadAction<number>) => {
+      state.pendingCount = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -98,17 +106,41 @@ export const volunteerApplicationSlice = createSlice({
     });
 
     // --- Get Volunteer Applications ---
-    builder.addCase(GetVolunteerApplications.pending, (state) => {
-      state.applications.loading = true;
+    builder.addCase(GetVolunteerApplications.pending, (state, action) => {
+      const page = action.meta.arg?.page ?? 1;
+      if (page <= 1) {
+        state.applications.loading = true;
+      }
       state.applications.error = null;
     });
     builder.addCase(
       GetVolunteerApplications.fulfilled,
-      (state, action: PayloadAction<PaginationResponse<IVolunteerApplication>>) => {
+      (state, action: any) => {
         state.applications.loading = false;
-        state.applications.data = action.payload.data;
-        state.applications.currentPage = action.payload.currentPage;
-        state.applications.totalPages = action.payload.totalPages;
+        const page = action.meta.arg?.page ?? 1;
+
+        if (page > 1) {
+          const existingIds = new Set(state.applications.data.map((item) => item.id));
+          const newItems = (action.payload.data || []).filter(
+            (item: IVolunteerApplication) => !existingIds.has(item.id)
+          );
+          state.applications.data.push(...newItems);
+          if (newItems.length === 0) {
+            state.applications.totalPages = state.applications.currentPage;
+          } else {
+            state.applications.totalPages = action.payload.totalPages || state.applications.currentPage;
+          }
+        } else {
+          state.applications.data = action.payload.data || [];
+          state.applications.totalPages = action.payload.totalPages || 1;
+        }
+
+        state.applications.currentPage = action.payload.currentPage || page;
+
+        const requestedStatus = action.meta.arg?.status;
+        if (requestedStatus === VolunteerApplicationStatus.PENDING) {
+          state.pendingCount = action.payload.totalItems ?? action.payload.data?.length ?? 0;
+        }
       },
     );
     builder.addCase(GetVolunteerApplications.rejected, (state, action) => {
@@ -125,6 +157,7 @@ export const volunteerApplicationSlice = createSlice({
       ApproveVolunteerApplication.fulfilled,
       (state, action: PayloadAction<IVolunteerApplication>) => {
         state.actionLoadingId = null;
+        state.pendingCount = Math.max(0, state.pendingCount - 1);
         const index = state.applications.data.findIndex((item) => item.id === action.payload.id);
         if (index !== -1) {
           state.applications.data[index] = action.payload;
@@ -145,6 +178,7 @@ export const volunteerApplicationSlice = createSlice({
       RejectVolunteerApplication.fulfilled,
       (state, action: PayloadAction<IVolunteerApplication>) => {
         state.actionLoadingId = null;
+        state.pendingCount = Math.max(0, state.pendingCount - 1);
         const index = state.applications.data.findIndex((item) => item.id === action.payload.id);
         if (index !== -1) {
           state.applications.data[index] = action.payload;
@@ -158,5 +192,5 @@ export const volunteerApplicationSlice = createSlice({
   },
 });
 
-export const { resetApplicationsState } = volunteerApplicationSlice.actions;
+export const { resetApplicationsState, setPendingApplicationsCount } = volunteerApplicationSlice.actions;
 export default volunteerApplicationSlice.reducer;

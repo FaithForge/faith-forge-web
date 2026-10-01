@@ -455,14 +455,15 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
    */
   const getVolunteerName = useCallback(
     (asg: IVolunteerAssignment): string => {
-      const vId = asg.volunteerId || asg.ministryVolunteerId;
+      const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
+        asg.churchMember ||
         asg.ministryVolunteer ||
         volunteersList.find(
           (v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
         );
-      const user = asg.volunteer?.user || vol?.user;
+      const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
       return user && (user.firstName || user.lastName)
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
         : '';
@@ -489,12 +490,13 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
   const renderPersonItem = (asg: IVolunteerAssignment, roleLabel?: string) => {
     const name = getVolunteerName(asg) || `${volunteerTerm} asignado(a)`;
-    const vId = asg.volunteerId || asg.ministryVolunteerId;
+    const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
     const vol =
       asg.volunteer ||
+      asg.churchMember ||
       asg.ministryVolunteer ||
       volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
-    const user = asg.volunteer?.user || vol?.user;
+    const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
     const nationalId = user?.nationalId;
     const photoUrl = user?.photoUrl;
 

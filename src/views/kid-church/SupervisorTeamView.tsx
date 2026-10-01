@@ -14,12 +14,21 @@ import {
   Sparkles,
   RefreshCw,
   UserCheck,
+  ClipboardCheck,
+  CheckCircle2,
+  ChevronRight,
+  ChevronLeft,
+  ArrowUp,
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { EntityState, MinistryType, MinistryAreaScope } from '@/libs/models';
 import { toast } from 'sonner';
 import { APP_ROUTES } from '@/config/routes';
+import { isFeatureEnabled } from '@/config/features';
+import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useGetVolunteerAttendanceSummaryQuery } from '@/libs/state/redux/api/churchApi';
+import { useVolunteerAttendanceLiveSync } from '@/libs/hooks/useVolunteerAttendanceLiveSync';
 import { useChurchTerm, useKidsTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { ChurchRole } from '@/libs/utils/auth';
@@ -172,8 +181,10 @@ export const SupervisorTeamView: React.FC = () => {
     isAreaCoordinator,
     isGroupCoordinator,
     isSupervisor,
+    isApoyo,
     canViewTeam: canAccessTeam,
     hasRole,
+    canTakeVolunteerAttendance,
   } = usePermissions();
 
   const isCoordinator =
@@ -183,13 +194,17 @@ export const SupervisorTeamView: React.FC = () => {
 
   useEffect(() => {
     if (!canAccessTeam) {
-      toast.error(t('supervisor_team.access_denied'));
+      toast.error(
+        isApoyo
+          ? t('supervisor_team.access_denied_apoyo')
+          : t('supervisor_team.access_denied'),
+      );
       const fallbackUrl = currentRole?.includes('REGISTER')
         ? APP_ROUTES.kidRegistration.root
         : APP_ROUTES.kidChurch.root;
       navigate(fallbackUrl, { replace: true });
     }
-  }, [canAccessTeam, currentRole, navigate, t]);
+  }, [canAccessTeam, isApoyo, currentRole, navigate, t]);
 
   const churchVolunteersTerm = useChurchTerm('volunteers');
   const kidsRegistrationName = useKidsTerm('registration');
@@ -234,10 +249,82 @@ export const SupervisorTeamView: React.FC = () => {
   const [selectedAreaFilter, setSelectedAreaFilter] = useState<string>('ALL');
   const [selectedGroupFilter, setSelectedGroupFilter] = useState<string>('ALL');
 
+  const filterScrollRef = React.useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+
+  /**
+   * Checks whether the horizontal filter chip list can scroll left or right.
+   *
+   * @returns {void}
+   */
+  const checkFilterScroll = React.useCallback((): void => {
+    if (!filterScrollRef.current) return;
+    const { scrollLeft, scrollWidth, clientWidth } = filterScrollRef.current;
+    setCanScrollLeft(scrollLeft > 6);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+  }, []);
+
+  /**
+   * Scrolls the filter chips smoothly left or right.
+   *
+   * @param {'left' | 'right'} direction - Scroll direction.
+   * @returns {void}
+   */
+  const handleScrollFilter = (direction: 'left' | 'right'): void => {
+    if (!filterScrollRef.current) return;
+    const offset = direction === 'left' ? -180 : 180;
+    filterScrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
+    setTimeout(checkFilterScroll, 300);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(checkFilterScroll, 150);
+    window.addEventListener('resize', checkFilterScroll);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener('resize', checkFilterScroll);
+    };
+  }, [checkFilterScroll, selectedGroupFilter, selectedAreaFilter]);
+
   const effectiveGroupId =
     activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP'
       ? activeGroupConfigId
       : undefined;
+
+  const isVolunteerAttendanceEnabled = isFeatureEnabled('volunteerAttendance');
+  const { currentMeeting } = useChurchMeetingStatus();
+
+  // RTK Query: Query attendance summary for the active service and group
+  const { data: attendanceSummary } = useGetVolunteerAttendanceSummaryQuery(
+    {
+      churchMeetingId: currentMeeting?.id || '',
+      ministryGroupConfigId: effectiveGroupId,
+    },
+    {
+      skip:
+        !isVolunteerAttendanceEnabled ||
+        !canTakeVolunteerAttendance ||
+        !currentMeeting?.id ||
+        (!effectiveGroupId && !isSuperAdmin),
+    },
+  );
+
+  // Realtime Live Sync: Keep coordinator's attendance counters updated via SSE
+  useVolunteerAttendanceLiveSync({
+    churchMeetingId: currentMeeting?.id,
+    enabled: Boolean(
+      isVolunteerAttendanceEnabled &&
+        canTakeVolunteerAttendance &&
+        currentMeeting?.id &&
+        (effectiveGroupId || isSuperAdmin),
+    ),
+  });
+
+  const attendancePercentage =
+    attendanceSummary && attendanceSummary.total > 0
+      ? Math.round((attendanceSummary.counts.taken / attendanceSummary.total) * 100)
+      : 0;
 
   const partitionKey = isAreaCoordinator
     ? `my-team-area-${effectiveCampusId}-${effectiveAreaId || 'all'}`
@@ -265,7 +352,7 @@ export const SupervisorTeamView: React.FC = () => {
           force: true,
         }),
       );
-    } else {
+    } else if (effectiveGroupId || isSuperAdmin) {
       dispatch(
         GetVolunteerAssignments({
           churchCampusId: effectiveCampusId,
@@ -283,6 +370,7 @@ export const SupervisorTeamView: React.FC = () => {
     isAreaCoordinator,
     effectiveAreaId,
     effectiveGroupId,
+    isSuperAdmin,
     isGroupCoordinator,
     activeAreaId,
     partitionKey,
@@ -293,32 +381,77 @@ export const SupervisorTeamView: React.FC = () => {
   }, [loadTeamData]);
 
   const [activeMainTab, setActiveMainTab] = useState<'TEAM' | 'APPLICATIONS'>('TEAM');
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
-  const rawApplications = useAppSelector(
-    (state) => state.volunteerApplicationSlice.applications.data,
-  );
+  // Monitor scroll position on viewport and main element
+  useEffect(() => {
+    const handleScroll = () => {
+      const mainEl = document.querySelector('main');
+      const scrollPos = Math.max(
+        mainEl?.scrollTop || 0,
+        window.scrollY || 0,
+        document.documentElement?.scrollTop || 0,
+        document.body?.scrollTop || 0,
+      );
+      setShowScrollTop(scrollPos > 180);
+    };
 
-  const pendingApplicationsCount = useMemo(() => {
-    return rawApplications.filter((app) => {
-      if (app.status !== VolunteerApplicationStatus.PENDING) return false;
-      if (effectiveCampusId && app.churchCampusId !== effectiveCampusId) return false;
-      if (isGroupCoordinator && !isAreaCoordinator && effectiveGroupId) {
-        return app.ministryGroupConfigId === effectiveGroupId;
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.addEventListener('scroll', handleScroll, { passive: true });
+    }
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    document.addEventListener('scroll', handleScroll, { passive: true });
+
+    handleScroll();
+
+    return () => {
+      if (mainEl) {
+        mainEl.removeEventListener('scroll', handleScroll);
       }
-      return true;
-    }).length;
-  }, [rawApplications, effectiveCampusId, isGroupCoordinator, isAreaCoordinator, effectiveGroupId]);
+      window.removeEventListener('scroll', handleScroll);
+      document.removeEventListener('scroll', handleScroll);
+    };
+  }, []);
 
-  const refreshApplicationsCount = React.useCallback(() => {
+  /**
+   * Scrolls the viewport smoothly back to the top.
+   *
+   * @returns {void}
+   */
+  const handleScrollToTop = (): void => {
+    const mainEl = document.querySelector('main');
+    if (mainEl) {
+      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.documentElement?.scrollTo({ top: 0, behavior: 'smooth' });
+    document.body?.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const pendingCountFromSlice = useAppSelector(
+    (state) => state.volunteerApplicationSlice.pendingCount,
+  );
+  const [localPendingCount, setLocalPendingCount] = useState<number | null>(null);
+
+  const pendingApplicationsCount = localPendingCount !== null ? localPendingCount : pendingCountFromSlice;
+
+  const refreshApplicationsCount = React.useCallback(async () => {
     if (!effectiveCampusId || (!isGroupCoordinator && !isAreaCoordinator)) return;
-    dispatch(
-      GetVolunteerApplications({
-        churchCampusId: effectiveCampusId,
-        ministryGroupConfigId: isGroupCoordinator && !isAreaCoordinator ? effectiveGroupId : undefined,
-        status: VolunteerApplicationStatus.PENDING,
-        limit: 50,
-      }),
-    );
+    try {
+      const res = await dispatch(
+        GetVolunteerApplications({
+          churchCampusId: effectiveCampusId,
+          ministryGroupConfigId: isGroupCoordinator && !isAreaCoordinator ? effectiveGroupId : undefined,
+          status: VolunteerApplicationStatus.PENDING,
+          limit: 50,
+        }),
+      ).unwrap();
+      const count = (res as any).totalItems ?? res.data?.length ?? 0;
+      setLocalPendingCount(count);
+    } catch {
+      // ignore error
+    }
   }, [dispatch, effectiveCampusId, isGroupCoordinator, isAreaCoordinator, effectiveGroupId]);
 
   useEffect(() => {
@@ -504,96 +637,96 @@ export const SupervisorTeamView: React.FC = () => {
   if (!canAccessTeam) return null;
 
   return (
-    <div className="flex-1 flex flex-col p-4 sm:p-6 max-w-4xl mx-auto w-full space-y-5 pb-28 sm:pb-32">
-      {/* Header card with leadership badge */}
-      <div className="bg-white rounded-3xl p-5 sm:p-6 border border-gray-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div className="space-y-1.5">
+    <div className="flex-1 flex flex-col p-3.5 sm:p-6 max-w-4xl mx-auto w-full space-y-3 sm:space-y-4 pb-28 sm:pb-32">
+      {/* Clean Unified Page Header */}
+      <div className="flex items-center justify-between gap-3 pt-1">
+        <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+              {t('supervisor_team.title')}
+            </h1>
             <span
               className={clsx(
-                'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold',
+                'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold',
                 headerBadgeStyle,
               )}
             >
-              <UserCheck size={13} />
+              <UserCheck size={12} />
               {isAreaCoordinator
-                ? t('supervisor_team.role_area_coordinator')
+                ? effectiveAreaName
                 : isGroupCoordinator
-                ? t('supervisor_team.role_group_coordinator')
-                : t('supervisor_team.role_supervisor')}
+                ? (activeGroupConfigName || 'Grupo')
+                : areaName}
             </span>
-            {isAreaCoordinator ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                <Sparkles size={13} />
-                {effectiveAreaName}
-              </span>
-            ) : activeGroupConfigName ? (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-primary/10 text-primary">
-                <Calendar size={13} />
-                {activeGroupConfigName}
-              </span>
-            ) : null}
             {activeCampusName && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-gray-100 text-gray-600">
-                <Building2 size={13} />
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600">
+                <Building2 size={11} />
                 {activeCampusName}
               </span>
             )}
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight">
+          <p className="text-xs text-gray-500 font-medium mt-0.5">
+            {filteredAssignments.length === 1
+              ? t('supervisor_team.count_one')
+              : t('supervisor_team.count_other', { count: filteredAssignments.length })}
+            {' • '}
             {isAreaCoordinator
-              ? t('supervisor_team.title_area', { name: effectiveAreaName })
+              ? t('supervisor_team.role_area_coordinator')
               : isGroupCoordinator
-              ? t('supervisor_team.title_group', { name: activeGroupConfigName || 'Grupo' })
-              : t('supervisor_team.title_group', { name: areaName })}
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 font-medium">
-            {isAreaCoordinator
-              ? t('supervisor_team.subtitle_area', { name: effectiveAreaName })
-              : isGroupCoordinator
-              ? t('supervisor_team.subtitle_group')
-              : t('supervisor_team.subtitle_supervisor')}
+              ? t('supervisor_team.role_group_coordinator')
+              : t('supervisor_team.role_supervisor')}
           </p>
         </div>
 
         <button
           onClick={loadTeamData}
           disabled={isLoading}
-          className="self-start sm:self-auto inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200/80 transition-colors active:scale-95 disabled:opacity-50"
+          title={t('supervisor_team.refresh')}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200/80 shadow-2xs transition-colors active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
         >
-          <RefreshCw size={14} className={clsx(isLoading && 'animate-spin text-primary')} />
-          {t('supervisor_team.refresh')}
+          <RefreshCw size={13} className={clsx(isLoading && 'animate-spin text-primary')} />
+          <span className="hidden sm:inline">{t('supervisor_team.refresh')}</span>
         </button>
       </div>
 
       {/* Tab Switcher: Equipo Activo vs Solicitudes */}
       {(isGroupCoordinator || isAreaCoordinator) && (
-        <div className="flex items-center gap-1.5 p-1 bg-white border border-gray-100 rounded-2xl shadow-xs w-full sm:w-auto self-start">
+        <div className="flex items-center gap-1.5 p-1 bg-white border border-gray-200/80 rounded-2xl shadow-2xs w-full sm:w-auto self-start">
           <button
             type="button"
             onClick={() => setActiveMainTab('TEAM')}
             className={clsx(
-              'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer',
+              'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer',
               activeMainTab === 'TEAM'
                 ? 'bg-primary text-white shadow-xs'
                 : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
             )}
           >
-            <Users size={15} />
+            <Users size={14} />
             <span>{t('supervisor_team.tabs.active_team')}</span>
+            <span
+              className={clsx(
+                'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                activeMainTab === 'TEAM'
+                  ? 'bg-white/20 text-white'
+                  : 'bg-gray-100 text-gray-600',
+              )}
+            >
+              {assignments.length}
+            </span>
           </button>
 
           <button
             type="button"
             onClick={() => setActiveMainTab('APPLICATIONS')}
             className={clsx(
-              'flex-1 sm:flex-initial px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 relative cursor-pointer',
+              'flex-1 sm:flex-initial px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 relative cursor-pointer',
               activeMainTab === 'APPLICATIONS'
                 ? 'bg-primary text-white shadow-xs'
                 : 'text-gray-500 hover:text-gray-900 hover:bg-gray-50',
             )}
           >
-            <UserCheck size={15} />
+            <UserCheck size={14} />
             <span>{t('supervisor_team.tabs.applications')}</span>
             {pendingApplicationsCount > 0 && (
               <span
@@ -625,184 +758,326 @@ export const SupervisorTeamView: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Search & metric bar */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
-          />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('supervisor_team.search_placeholder')}
-            className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-2xl text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 shadow-2xs transition-all"
-          />
-        </div>
-        <div className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-white rounded-2xl border border-gray-200 text-xs font-bold text-gray-600 shadow-2xs justify-between sm:justify-start">
-          <Users size={15} className="text-primary" />
-          <span>
-            {filteredAssignments.length === 1
-              ? t('supervisor_team.count_one')
-              : t('supervisor_team.count_other', { count: filteredAssignments.length })}
-          </span>
-        </div>
-      </div>
+          {/* Live Service Volunteer Attendance Notice (only for Group Coordinators) */}
+          {isVolunteerAttendanceEnabled && canTakeVolunteerAttendance && currentMeeting && attendanceSummary && attendanceSummary.total > 0 && (
+            <div
+              onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+              className="bg-amber-50 hover:bg-amber-100/70 border border-amber-200/90 rounded-2xl p-2.5 px-3.5 flex items-center justify-between gap-3 shadow-2xs cursor-pointer transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8.5 h-8.5 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <ClipboardCheck className="w-4.5 h-4.5" />
+                </div>
+                <div className="min-w-0">
+                  {/* Primera línea: el servicio */}
+                  <h4 className="text-xs sm:text-sm font-bold text-amber-950 leading-tight">
+                    {currentMeeting.name}
+                  </h4>
+
+                  {/* Segunda línea: cuántos hay registrados del total */}
+                  <p className="text-[11px] text-amber-900 font-medium leading-tight mt-0.5">
+                    {t('supervisor_team.attendance_widget.registered_count', {
+                      taken: attendanceSummary.counts.taken,
+                      total: attendanceSummary.total,
+                    })}
+                  </p>
+
+                  {/* Tercera línea: faltantes */}
+                  <p className="text-[11px] text-amber-800 font-medium leading-tight mt-0.5">
+                    {attendanceSummary.counts.pending === 0
+                      ? t('supervisor_team.attendance_widget.completed_no_missing')
+                      : t('supervisor_team.attendance_widget.pending_missing', {
+                          pending: attendanceSummary.counts.pending,
+                        })}
+                  </p>
+                </div>
+              </div>
+
+              <div className="bg-primary hover:bg-primary-dark text-white font-bold text-xs px-3 py-1.5 rounded-xl flex items-center gap-1 shrink-0 shadow-2xs whitespace-nowrap">
+                <span>
+                  {attendanceSummary.counts.pending === 0
+                    ? t('supervisor_team.attendance_widget.view_action')
+                    : t('supervisor_team.attendance_widget.take_action')}
+                </span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
+            </div>
+          )}
+
+          {/* Search bar */}
+          <div className="relative">
+            <Search
+              size={16}
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t('supervisor_team.search_placeholder')}
+              className="w-full pl-10 pr-4 py-2 bg-white border border-gray-200 rounded-xl text-xs sm:text-sm text-gray-800 placeholder:text-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/10 shadow-2xs transition-all"
+            />
+          </div>
 
       {/* Group filter tabs for Area Coordinator */}
       {isAreaCoordinator && availableGroups.length > 0 && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setSelectedGroupFilter('ALL')}
-            className={clsx(
-              'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
-              selectedGroupFilter === 'ALL'
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
-            )}
-          >
-            <span>{t('supervisor_team.all_groups')}</span>
-            <span
-              className={clsx(
-                'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                selectedGroupFilter === 'ALL'
-                  ? 'bg-white/25 text-white'
-                  : 'bg-gray-100 text-gray-600',
-              )}
-            >
-              {
-                assignments.filter(
-                  (asg) =>
-                    asg.state !== EntityState.DELETED &&
-                    (asg.role === VolunteerRole.SUPERVISOR || asg.role === VolunteerRole.VOLUNTEER),
-                ).length
-              }
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 px-0.5">
+            <span className="font-semibold text-slate-700">
+              {t('volunteer_attendance.filter_by_group')}
             </span>
-          </button>
+            {canScrollRight && (
+              <span className="text-[11px] text-primary font-semibold flex items-center gap-1">
+                <span>{t('volunteer_attendance.swipe_hint')}</span>
+                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
+              </span>
+            )}
+          </div>
 
-          {availableGroups.map((group) => {
-            const count = assignments.filter((asg: IVolunteerAssignment) => {
-              if (asg.state === EntityState.DELETED) return false;
-              if (asg.role !== VolunteerRole.SUPERVISOR && asg.role !== VolunteerRole.VOLUNTEER)
-                return false;
-              const asgGroupId =
-                asg.ministryGroupConfigId ||
-                asg.serviceAreaGroup?.ministryGroupConfigId ||
-                asg.serviceAreaGroup?.ministryGroupConfig?.id;
-              return asgGroupId === group.id;
-            }).length;
+          <div className="relative group">
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 bg-gradient-to-r from-slate-50 via-slate-50/80 to-transparent pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => handleScrollFilter('left')}
+                  aria-label={t('volunteer_attendance.scroll_left_hint')}
+                  title={t('volunteer_attendance.scroll_left_hint')}
+                  className="pointer-events-auto w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-            return (
+            <div
+              ref={filterScrollRef}
+              onScroll={checkFilterScroll}
+              className="flex items-center gap-1.5 overflow-x-auto scroll-smooth py-0.5 no-scrollbar"
+            >
               <button
-                key={group.id}
                 type="button"
-                onClick={() => setSelectedGroupFilter(group.id)}
+                onClick={() => setSelectedGroupFilter('ALL')}
                 className={clsx(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
-                  selectedGroupFilter === group.id
+                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                  selectedGroupFilter === 'ALL'
                     ? 'bg-primary text-white shadow-xs'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
                 )}
               >
-                <span>{group.name}</span>
+                <span>{t('supervisor_team.all_groups')}</span>
                 <span
                   className={clsx(
                     'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                    selectedGroupFilter === group.id
+                    selectedGroupFilter === 'ALL'
                       ? 'bg-white/25 text-white'
-                      : 'bg-gray-100 text-gray-600',
+                      : 'bg-slate-100 text-slate-600',
                   )}
                 >
-                  {count}
+                  {
+                    assignments.filter(
+                      (asg) =>
+                        asg.state !== EntityState.DELETED &&
+                        (asg.role === VolunteerRole.SUPERVISOR || asg.role === VolunteerRole.VOLUNTEER),
+                    ).length
+                  }
                 </span>
               </button>
-            );
-          })}
+
+              {availableGroups.map((group) => {
+                const count = assignments.filter((asg: IVolunteerAssignment) => {
+                  if (asg.state === EntityState.DELETED) return false;
+                  if (asg.role !== VolunteerRole.SUPERVISOR && asg.role !== VolunteerRole.VOLUNTEER)
+                    return false;
+                  const asgGroupId =
+                    asg.ministryGroupConfigId ||
+                    asg.serviceAreaGroup?.ministryGroupConfigId ||
+                    asg.serviceAreaGroup?.ministryGroupConfig?.id;
+                  return asgGroupId === group.id;
+                }).length;
+
+                return (
+                  <button
+                    key={group.id}
+                    type="button"
+                    onClick={() => setSelectedGroupFilter(group.id)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                      selectedGroupFilter === group.id
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
+                    )}
+                  >
+                    <span>{group.name}</span>
+                    <span
+                      className={clsx(
+                        'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                        selectedGroupFilter === group.id
+                          ? 'bg-white/25 text-white'
+                          : 'bg-slate-100 text-slate-600',
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 bg-gradient-to-l from-slate-50 via-slate-50/80 to-transparent pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => handleScrollFilter('right')}
+                  aria-label={t('volunteer_attendance.scroll_right_hint')}
+                  title={t('volunteer_attendance.scroll_right_hint')}
+                  className="pointer-events-auto w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
       {/* Area & Role filter tabs for Group Coordinators */}
       {!isAreaCoordinator && isGroupCoordinator && (availableAreas.length > 0 || coordinatorCount > 0) && (
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar">
-          <button
-            type="button"
-            onClick={() => setSelectedAreaFilter('ALL')}
-            className={clsx(
-              'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
-              selectedAreaFilter === 'ALL'
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
-            )}
-          >
-            <span>{t('supervisor_team.all_areas')}</span>
-          </button>
-
-          {/* Coordinadores de grupo - First specific category filter */}
-          {coordinatorCount > 0 && (
-            <button
-              type="button"
-              onClick={() => setSelectedAreaFilter('COORDINATORS')}
-              className={clsx(
-                'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
-                selectedAreaFilter === 'COORDINATORS'
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
-              )}
-            >
-              <span>{t('supervisor_team.group_coordinators')}</span>
-              <span
-                className={clsx(
-                  'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  selectedAreaFilter === 'COORDINATORS'
-                    ? 'bg-white/25 text-white'
-                    : 'bg-gray-100 text-gray-600',
-                )}
-              >
-                {coordinatorCount}
+        <div className="space-y-1">
+          <div className="flex items-center justify-between text-xs text-slate-500 px-0.5">
+            <span className="font-semibold text-slate-700">
+              {t('volunteer_attendance.filter_by_area')}
+            </span>
+            {canScrollRight && (
+              <span className="text-[11px] text-primary font-semibold flex items-center gap-1">
+                <span>{t('volunteer_attendance.swipe_hint')}</span>
+                <ChevronRight className="w-3.5 h-3.5 shrink-0" />
               </span>
-            </button>
-          )}
+            )}
+          </div>
 
-          {/* Area filter tabs */}
-          {availableAreas.map((area) => {
-            const count = assignments.filter((asg: IVolunteerAssignment) => {
-              if (asg.state === EntityState.DELETED) return false;
-              if (asg.role === VolunteerRole.GROUP_COORDINATOR) return false;
-              const asgAreaId =
-                asg.ministryAreaId ||
-                asg.serviceAreaGroup?.ministryAreaId ||
-                asg.serviceAreaGroup?.ministryArea?.id;
-              return asgAreaId === area.id;
-            }).length;
+          <div className="relative group">
+            {canScrollLeft && (
+              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 bg-gradient-to-r from-slate-50 via-slate-50/80 to-transparent pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => handleScrollFilter('left')}
+                  aria-label={t('volunteer_attendance.scroll_left_hint')}
+                  title={t('volunteer_attendance.scroll_left_hint')}
+                  className="pointer-events-auto w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </button>
+              </div>
+            )}
 
-            return (
+            <div
+              ref={filterScrollRef}
+              onScroll={checkFilterScroll}
+              className="flex items-center gap-1.5 overflow-x-auto scroll-smooth py-0.5 no-scrollbar"
+            >
               <button
-                key={area.id}
                 type="button"
-                onClick={() => setSelectedAreaFilter(area.id)}
+                onClick={() => setSelectedAreaFilter('ALL')}
                 className={clsx(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 shadow-2xs',
-                  selectedAreaFilter === area.id
+                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                  selectedAreaFilter === 'ALL'
                     ? 'bg-primary text-white shadow-xs'
-                    : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200/80',
+                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
                 )}
               >
-                <span>{area.name}</span>
+                <span>{t('supervisor_team.all_areas')}</span>
                 <span
                   className={clsx(
                     'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                    selectedAreaFilter === area.id
+                    selectedAreaFilter === 'ALL'
                       ? 'bg-white/25 text-white'
-                      : 'bg-gray-100 text-gray-600',
+                      : 'bg-slate-100 text-slate-600',
                   )}
                 >
-                  {count}
+                  {assignments.length}
                 </span>
               </button>
-            );
-          })}
+
+              {/* Coordinadores de grupo - First specific category filter */}
+              {coordinatorCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setSelectedAreaFilter('COORDINATORS')}
+                  className={clsx(
+                    'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                    selectedAreaFilter === 'COORDINATORS'
+                      ? 'bg-primary text-white shadow-xs'
+                      : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
+                  )}
+                >
+                  <span>{t('supervisor_team.group_coordinators')}</span>
+                  <span
+                    className={clsx(
+                      'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                      selectedAreaFilter === 'COORDINATORS'
+                        ? 'bg-white/25 text-white'
+                        : 'bg-slate-100 text-slate-600',
+                    )}
+                  >
+                    {coordinatorCount}
+                  </span>
+                </button>
+              )}
+
+              {/* Area filter tabs */}
+              {availableAreas.map((area) => {
+                const count = assignments.filter((asg: IVolunteerAssignment) => {
+                  if (asg.state === EntityState.DELETED) return false;
+                  if (asg.role === VolunteerRole.GROUP_COORDINATOR) return false;
+                  const asgAreaId =
+                    asg.ministryAreaId ||
+                    asg.serviceAreaGroup?.ministryAreaId ||
+                    asg.serviceAreaGroup?.ministryArea?.id;
+                  return asgAreaId === area.id;
+                }).length;
+
+                return (
+                  <button
+                    key={area.id}
+                    type="button"
+                    onClick={() => setSelectedAreaFilter(area.id)}
+                    className={clsx(
+                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
+                      selectedAreaFilter === area.id
+                        ? 'bg-primary text-white shadow-xs'
+                        : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
+                    )}
+                  >
+                    <span>{area.name}</span>
+                    <span
+                      className={clsx(
+                        'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
+                        selectedAreaFilter === area.id
+                          ? 'bg-white/25 text-white'
+                          : 'bg-slate-100 text-slate-600',
+                      )}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            {canScrollRight && (
+              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 bg-gradient-to-l from-slate-50 via-slate-50/80 to-transparent pointer-events-none">
+                <button
+                  type="button"
+                  onClick={() => handleScrollFilter('right')}
+                  aria-label={t('volunteer_attendance.scroll_right_hint')}
+                  title={t('volunteer_attendance.scroll_right_hint')}
+                  className="pointer-events-auto w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -990,6 +1265,24 @@ export const SupervisorTeamView: React.FC = () => {
 
       {/* Safe bottom spacer so the last card is never obscured by the floating navigation */}
       <div className="h-10 shrink-0 pointer-events-none" aria-hidden="true" />
+
+      {/* Floating Scroll To Top Button (for Team tab) */}
+      {activeMainTab === 'TEAM' && (
+        <button
+          type="button"
+          onClick={handleScrollToTop}
+          aria-label={t('volunteer_attendance.scroll_to_top', 'Volver arriba')}
+          title={t('volunteer_attendance.scroll_to_top', 'Volver arriba')}
+          className={clsx(
+            'fixed right-4 sm:right-6 bottom-20 sm:bottom-24 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/95 text-slate-700 border border-slate-200/90 shadow-lg hover:shadow-xl hover:text-primary hover:border-primary/40 flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer backdrop-blur-xs',
+            showScrollTop
+              ? 'opacity-100 scale-100 pointer-events-auto'
+              : 'opacity-0 scale-75 pointer-events-none',
+          )}
+        >
+          <ArrowUp className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 };

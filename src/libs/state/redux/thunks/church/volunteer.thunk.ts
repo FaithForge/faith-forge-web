@@ -200,8 +200,6 @@ export const GetVolunteerAssignments = createAsyncThunk(
     const { token } = state.authSlice;
 
     const params: Record<string, string | number | boolean> = {};
-    if (payload.page !== undefined) params.page = payload.page;
-    params.limit = payload.limit !== undefined ? payload.limit : 500;
     if (payload.order) params.order = payload.order;
     if (payload.ministryId) params.ministryId = payload.ministryId;
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
@@ -234,11 +232,12 @@ export const GetVolunteerAssignments = createAsyncThunk(
       const normalizedAssignments = rawAssignments.map((asg) => {
         const volunteer = asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
         const volunteerId = asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
-        const user = asg.user || volunteer.user;
+        const user = asg.churchMember?.user || asg.user || volunteer.user;
 
         return {
           ...asg,
           volunteerId,
+          user,
           volunteer: {
             ...volunteer,
             id: volunteer.id || volunteerId,

@@ -128,7 +128,6 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
           ministryId,
           role: VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
           partitionKey: ministryCoordsKey,
-          limit: 500,
           force,
         }),
       );
@@ -137,7 +136,6 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
           ministryId,
           role: VolunteerRole.AREA_GENERAL_COORDINATOR,
           partitionKey: areaCoordsKey,
-          limit: 500,
           force,
         }),
       );
@@ -146,7 +144,6 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
           ministryId,
           role: VolunteerRole.GROUP_COORDINATOR,
           partitionKey: groupCoordsKey,
-          limit: 500,
           force,
         }),
       );
@@ -231,12 +228,13 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
    */
   const getVolunteerDetails = useCallback(
     (asg: IVolunteerAssignment) => {
-      const vId = asg.volunteerId || asg.ministryVolunteerId;
+      const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
+        asg.churchMember ||
         asg.ministryVolunteer ||
         volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
-      const user = asg.volunteer?.user || vol?.user || asg.user;
+      const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
 
       const rawName = user && (user.firstName || user.lastName)
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()

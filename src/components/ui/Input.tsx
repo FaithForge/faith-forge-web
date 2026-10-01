@@ -42,8 +42,19 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className={twMerge(clsx(fullWidth && 'w-full', wrapperClassName))}>
         {label && (
-          <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-            {label} {required && <span className="text-red-500">*</span>}
+          <label
+            className={clsx(
+              'block text-xs font-bold mb-1.5 uppercase tracking-wide transition-colors',
+              props.disabled ? 'text-gray-400' : 'text-gray-700'
+            )}
+          >
+            {label.replace(/\s*\((?:opcional|Opcional)\)/i, '')}
+            {/\((?:opcional|Opcional)\)/i.test(label) && (
+              <span className="text-gray-400 font-medium normal-case tracking-normal ml-1">
+                (opcional)
+              </span>
+            )}
+            {required && <span className={props.disabled ? 'text-gray-300' : 'text-red-500'}> *</span>}
           </label>
         )}
         <div className="relative flex items-center">

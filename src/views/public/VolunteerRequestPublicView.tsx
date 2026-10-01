@@ -90,6 +90,16 @@ const VolunteerRequestPublicView: React.FC = () => {
   const [existingUser, setExistingUser] = useState<ICheckVolunteerUserResponse | null>(null);
 
   const [submittedSuccess, setSubmittedSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  const clearError = (field: string) => {
+    setFieldErrors((prev) => {
+      if (!prev[field]) return prev;
+      const next = { ...prev };
+      delete next[field];
+      return next;
+    });
+  };
 
   useEffect(() => {
     dispatch(GetPublicVolunteerCatalog());
@@ -154,11 +164,21 @@ const VolunteerRequestPublicView: React.FC = () => {
    * @param {string} newCampusId - The selected church campus ID.
    * @returns {void}
    */
+  /**
+   * Handles campus selection change and resets dependent fields.
+   *
+   * @param {string} newCampusId - The selected church campus ID.
+   * @returns {void}
+   */
   const handleCampusChange = (newCampusId: string) => {
     setChurchCampusId(newCampusId);
     setMinistryGroupConfigId('');
     setRequestedRole('');
     setMinistryAreaId('');
+    clearError('churchCampusId');
+    clearError('ministryGroupConfigId');
+    clearError('requestedRole');
+    clearError('ministryAreaId');
   };
 
   /**
@@ -170,6 +190,9 @@ const VolunteerRequestPublicView: React.FC = () => {
   const handleGroupChange = (newGroupId: string) => {
     setMinistryGroupConfigId(newGroupId);
     setMinistryAreaId('');
+    clearError('ministryGroupConfigId');
+    clearError('requestedRole');
+    clearError('ministryAreaId');
   };
 
   /**
@@ -183,10 +206,13 @@ const VolunteerRequestPublicView: React.FC = () => {
     if (newRole === VolunteerRole.GROUP_COORDINATOR) {
       setMinistryAreaId('');
     }
+    clearError('requestedRole');
+    clearError('ministryAreaId');
   };
 
   const handleDocumentChange = (newDoc: string) => {
     setNationalId(newDoc);
+    clearError('nationalId');
     if (hasCheckedUser) {
       setHasCheckedUser(false);
       setExistingUser(null);
@@ -195,6 +221,7 @@ const VolunteerRequestPublicView: React.FC = () => {
 
   const handleDocumentTypeChange = (newType: string) => {
     setNationalIdType(newType);
+    clearError('nationalIdType');
     if (hasCheckedUser) {
       setHasCheckedUser(false);
       setExistingUser(null);
@@ -202,12 +229,18 @@ const VolunteerRequestPublicView: React.FC = () => {
   };
 
   const handleCheckUser = async () => {
+    const errors: Record<string, string> = {};
     if (!nationalIdType) {
-      toast.error(t('auth:volunteer_request.toast_select_id_type'));
-      return;
+      errors.nationalIdType = t('auth:volunteer_request.toast_select_id_type');
     }
     if (!nationalId.trim()) {
-      toast.error(t('auth:volunteer_request.toast_enter_id'));
+      errors.nationalId = t('auth:volunteer_request.toast_enter_id');
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors((prev) => ({ ...prev, ...errors }));
+      const firstError = errors.nationalIdType || errors.nationalId;
+      toast.error(firstError);
       return;
     }
 
@@ -239,66 +272,66 @@ const VolunteerRequestPublicView: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    const errors: Record<string, string> = {};
+
     if (!nationalIdType) {
-      toast.error(t('auth:volunteer_request.toast_select_id_type'));
-      return;
+      errors.nationalIdType = t('auth:volunteer_request.toast_select_id_type');
     }
     if (!nationalId.trim()) {
-      toast.error(t('auth:volunteer_request.toast_enter_id'));
-      return;
+      errors.nationalId = t('auth:volunteer_request.toast_enter_id');
     }
     if (!hasCheckedUser) {
       toast.error(t('auth:volunteer_request.toast_check_doc_first'));
+      setFieldErrors((prev) => ({ ...prev, ...errors }));
       return;
     }
     if (!churchCampusId) {
-      toast.error(t('auth:volunteer_request.toast_select_campus'));
-      return;
+      errors.churchCampusId = t('auth:volunteer_request.toast_select_campus');
     }
     if (!ministryGroupConfigId) {
-      toast.error(t('auth:volunteer_request.toast_select_group'));
-      return;
+      errors.ministryGroupConfigId = t('auth:volunteer_request.toast_select_group');
     }
     if (!requestedRole) {
-      toast.error(t('auth:volunteer_request.toast_select_role'));
-      return;
+      errors.requestedRole = t('auth:volunteer_request.toast_select_role');
     }
-    if (requestedRole !== VolunteerRole.GROUP_COORDINATOR && !ministryAreaId) {
-      toast.error(t('auth:volunteer_request.toast_select_area'));
-      return;
+    if (requestedRole && requestedRole !== VolunteerRole.GROUP_COORDINATOR && !ministryAreaId) {
+      errors.ministryAreaId = t('auth:volunteer_request.toast_select_area');
     }
 
     // Si es usuario nuevo, validar datos obligatorios
     if (!existingUser?.userId) {
       if (!firstName.trim()) {
-        toast.error(t('auth:volunteer_request.toast_enter_first_name'));
-        return;
+        errors.firstName = t('auth:volunteer_request.toast_enter_first_name');
       }
       if (!lastName.trim()) {
-        toast.error(t('auth:volunteer_request.toast_enter_last_name'));
-        return;
-      }
-      const lastNameParts = lastName.trim().split(/\s+/).filter(Boolean);
-      if (lastNameParts.length < 2) {
-        toast.error(t('auth:volunteer_request.toast_enter_both_last_names'));
-        return;
+        errors.lastName = t('auth:volunteer_request.toast_enter_last_name');
+      } else {
+        const lastNameParts = lastName.trim().split(/\s+/).filter(Boolean);
+        if (lastNameParts.length < 2) {
+          errors.lastName = t('auth:volunteer_request.toast_enter_both_last_names');
+        }
       }
       if (!birthday) {
-        toast.error(t('auth:volunteer_request.toast_enter_birthday'));
-        return;
+        errors.birthday = t('auth:volunteer_request.toast_enter_birthday');
       }
       if (!gender) {
-        toast.error(t('auth:volunteer_request.toast_select_gender'));
-        return;
+        errors.gender = t('auth:volunteer_request.toast_select_gender');
       }
       if (phone && phone.trim()) {
         const phoneVal = validatePhoneNumber(phone, dialCodePhone);
         if (!phoneVal.isValid) {
-          toast.error(phoneVal.error || t('auth:volunteer_request.toast_valid_phone'));
-          return;
+          errors.phone = phoneVal.error || t('auth:volunteer_request.toast_valid_phone');
         }
       }
     }
+
+    if (Object.keys(errors).length > 0) {
+      setFieldErrors(errors);
+      const firstError = Object.values(errors)[0];
+      toast.error(firstError);
+      return;
+    }
+    setFieldErrors({});
 
     try {
       const isGroupCoordinator = requestedRole === VolunteerRole.GROUP_COORDINATOR;
@@ -515,6 +548,7 @@ const VolunteerRequestPublicView: React.FC = () => {
                   required
                   value={nationalIdType}
                   onChange={(e) => handleDocumentTypeChange(e.target.value)}
+                  error={fieldErrors.nationalIdType}
                 >
                   <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.id_type_select')}</option>
                   {ID_TYPES.map((idType) => (
@@ -531,6 +565,15 @@ const VolunteerRequestPublicView: React.FC = () => {
                   placeholder={t('auth:volunteer_request.id_number_placeholder')}
                   value={nationalId}
                   onChange={(e) => handleDocumentChange(e.target.value)}
+                  error={fieldErrors.nationalId}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      if (!checkingUser) {
+                        handleCheckUser();
+                      }
+                    }
+                  }}
                 />
               </div>
             </div>
@@ -541,7 +584,6 @@ const VolunteerRequestPublicView: React.FC = () => {
                 type="button"
                 onClick={handleCheckUser}
                 loading={checkingUser}
-                disabled={!nationalIdType || !nationalId.trim()}
                 block
                 className="rounded-2xl py-3 text-xs sm:text-sm font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm flex items-center justify-center gap-2 cursor-pointer transition-all"
               >
@@ -620,14 +662,22 @@ const VolunteerRequestPublicView: React.FC = () => {
                   required
                   placeholder={t('auth:volunteer_request.first_name_placeholder')}
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    clearError('firstName');
+                  }}
+                  error={fieldErrors.firstName}
                 />
                 <Input
                   label={t('auth:volunteer_request.last_name')}
                   required
                   placeholder={t('auth:volunteer_request.last_name_placeholder')}
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    clearError('lastName');
+                  }}
+                  error={fieldErrors.lastName}
                 />
               </div>
 
@@ -637,13 +687,21 @@ const VolunteerRequestPublicView: React.FC = () => {
                   type="date"
                   required
                   value={birthday}
-                  onChange={(e) => setBirthday(e.target.value)}
+                  onChange={(e) => {
+                    setBirthday(e.target.value);
+                    clearError('birthday');
+                  }}
+                  error={fieldErrors.birthday}
                 />
                 <Select
                   label={t('auth:volunteer_request.gender')}
                   required
                   value={gender}
-                  onChange={(e) => setGender(e.target.value)}
+                  onChange={(e) => {
+                    setGender(e.target.value);
+                    clearError('gender');
+                  }}
+                  error={fieldErrors.gender}
                 >
                   <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.gender_placeholder')}</option>
                   {GENDER_OPTIONS.map((g) => (
@@ -660,7 +718,11 @@ const VolunteerRequestPublicView: React.FC = () => {
                   dialCode={dialCodePhone}
                   phone={phone}
                   onDialCodeChange={setDialCodePhone}
-                  onPhoneChange={setPhone}
+                  onPhoneChange={(val) => {
+                    setPhone(val);
+                    clearError('phone');
+                  }}
+                  error={fieldErrors.phone}
                 />
                 <Input
                   label={t('auth:volunteer_request.email')}
@@ -673,106 +735,117 @@ const VolunteerRequestPublicView: React.FC = () => {
             </div>
           )}
 
-          {/* Section: Dónde sirves actualmente */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
-              <MapPin size={18} className="text-emerald-600" />
-              <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
-                {hasCheckedUser && !existingUser?.exists ? t('auth:volunteer_request.section_placement_new') : t('auth:volunteer_request.section_placement_existing')}
-              </h2>
-            </div>
+          {/* Section: Dónde sirves actualmente y Botón de envío (Solo visible tras consultar documento) */}
+          {hasCheckedUser && (
+            <>
+              <div className="space-y-4">
+                <div className="flex items-center gap-2 border-b border-gray-100 pb-2">
+                  <MapPin size={18} className="text-emerald-600" />
+                  <h2 className="text-sm font-bold text-gray-800 uppercase tracking-wide">
+                    {!existingUser?.exists ? t('auth:volunteer_request.section_placement_new') : t('auth:volunteer_request.section_placement_existing')}
+                  </h2>
+                </div>
 
-            <div className="space-y-3">
-              <Select
-                label={t('auth:volunteer_request.campus')}
-                required
-                value={churchCampusId}
-                onChange={(e) => handleCampusChange(e.target.value)}
-                disabled={loadingCatalog}
-              >
-                <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.campus_placeholder')}</option>
-                {catalog?.campuses?.map((c) => (
-                  <option key={c.id} value={c.id} className="text-gray-900 bg-white font-medium">
-                    {c.name}
-                  </option>
-                ))}
-              </Select>
+                <div className="space-y-3">
+                  <Select
+                    label={t('auth:volunteer_request.campus')}
+                    required
+                    value={churchCampusId}
+                    onChange={(e) => handleCampusChange(e.target.value)}
+                    disabled={loadingCatalog}
+                    error={fieldErrors.churchCampusId}
+                  >
+                    <option value="" className="text-gray-700 bg-white">{t('auth:volunteer_request.campus_placeholder')}</option>
+                    {catalog?.campuses?.map((c) => (
+                      <option key={c.id} value={c.id} className="text-gray-900 bg-white font-medium">
+                        {c.name}
+                      </option>
+                    ))}
+                  </Select>
 
-              <Select
-                label={t('auth:volunteer_request.group')}
-                required
-                value={ministryGroupConfigId}
-                onChange={(e) => handleGroupChange(e.target.value)}
-                disabled={loadingCatalog || !churchCampusId}
-              >
-                <option value="" className="text-gray-700 bg-white">
-                  {!churchCampusId
-                    ? t('auth:volunteer_request.select_campus_first')
-                    : filteredGroups.length === 0
-                    ? t('auth:volunteer_request.no_groups_for_campus')
-                    : t('auth:volunteer_request.select_group_item')}
-                </option>
-                {filteredGroups.map((g) => (
-                  <option key={g.id} value={g.id} className="text-gray-900 bg-white font-medium">
-                    {g.name}
-                  </option>
-                ))}
-              </Select>
-
-              <Select
-                label={t('auth:volunteer_request.role')}
-                required
-                value={requestedRole}
-                onChange={(e) => handleRoleChange(e.target.value as VolunteerRole)}
-                disabled={!ministryGroupConfigId}
-              >
-                <option value="" className="text-gray-700 bg-white">
-                  {!ministryGroupConfigId ? t('auth:volunteer_request.select_group_first') : t('auth:volunteer_request.select_role_item')}
-                </option>
-                {ROLE_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value} className="text-gray-900 bg-white font-medium">
-                    {opt.label}
-                  </option>
-                ))}
-              </Select>
-
-              {requestedRole && requestedRole !== VolunteerRole.GROUP_COORDINATOR && (
-                <Select
-                  label={t('auth:volunteer_request.area')}
-                  required
-                  value={ministryAreaId}
-                  onChange={(e) => setMinistryAreaId(e.target.value)}
-                  disabled={loadingCatalog || !churchCampusId}
-                >
-                  <option value="" className="text-gray-700 bg-white">
-                    {filteredAreas.length === 0
-                      ? t('auth:volunteer_request.no_areas_available')
-                      : t('auth:volunteer_request.select_area_item')}
-                  </option>
-                  {filteredAreas.map((a) => (
-                    <option key={a.id} value={a.id} className="text-gray-900 bg-white font-medium">
-                      {a.name}
+                  <Select
+                    label={t('auth:volunteer_request.group')}
+                    required
+                    value={ministryGroupConfigId}
+                    onChange={(e) => handleGroupChange(e.target.value)}
+                    disabled={loadingCatalog || !churchCampusId}
+                    error={fieldErrors.ministryGroupConfigId}
+                  >
+                    <option value="" className="text-gray-700 bg-white">
+                      {!churchCampusId
+                        ? t('auth:volunteer_request.select_campus_first')
+                        : filteredGroups.length === 0
+                        ? t('auth:volunteer_request.no_groups_for_campus')
+                        : t('auth:volunteer_request.select_group_item')}
                     </option>
-                  ))}
-                </Select>
-              )}
-            </div>
-          </div>
+                    {filteredGroups.map((g) => (
+                      <option key={g.id} value={g.id} className="text-gray-900 bg-white font-medium">
+                        {g.name}
+                      </option>
+                    ))}
+                  </Select>
 
-          {/* Submit Button */}
-          <div className="pt-2">
-            <Button
-              type="submit"
-              block
-              loading={submitting}
-              className="rounded-2xl py-3.5 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
-            >
-              {submitting ? t('auth:volunteer_request.submitting') : t('auth:volunteer_request.submit')}
-            </Button>
-            <p className="text-[11px] text-center text-gray-400 mt-2">
-              {t('auth:volunteer_request.privacy_notice')}
-            </p>
-          </div>
+                  <Select
+                    label={t('auth:volunteer_request.role')}
+                    required
+                    value={requestedRole}
+                    onChange={(e) => handleRoleChange(e.target.value as VolunteerRole)}
+                    disabled={!ministryGroupConfigId}
+                    error={fieldErrors.requestedRole}
+                  >
+                    <option value="" className="text-gray-700 bg-white">
+                      {!ministryGroupConfigId ? t('auth:volunteer_request.select_group_first') : t('auth:volunteer_request.select_role_item')}
+                    </option>
+                    {ROLE_OPTIONS.map((opt) => (
+                      <option key={opt.value} value={opt.value} className="text-gray-900 bg-white font-medium">
+                        {opt.label}
+                      </option>
+                    ))}
+                  </Select>
+
+                  {requestedRole && requestedRole !== VolunteerRole.GROUP_COORDINATOR && (
+                    <Select
+                      label={t('auth:volunteer_request.area')}
+                      required
+                      value={ministryAreaId}
+                      onChange={(e) => {
+                        setMinistryAreaId(e.target.value);
+                        clearError('ministryAreaId');
+                      }}
+                      disabled={loadingCatalog || !churchCampusId || !ministryGroupConfigId}
+                      error={fieldErrors.ministryAreaId}
+                    >
+                      <option value="" className="text-gray-700 bg-white">
+                        {filteredAreas.length === 0
+                          ? t('auth:volunteer_request.no_areas_available')
+                          : t('auth:volunteer_request.select_area_item')}
+                      </option>
+                      {filteredAreas.map((a) => (
+                        <option key={a.id} value={a.id} className="text-gray-900 bg-white font-medium">
+                          {a.name}
+                        </option>
+                      ))}
+                    </Select>
+                  )}
+                </div>
+              </div>
+
+              {/* Submit Button */}
+              <div className="pt-2">
+                <Button
+                  type="submit"
+                  block
+                  loading={submitting}
+                  className="rounded-2xl py-3.5 text-base font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-600/25 transition-all cursor-pointer"
+                >
+                  {submitting ? t('auth:volunteer_request.submitting') : t('auth:volunteer_request.submit')}
+                </Button>
+                <p className="text-[11px] text-center text-gray-400 mt-2">
+                  {t('auth:volunteer_request.privacy_notice')}
+                </p>
+              </div>
+            </>
+          )}
         </form>
       </div>
     </div>

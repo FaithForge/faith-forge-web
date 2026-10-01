@@ -22,6 +22,7 @@
     "toast_refresh_error": "Error al actualizar los registros"
   },
   "supervisor_team": {
+    "title": "Mi Equipo",
     "tabs": {
       "active_team": "Equipo Activo",
       "applications": "Solicitudes",
@@ -52,7 +53,15 @@
     "whatsapp_btn": "WhatsApp",
     "whatsapp_title": "Enviar mensaje de WhatsApp",
     "call_title": "Llamar",
-    "access_denied": "No tienes permisos para acceder al equipo de supervisión."
+    "access_denied": "No tienes permisos para acceder al equipo de supervisión.",
+    "access_denied_apoyo": "El rol de apoyo no pertenece a un equipo específico.",
+    "attendance_widget": {
+      "registered_count": "{{taken}} de {{total}} servidores registrados",
+      "pending_missing": "Faltan {{pending}} por marcar",
+      "completed_no_missing": "Asistencia completada (sin faltantes)",
+      "take_action": "Tomar asistencia",
+      "view_action": "Ver asistencia"
+    }
   },
   "report": {
     "title": "Reporte de Asistencia - {{module}}",
@@ -137,6 +146,8 @@
     "partial_alert": "Faltan {{count}} maestros por tomar asistencia",
     "completed_alert": "Asistencia de maestros completada",
     "take_button": "Tomar asistencia",
+    "take_button_short": "Tomar",
+    "take_button_rest": " asistencia",
     "status_label": "Estado",
     "status": {
       "ATTENDED": "Asistió",
@@ -145,12 +156,41 @@
       "UNEXCUSED": "No asistió (Sin excusa)",
       "EXEMPT": "No aplica"
     },
+    "short_status": {
+      "ATTENDED": "Asistió",
+      "EXCUSED": "Faltó con excusa",
+      "UNEXCUSED": "Faltó sin excusa",
+      "EXEMPT": "No aplica"
+    },
     "progress": "{{taken}} de {{total}} completados",
     "no_volunteers": "No hay servidores asignados a tu equipo",
     "save_success": "Asistencia actualizada correctamente",
     "save_error": "Error al actualizar la asistencia",
-    "search_placeholder": "Buscar servidor por nombre o documento...",
+    "search_placeholder": "Buscar servidor...",
     "unmarked": "Sin marcar",
-    "active_meeting": "Servicio activo"
+    "active_meeting": "Servicio activo",
+    "all_areas": "Todas las áreas",
+    "other_areas": "Coordinadores",
+    "clear_filters": "Limpiar filtros",
+    "no_volunteers_filter": "No se encontraron servidores con los filtros aplicados",
+    "progress_general": "Progreso general: {{taken}} de {{total}} completados",
+    "progress_area": "{{area}}: {{taken}} de {{total}} completados",
+    "completed_area_alert": "Área completada",
+    "partial_area_alert": "Faltan {{count}} en esta área",
+    "overall_summary": "Progreso general: {{taken}} de {{total}} (faltan {{pending}})",
+    "view_all": "Ver todos",
+    "scroll_to_top": "Volver arriba",
+    "title_general": "Progreso general",
+    "team_scope": "Todo el equipo",
+    "area_scope": "Área",
+    "progress_count": "{{taken}} de {{total}} completados",
+    "legend_title": "Estados:",
+    "filter_by_area": "Filtrar por área:",
+    "filter_by_group": "Filtrar por grupo:",
+    "swipe_hint": "Desliza para ver más",
+    "scroll_left_hint": "Ver áreas anteriores",
+    "scroll_right_hint": "Ver más áreas",
+    "pending_count_badge": "Faltan {{count}}",
+    "completed_team_badge": "Completado"
   }
 }

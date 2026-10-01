@@ -46,25 +46,38 @@ const KidChurchDashboard: React.FC = () => {
   const kidsModuleName = useKidsTerm('module_alias');
 
   const isVolunteerAttendanceEnabled = isFeatureEnabled('volunteerAttendance');
-  const { isSupervisor, isGroupCoordinator, isAreaCoordinator } = usePermissions();
-  const isCoordinatorUser = isSupervisor || isGroupCoordinator || isAreaCoordinator;
+  const { canTakeVolunteerAttendance, isSuperAdmin } = usePermissions();
   const { activeGroupConfigId } = useAppSelector((state) => state.volunteerContextSlice);
+
+  const effectiveGroupId =
+    activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP'
+      ? activeGroupConfigId
+      : undefined;
 
   // RTK Query: Query attendance summary for the active service and group
   const { data: attendanceSummary } = useGetVolunteerAttendanceSummaryQuery(
     {
       churchMeetingId: currentMeeting?.id || '',
-      ministryGroupConfigId: activeGroupConfigId || undefined,
+      ministryGroupConfigId: effectiveGroupId,
     },
     {
-      skip: !isVolunteerAttendanceEnabled || !isCoordinatorUser || !currentMeeting?.id,
+      skip:
+        !isVolunteerAttendanceEnabled ||
+        !canTakeVolunteerAttendance ||
+        !currentMeeting?.id ||
+        (!effectiveGroupId && !isSuperAdmin),
     },
   );
 
   // Realtime Live Sync: Keep coordinator's attendance counters updated via SSE
   useVolunteerAttendanceLiveSync({
     churchMeetingId: currentMeeting?.id,
-    enabled: Boolean(isVolunteerAttendanceEnabled && isCoordinatorUser && currentMeeting?.id),
+    enabled: Boolean(
+      isVolunteerAttendanceEnabled &&
+        canTakeVolunteerAttendance &&
+        currentMeeting?.id &&
+        (effectiveGroupId || isSuperAdmin),
+    ),
   });
 
   const [searchText, setSearchText] = useState('');
@@ -246,45 +259,48 @@ const KidChurchDashboard: React.FC = () => {
         />
       )}
 
-      {/* Volunteer Attendance Alert Banner for Coordinators */}
-      {isVolunteerAttendanceEnabled && isCoordinatorUser && currentMeeting && attendanceSummary && attendanceSummary.total > 0 && (
+      {/* Volunteer Attendance Alert Banner for Group Coordinators */}
+      {isVolunteerAttendanceEnabled && canTakeVolunteerAttendance && currentMeeting && attendanceSummary && attendanceSummary.total > 0 && (
         <div className="mt-1">
           {attendanceSummary.counts.taken === 0 ? (
-            <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
-                  <ClipboardCheck className="w-5 h-5" />
+            <div
+              onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+              className="bg-amber-50 border border-amber-300 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2.5 shadow-2xs cursor-pointer hover:bg-amber-100/70 transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8.5 h-8.5 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                  <ClipboardCheck className="w-4.5 h-4.5" />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-amber-950 truncate">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xs sm:text-sm font-bold text-amber-950 leading-tight">
                     {t('volunteer_attendance.missing_alert')}
                   </h3>
-                  <p className="text-[11px] text-amber-800/90 font-medium truncate">
+                  <p className="text-[11px] text-amber-800/90 font-medium leading-tight mt-0.5">
                     {t('volunteer_attendance.subtitle')}
                   </p>
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
-                className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 transition-all active:scale-95 shadow-xs cursor-pointer"
-              >
-                <span>{t('volunteer_attendance.take_button')}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1 shrink-0 shadow-2xs">
+                <span>{t('volunteer_attendance.take_button_short')}</span>
+                <span className="hidden sm:inline">{t('volunteer_attendance.take_button_rest')}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
             </div>
           ) : attendanceSummary.counts.pending > 0 ? (
-            <div className="bg-amber-50/90 border border-amber-200 rounded-2xl p-3.5 flex items-center justify-between gap-3 shadow-xs">
-              <div className="flex items-center gap-3 min-w-0">
-                <div className="w-10 h-10 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
-                  <ClipboardCheck className="w-5 h-5" />
+            <div
+              onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+              className="bg-amber-50/90 border border-amber-200 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2.5 shadow-2xs cursor-pointer hover:bg-amber-100/70 transition-all active:scale-[0.99]"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8.5 h-8.5 rounded-xl bg-amber-100/80 text-amber-700 flex items-center justify-center shrink-0">
+                  <ClipboardCheck className="w-4.5 h-4.5" />
                 </div>
-                <div className="min-w-0">
-                  <h3 className="text-xs sm:text-sm font-bold text-amber-950 truncate">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-xs sm:text-sm font-bold text-amber-950 leading-tight">
                     {t('volunteer_attendance.partial_alert', { count: attendanceSummary.counts.pending })}
                   </h3>
-                  <p className="text-[11px] text-amber-800 font-medium truncate">
+                  <p className="text-[11px] text-amber-800 font-medium leading-tight mt-0.5">
                     {t('volunteer_attendance.progress', {
                       taken: attendanceSummary.counts.taken,
                       total: attendanceSummary.total,
@@ -293,23 +309,20 @@ const KidChurchDashboard: React.FC = () => {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
-                className="bg-primary hover:bg-primary-dark text-white font-bold text-xs px-3.5 py-2 rounded-xl flex items-center gap-1.5 shrink-0 transition-all active:scale-95 shadow-xs cursor-pointer"
-              >
-                <span>{t('volunteer_attendance.take_button')}</span>
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              <div className="bg-primary hover:bg-primary-dark text-white font-bold text-xs px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1 shrink-0 shadow-2xs">
+                <span>{t('volunteer_attendance.take_button_short')}</span>
+                <span className="hidden sm:inline">{t('volunteer_attendance.take_button_rest')}</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </div>
             </div>
           ) : (
             <div
               onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
-              className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-2.5 px-3.5 flex items-center justify-between gap-2 shadow-2xs cursor-pointer hover:bg-emerald-50 transition-colors"
+              className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2.5 shadow-2xs cursor-pointer hover:bg-emerald-100/70 transition-all active:scale-[0.99]"
             >
               <div className="flex items-center gap-2.5 min-w-0">
-                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span className="text-xs font-semibold text-emerald-900 truncate">
+                <CheckCircle2 className="w-4.5 h-4.5 text-emerald-600 shrink-0" />
+                <span className="text-xs sm:text-sm font-semibold text-emerald-900 leading-tight">
                   {t('volunteer_attendance.completed_alert')}
                 </span>
               </div>

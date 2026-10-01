@@ -121,7 +121,7 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
     if (!open || !ministryId) return;
 
     Promise.all([
-      dispatch(GetVolunteerAssignments({ ministryId, limit: 500, force: false })),
+      dispatch(GetVolunteerAssignments({ ministryId, force: false })),
       dispatch(GetVolunteers({ ministryId, limit: 500, force: false })),
       dispatch(GetServiceAreaGroups({ ministryId })),
     ]);

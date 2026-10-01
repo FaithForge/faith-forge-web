@@ -179,7 +179,7 @@ export const churchApi = baseApi.injectEndpoints({
         if (args?.ministryGroupConfigId) params.ministryGroupConfigId = args.ministryGroupConfigId;
         if (args?.attendanceDate) params.attendanceDate = args.attendanceDate;
         if (args?.page) params.page = args.page;
-        if (args?.limit) params.limit = args.limit;
+        params.limit = args?.limit ?? 500;
         return {
           microservice: MicroserviceEnum.Church,
           url: '/volunteer-attendance',

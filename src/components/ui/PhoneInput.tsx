@@ -153,8 +153,19 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
   return (
     <div className={twMerge(clsx('w-full', className))}>
       {label && (
-        <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-          {label} {required && <span className="text-red-500">*</span>}
+        <label
+          className={clsx(
+            'block text-xs font-bold mb-1.5 uppercase tracking-wide transition-colors',
+            disabled ? 'text-gray-400' : 'text-gray-700'
+          )}
+        >
+          {label.replace(/\s*\((?:opcional|Opcional)\)/i, '')}
+          {/\((?:opcional|Opcional)\)/i.test(label) && (
+            <span className="text-gray-400 font-medium normal-case tracking-normal ml-1">
+              (opcional)
+            </span>
+          )}
+          {required && <span className={disabled ? 'text-gray-300' : 'text-red-500'}> *</span>}
         </label>
       )}
 

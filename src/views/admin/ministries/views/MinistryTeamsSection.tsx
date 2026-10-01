@@ -153,7 +153,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     }
   }, [dispatch, areas, workspaceTeams]);
 
-  // Load Campus Teams Assignments with limit=500 to prevent pagination cuts
+  // Load Campus Teams Assignments
   const fetchCampusAssignments = useCallback(() => {
     if (effectiveCampusId && campusTeamsKey) {
       dispatch(
@@ -161,7 +161,6 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           ministryId,
           churchCampusId: effectiveCampusId,
           partitionKey: campusTeamsKey,
-          limit: 500,
           force: true,
         }),
       );
@@ -175,7 +174,6 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           ministryId,
           churchCampusId: effectiveCampusId,
           partitionKey: campusTeamsKey,
-          limit: 500,
           force: false,
         }),
       );
@@ -258,12 +256,13 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   // Helper to extract user display information from an assignment
   const getVolunteerDetails = useCallback(
     (asg: IVolunteerAssignment) => {
-      const vId = asg.volunteerId || asg.ministryVolunteerId;
+      const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
+        asg.churchMember ||
         asg.ministryVolunteer ||
         volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
-      const user = asg.volunteer?.user || vol?.user || asg.user;
+      const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
 
       const rawName = user && (user.firstName || user.lastName)
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()

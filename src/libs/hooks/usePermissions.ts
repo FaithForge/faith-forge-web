@@ -20,9 +20,10 @@ export const usePermissions = () => {
   const userRoles = useMemo(() => (user?.roles as AppRole[]) || [], [user?.roles]);
 
   const activeRoles = useMemo(() => {
-    const roles = new Set<AppRole>(userRoles);
-    if (currentRole) roles.add(currentRole as AppRole);
-    return roles;
+    if (currentRole) {
+      return new Set<AppRole>([currentRole as AppRole]);
+    }
+    return new Set<AppRole>(userRoles);
   }, [userRoles, currentRole]);
 
   const hasRole = useCallback(
@@ -35,41 +36,71 @@ export const usePermissions = () => {
     [activeVolunteerRole],
   );
 
+  // An explicit volunteer/server role switch (e.g. Servidor, Servidor - Apoyo, Maestro)
+  const isExplicitServidor =
+    currentRole === ChurchRole.KID_REGISTER_USER ||
+    currentRole === ChurchRole.KID_CHURCH_USER ||
+    currentRole === ChurchRole.KID_SECURITY_USER ||
+    activeVolunteerRole === VolunteerRole.VOLUNTEER;
+
+  const {
+    activeGroupConfigId,
+    activeGroupConfigName,
+  } = useAppSelector((state) => state.volunteerContextSlice);
+
+  const isApoyoGroup = Boolean(
+    activeGroupConfigName?.toLowerCase().includes('apoyo'),
+  );
+
+  const hasAssignedGroup = Boolean(
+    activeGroupConfigId &&
+      activeGroupConfigId !== 'ADMIN_GROUP' &&
+      !isApoyoGroup,
+  );
+
   const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN);
   const isAdmin = hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN);
   const isStaff = isAdmin || activeRoles.has(UserRole.STAFF);
   const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN);
 
   const isAreaCoordinator =
-    isMinistryAdmin ||
-    hasRole(ChurchRole.KID_REGISTER_COORDINATOR) ||
-    hasVolunteerRole(
-      VolunteerRole.AREA_GENERAL_COORDINATOR,
-      VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
-    );
+    !isExplicitServidor &&
+    (isMinistryAdmin ||
+      hasRole(ChurchRole.KID_REGISTER_COORDINATOR) ||
+      hasVolunteerRole(
+        VolunteerRole.AREA_GENERAL_COORDINATOR,
+        VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
+      ));
+
+  // A user is classified as 'Apoyo' if they are an operational role without an assigned group,
+  // or explicitly assigned to a support group / temporary ad-hoc grant.
+  const isApoyo = !isAdmin && !isAreaCoordinator && (!hasAssignedGroup || isApoyoGroup);
 
   const isGroupCoordinator =
-    isAreaCoordinator ||
-    hasRole(ChurchRole.KID_CHURCH_GROUP_COORDINATOR) ||
-    hasVolunteerRole(VolunteerRole.GROUP_COORDINATOR);
+    !isExplicitServidor &&
+    (isAreaCoordinator ||
+      hasRole(ChurchRole.KID_CHURCH_GROUP_COORDINATOR) ||
+      hasVolunteerRole(VolunteerRole.GROUP_COORDINATOR));
 
   const isSupervisor =
-    isGroupCoordinator ||
-    hasRole(
-      ChurchRole.KID_REGISTER_SUPERVISOR,
-      ChurchRole.KID_CHURCH_SUPERVISOR,
-      ChurchRole.KID_SECURITY_SUPERVISOR,
-      ChurchRole.KID_SECURITY_COORDINATOR,
-    ) ||
-    hasVolunteerRole(VolunteerRole.SUPERVISOR);
+    !isExplicitServidor &&
+    (isGroupCoordinator ||
+      hasRole(
+        ChurchRole.KID_REGISTER_SUPERVISOR,
+        ChurchRole.KID_CHURCH_SUPERVISOR,
+        ChurchRole.KID_SECURITY_SUPERVISOR,
+        ChurchRole.KID_SECURITY_COORDINATOR,
+      ) ||
+      hasVolunteerRole(VolunteerRole.SUPERVISOR));
 
   const isServidor =
-    !isSupervisor &&
-    (hasRole(
-      ChurchRole.KID_REGISTER_USER,
-      ChurchRole.KID_CHURCH_USER,
-      ChurchRole.KID_SECURITY_USER,
-    ) || hasVolunteerRole(VolunteerRole.VOLUNTEER));
+    isExplicitServidor ||
+    (!isSupervisor &&
+      (hasRole(
+        ChurchRole.KID_REGISTER_USER,
+        ChurchRole.KID_CHURCH_USER,
+        ChurchRole.KID_SECURITY_USER,
+      ) || hasVolunteerRole(VolunteerRole.VOLUNTEER)));
 
   const isKidChurchRole = useMemo(() => {
     if (currentRole) {
@@ -129,6 +160,7 @@ export const usePermissions = () => {
   }, [currentRole, activeVolunteerRole, isKidChurchRole, hasRole]);
 
   const canViewTeam =
+    !isApoyo &&
     !isServidor &&
     (isSupervisor ||
       hasRole(ChurchRole.MINISTRY_ADMIN) ||
@@ -139,6 +171,53 @@ export const usePermissions = () => {
 
   const canViewCreatorInfo = isAreaCoordinator;
   const canViewRegistrationLog = isSupervisor;
+
+  /**
+   * Whether the active role can take volunteer attendance for a service.
+   * Coordinadores de área, supervisores, servidores y roles de apoyo no toman asistencia;
+   * solo coordinadores de grupo con un equipo asignado o administradores generales toman asistencia.
+   */
+  const canTakeVolunteerAttendance = useMemo(() => {
+    if (isExplicitServidor || isApoyo) return false;
+    if (!hasAssignedGroup && !(isSuperAdmin && currentRole === UserRole.SUPER_ADMIN)) {
+      return false;
+    }
+
+    if (currentRole) {
+      if (
+        currentRole === ChurchRole.KID_REGISTER_COORDINATOR ||
+        currentRole === ChurchRole.MINISTRY_ADMIN ||
+        currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+        currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+        currentRole === ChurchRole.KID_SECURITY_SUPERVISOR ||
+        currentRole === ChurchRole.KID_SECURITY_COORDINATOR
+      ) {
+        return false;
+      }
+      return (
+        currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+        (isSuperAdmin && currentRole === UserRole.SUPER_ADMIN)
+      );
+    }
+
+    if (activeVolunteerRole) {
+      return activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR;
+    }
+
+    return (
+      hasRole(ChurchRole.KID_CHURCH_GROUP_COORDINATOR) ||
+      hasVolunteerRole(VolunteerRole.GROUP_COORDINATOR)
+    );
+  }, [
+    isExplicitServidor,
+    isApoyo,
+    hasAssignedGroup,
+    currentRole,
+    isSuperAdmin,
+    activeVolunteerRole,
+    hasRole,
+    hasVolunteerRole,
+  ]);
 
   return {
     user,
@@ -156,10 +235,13 @@ export const usePermissions = () => {
     isGroupCoordinator,
     isSupervisor,
     isServidor,
+    isApoyo,
+    hasAssignedGroup,
     isKidChurchRole,
     isKidRegistrationRole,
     canViewTeam,
     canViewCreatorInfo,
     canViewRegistrationLog,
+    canTakeVolunteerAttendance,
   };
 };
