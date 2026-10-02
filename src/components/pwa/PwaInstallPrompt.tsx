@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { CheckCircle2, Download, Share, PlusSquare, Smartphone, X } from 'lucide-react';
+import { CheckCircle2, Download, Share, PlusSquare, Smartphone, MoreVertical, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 
 interface BeforeInstallPromptEvent extends Event {
@@ -11,7 +11,7 @@ interface BeforeInstallPromptEvent extends Event {
 /**
  * Interactive PWA installation component.
  * Detects whether the device is running in standalone mode, Android/Chromium, or iOS Safari,
- * providing the native installation prompt or guided home-screen instructions.
+ * providing the native installation prompt or device-specific guided home-screen instructions.
  *
  * @returns {JSX.Element} PWA installation prompt card and modal.
  */
@@ -21,6 +21,7 @@ export const PwaInstallPrompt: React.FC = () => {
   const [isStandalone, setIsStandalone] = useState(false);
   const [isIos, setIsIos] = useState(false);
   const [showIosModal, setShowIosModal] = useState(false);
+  const [showAndroidModal, setShowAndroidModal] = useState(false);
   const [isInstalling, setIsInstalling] = useState(false);
 
   useEffect(() => {
@@ -37,16 +38,33 @@ export const PwaInstallPrompt: React.FC = () => {
       !(window as unknown as { MSStream?: unknown }).MSStream;
     setIsIos(isIosDevice);
 
+    // Check if prompt was already captured globally
+    const checkGlobalPrompt = () => {
+      const globalPrompt = (window as unknown as { __deferredPwaPrompt?: BeforeInstallPromptEvent }).__deferredPwaPrompt;
+      if (globalPrompt) {
+        setDeferredPrompt(globalPrompt);
+      }
+    };
+    checkGlobalPrompt();
+
     // Capture beforeinstallprompt for Android and desktop Chrome
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      const promptEvent = e as BeforeInstallPromptEvent;
+      (window as unknown as { __deferredPwaPrompt?: BeforeInstallPromptEvent }).__deferredPwaPrompt = promptEvent;
+      setDeferredPrompt(promptEvent);
+    };
+
+    const handlePromptAvailable = () => {
+      checkGlobalPrompt();
     };
 
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    window.addEventListener('pwa-prompt-available', handlePromptAvailable);
 
     return () => {
       window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+      window.removeEventListener('pwa-prompt-available', handlePromptAvailable);
     };
   }, []);
 
@@ -56,14 +74,19 @@ export const PwaInstallPrompt: React.FC = () => {
       return;
     }
 
-    if (deferredPrompt) {
+    const activePrompt =
+      deferredPrompt ||
+      (window as unknown as { __deferredPwaPrompt?: BeforeInstallPromptEvent }).__deferredPwaPrompt;
+
+    if (activePrompt) {
       setIsInstalling(true);
       try {
-        await deferredPrompt.prompt();
-        const choiceResult = await deferredPrompt.userChoice;
+        await activePrompt.prompt();
+        const choiceResult = await activePrompt.userChoice;
         if (choiceResult.outcome === 'accepted') {
           setIsStandalone(true);
           setDeferredPrompt(null);
+          (window as unknown as { __deferredPwaPrompt?: BeforeInstallPromptEvent | null }).__deferredPwaPrompt = null;
         }
       } catch (err) {
         console.error('PWA install error:', err);
@@ -72,7 +95,7 @@ export const PwaInstallPrompt: React.FC = () => {
       }
     } else {
       // Fallback for browsers where beforeinstallprompt already fired or is not supported
-      setShowIosModal(true);
+      setShowAndroidModal(true);
     }
   };
 
@@ -198,6 +221,84 @@ export const PwaInstallPrompt: React.FC = () => {
               className="py-3 rounded-xl font-bold text-sm mt-1"
             >
               {t('auth:pwa.ios_modal_close')}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Android & Chromium Guided Installation Modal */}
+      {showAndroidModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-sm rounded-3xl p-6 shadow-xl border border-gray-100 flex flex-col gap-4 animate-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+              <h3 className="text-base font-bold text-gray-800 flex items-center gap-2">
+                <Smartphone size={18} className="text-primary" />
+                {t('auth:pwa.android_modal_title')}
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowAndroidModal(false)}
+                className="p-1 rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3.5 py-1 text-left">
+              {/* Step 1 */}
+              <div className="flex items-start gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center shrink-0">
+                  <MoreVertical size={18} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">
+                    {t('auth:pwa.android_modal_step1_title')}
+                  </p>
+                  <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">
+                    {t('auth:pwa.android_modal_step1_desc')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 2 */}
+              <div className="flex items-start gap-3 bg-gray-50 p-3 rounded-2xl border border-gray-100">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                  <Download size={18} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-gray-800">
+                    {t('auth:pwa.android_modal_step2_title')}
+                  </p>
+                  <p className="text-[11px] text-gray-600 mt-0.5 leading-relaxed">
+                    {t('auth:pwa.android_modal_step2_desc')}
+                  </p>
+                </div>
+              </div>
+
+              {/* Step 3 */}
+              <div className="flex items-start gap-3 bg-emerald-50/70 p-3 rounded-2xl border border-emerald-100">
+                <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={18} />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-emerald-800">
+                    {t('auth:pwa.android_modal_step3_title')}
+                  </p>
+                  <p className="text-[11px] text-emerald-700 mt-0.5 leading-relaxed">
+                    {t('auth:pwa.android_modal_step3_desc')}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => setShowAndroidModal(false)}
+              block
+              className="py-3 rounded-xl font-bold text-sm mt-1"
+            >
+              {t('auth:pwa.android_modal_close')}
             </Button>
           </div>
         </div>

@@ -105,6 +105,12 @@
       </div>
     </div>
     <script>
+      window.__deferredPwaPrompt = null;
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        window.__deferredPwaPrompt = e;
+        window.dispatchEvent(new CustomEvent('pwa-prompt-available'));
+      });
       setTimeout(function() {
         var fallback = document.getElementById('app-splash-fallback');
         if (fallback) {
