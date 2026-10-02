@@ -147,9 +147,14 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
         guardianId: guardian.id,
         nationalId: guardian.nationalId,
       }).unwrap();
-      setActivationToken(response.token);
-    } catch {
-      toast.error('Error al generar código de activación');
+      if (response && response.token) {
+        setActivationToken(response.token);
+      } else {
+        toast.error('Error al generar código de activación');
+      }
+    } catch (err: unknown) {
+      const errorResponse = err as { data?: { message?: string }; message?: string };
+      toast.error(errorResponse?.data?.message || errorResponse?.message || 'Error al generar código de activación');
     }
   };
 
