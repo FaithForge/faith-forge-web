@@ -11,7 +11,8 @@
       "Pantalla de confirmación con botón directo para instalar la aplicación en Android y guía visual para iPhone",
       "Opción para servidores de generar código QR o enviar enlace de activación directamente por WhatsApp",
       "Redirección automática y segura al portal de acudientes al iniciar sesión o activar la cuenta",
-      "Bloqueo preventivo en el módulo de registros cuando el servicio seleccionado aún no ha comenzado su horario programado"
+      "Bloqueo preventivo en el módulo de registros cuando el servicio seleccionado aún no ha comenzado su horario programado",
+      "Acceso y visualización permitidos para administradores y coordinadores fuera del horario programado del servicio"
     ]
   },
   {

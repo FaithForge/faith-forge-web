@@ -261,15 +261,18 @@ const RegistrationDashboard = () => {
           </div>
         )}
 
-      {/* Error de horario de servicio */}
+      {/* Error / Aviso de horario de servicio */}
       {isConfigured && !isMeetingValid && (
         <Alert 
-          type="error"
+          type={isAdmin ? 'warning' : 'error'}
           hideIcon
           message={
             <div className="flex items-start gap-1.5">
               <AlertCircle size={13.5} className="shrink-0 mt-0.5" />
-              <span>{meetingErrorMsg}</span>
+              <span>
+                {meetingErrorMsg}
+                {isAdmin && ` • ${t('kidRegistration:dashboard.admin_out_of_schedule_notice')}`}
+              </span>
             </div>
           }
         />
@@ -354,7 +357,7 @@ const RegistrationDashboard = () => {
                   <button
                     type="button"
                     onClick={() => {
-                      if (shouldBlockKids || !isMeetingValid) {
+                      if (shouldBlockKids) {
                         toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado.');
                         return;
                       }
@@ -420,7 +423,7 @@ const RegistrationDashboard = () => {
                       isOverage={showOverageStyle}
                       badge={badgeElement}
                       onClick={() => {
-                        if (shouldBlockKids || !isMeetingValid) {
+                        if (shouldBlockKids) {
                           toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado.');
                           return;
                         }

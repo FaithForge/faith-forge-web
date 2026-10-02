@@ -58,10 +58,13 @@ export const usePermissions = () => {
       !isApoyoGroup,
   );
 
-  const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN);
-  const isAdmin = hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN);
-  const isStaff = isAdmin || activeRoles.has(UserRole.STAFF);
-  const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN);
+  const isAccountSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
+  const isAccountAdmin = isAccountSuperAdmin || userRoles.includes(UserRole.ADMIN);
+
+  const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN) || (!isExplicitServidor && isAccountSuperAdmin);
+  const isAdmin = hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN) || (!isExplicitServidor && isAccountAdmin);
+  const isStaff = isAdmin || activeRoles.has(UserRole.STAFF) || (!isExplicitServidor && userRoles.includes(UserRole.STAFF));
+  const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN) || (!isExplicitServidor && userRoles.includes(ChurchRole.MINISTRY_ADMIN));
 
   const isAreaCoordinator =
     !isExplicitServidor &&
@@ -227,6 +230,8 @@ export const usePermissions = () => {
     hasVolunteerRole,
     isSuperAdmin,
     isAdmin,
+    isAccountSuperAdmin,
+    isAccountAdmin,
     isStaff,
     isMinistryAdmin,
     isAreaCoordinator,

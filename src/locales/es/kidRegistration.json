@@ -8,6 +8,7 @@
     "meeting_info": "{{meeting}} ({{campus}})",
     "out_of_schedule_title": "Fuera de horario",
     "out_of_schedule_message": "La búsqueda y el registro de niños se encuentran bloqueados temporalmente para proteger la información.",
+    "admin_out_of_schedule_notice": "Acceso de Administrador: visualización y registro permitidos fuera de horario.",
     "no_kids_found_title": "No se encontraron niños",
     "directory_title": "Directorio de niños",
     "no_results_search": "No encontramos resultados para \"{{query}}\".",

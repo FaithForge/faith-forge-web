@@ -121,8 +121,23 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
   const currentPrinter = useAppSelector((state) => state.churchPrinterSlice.current);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
-  const { isKidChurchRole, isSupervisor, isSuperAdmin, isAdmin: isSystemAdmin } = usePermissions();
-  const isAdmin = isSuperAdmin || isSystemAdmin;
+  const {
+    isKidChurchRole,
+    isSupervisor,
+    isSuperAdmin,
+    isAdmin: isSystemAdmin,
+    isMinistryAdmin,
+    isAreaCoordinator,
+    isAccountAdmin,
+    isAccountSuperAdmin,
+  } = usePermissions();
+  const isAdmin =
+    isSuperAdmin ||
+    isSystemAdmin ||
+    isAccountAdmin ||
+    isAccountSuperAdmin ||
+    isMinistryAdmin ||
+    isAreaCoordinator;
 
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
