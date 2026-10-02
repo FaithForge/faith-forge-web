@@ -1,5 +1,18 @@
 [
   {
+    "version": "3.14.0",
+    "type": "minor",
+    "timestamp": "2026-10-02T13:42:41.169Z",
+    "dateFormatted": "02/10/2026 08:42 AM",
+    "title": "Activación de cuenta para acudientes e instalación de la app",
+    "changes": [
+      "Posibilidad de iniciar sesión usando número de cédula, correo o nombre de usuario",
+      "Nuevo flujo seguro de activación de cuenta mediante código QR autorizado por un servidor",
+      "Pantalla de confirmación con botón directo para instalar la aplicación en Android y guía visual para iPhone",
+      "Opción para servidores de generar código QR o enviar enlace de activación directamente por WhatsApp"
+    ]
+  },
+  {
     "version": "3.13.0",
     "type": "minor",
     "timestamp": "2026-10-02T02:37:15.225Z",

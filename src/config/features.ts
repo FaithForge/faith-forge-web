@@ -4,6 +4,7 @@
  */
 export const FEATURES = {
   volunteerAttendance: import.meta.env.VITE_FEATURE_VOLUNTEER_ATTENDANCE === 'true',
+  guardianSignup: import.meta.env.VITE_FEATURE_GUARDIAN_SIGNUP === 'true',
 } as const;
 
 export type FeatureFlagKey = keyof typeof FEATURES;

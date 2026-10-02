@@ -4,7 +4,10 @@ export const APP_ROUTES = {
   },
   public: {
     volunteerRequest: '/volunteer-request',
+    signup: '/signup',
+    signupConfirmation: '/signup/confirmation',
   },
+
   admin: {
     root: '/admin',
     campuses: '/admin/campuses',

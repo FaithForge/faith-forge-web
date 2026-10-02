@@ -56,8 +56,15 @@ const VolunteerApplicationsView = lazy(
 const VolunteerRequestPublicView = lazy(
   () => import('@/views/public/VolunteerRequestPublicView'),
 );
+const AccountSignupPublicView = lazy(
+  () => import('@/views/public/AccountSignupPublicView'),
+);
+const AccountSignupConfirmationView = lazy(
+  () => import('@/views/public/AccountSignupConfirmationView'),
+);
 const TermsOfServiceView = lazy(() => import('@/views/legal/TermsOfServiceView'));
 const PrivacyPolicyView = lazy(() => import('@/views/legal/PrivacyPolicyView'));
+
 const ProfileRoute = lazy(() => import('@/views/profile/ProfileRoute'));
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
@@ -239,7 +246,28 @@ function App() {
               path={APP_ROUTES.public.volunteerRequest}
               element={<VolunteerRequestPublicView />}
             />
+            <Route
+              path={APP_ROUTES.public.signup}
+              element={
+                isFeatureEnabled('guardianSignup') ? (
+                  <AccountSignupPublicView />
+                ) : (
+                  <Navigate to={APP_ROUTES.auth.login} replace />
+                )
+              }
+            />
+            <Route
+              path={APP_ROUTES.public.signupConfirmation}
+              element={
+                isFeatureEnabled('guardianSignup') ? (
+                  <AccountSignupConfirmationView />
+                ) : (
+                  <Navigate to={APP_ROUTES.auth.login} replace />
+                )
+              }
+            />
             <Route path={APP_ROUTES.legal.terms} element={<TermsOfServiceView />} />
+
             <Route path={APP_ROUTES.legal.privacy} element={<PrivacyPolicyView />} />
             <Route element={<PrivateRoute />}>
               {/* Hub: Experience selector */}

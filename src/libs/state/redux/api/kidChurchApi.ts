@@ -1,7 +1,9 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
 import {
+  IActivationTokenResponse,
   ICreateKid,
   ICreateKidGuardian,
+
   ICreateKidRegistration,
   IKid,
   IKidGroup,
@@ -261,7 +263,20 @@ export const kidChurchApi = baseApi.injectEndpoints({
         result?.id ? [{ type: 'KidGuardian', id: result.id }] : [{ type: 'KidGuardian', id: 'CURRENT' }],
     }),
 
+    generateGuardianActivationToken: builder.mutation<
+      IActivationTokenResponse,
+      { guardianId?: string; nationalId?: string }
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid-guardian/activation-token',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+    }),
+
     createKidGuardian: builder.mutation<IKidGuardian, ICreateKidGuardian>({
+
       query: (payload) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: '/kid-guardian',
@@ -543,7 +558,9 @@ export const {
   useDeleteKidMutation,
   useGetKidGuardianQuery,
   useLazyGetKidGuardianQuery,
+  useGenerateGuardianActivationTokenMutation,
   useCreateKidGuardianMutation,
+
   useUpdateKidGuardianMutation,
   useDeleteKidGuardianRelationMutation,
   useUploadQRCodeImageMutation,

@@ -7,18 +7,23 @@ import {
   Printer, 
   Loader2, 
   QrCode, 
-  User,
-  Phone,
-  FileText,
-  Check,
-  X
+  User, 
+  Phone, 
+  FileText, 
+  Check, 
+  X,
+  KeyRound,
+  Copy,
+  Clock,
+  ShieldCheck
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { 
   useLazyGetKidGuardianQuery, 
-  useUploadQRCodeImageMutation 
+  useUploadQRCodeImageMutation,
+  useGenerateGuardianActivationTokenMutation
 } from '@/libs/state/redux/api/kidChurchApi';
 import { IKidGuardian } from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -26,11 +31,14 @@ import { useKidsTerm } from '@/libs/hooks/useTerm';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/ui/PageHeader';
 import { APP_ROUTES } from '@/config/routes';
+import { isFeatureEnabled } from '@/config/features';
 import { useTranslation } from 'react-i18next';
+
 
 const GenerateGuardianQRView: React.FC = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
+  const isActivationEnabled = isFeatureEnabled('guardianSignup');
   const [triggerGetGuardian, { isFetching: guardianLoading }] = useLazyGetKidGuardianQuery();
   const [uploadQRCode] = useUploadQRCodeImageMutation();
   const kidsModuleName = useKidsTerm('module_alias');
@@ -44,6 +52,11 @@ const GenerateGuardianQRView: React.FC = () => {
   const [whatsappUrl, setWhatsappUrl] = useState<string | undefined>(undefined);
   const [qrCodeUrl, setQrCodeUrl] = useState<string | undefined>(undefined);
 
+  const [activeTab, setActiveTab] = useState<'checkin' | 'activation'>('checkin');
+  const [generateActivationToken, { isLoading: isGeneratingActivation }] =
+    useGenerateGuardianActivationTokenMutation();
+  const [activationToken, setActivationToken] = useState<string | null>(null);
+
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const cleanId = nationalIdQuery.trim();
@@ -54,9 +67,12 @@ const GenerateGuardianQRView: React.FC = () => {
     setHasSearched(true);
     setWhatsappUrl(undefined);
     setQrCodeUrl(undefined);
+    setActivationToken(null);
+    setActiveTab('checkin');
     setGuardianError(null);
     try {
       const data = await triggerGetGuardian({ nationalId: cleanId }).unwrap();
+
       if (data) {
         setGuardian(data);
       } else {
@@ -123,6 +139,39 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
 
     generateWhatsappUrl();
   }, [guardian, kidsModuleName, guardianTerm, uploadQRCode]);
+
+  const handleGenerateActivation = async () => {
+    if (!guardian) return;
+    try {
+      const response = await generateActivationToken({
+        guardianId: guardian.id,
+        nationalId: guardian.nationalId,
+      }).unwrap();
+      setActivationToken(response.token);
+    } catch {
+      toast.error('Error al generar código de activación');
+    }
+  };
+
+  const activationUrl = activationToken
+    ? `${window.location.origin}${APP_ROUTES.public.signup}?token=${activationToken}`
+    : '';
+
+  useEffect(() => {
+    if (isActivationEnabled && activeTab === 'activation' && guardian && !activationToken && !isGeneratingActivation) {
+      handleGenerateActivation();
+    }
+  }, [isActivationEnabled, activeTab, guardian]);
+
+  const copyActivationLink = async () => {
+    if (!activationUrl) return;
+    try {
+      await navigator.clipboard.writeText(activationUrl);
+      toast.success(t('kidRegistration:guardian_qr.activation_link_copied'));
+    } catch {
+      toast.error('No se pudo copiar el enlace');
+    }
+  };
 
   const downloadCode = () => {
     const canvas: HTMLCanvasElement | null = document.getElementById(
@@ -246,65 +295,166 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
               </div>
             </div>
 
-            {/* Código QR Interactivo */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-3">
-              <div className="p-3 bg-white rounded-2xl border-2 border-gray-200 shadow-sm flex items-center justify-center">
-                {qrCodeUrl ? (
-                  <QRCode
-                    value={qrCodeUrl}
-                    size={300}
-                    qrStyle="squares"
-                    fgColor="#000000"
-                    bgColor="#FFFFFF"
-                    ecLevel="L"
-                    quietZone={10}
-                    id="qr-code-generate-kid-guardian-whatsapp"
-                  />
-                ) : (
-                  <div className="w-[300px] h-[300px] flex items-center justify-center">
-                    <Loader2 className="animate-spin text-primary" size={36} />
+            {/* Selector de Pestañas: QR Asistencia vs Activar Cuenta App */}
+            {isActivationEnabled && (
+              <div className="flex bg-gray-200/80 p-1 rounded-2xl gap-1">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('checkin')}
+                  className={clsx(
+                    "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+                    activeTab === 'checkin'
+                      ? "bg-white text-gray-800 shadow-xs"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  <QrCode size={15} />
+                  {t('kidRegistration:guardian_qr.tab_checkin_qr')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('activation')}
+                  className={clsx(
+                    "flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 cursor-pointer",
+                    activeTab === 'activation'
+                      ? "bg-white text-primary shadow-xs"
+                      : "text-gray-500 hover:text-gray-700"
+                  )}
+                >
+                  <KeyRound size={15} />
+                  {t('kidRegistration:guardian_qr.tab_activation_qr')}
+                </button>
+              </div>
+            )}
+
+            {!isActivationEnabled || activeTab === 'checkin' ? (
+              <>
+                {/* Código QR Interactivo de Asistencia */}
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-3">
+                  <div className="p-3 bg-white rounded-2xl border-2 border-gray-200 shadow-sm flex items-center justify-center">
+                    {qrCodeUrl ? (
+                      <QRCode
+                        value={qrCodeUrl}
+                        size={300}
+                        qrStyle="squares"
+                        fgColor="#000000"
+                        bgColor="#FFFFFF"
+                        ecLevel="L"
+                        quietZone={10}
+                        id="qr-code-generate-kid-guardian-whatsapp"
+                      />
+                    ) : (
+                      <div className="w-[300px] h-[300px] flex items-center justify-center">
+                        <Loader2 className="animate-spin text-primary" size={36} />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
 
-              <p className="text-xs text-gray-500 font-medium px-2 leading-relaxed">
-                Pide a {guardianTerm.toLowerCase()} que escanee este código con su celular para abrir su mensaje de WhatsApp, o compárteselo directamente abajo.
-              </p>
-            </div>
+                  <p className="text-xs text-gray-500 font-medium px-2 leading-relaxed">
+                    Pide a {guardianTerm.toLowerCase()} que escanee este código con su celular para abrir su mensaje de WhatsApp, o compárteselo directamente abajo.
+                  </p>
+                </div>
 
-            {/* Acciones */}
-            <div className="flex flex-col gap-2.5">
-              <button
-                type="button"
-                onClick={openWhatsapp}
-                disabled={!whatsappUrl || isGeneratingUrl}
-                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
-              >
-                <FaWhatsapp size={18} />
-                {t('kidRegistration:guardian_qr.btn_whatsapp')}
-              </button>
+                {/* Acciones para QR de Asistencia */}
+                <div className="flex flex-col gap-2.5">
+                  <button
+                    type="button"
+                    onClick={openWhatsapp}
+                    disabled={!whatsappUrl || isGeneratingUrl}
+                    className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-white bg-[#25D366] hover:bg-[#20bd5a] active:scale-[0.98] transition-all shadow-sm disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                  >
+                    <FaWhatsapp size={18} />
+                    {t('kidRegistration:guardian_qr.btn_whatsapp')}
+                  </button>
 
-              <Button onClick={downloadCode} block variant="default">
-                <Download size={18} className="mr-2 inline" />
-                {t('kidRegistration:guardian_qr.btn_download_image')}
+                  <Button onClick={downloadCode} block variant="default">
+                    <Download size={18} className="mr-2 inline" />
+                    {t('kidRegistration:guardian_qr.btn_download_image')}
+                  </Button>
+
+                  <Button block disabled variant="ghost" className="opacity-50">
+                    <Printer size={18} className="mr-2 inline" />
+                    Imprimir (Próximamente)
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* Código QR de Activación de Cuenta en la App */}
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-3">
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold">
+                    <ShieldCheck size={13} />
+                    {t('kidRegistration:guardian_qr.activation_badge')}
+                    <span className="text-gray-400 font-normal ml-1 flex items-center gap-1">
+                      <Clock size={11} />
+                      {t('kidRegistration:guardian_qr.activation_expires_hint')}
+                    </span>
+                  </div>
+
+                  <div className="p-3 bg-white rounded-2xl border-2 border-blue-200/80 shadow-sm flex items-center justify-center">
+                    {isGeneratingActivation ? (
+                      <div className="w-[300px] h-[300px] flex flex-col items-center justify-center gap-2 text-gray-500">
+                        <Loader2 className="animate-spin text-primary" size={36} />
+                        <span className="text-xs font-medium">
+                          {t('kidRegistration:guardian_qr.activation_generating')}
+                        </span>
+                      </div>
+                    ) : activationUrl ? (
+                      <QRCode
+                        value={activationUrl}
+                        size={300}
+                        qrStyle="squares"
+                        fgColor="#000000"
+                        bgColor="#FFFFFF"
+                        ecLevel="M"
+                        quietZone={10}
+                        id="qr-code-account-activation"
+                      />
+                    ) : (
+                      <div className="w-[300px] h-[300px] flex flex-col items-center justify-center gap-3 p-4">
+                        <Button
+                          type="button"
+                          variant="primary"
+                          onClick={handleGenerateActivation}
+                          className="py-2.5 px-4 text-xs font-bold rounded-xl"
+                        >
+                          {t('kidRegistration:guardian_qr.btn_generate_activation')}
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+
+                  <p className="text-xs text-gray-500 font-medium px-2 leading-relaxed">
+                    {t('kidRegistration:guardian_qr.activation_desc', { guardian: guardianTerm.toLowerCase() })}
+                  </p>
+                </div>
+
+                {/* Acciones para QR de Activación */}
+                <div className="flex flex-col gap-2.5">
+                  <Button
+                    onClick={copyActivationLink}
+                    disabled={!activationUrl || isGeneratingActivation}
+                    block
+                    variant="default"
+                  >
+                    <Copy size={16} className="mr-2 inline" />
+                    {t('kidRegistration:guardian_qr.copy_activation_link')}
+                  </Button>
+                </div>
+              </>
+            )}
+
+            <div className="pt-2 border-t border-gray-100 mt-1">
+              <Button onClick={handleFinish} block variant="primary">
+                <Check size={18} className="mr-2 inline" />
+                {t('common:actions.accept')}
               </Button>
-
-              <Button block disabled variant="ghost" className="opacity-50">
-                <Printer size={18} className="mr-2 inline" />
-                Imprimir (Próximamente)
-              </Button>
-
-              <div className="pt-2 border-t border-gray-100 mt-1">
-                <Button onClick={handleFinish} block variant="primary">
-                  <Check size={18} className="mr-2 inline" />
-                  {t('common:actions.accept')}
-                </Button>
-              </div>
             </div>
             {/* Espaciador para evitar que el BottomNav flotante tape el botón */}
             <div className="h-24 sm:h-28 pointer-events-none shrink-0" aria-hidden="true" />
           </div>
         )}
+
 
         {/* Estado Vacío o Error */}
         {!guardianLoading && !guardian && (

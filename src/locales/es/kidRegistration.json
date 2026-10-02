@@ -170,8 +170,20 @@
     "btn_download_image": "Descargar Imagen",
     "btn_download_pdf": "Descargar PDF",
     "generating_link": "Generando enlace para WhatsApp...",
-    "downloading": "Descargando carnet..."
+    "downloading": "Descargando carnet...",
+    "tab_checkin_qr": "QR de Asistencia",
+    "tab_activation_qr": "Activar Cuenta App",
+    "activation_badge": "Acceso a la App",
+    "activation_title": "Código de Activación",
+    "activation_desc": "Muestra este código para que {{guardian}} lo escanee desde su celular y cree su contraseña de acceso a la aplicación.",
+    "btn_generate_activation": "Generar Código QR de Activación",
+    "activation_generating": "Generando código de activación...",
+    "activation_expires_hint": "Válido por 2 horas",
+    "copy_activation_link": "Copiar enlace de activación",
+    "activation_link_copied": "Enlace copiado al portapapeles",
+    "share_activation_whatsapp": "Enviar acceso por WhatsApp"
   },
+
   "attendance_tracking": {
     "title": "Control de Asistencia",
     "subtitle": "Seguimiento en vivo de ingreso y salida",

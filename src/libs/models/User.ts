@@ -331,3 +331,49 @@ export interface IInAppNotificationsResponse {
   unreadCount: number;
 }
 
+export interface IActivationTokenResponse {
+  token: string;
+  expiresInSeconds: number;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    nationalId?: string;
+    nationalIdType?: UserIdType;
+    phone?: string;
+    dialCodePhone?: string;
+    email?: string;
+    hasPassword: boolean;
+  };
+}
+
+export interface IVerifyActivationTokenResponse {
+  valid: boolean;
+  user: {
+    id: string;
+    firstName: string;
+    lastName: string;
+    nationalId?: string;
+    nationalIdType?: UserIdType;
+    phone?: string;
+    dialCodePhone?: string;
+    email?: string;
+    hasPassword: boolean;
+  };
+}
+
+export interface ICompleteAccountSetupPayload {
+  token: string;
+  email?: string;
+  password: string;
+}
+
+export interface ICompleteAccountSetupResponse {
+  success: boolean;
+  token: string;
+  refreshToken: string;
+  user: IUser;
+  message: string;
+}
+
+

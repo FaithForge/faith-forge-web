@@ -1,5 +1,15 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
-import { IInAppNotificationsResponse, IUser, IUpdateMyProfile, IUserOverviewResponse } from '@/libs/models';
+import {
+  IActivationTokenResponse,
+  ICompleteAccountSetupPayload,
+  ICompleteAccountSetupResponse,
+  IInAppNotificationsResponse,
+  IUpdateMyProfile,
+  IUser,
+  IUserOverviewResponse,
+  IVerifyActivationTokenResponse,
+} from '@/libs/models';
+
 import { UserExperienceEnum } from '@/libs/utils/auth';
 import { baseApi } from './baseApi';
 
@@ -168,6 +178,27 @@ export const userApi = baseApi.injectEndpoints({
       }),
       providesTags: ['UserTerms'],
     }),
+
+    verifyActivationToken: builder.query<IVerifyActivationTokenResponse, { token: string }>({
+      query: ({ token }) => ({
+        microservice: MicroserviceEnum.User,
+        url: '/auth/verify-activation-token',
+        method: HttpRequestMethod.GET,
+        params: { token },
+      }),
+    }),
+
+    completeAccountSetup: builder.mutation<
+      ICompleteAccountSetupResponse,
+      ICompleteAccountSetupPayload
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.User,
+        url: '/auth/complete-account-setup',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -190,4 +221,9 @@ export const {
   useLazyGetPendingTermsQuery,
   useAcceptTermsMutation,
   useGetMyTermsAcceptancesQuery,
+  useVerifyActivationTokenQuery,
+  useLazyVerifyActivationTokenQuery,
+  useCompleteAccountSetupMutation,
 } = userApi;
+
+
