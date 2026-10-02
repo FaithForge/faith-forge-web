@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import Input from '@/components/ui/Input';
 import Alert from '@/components/ui/Alert';
 import { APP_ROUTES } from "@/config/routes";
+import { toast } from 'sonner';
 import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2, SearchX, RotateCcw, Plus, Lightbulb, ChevronDown, DoorOpen, ChevronRight, Printer, CalendarClock, AlertCircle } from 'lucide-react';
+import { Loader2, SearchX, RotateCcw, Plus, Lightbulb, ChevronDown, DoorOpen, ChevronRight, Printer, CalendarClock, AlertCircle, Clock } from 'lucide-react';
 import dayjs from 'dayjs';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
@@ -37,6 +38,7 @@ const RegistrationDashboard = () => {
   const {
     isConfigured,
     isMeetingValid,
+    isMeetingNotStarted,
     meetingErrorMsg,
     shouldBlockKids,
     isAdmin,
@@ -179,21 +181,23 @@ const RegistrationDashboard = () => {
   return (
     <div className="p-3 sm:p-4 md:p-6 max-w-4xl mx-auto w-full flex flex-col gap-3 min-h-full flex-1 pb-6">
       {/* Search Bar (scrolls with content, revealed as lupa in TopBar on scroll) */}
-      <div className="py-1">
-        <Input 
-          ref={searchInputRef}
-          icon="search" 
-          placeholder={shouldBlockKids ? t('kidRegistration:dashboard.search_disabled') : t('kidRegistration:dashboard.search_placeholder')}
-          value={searchText}
-          onChange={(e) => setSearchText(e.target.value)}
-          onClear={handleClearSearch}
-          wrapperClassName="mb-0"
-          className={`border-0 shadow-sm text-base focus:ring-0 transition-colors ${
-            shouldBlockKids || !isConfigured ? 'bg-gray-100 opacity-70 cursor-not-allowed text-gray-500' : 'bg-white'
-          }`}
-          disabled={!isConfigured || shouldBlockKids}
-        />
-      </div>
+      {!shouldBlockKids && (
+        <div className="py-1">
+          <Input 
+            ref={searchInputRef}
+            icon="search" 
+            placeholder={t('kidRegistration:dashboard.search_placeholder')}
+            value={searchText}
+            onChange={(e) => setSearchText(e.target.value)}
+            onClear={handleClearSearch}
+            wrapperClassName="mb-0"
+            className={`border-0 shadow-sm text-base focus:ring-0 transition-colors ${
+              !isConfigured ? 'bg-gray-100 opacity-70 cursor-not-allowed text-gray-500' : 'bg-white'
+            }`}
+            disabled={!isConfigured}
+          />
+        </div>
+      )}
 
       {/* Configuration Warnings */}
       {!isConfigured && (
@@ -229,7 +233,8 @@ const RegistrationDashboard = () => {
       )}
 
       {/* Control de Asistencia Modular (Si la sede no es ONLY_CHECK_IN) */}
-      {isConfigured &&
+      {!shouldBlockKids &&
+        isConfigured &&
         currentCampus?.kidAttendanceFlowMode &&
         currentCampus.kidAttendanceFlowMode !== KidAttendanceFlowModeEnum.ONLY_CHECK_IN && (
           <div
@@ -272,20 +277,15 @@ const RegistrationDashboard = () => {
 
       {/* Bloqueo Visual (Empty State) */}
       {shouldBlockKids && isConfigured && (
-        <div className="flex flex-col items-center justify-center py-12 px-6 mt-2 text-center bg-gray-50/80 rounded-2xl border-2 border-dashed border-gray-200">
-          <div className="bg-gray-100 p-4 rounded-full mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400">
-              <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-              <line x1="16" x2="16" y1="2" y2="6"/>
-              <line x1="8" x2="8" y1="2" y2="6"/>
-              <line x1="3" x2="21" y1="10" y2="10"/>
-              <line x1="10" x2="14" y1="15" y2="19"/>
-              <line x1="14" x2="10" y1="15" y2="19"/>
-            </svg>
+        <div className="flex flex-col items-center justify-center py-16 px-6 mt-2 text-center bg-white rounded-3xl border border-gray-200/80 shadow-xs">
+          <div className="w-16 h-16 rounded-2xl bg-amber-50 text-amber-500 flex items-center justify-center mb-4 shadow-xs border border-amber-100">
+            <Clock size={32} />
           </div>
-          <h3 className="text-lg font-bold text-gray-700 mb-1">{t('kidRegistration:dashboard.out_of_schedule_title')}</h3>
-          <p className="text-sm text-gray-500 leading-relaxed">
-            {t('kidRegistration:dashboard.out_of_schedule_message')}
+          <h3 className="text-lg font-bold text-gray-800 mb-1.5">
+            {isMeetingNotStarted ? 'Servicio aún no iniciado' : t('kidRegistration:dashboard.out_of_schedule_title')}
+          </h3>
+          <p className="text-xs text-gray-500 max-w-sm leading-relaxed mb-2">
+            {meetingErrorMsg || t('kidRegistration:dashboard.out_of_schedule_message')}
           </p>
         </div>
       )}
@@ -353,7 +353,13 @@ const RegistrationDashboard = () => {
                   )}
                   <button
                     type="button"
-                    onClick={() => navigate(APP_ROUTES.kidRegistration.new)}
+                    onClick={() => {
+                      if (shouldBlockKids || !isMeetingValid) {
+                        toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado.');
+                        return;
+                      }
+                      navigate(APP_ROUTES.kidRegistration.new);
+                    }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-primary hover:bg-primary/90 active:scale-95 rounded-xl transition-all shadow-xs"
                   >
                     <Plus size={14} />
@@ -414,6 +420,10 @@ const RegistrationDashboard = () => {
                       isOverage={showOverageStyle}
                       badge={badgeElement}
                       onClick={() => {
+                        if (shouldBlockKids || !isMeetingValid) {
+                          toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado.');
+                          return;
+                        }
                         if (isRegistered || !overage || isAdmin) {
                           dispatch(updateCurrentKid(kid));
                           navigate(APP_ROUTES.kidRegistration.checkIn(kid.id));

@@ -55,7 +55,15 @@ const NewKidView = () => {
     t('kidRegistration:form.step_guardian_info', { guardian: guardianTerm })
   ], [guardianTerm, t]);
   const { registerGuard } = useNavigationGuard();
-  const { shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
+  const { shouldBlockKids, meetingErrorMsg, isAdmin } = useChurchMeetingStatus();
+
+  // Security and schedule guard: Block kid creation if service is not started or out of schedule
+  useEffect(() => {
+    if (shouldBlockKids && !isAdmin) {
+      toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado. El registro de niños no está disponible.');
+      navigate(APP_ROUTES.kidRegistration.root, { replace: true });
+    }
+  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
 
   const [step, setStep] = useState(1);
   const [staticGroup, setStaticGroup] = useState(false);

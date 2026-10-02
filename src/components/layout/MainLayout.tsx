@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { motion } from 'framer-motion';
 import BottomNav from './BottomNav';
@@ -12,13 +12,15 @@ import { logout, setActiveExperience } from '@/libs/state/redux/slices/user/auth
 import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
 import { triggerSilentRefresh } from '@/libs/utils/http';
-import { UserExperienceEnum } from '@/libs/utils/auth';
+import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
 import { ChurchMeetingStateEnum } from '@/libs/models';
 import { usePermissions } from '@/libs/hooks/usePermissions';
+import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
+import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
 import { toast } from 'sonner';
 
 
@@ -50,7 +52,32 @@ const MainLayoutContent: React.FC<MainLayoutProps> = ({ children }) => {
   const { setIsScrolledPastSearch, registerMainContainer } = useSearchScroll();
   const { isTransitioning } = useRoleTransition();
 
-  const { token, refreshToken } = useAppSelector((state) => state.authSlice);
+  const { token, refreshToken, user, experiences } = useAppSelector((state) => state.authSlice);
+  const userRoles = (user?.roles || []) as AppRole[];
+  const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
+  const hasOperationalRole = userRoles.some(
+    (role) => role !== UserRole.USER && (role as string) !== 'USER' && isRoleEnabled(role)
+  );
+  const isKidChurchStaff =
+    isSuperAdmin ||
+    (experiences || []).includes(UserExperienceEnum.KID_CHURCH_STAFF) ||
+    hasOperationalRole;
+
+  // Security guard: If user does not have permission for Kids Ministry operational workspace,
+  // immediately block access and redirect them to their rightful experience or hub.
+  if (!isKidChurchStaff) {
+    if ((experiences || []).includes(UserExperienceEnum.KID_GUARDIAN)) {
+      return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
+    }
+    if ((experiences || []).includes(UserExperienceEnum.ADMIN)) {
+      return <Navigate to={APP_ROUTES.admin.root} replace />;
+    }
+    if ((experiences || []).length > 1) {
+      return <Navigate to={APP_ROUTES.hub} replace />;
+    }
+    return <NoRolesAssignedView />;
+  }
+
   const { currentRole, isKidChurchRole, isKidRegistrationRole } = usePermissions();
   const volunteerCampuses = useAppSelector((state) => state.volunteerContextSlice.campuses || []);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);

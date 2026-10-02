@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, Navigate } from 'react-router-dom';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import { LogOut, LayoutGrid, User, Bell } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
@@ -10,7 +10,7 @@ import { setActiveExperience } from '@/libs/state/redux/slices/user/auth.slice';
 import { APP_ROUTES } from '@/config/routes';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import { capitalizeWords, formatPersonShortName } from '@/libs/utils/text';
-import { UserExperienceEnum } from '@/libs/utils/auth';
+import { UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 
 import { APP_VERSION } from '@/constants/version';
@@ -63,6 +63,14 @@ const KidGuardianLayout: React.FC<KidGuardianLayoutProps> = ({ children }) => {
   };
 
   const hasMultipleSpaces = experiences.length > 1;
+  const isSuperAdmin = (user?.roles || []).includes(UserRole.SUPER_ADMIN);
+  const hasGuardianAccess = isSuperAdmin || experiences.includes(UserExperienceEnum.KID_GUARDIAN);
+
+  // Security guard: If user lacks guardian permissions, block access and redirect away
+  if (!hasGuardianAccess && experiences.length > 0) {
+    return <Navigate to="/" replace />;
+  }
+
   const shortName = formatPersonShortName(user?.firstName, user?.lastName) || guardianTerm;
   const userInitials = user
     ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || 'AC'

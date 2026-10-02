@@ -9,6 +9,7 @@ import { PwaInstallPrompt } from '@/components/pwa/PwaInstallPrompt';
 import { useVerifyActivationTokenQuery, useCompleteAccountSetupMutation } from '@/libs/state/redux/api/userApi';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { setAuthSession } from '@/libs/state/redux/slices/user/auth.slice';
+import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { capitalizeWords } from '@/libs/utils/text';
 import { APP_ROUTES } from '@/config/routes';
 
@@ -98,6 +99,7 @@ const AccountSignupPublicView: React.FC = () => {
               user: response.user,
             })
           );
+          await dispatch(FetchMyVolunteerPermissions());
         }
         toast.success(t('auth:signup.toast_success'));
         navigate(APP_ROUTES.public.signupConfirmation, { replace: true });

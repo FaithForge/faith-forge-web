@@ -6,6 +6,7 @@ import Button from '@/components/ui/Button';
 import { PwaInstallPrompt } from '@/components/pwa/PwaInstallPrompt';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { APP_ROUTES } from '@/config/routes';
+import { UserExperienceEnum } from '@/libs/utils/auth';
 
 /**
  * Public confirmation view displayed immediately after successful account activation.
@@ -19,10 +20,19 @@ const AccountSignupConfirmationView: React.FC = () => {
   const navigate = useNavigate();
   const token = useAppSelector((state) => state.authSlice.token);
   const user = useAppSelector((state) => state.authSlice.user);
+  const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
 
   const handleContinue = () => {
     if (token) {
-      navigate('/', { replace: true });
+      if (
+        experiences.includes(UserExperienceEnum.KID_GUARDIAN) &&
+        !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) &&
+        !experiences.includes(UserExperienceEnum.ADMIN)
+      ) {
+        navigate(APP_ROUTES.kidGuardian.root, { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
     } else {
       navigate(APP_ROUTES.auth.login, { replace: true });
     }

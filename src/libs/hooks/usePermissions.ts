@@ -135,8 +135,7 @@ export const usePermissions = () => {
         currentRole === ChurchRole.KID_REGISTER_USER ||
         currentRole === ChurchRole.KID_SECURITY_COORDINATOR ||
         currentRole === ChurchRole.KID_SECURITY_SUPERVISOR ||
-        currentRole === ChurchRole.KID_SECURITY_USER ||
-        currentRole === UserRole.USER
+        currentRole === ChurchRole.KID_SECURITY_USER
       );
     }
     if (activeVolunteerRole) {
@@ -154,7 +153,6 @@ export const usePermissions = () => {
         ChurchRole.KID_SECURITY_COORDINATOR,
         ChurchRole.KID_SECURITY_SUPERVISOR,
         ChurchRole.KID_SECURITY_USER,
-        UserRole.USER,
       )
     );
   }, [currentRole, activeVolunteerRole, isKidChurchRole, hasRole]);

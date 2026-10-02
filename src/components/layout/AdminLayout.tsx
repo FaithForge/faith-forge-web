@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, lazy, Suspense } from 'react';
-import { Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import clsx from 'clsx';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
@@ -80,6 +80,15 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
   const isSuperAdmin = (user?.roles || []).includes(UserRole.SUPER_ADMIN);
   const isAdmin = (user?.roles || []).includes(UserRole.ADMIN);
   const isStaff = (user?.roles || []).includes(UserRole.STAFF);
+  const hasAdminAccess = isSuperAdmin || isAdmin || isStaff || (experiences || []).includes(UserExperienceEnum.ADMIN);
+
+  // Security guard: If user lacks admin permissions, block access and redirect away
+  if (!hasAdminAccess) {
+    if ((experiences || []).includes(UserExperienceEnum.KID_GUARDIAN)) {
+      return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
+    }
+    return <Navigate to="/" replace />;
+  }
 
   useEffect(() => {
     dispatch(setActiveExperience(UserExperienceEnum.ADMIN));

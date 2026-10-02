@@ -79,7 +79,9 @@ import { isFeatureEnabled } from '@/config/features';
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
 import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
+import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
 import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
+import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -89,28 +91,26 @@ const IndexRedirect = () => {
 
   const userRoles = (user?.roles || []) as AppRole[];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
+  const enabledRoles = userRoles.filter(
+    (role) => role !== UserRole.USER && (role as string) !== 'USER' && isRoleEnabled(role)
+  );
   const isMultiRoleUser =
     experiences.length > 1 ||
     isSuperAdmin ||
-    userRoles.filter(isRoleEnabled).length > 1;
+    enabledRoles.length > 1;
 
-  // If user has 2 or more roles / experiences and has not picked an active experience yet,
-  // they MUST ALWAYS start at the Hub
+  // 1. If user has multiple experiences and has not picked an active one, go to Hub
   if (isMultiRoleUser && !activeExperience) {
     return <Navigate to={APP_ROUTES.hub} replace />;
   }
 
-  // If user explicitly chose Kid Guardian experience
+  // 2. Active experience explicitly selected
   if (activeExperience === UserExperienceEnum.KID_GUARDIAN) {
     return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
   }
-
-  // If user explicitly chose Admin experience
   if (activeExperience === UserExperienceEnum.ADMIN) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
-
-  // If user explicitly chose Kid Church Staff experience
   if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const dashboardUrl =
@@ -120,23 +120,19 @@ const IndexRedirect = () => {
     return <Navigate to={dashboardUrl} replace />;
   }
 
-  // If user has multiple experiences and has not picked one yet, send to the Hub
+  // 3. User with multiple spaces fallback
   if (isMultiRoleUser) {
     return <Navigate to={APP_ROUTES.hub} replace />;
   }
 
-  // If user has only one experience and it is Kid Guardian
-  if (experiences.length === 1 && experiences[0] === UserExperienceEnum.KID_GUARDIAN) {
+  // 4. Single experience routing
+  if (experiences.includes(UserExperienceEnum.KID_GUARDIAN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.ADMIN)) {
     return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
   }
-
-  // If user has only one experience and it is Admin
-  if (experiences.length === 1 && experiences[0] === UserExperienceEnum.ADMIN) {
+  if (experiences.includes(UserExperienceEnum.ADMIN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.KID_GUARDIAN)) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
-
-  // If user has only one experience and it is Kid Church Staff
-  if (experiences.length === 1 && experiences[0] === UserExperienceEnum.KID_CHURCH_STAFF) {
+  if (experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) || enabledRoles.length > 0) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const dashboardUrl =
       isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
@@ -145,14 +141,13 @@ const IndexRedirect = () => {
     return <Navigate to={dashboardUrl} replace />;
   }
 
-  // Default: Find the base dashboard URL for the current role if enabled
-  const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
-  const dashboardUrl =
-    isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
-      ? userRolesNavBarConfig[currentRole]!.dashboardUrl
-      : APP_ROUTES.kidRegistration.root;
+  // 5. Guardian fallback if experiences has KID_GUARDIAN
+  if (experiences.includes(UserExperienceEnum.KID_GUARDIAN)) {
+    return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
+  }
 
-  return <Navigate to={dashboardUrl} replace />;
+  // 6. Regular user with no assigned roles or experiences
+  return <NoRolesAssignedView />;
 };
 
 /**
@@ -174,6 +169,7 @@ function App() {
     if (churchId) dispatch(GetChurchById(churchId));
     dispatch(GetChurchCampuses());
     dispatch(GetMinistries());
+    dispatch(FetchMyVolunteerPermissions());
   }, [dispatch, token]);
 
   // Request notification permissions on app startup
@@ -315,9 +311,11 @@ function App() {
                 />
               </Route>
 
+              {/* Root redirect: Determines experience cleanly before mounting any layout */}
+              <Route path="/" element={<IndexRedirect />} />
+
               {/* Operational Volunteers Layout (Kids Ministry) */}
-              <Route path="/" element={<MainLayout />}>
-                <Route index element={<IndexRedirect />} />
+              <Route element={<MainLayout />}>
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
                 <Route path={APP_ROUTES.kidChurch.myTeam} element={<SupervisorTeamView />} />
                 <Route

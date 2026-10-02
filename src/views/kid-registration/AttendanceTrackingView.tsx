@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
@@ -48,7 +48,15 @@ type TabStatusFilter = 'ALL' | KidAttendanceStatusEnum;
 const AttendanceTrackingView: React.FC = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
-  const { currentMeeting, currentCampus, isConfigured } = useChurchMeetingStatus();
+  const { currentMeeting, currentCampus, isConfigured, shouldBlockKids, isAdmin, meetingErrorMsg } = useChurchMeetingStatus();
+
+  // Security and schedule guard: Block tracking view if service is not started or out of schedule
+  useEffect(() => {
+    if (shouldBlockKids && !isAdmin) {
+      toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado.');
+      navigate(APP_ROUTES.kidRegistration.root, { replace: true });
+    }
+  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
 
   const flowMode = currentCampus?.kidAttendanceFlowMode || KidAttendanceFlowModeEnum.ONLY_CHECK_IN;
   const isOnlyCheckIn = flowMode === KidAttendanceFlowModeEnum.ONLY_CHECK_IN;

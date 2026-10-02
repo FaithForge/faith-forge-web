@@ -64,6 +64,14 @@ const ScannerView = () => {
     };
   }, [dispatch]);
 
+  // Security and schedule guard: Block scanner if service is not started or out of schedule
+  useEffect(() => {
+    if (shouldBlockKids && !isAdmin) {
+      toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado. El escáner de registro no está disponible.');
+      navigate(APP_ROUTES.kidRegistration.root, { replace: true });
+    }
+  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
+
   const handleCancelClick = () => {
     if (step === 3) {
       // Desde paso 3 regresa directamente a paso 2 sin alerta

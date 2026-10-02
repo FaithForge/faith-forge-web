@@ -14,12 +14,14 @@ import {
   Users,
   Building2,
   ChevronsUpDown,
+  AlertCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
 import Button from '@/components/ui/Button';
 import Alert from '@/components/ui/Alert';
+import { normalizeTime, formatMeetingHour } from '@/libs/hooks/useChurchMeetingStatus';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   GetChurchCampuses,
@@ -102,6 +104,35 @@ const getMeetingDayNum = (day: any): number | undefined => {
   if (typeof day === 'number') return day;
   const key = String(day).toUpperCase().trim();
   return DAYS_NUM_MAP[key];
+};
+
+/**
+ * Evaluates real-time meeting schedule status for display and validation in settings drawer.
+ *
+ * @param {any} meeting - The meeting object to evaluate.
+ * @returns {{ isDifferentDay: boolean; isNotStarted: boolean; isConcluded: boolean; isCurrent: boolean; initTimeFormatted: string }} Schedule status indicators.
+ */
+const getMeetingScheduleStatus = (meeting: any) => {
+  if (!meeting) return { isDifferentDay: false, isNotStarted: false, isConcluded: false, isCurrent: false, initTimeFormatted: '' };
+  const currentTime = dayjs();
+  const currentDayNum = currentTime.day();
+  const mDay = getMeetingDayNum(meeting.day);
+  const currentTimeStr = currentTime.format('HH:mm:ss');
+
+  const initRaw =
+    meeting.initialRegistrationHour ?? meeting.initial_registration_hour ?? meeting.registrationInitialHour ?? meeting.initialHour;
+  const finalRaw =
+    meeting.finalRegistrationHour ?? meeting.final_registration_hour ?? meeting.registrationFinalHour ?? meeting.finalHour;
+  const initTimeStr = normalizeTime(initRaw);
+  const finalTimeStr = normalizeTime(finalRaw);
+  const initTimeFormatted = formatMeetingHour(initTimeStr);
+
+  const isDifferentDay = mDay !== undefined && mDay !== currentDayNum;
+  const isNotStarted = !isDifferentDay && Boolean(initTimeStr && currentTimeStr < initTimeStr);
+  const isConcluded = !isDifferentDay && Boolean(finalTimeStr && currentTimeStr >= finalTimeStr);
+  const isCurrent = !isDifferentDay && !isNotStarted && !isConcluded;
+
+  return { isDifferentDay, isNotStarted, isConcluded, isCurrent, initTimeFormatted };
 };
 
 /**
@@ -578,9 +609,30 @@ const SettingsDrawer = ({
 
   const hasNoMeetingsToday = Boolean(selectedCampusId) && availableMeetings.length === 0 && !isMeetingLoading;
 
+  const selectedMeetingObj = useMemo(() => {
+    if (!selectedMeetingId) return null;
+    return (
+      availableMeetings.find((m: any) => m.id === selectedMeetingId) ||
+      (meetings.current?.id === selectedMeetingId ? meetings.current : null)
+    );
+  }, [availableMeetings, selectedMeetingId, meetings.current]);
+
+  const selectedMeetingSchedule = useMemo(() => {
+    return getMeetingScheduleStatus(selectedMeetingObj);
+  }, [selectedMeetingObj]);
+
+  const isSelectedMeetingBlockedForRegistration =
+    !isKidChurchRole &&
+    !isUserAdmin &&
+    Boolean(
+      selectedMeetingObj &&
+        (selectedMeetingSchedule.isNotStarted || selectedMeetingSchedule.isConcluded)
+    );
+
   const isSaveDisabled =
     !selectedCampusId ||
     !selectedMeetingId ||
+    isSelectedMeetingBlockedForRegistration ||
     (availableGroups.length > 0 && !selectedGroupId) ||
     (!isKidChurchRole && !isBluetoothMode && !selectedPrinterId) ||
     (!isKidChurchRole && isBluetoothMode && !isBluetoothConnected);
@@ -769,16 +821,51 @@ const SettingsDrawer = ({
                   {availableMeetings.length > 1 && (
                     <option value="" disabled>{t('settings.select_meeting', { meeting: meetingTerm.toLowerCase() })}</option>
                   )}
-                  {availableMeetings.map((meeting: any) => (
-                    <option key={meeting.id} value={meeting.id}>
-                      {meeting.name}
-                    </option>
-                  ))}
+                  {availableMeetings.map((meeting: any) => {
+                    const sched = getMeetingScheduleStatus(meeting);
+                    let statusSuffix = '';
+                    if (sched.isNotStarted) {
+                      statusSuffix = ` (Inicia ${sched.initTimeFormatted} - Aún no inicia)`;
+                    } else if (sched.isConcluded) {
+                      statusSuffix = ' (Finalizado)';
+                    } else if (sched.isCurrent) {
+                      statusSuffix = ' (En curso)';
+                    }
+                    return (
+                      <option key={meeting.id} value={meeting.id}>
+                        {meeting.name}{statusSuffix}
+                      </option>
+                    );
+                  })}
                 </>
               )}
             </select>
             <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-400">
               <ChevronsUpDown size={15} />
+            </div>
+          </div>
+        )}
+
+        {selectedMeetingSchedule.isNotStarted && !isKidChurchRole && !isUserAdmin && (
+          <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs">
+            <AlertCircle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold block">Servicio aún no iniciado</span>
+              <span>
+                El servicio aún no ha comenzado (horario de registro inicia a las {selectedMeetingSchedule.initTimeFormatted}). No es posible ingresar hasta que comience el servicio.
+              </span>
+            </div>
+          </div>
+        )}
+
+        {selectedMeetingSchedule.isConcluded && !isKidChurchRole && !isUserAdmin && (
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-xs text-rose-900 shadow-2xs">
+            <AlertCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <span className="font-bold block">Servicio finalizado</span>
+              <span>
+                Este servicio ya ha finalizado. Por favor selecciona otro servicio que se encuentre activo.
+              </span>
             </div>
           </div>
         )}
@@ -935,16 +1022,29 @@ const SettingsDrawer = ({
 
       {/* ===================== CARD 4: FINALIZAR BUTTON ===================== */}
       {!hasNoMeetingsToday && (
-        <Button
-          onClick={handleSave}
-          block
-          variant="primary"
-          size="lg"
-          className="mt-1 shadow-md shadow-primary/20 font-bold"
-          disabled={isSaveDisabled}
-        >
-          {t('settings.finish')}
-        </Button>
+        <>
+          <Button
+            onClick={handleSave}
+            block
+            variant="primary"
+            size="lg"
+            className="mt-1 shadow-md shadow-primary/20 font-bold"
+            disabled={isSaveDisabled}
+          >
+            {t('settings.finish')}
+          </Button>
+
+          {isSelectedMeetingBlockedForRegistration && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={handleLogout}
+              className="mt-2 w-full bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200 font-bold py-2.5 rounded-xl transition-all shadow-xs flex items-center justify-center gap-2 text-xs"
+            >
+              <LogOut size={15} /> {t('navigation.logout')}
+            </Button>
+          )}
+        </>
       )}
 
       <div className="pb-safe" />

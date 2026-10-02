@@ -34,7 +34,7 @@ const DAYS_MAP: Record<string, number> = {
  * @param {unknown} val - Raw time representation to normalize.
  * @returns {string} Formatted "HH:mm:ss" string, or empty string if invalid.
  */
-const normalizeTime = (val: unknown): string => {
+export const normalizeTime = (val: unknown): string => {
   if (!val) return '';
   if (typeof val === 'string') {
     // If already in "HH:mm" or "HH:mm:ss" format
@@ -67,11 +67,27 @@ const normalizeTime = (val: unknown): string => {
 };
 
 /**
+ * Formats a normalized time string ("HH:mm:ss" or "HH:mm") into 12-hour format "h:mm A".
+ *
+ * @param {string | undefined} timeStr - Time string to format.
+ * @returns {string} User-friendly formatted time string (e.g. "6:30 PM").
+ */
+export const formatMeetingHour = (timeStr?: string): string => {
+  if (!timeStr) return '';
+  const normalized = normalizeTime(timeStr);
+  if (!normalized) return '';
+  const d = dayjs(`2000-01-01 ${normalized}`);
+  return d.isValid() ? d.format('h:mm A') : normalized;
+};
+
+/**
  * Meeting state validation snapshot returned by useChurchMeetingStatus.
  */
 export interface MeetingStatus {
   isConfigured: boolean;
   isMeetingValid: boolean;
+  isMeetingNotStarted: boolean;
+  isMeetingConcluded: boolean;
   meetingErrorMsg: string;
   shouldBlockKids: boolean;
   isAdmin: boolean;
@@ -105,8 +121,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
   const currentPrinter = useAppSelector((state) => state.churchPrinterSlice.current);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
-  const { isKidChurchRole, isAreaCoordinator, isSupervisor } = usePermissions();
-  const isAdmin = isAreaCoordinator;
+  const { isKidChurchRole, isSupervisor, isSuperAdmin, isAdmin: isSystemAdmin } = usePermissions();
+  const isAdmin = isSuperAdmin || isSystemAdmin;
 
   const [currentTime, setCurrentTime] = useState<dayjs.Dayjs>(dayjs());
 
@@ -123,6 +139,8 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const bluetoothDevice = useAppSelector((state) => state.printerModeSlice?.bluetoothDevice);
 
   let isMeetingValid = true;
+  let isMeetingNotStarted = false;
+  let isMeetingConcluded = false;
   let meetingErrorMsg = '';
 
   if (currentMeeting) {
@@ -139,7 +157,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
       // Specifically use registration hour fields (initialRegistrationHour / finalRegistrationHour)
       const m = currentMeeting as IExtendedMeetingProperties;
       const initRaw =
-        m.initialRegistrationHour ?? m.initial_registration_hour ?? m.registrationInitialHour;
+        m.initialRegistrationHour ?? m.initial_registration_hour ?? m.registrationInitialHour ?? m.initialHour;
 
       const finalRaw =
         m.finalRegistrationHour ??
@@ -154,10 +172,15 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
       if (initTimeStr && currentTimeStr < initTimeStr) {
         // Current time is before the initial registration hour of the meeting (future meeting)
         isMeetingValid = false;
-        meetingErrorMsg = REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING.message;
+        isMeetingNotStarted = true;
+        const formattedInit = formatMeetingHour(initTimeStr);
+        meetingErrorMsg = formattedInit
+          ? `El servicio aún no ha comenzado. El registro inicia a las ${formattedInit}.`
+          : REGISTRATION_CONFIRM_COPY_LATER_HOURS_MEETING.message;
       } else if (finalTimeStr && currentTimeStr >= finalTimeStr) {
         // Current time is after the final registration hour of the meeting (meeting has concluded)
         isMeetingValid = false;
+        isMeetingConcluded = true;
         meetingErrorMsg = REGISTRATION_CONFIRM_COPY_LOWER_HOURS_MEETING.message;
       }
     }
@@ -167,11 +190,13 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
   const isConfigured = isKidChurchRole ? !!currentMeeting : !!currentMeeting && isPrinterConfigured;
 
-  const shouldBlockKids = !isAdmin && !isMeetingValid && isConfigured;
+  const shouldBlockKids = !isAdmin && (!isMeetingValid || !isConfigured);
 
   return {
     isConfigured,
     isMeetingValid,
+    isMeetingNotStarted,
+    isMeetingConcluded,
     meetingErrorMsg,
     shouldBlockKids,
     isAdmin,

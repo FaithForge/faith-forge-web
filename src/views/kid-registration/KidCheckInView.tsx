@@ -84,6 +84,14 @@ const KidCheckInView = () => {
     setImageError(false);
   }, [kid?.photoUrl]);
 
+  // Security and schedule guard: Block entry if service is not started or out of schedule
+  useEffect(() => {
+    if (shouldBlockKids && !isAdmin) {
+      toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado. El registro de niños no está disponible.');
+      navigate(APP_ROUTES.kidRegistration.root, { replace: true });
+    }
+  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
+
   // Fetch kid data via RTK Query hook; no manual dispatch needed
 
   const getTranslatedRelation = (code: string) => {

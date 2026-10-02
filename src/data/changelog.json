@@ -9,7 +9,9 @@
       "Posibilidad de iniciar sesión usando número de cédula, correo o nombre de usuario",
       "Nuevo flujo seguro de activación de cuenta mediante código QR autorizado por un servidor",
       "Pantalla de confirmación con botón directo para instalar la aplicación en Android y guía visual para iPhone",
-      "Opción para servidores de generar código QR o enviar enlace de activación directamente por WhatsApp"
+      "Opción para servidores de generar código QR o enviar enlace de activación directamente por WhatsApp",
+      "Redirección automática y segura al portal de acudientes al iniciar sesión o activar la cuenta",
+      "Bloqueo preventivo en el módulo de registros cuando el servicio seleccionado aún no ha comenzado su horario programado"
     ]
   },
   {

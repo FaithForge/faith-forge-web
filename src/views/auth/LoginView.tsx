@@ -26,7 +26,7 @@ import { formatPersonShortName } from '@/libs/utils/text';
 import { APP_VERSION } from '@/constants/version';
 import { requestAndSyncPushSubscription } from '@/libs/utils/notifications/webPush';
 import { LegalDocumentsDrawer } from '@/components/legal/LegalDocumentsDrawer';
-import { AppRole, UserRole } from '@/libs/utils/auth';
+import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 
 interface IFormLoginInput {
@@ -69,6 +69,13 @@ const LoginView = () => {
     },
   });
 
+  /**
+   * Navigates to appropriate destination post-login based on user experiences and assigned roles.
+   *
+   * @param experiencesList - Optional list of user experience enums.
+   * @param rolesList - Optional list of assigned application roles.
+   * @returns Void.
+   */
   const navigateAfterLogin = (experiencesList?: any[], rolesList?: any[]) => {
     const authState = store.getState().authSlice;
     const list = experiencesList ?? authState.experiences ?? [];
@@ -80,6 +87,13 @@ const LoginView = () => {
     if (hasMultipleRoles) {
       dispatch(setActiveExperience(null));
       navigate(APP_ROUTES.hub, { replace: true });
+    } else if (
+      list.includes(UserExperienceEnum.KID_GUARDIAN) &&
+      !list.includes(UserExperienceEnum.KID_CHURCH_STAFF) &&
+      !list.includes(UserExperienceEnum.ADMIN)
+    ) {
+      dispatch(setActiveExperience(UserExperienceEnum.KID_GUARDIAN));
+      navigate(APP_ROUTES.kidGuardian.root, { replace: true });
     } else {
       navigate('/', { replace: true });
     }
