@@ -5,6 +5,7 @@ import { ShieldAlert, ShieldCheck, User, LogIn, Lock, ArrowRight, Loader2 } from
 import { toast } from 'sonner';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { PwaInstallPrompt } from '@/components/pwa/PwaInstallPrompt';
 import { useVerifyActivationTokenQuery, useCompleteAccountSetupMutation } from '@/libs/state/redux/api/userApi';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { setAuthSession } from '@/libs/state/redux/slices/user/auth.slice';
@@ -153,6 +154,63 @@ const AccountSignupPublicView: React.FC = () => {
             >
               <LogIn size={16} />
               {t('auth:signup.go_to_login')}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // State 2.5: User already has an active account with password configured (signup not allowed)
+  if (verifyResult.alreadyHasAccount || verifyResult.user?.hasPassword) {
+    const existingUser = verifyResult.user;
+    const existingName = `${capitalizeWords(existingUser.firstName)} ${capitalizeWords(existingUser.lastName)}`.trim();
+    const existingDoc = `${existingUser.nationalIdType || 'CC'}: ${existingUser.nationalId || ''}`;
+
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4 sm:p-6 text-center animate-in fade-in duration-300">
+        <div className="w-full max-w-md bg-white p-6 sm:p-7 rounded-3xl shadow-sm border border-gray-100 flex flex-col items-center gap-4">
+          <div className="w-16 h-16 rounded-full bg-blue-50 text-primary flex items-center justify-center border-2 border-blue-200 shadow-inner">
+            <ShieldCheck size={34} />
+          </div>
+
+          <div>
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold uppercase tracking-wider mb-2">
+              {t('auth:signup.already_has_account_badge')}
+            </span>
+            <h2 className="text-lg font-bold text-gray-800">
+              {t('auth:signup.already_has_account_title')}
+            </h2>
+            <p className="text-xs text-gray-500 mt-2 leading-relaxed">
+              {t('auth:signup.already_has_account_desc')}
+            </p>
+          </div>
+
+          <div className="w-full bg-slate-50 border border-slate-100 rounded-2xl p-3.5 flex flex-col items-center gap-1 text-center">
+            <p className="text-xs font-bold text-gray-800">{existingName}</p>
+            <p className="text-[11px] font-medium text-gray-500">{existingDoc}</p>
+            {existingUser.username && (
+              <p className="text-[11px] font-semibold text-primary font-mono mt-0.5">
+                @{existingUser.username}
+              </p>
+            )}
+          </div>
+
+          {/* PWA Installation Section */}
+          <div className="w-full pt-1">
+            <PwaInstallPrompt />
+          </div>
+
+          <div className="w-full pt-2 flex flex-col gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              onClick={() => navigate(APP_ROUTES.auth.login)}
+              block
+              className="py-3 text-sm font-semibold rounded-xl flex items-center justify-center gap-2"
+            >
+              <LogIn size={16} />
+              {t('auth:signup.already_has_account_action')}
             </Button>
           </div>
         </div>

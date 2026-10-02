@@ -56,6 +56,7 @@ const GenerateGuardianQRView: React.FC = () => {
   const [generateActivationToken, { isLoading: isGeneratingActivation }] =
     useGenerateGuardianActivationTokenMutation();
   const [activationToken, setActivationToken] = useState<string | null>(null);
+  const [guardianAlreadyHasAccount, setGuardianAlreadyHasAccount] = useState(false);
 
   const handleSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -68,6 +69,7 @@ const GenerateGuardianQRView: React.FC = () => {
     setWhatsappUrl(undefined);
     setQrCodeUrl(undefined);
     setActivationToken(null);
+    setGuardianAlreadyHasAccount(false);
     setActiveTab('checkin');
     setGuardianError(null);
     try {
@@ -143,6 +145,7 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
   const handleGenerateActivation = async () => {
     if (!guardian) return;
     try {
+      setGuardianAlreadyHasAccount(false);
       const response = await generateActivationToken({
         guardianId: guardian.id,
         nationalId: guardian.nationalId,
@@ -154,7 +157,16 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
       }
     } catch (err: unknown) {
       const errorResponse = err as { data?: { message?: string }; message?: string };
-      toast.error(errorResponse?.data?.message || errorResponse?.message || 'Error al generar código de activación');
+      const errorMessage =
+        errorResponse?.data?.message ||
+        errorResponse?.message ||
+        '';
+      if (errorMessage.includes('cuenta activa') || errorMessage.includes('ya cuenta')) {
+        setGuardianAlreadyHasAccount(true);
+        toast.info(errorMessage);
+      } else {
+        toast.error(errorMessage || 'Error al generar código de activación');
+      }
     }
   };
 
@@ -385,20 +397,31 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
               </>
             ) : (
               <>
-                {/* Código QR de Activación de Cuenta en la App */}
+                {/* Código QR de Activación de Cuenta / Instalación App */}
                 <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center text-center gap-3">
                   <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 text-blue-700 text-[11px] font-bold">
                     <ShieldCheck size={13} />
-                    {t('kidRegistration:guardian_qr.activation_badge')}
+                    {guardianAlreadyHasAccount
+                      ? t('kidRegistration:guardian_qr.activation_already_active_badge')
+                      : t('kidRegistration:guardian_qr.activation_badge')}
                     <span className="text-gray-400 font-normal ml-1 flex items-center gap-1">
                       <Clock size={11} />
                       {t('kidRegistration:guardian_qr.activation_expires_hint')}
                     </span>
                   </div>
 
+                  {guardianAlreadyHasAccount && (
+                    <div className="w-full flex items-center gap-2 p-2.5 bg-blue-50/70 border border-blue-200/80 rounded-xl text-left text-blue-900">
+                      <ShieldCheck size={16} className="text-primary shrink-0" />
+                      <p className="text-[11px] font-medium leading-relaxed">
+                        {t('kidRegistration:guardian_qr.activation_already_active_hint')}
+                      </p>
+                    </div>
+                  )}
+
                   <div className="p-3 bg-white rounded-2xl border-2 border-blue-200/80 shadow-sm flex items-center justify-center">
                     {isGeneratingActivation ? (
-                      <div className="w-[300px] h-[300px] flex flex-col items-center justify-center gap-2 text-gray-500">
+                      <div className="w-[280px] h-[280px] flex flex-col items-center justify-center gap-2 text-gray-500">
                         <Loader2 className="animate-spin text-primary" size={36} />
                         <span className="text-xs font-medium">
                           {t('kidRegistration:guardian_qr.activation_generating')}
@@ -407,16 +430,16 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
                     ) : activationUrl ? (
                       <QRCode
                         value={activationUrl}
-                        size={300}
+                        size={280}
                         qrStyle="squares"
                         fgColor="#000000"
                         bgColor="#FFFFFF"
-                        ecLevel="M"
+                        ecLevel="L"
                         quietZone={10}
                         id="qr-code-account-activation"
                       />
                     ) : (
-                      <div className="w-[300px] h-[300px] flex flex-col items-center justify-center gap-3 p-4">
+                      <div className="w-[280px] h-[280px] flex flex-col items-center justify-center gap-3 p-4">
                         <Button
                           type="button"
                           variant="primary"
@@ -430,7 +453,9 @@ Este código es personal, solo lo puede presentar ${guardianTerm.toLowerCase()} 
                   </div>
 
                   <p className="text-xs text-gray-500 font-medium px-2 leading-relaxed">
-                    {t('kidRegistration:guardian_qr.activation_desc', { guardian: guardianTerm.toLowerCase() })}
+                    {guardianAlreadyHasAccount
+                      ? t('kidRegistration:guardian_qr.activation_desc_existing', { guardian: guardianTerm.toLowerCase() })
+                      : t('kidRegistration:guardian_qr.activation_desc', { guardian: guardianTerm.toLowerCase() })}
                   </p>
                 </div>
 

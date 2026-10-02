@@ -18,6 +18,7 @@ const AccountSignupConfirmationView: React.FC = () => {
   const { t } = useTranslation(['auth', 'common']);
   const navigate = useNavigate();
   const token = useAppSelector((state) => state.authSlice.token);
+  const user = useAppSelector((state) => state.authSlice.user);
 
   const handleContinue = () => {
     if (token) {
@@ -53,6 +54,12 @@ const AccountSignupConfirmationView: React.FC = () => {
             <p className="text-sm font-semibold text-emerald-700 mt-1">
               {t('auth:signup_confirmation.subtitle')}
             </p>
+            {user?.username && (
+              <div className="mt-2.5 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 border border-slate-200 text-xs text-slate-700">
+                <span className="font-medium text-slate-500">{t('auth:signup_confirmation.your_username')}</span>
+                <span className="font-mono text-primary font-bold">@{user.username}</span>
+              </div>
+            )}
             <p className="text-xs text-gray-500 mt-2 leading-relaxed max-w-xs mx-auto">
               {t('auth:signup_confirmation.account_ready_desc')}
             </p>

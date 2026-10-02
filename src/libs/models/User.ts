@@ -349,6 +349,7 @@ export interface IActivationTokenResponse {
 
 export interface IVerifyActivationTokenResponse {
   valid: boolean;
+  alreadyHasAccount?: boolean;
   user: {
     id: string;
     firstName: string;
@@ -358,6 +359,7 @@ export interface IVerifyActivationTokenResponse {
     phone?: string;
     dialCodePhone?: string;
     email?: string;
+    username?: string;
     hasPassword: boolean;
   };
 }

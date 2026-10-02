@@ -20,12 +20,19 @@ const TermsAcceptanceModal: React.FC = () => {
   const location = useLocation();
   const token = useAppSelector((state) => state.authSlice.token);
 
-  // Do not show TermsAcceptanceModal while user is resolving login / biometric prompt on login page
-  const isOnAuthPage = location.pathname === APP_ROUTES.auth.login;
+  // Exclude public/auth routes so the terms modal does not interrupt activation or login screens
+  const publicAuthRoutes: string[] = [
+    APP_ROUTES.auth.login,
+    APP_ROUTES.public.signup,
+    APP_ROUTES.public.signupConfirmation,
+    APP_ROUTES.public.volunteerRequest,
+  ];
+  const isPublicAuthRoute = publicAuthRoutes.includes(location.pathname);
 
-  // Skip query if user is not authenticated or still on the login screen
+  // Fetch pending terms fresh whenever the user enters the authenticated app space
   const { data, isLoading } = useGetPendingTermsQuery(undefined, {
-    skip: !token || isOnAuthPage,
+    skip: !token || isPublicAuthRoute,
+    refetchOnMountOrArgChange: true,
   });
 
   const [acceptTermsMutation] = useAcceptTermsMutation();
@@ -33,7 +40,7 @@ const TermsAcceptanceModal: React.FC = () => {
   const [docDrawerOpen, setDocDrawerOpen] = useState(false);
   const [docDrawerTab, setDocDrawerTab] = useState<'terms' | 'privacy'>('terms');
 
-  const hasPending = Boolean(token && !isOnAuthPage && !isLoading && data?.hasPending);
+  const hasPending = Boolean(token && !isPublicAuthRoute && !isLoading && data?.hasPending);
   const pendingItems = data?.pendingTerms?.filter((term) => term.mandatory && !term.accepted) || [];
 
   const handleAcceptAll = async () => {

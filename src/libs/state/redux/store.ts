@@ -26,7 +26,7 @@ import volunteerContextSlice from './slices/church/volunteerContext.slice';
 import kidSlice from './slices/kid-church/kid.slice';
 import scanQRKidGuardianSlice from './slices/kid-church/scan-code-kid-registration.slice';
 import accountSlice from './slices/user/account.slice';
-import authSlice from './slices/user/auth.slice';
+import authSlice, { logout } from './slices/user/auth.slice';
 import editUserSlice from './slices/user/editUser.slice';
 import userSlice from './slices/user/users.slice';
 
@@ -164,7 +164,26 @@ const persistConfig = {
   transforms: [activeContextOnlyTransform],
 };
 
-const persistedReducer = persistReducer<ReturnType<typeof reducers>>(persistConfig, reducers);
+/**
+ * Root reducer interceptor that purges RTK Query cache whenever the user logs out
+ * or switches session, preventing data leakage across different user accounts.
+ */
+const rootReducer = (state: any, action: any) => {
+  if (
+    action.type === logout.type ||
+    action.type === 'auth/setAuthSession' ||
+    action.type === 'user/setAuthSession' ||
+    action.type === 'user/UserLogin/fulfilled'
+  ) {
+    state = {
+      ...state,
+      [baseApi.reducerPath]: undefined,
+    };
+  }
+  return reducers(state, action);
+};
+
+const persistedReducer = persistReducer<ReturnType<typeof reducers>>(persistConfig, rootReducer);
 
 export const store = configureStore({
   reducer: persistedReducer,
