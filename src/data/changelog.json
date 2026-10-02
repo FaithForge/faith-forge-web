@@ -1,5 +1,19 @@
 [
   {
+    "version": "3.13.0",
+    "type": "minor",
+    "timestamp": "2026-10-02T02:37:15.225Z",
+    "dateFormatted": "01/10/2026 09:37 PM",
+    "title": "Nueva pantalla de perfil y edición de datos",
+    "changes": [
+      "Nueva vista de perfil con diseño moderno donde puedes consultar tus datos personales, roles y áreas de servicio",
+      "Opción para actualizar tus datos de contacto básicos (nombres, teléfono, correo, fecha de nacimiento y EPS)",
+      "Acceso directo a la configuración de seguridad del dispositivo para huella, notificaciones y mantenimiento",
+      "Opción para descargar el reporte de organización en formato vertical optimizado para teléfonos móviles y WhatsApp",
+      "Reportes ejecutivos más claros y legibles con plantillas de equipos organizadas por grupo"
+    ]
+  },
+  {
     "version": "3.12.1",
     "type": "patch",
     "timestamp": "2026-09-30T23:40:09.947Z",

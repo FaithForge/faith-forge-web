@@ -49,6 +49,7 @@ export const APP_ROUTES = {
     myTeam: '/kid-registration/my-team',
   },
   hub: '/hub',
+  profile: '/profile',
   kidGuardian: {
     root: '/kid-guardian',
     qr: '/kid-guardian/qr',

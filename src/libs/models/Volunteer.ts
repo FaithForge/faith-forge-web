@@ -279,6 +279,8 @@ export interface IVolunteerAreaAssignmentContext {
   role: VolunteerRole;
   permissions: string[];
   serviceAreaGroupId?: string;
+  ministryId?: string;
+  ministryName?: string;
 }
 
 export interface IVolunteerGroupConfigContext {

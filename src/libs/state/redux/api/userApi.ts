@@ -1,5 +1,5 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
-import { IInAppNotificationsResponse, IUserOverviewResponse } from '@/libs/models';
+import { IInAppNotificationsResponse, IUser, IUpdateMyProfile, IUserOverviewResponse } from '@/libs/models';
 import { UserExperienceEnum } from '@/libs/utils/auth';
 import { baseApi } from './baseApi';
 
@@ -16,6 +16,16 @@ export const userApi = baseApi.injectEndpoints({
         method: HttpRequestMethod.GET,
       }),
       providesTags: ['UserOverview'],
+    }),
+
+    updateMyProfile: builder.mutation<IUser, IUpdateMyProfile>({
+      query: (data) => ({
+        microservice: MicroserviceEnum.User,
+        url: '/user/me',
+        method: HttpRequestMethod.PUT,
+        data,
+      }),
+      invalidatesTags: ['UserOverview'],
     }),
 
     getVapidPublicKey: builder.query<{ publicKey: string }, { token?: string } | void>({
@@ -165,6 +175,7 @@ export const userApi = baseApi.injectEndpoints({
 export const {
   useGetMyOverviewQuery,
   useLazyGetMyOverviewQuery,
+  useUpdateMyProfileMutation,
   useGetVapidPublicKeyQuery,
   useLazyGetVapidPublicKeyQuery,
   useSubscribePushNotificationMutation,

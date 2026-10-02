@@ -25,7 +25,11 @@ const ChangelogDrawer = React.lazy(() => import('@/components/modal/ChangelogDra
  *
  * @returns {JSX.Element} The rendered Kid Guardian layout.
  */
-const KidGuardianLayout: React.FC = () => {
+export interface KidGuardianLayoutProps {
+  children?: React.ReactNode;
+}
+
+const KidGuardianLayout: React.FC<KidGuardianLayoutProps> = ({ children }) => {
   const { t } = useTranslation(['kidGuardian', 'common', 'auth']);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -174,7 +178,7 @@ const KidGuardianLayout: React.FC = () => {
                 </div>
 
                 <DropdownMenu.Item
-                  onSelect={() => handleOpenProfile(true)}
+                  onSelect={() => navigate(APP_ROUTES.profile)}
                   className="flex items-center gap-2.5 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 rounded-xl cursor-pointer transition-colors outline-hidden"
                 >
                   <User className="w-4 h-4 text-slate-500" />
@@ -222,7 +226,7 @@ const KidGuardianLayout: React.FC = () => {
 
       {/* Main Content Area */}
       <main className="flex-1 max-w-lg w-full mx-auto p-4 pb-12">
-        <Outlet />
+        {children || <Outlet />}
       </main>
 
       {/* Lazy-loaded User Profile Modal */}

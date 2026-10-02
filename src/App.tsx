@@ -58,6 +58,7 @@ const VolunteerRequestPublicView = lazy(
 );
 const TermsOfServiceView = lazy(() => import('@/views/legal/TermsOfServiceView'));
 const PrivacyPolicyView = lazy(() => import('@/views/legal/PrivacyPolicyView'));
+const ProfileRoute = lazy(() => import('@/views/profile/ProfileRoute'));
 const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
 const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
 const VolunteerAttendanceView = lazy(
@@ -243,6 +244,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               {/* Hub: Experience selector */}
               <Route path={APP_ROUTES.hub} element={<HubView />} />
+              <Route path={APP_ROUTES.profile} element={<ProfileRoute />} />
 
               {/* Kid Guardian Experience */}
               <Route path={APP_ROUTES.kidGuardian.root} element={<KidGuardianLayout />}>

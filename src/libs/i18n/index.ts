@@ -8,6 +8,7 @@ import admin from '@/locales/es/admin.json';
 import kidGuardian from '@/locales/es/kidGuardian.json';
 import hub from '@/locales/es/hub.json';
 import legal from '@/locales/es/legal.json';
+import profile from '@/locales/es/profile.json';
 
 export const defaultNS = 'common';
 export const resources = {
@@ -20,6 +21,7 @@ export const resources = {
     kidGuardian,
     hub,
     legal,
+    profile,
   },
 } as const;
 

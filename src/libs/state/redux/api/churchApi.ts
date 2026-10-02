@@ -10,6 +10,7 @@ import {
   GetVolunteerAttendancePayload,
   CreateVolunteerAttendancePayload,
   BatchCreateVolunteerAttendancePayload,
+  IVolunteer,
 } from '@/libs/models';
 import { baseApi } from './baseApi';
 
@@ -251,6 +252,16 @@ export const churchApi = baseApi.injectEndpoints({
         { type: 'VolunteerAttendance', id: 'SUMMARY' },
       ],
     }),
+
+    getVolunteerByUserId: builder.query<IVolunteer | null, { userId: string }>({
+      query: ({ userId }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/volunteer/by-user/${userId}`,
+        method: HttpRequestMethod.GET,
+      }),
+      providesTags: (result) =>
+        result ? [{ type: 'VolunteerAssignment', id: result.id }] : [],
+    }),
   }),
   overrideExisting: false,
 });
@@ -272,5 +283,7 @@ export const {
   useLazyGetVolunteerAttendanceSummaryQuery,
   useRecordVolunteerAttendanceMutation,
   useRecordBatchVolunteerAttendanceMutation,
+  useGetVolunteerByUserIdQuery,
+  useLazyGetVolunteerByUserIdQuery,
 } = churchApi;
 

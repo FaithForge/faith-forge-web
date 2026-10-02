@@ -92,6 +92,7 @@ export interface IUser {
   username?: string;
   healthSecurityEntity?: string;
   roles: UserRole[];
+  createdAt?: string | Date;
 }
 
 export interface IUpdateUser {
@@ -109,6 +110,18 @@ export interface IUpdateUser {
   photoUrl?: string;
   username?: string;
   healthSecurityEntity?: string;
+}
+
+export interface IUpdateMyProfile {
+  firstName?: string;
+  lastName?: string;
+  dialCodePhone?: string;
+  phone?: string;
+  email?: string;
+  gender?: UserGenderCode | string;
+  birthday?: string | Date;
+  healthSecurityEntity?: string;
+  photoUrl?: string;
 }
 
 export const healthSecurityEntitySelect: SelectorOption[] = [

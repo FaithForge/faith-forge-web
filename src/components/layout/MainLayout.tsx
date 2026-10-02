@@ -37,7 +37,11 @@ const PRESERVED_SCROLL_ROUTES = new Set<string>([
  *
  * @returns {JSX.Element} The rendered main layout content.
  */
-const MainLayoutContent = () => {
+interface MainLayoutProps {
+  children?: React.ReactNode;
+}
+
+const MainLayoutContent: React.FC<MainLayoutProps> = ({ children }) => {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -276,7 +280,7 @@ const MainLayoutContent = () => {
           transition={{ duration: 0.15, ease: 'easeOut' }}
           className={clsx("flex-1 flex flex-col min-h-0", !isAdminRole ? "pb-32 sm:pb-36" : "pb-4")}
         >
-          <Outlet />
+          {children || <Outlet />}
         </motion.div>
       </main>
 
@@ -292,12 +296,16 @@ const MainLayoutContent = () => {
  *
  * @returns {JSX.Element} Composed application shell with providers.
  */
-const MainLayout = () => {
+export interface MainLayoutWrapperProps {
+  children?: React.ReactNode;
+}
+
+const MainLayout: React.FC<MainLayoutWrapperProps> = ({ children }) => {
   return (
     <NavigationGuardProvider>
       <SearchScrollProvider>
         <RoleTransitionProvider>
-          <MainLayoutContent />
+          <MainLayoutContent>{children}</MainLayoutContent>
         </RoleTransitionProvider>
       </SearchScrollProvider>
     </NavigationGuardProvider>

@@ -1259,7 +1259,7 @@ const TopBar = () => {
               </div>
               
               <DropdownMenu.Item 
-                onSelect={() => handleOpenProfile(true)}
+                onSelect={() => navigate(APP_ROUTES.profile)}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
               >
                 <User size={16} className="text-text-muted" />

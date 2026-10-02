@@ -31,7 +31,11 @@ const NotificationsDrawer = lazy(() => import('@/components/modal/NotificationsD
  *
  * @returns {JSX.Element} The rendered Admin layout content.
  */
-const AdminLayoutContent: React.FC = () => {
+interface AdminLayoutProps {
+  children?: React.ReactNode;
+}
+
+const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
   const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
   const location = useLocation();
@@ -208,7 +212,7 @@ const AdminLayoutContent: React.FC = () => {
                 </div>
 
                 <DropdownMenu.Item
-                  onSelect={() => handleOpenProfile(true)}
+                  onSelect={() => navigate(APP_ROUTES.profile)}
                   className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm text-gray-700"
                 >
                   <User size={16} className="text-gray-500" />
@@ -259,7 +263,7 @@ const AdminLayoutContent: React.FC = () => {
         onScroll={handleScroll}
         className="flex-1 overflow-y-auto flex flex-col bg-slate-50"
       >
-        <Outlet />
+        {children || <Outlet />}
       </main>
 
       {/* Profile Modal */}
@@ -296,11 +300,11 @@ const AdminLayoutContent: React.FC = () => {
  *
  * @returns {JSX.Element} Composed admin layout shell.
  */
-const AdminLayout: React.FC = () => {
+const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
     <NavigationGuardProvider>
       <SearchScrollProvider>
-        <AdminLayoutContent />
+        <AdminLayoutContent>{children}</AdminLayoutContent>
       </SearchScrollProvider>
     </NavigationGuardProvider>
   );
