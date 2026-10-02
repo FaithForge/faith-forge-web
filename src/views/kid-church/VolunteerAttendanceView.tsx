@@ -2,17 +2,19 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
-  ArrowUp,
+  AlertCircle,
+  AlertTriangle,
+  Building2,
   Check,
-  ChevronLeft,
+  CheckCircle2,
   ChevronRight,
+  Clock,
   FileText,
-  X,
   Minus,
   RefreshCw,
+  UserCheck,
   Users,
-  Search,
+  X,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -26,102 +28,140 @@ import {
 import {
   EntityState,
   IVolunteerAssignment,
-  MinistryType,
   VolunteerAttendanceStatus,
   VolunteerRole,
 } from '@/libs/models';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useVolunteerAttendanceLiveSync } from '@/libs/hooks/useVolunteerAttendanceLiveSync';
-import { getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { isFeatureEnabled } from '@/config/features';
 import { APP_ROUTES } from '@/config/routes';
-import { capitalizeWords } from '@/libs/utils/text';
 import PullToRefresh from '@/components/ui/PullToRefresh';
-import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import AreaAttendanceDrawer from './components/AreaAttendanceDrawer';
 
 const EMPTY_ASSIGNMENTS: IVolunteerAssignment[] = [];
 
-type AttendanceStatusKey =
-  | 'volunteer_attendance.status.ATTENDED'
-  | 'volunteer_attendance.status.EXCUSED'
-  | 'volunteer_attendance.status.UNEXCUSED'
-  | 'volunteer_attendance.status.EXEMPT'
-  | 'volunteer_attendance.short_status.ATTENDED'
-  | 'volunteer_attendance.short_status.EXCUSED'
-  | 'volunteer_attendance.short_status.UNEXCUSED'
-  | 'volunteer_attendance.short_status.EXEMPT';
-
-interface StatusOption {
-  status: VolunteerAttendanceStatus;
-  labelKey: AttendanceStatusKey;
-  icon: React.ComponentType<{ className?: string }>;
-  iconColor: string;
-  selectedClass: string;
-  unselectedClass: string;
+export interface AreaStats {
+  id: string;
+  name: string;
+  total: number;
+  taken: number;
+  pending: number;
+  attended: number;
+  excused: number;
+  unexcused: number;
+  exempt: number;
+  isComplete: boolean;
+  assignments: IVolunteerAssignment[];
 }
 
-const STATUS_OPTIONS: StatusOption[] = [
-  {
-    status: VolunteerAttendanceStatus.ATTENDED,
-    labelKey: 'volunteer_attendance.short_status.ATTENDED',
-    icon: Check,
-    iconColor: 'text-emerald-600',
-    selectedClass: 'bg-emerald-600 text-white font-bold shadow-xs border-emerald-600 ring-2 ring-emerald-600/30 scale-[1.02]',
-    unselectedClass: 'bg-slate-50/90 text-slate-700 border-slate-200/90 hover:bg-emerald-50/70 hover:text-emerald-800 hover:border-emerald-300',
-  },
-  {
-    status: VolunteerAttendanceStatus.EXCUSED,
-    labelKey: 'volunteer_attendance.short_status.EXCUSED',
-    icon: FileText,
-    iconColor: 'text-amber-600',
-    selectedClass: 'bg-amber-500 text-white font-bold shadow-xs border-amber-500 ring-2 ring-amber-500/30 scale-[1.02]',
-    unselectedClass: 'bg-slate-50/90 text-slate-700 border-slate-200/90 hover:bg-amber-50/70 hover:text-amber-800 hover:border-amber-200',
-  },
-  {
-    status: VolunteerAttendanceStatus.UNEXCUSED,
-    labelKey: 'volunteer_attendance.short_status.UNEXCUSED',
-    icon: X,
-    iconColor: 'text-rose-600',
-    selectedClass: 'bg-rose-600 text-white font-bold shadow-xs border-rose-600 ring-2 ring-rose-600/30 scale-[1.02]',
-    unselectedClass: 'bg-slate-50/90 text-slate-700 border-slate-200/90 hover:bg-rose-50/70 hover:text-rose-800 hover:border-rose-200',
-  },
-  {
-    status: VolunteerAttendanceStatus.EXEMPT,
-    labelKey: 'volunteer_attendance.short_status.EXEMPT',
-    icon: Minus,
-    iconColor: 'text-slate-500',
-    selectedClass: 'bg-slate-700 text-white font-bold shadow-xs border-slate-700 ring-2 ring-slate-700/30 scale-[1.02]',
-    unselectedClass: 'bg-slate-50/90 text-slate-700 border-slate-200/90 hover:bg-slate-100 hover:text-slate-900 hover:border-slate-300',
-  },
-];
-
 /**
- * Resolves the styling classes for the top-right status badge.
+ * Skeleton loader matching the statistical attendance dashboard structure.
  *
- * @param {VolunteerAttendanceStatus} [status] - The volunteer's current attendance status.
- * @returns {string} Tailwind CSS class list for the badge.
+ * @returns {JSX.Element} Rendered animated dashboard skeleton.
  */
-const getStatusBadgeClass = (status?: VolunteerAttendanceStatus): string => {
-  switch (status) {
-    case VolunteerAttendanceStatus.ATTENDED:
-      return 'bg-emerald-50 text-emerald-800 border-emerald-200/90 font-bold';
-    case VolunteerAttendanceStatus.EXCUSED:
-      return 'bg-amber-50 text-amber-800 border-amber-200/90 font-bold';
-    case VolunteerAttendanceStatus.UNEXCUSED:
-      return 'bg-rose-50 text-rose-800 border-rose-200/90 font-bold';
-    case VolunteerAttendanceStatus.EXEMPT:
-      return 'bg-slate-100 text-slate-700 border-slate-200 font-bold';
-    default:
-      return 'bg-amber-100/90 text-amber-900 border-amber-300 font-extrabold';
-  }
+const VolunteerAttendanceDashboardSkeleton: React.FC = () => {
+  return (
+    <div
+      className="space-y-4 animate-pulse pt-1"
+      aria-busy="true"
+      aria-label="Cargando estadísticas de asistencia"
+    >
+      {/* 1. Status Banner Skeleton */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-4 shadow-2xs">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-xl bg-slate-200 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-2">
+              <div className="h-4 w-44 bg-slate-200 rounded-md" />
+              <div className="h-4 w-20 bg-slate-200 rounded-full" />
+            </div>
+            <div className="h-3 w-4/5 bg-slate-100 rounded-md mt-2" />
+            {/* Progress bar skeleton */}
+            <div className="mt-3">
+              <div className="flex justify-between mb-1.5">
+                <div className="h-2.5 w-24 bg-slate-100 rounded-md" />
+                <div className="h-2.5 w-8 bg-slate-100 rounded-md" />
+              </div>
+              <div className="h-2 w-full bg-slate-100 rounded-full" />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 2. 4 General Statistics Cards Skeleton */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
+        {[0, 1, 2, 3].map((idx) => (
+          <div
+            key={idx}
+            className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200 shadow-2xs flex flex-col justify-between"
+          >
+            <div className="flex items-center justify-between">
+              <div className="w-7 h-7 rounded-lg bg-slate-200" />
+              <div className="h-6 w-8 bg-slate-200 rounded-md" />
+            </div>
+            <div className="mt-2.5">
+              <div className="h-3.5 w-16 bg-slate-200 rounded-md" />
+              <div className="h-2.5 w-24 bg-slate-100 rounded-md mt-1" />
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* 3. Section Title Skeleton */}
+      <div className="flex items-center justify-between pt-1">
+        <div className="flex items-center gap-2">
+          <div className="h-4 w-36 bg-slate-200 rounded-md" />
+          <div className="h-4 w-12 bg-slate-200 rounded-full" />
+        </div>
+        <div className="h-3.5 w-16 bg-slate-100 rounded-md" />
+      </div>
+
+      {/* 4. Area Cards Skeleton (3 cards) */}
+      <div className="space-y-3">
+        {[0, 1, 2].map((idx) => (
+          <div
+            key={idx}
+            className="bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200 shadow-2xs space-y-3"
+          >
+            {/* Title & Badge */}
+            <div className="flex items-center justify-between">
+              <div className="h-5 w-40 bg-slate-200 rounded-md" />
+              <div className="h-5 w-16 bg-slate-200 rounded-full" />
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <div className="h-2.5 w-20 bg-slate-100 rounded-md" />
+                <div className="h-2.5 w-8 bg-slate-100 rounded-md" />
+              </div>
+              <div className="h-1.5 w-full bg-slate-100 rounded-full" />
+            </div>
+
+            {/* 4 Compact Stat Pills */}
+            <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-100">
+              <div className="grid grid-cols-4 gap-1.5 flex-1">
+                {[0, 1, 2, 3].map((pillIdx) => (
+                  <div key={pillIdx} className="h-6 bg-slate-100 rounded-lg" />
+                ))}
+              </div>
+              <div className="w-5 h-5 bg-slate-100 rounded-full shrink-0" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 };
 
 /**
- * Mobile-first screen enabling group coordinators to record and update
- * volunteer attendance for their assigned team during an active church meeting.
+ * Mobile-first statistical dashboard enabling group coordinators to view attendance
+ * metrics (attended, excused, unexcused, exempt), assess data completeness via a status banner,
+ * and drill into individual areas via a lateral slide-over sheet to record attendance.
  *
- * @returns {JSX.Element} Rendered volunteer attendance screen.
+ * @returns {JSX.Element} Rendered volunteer attendance statistical dashboard.
  */
 export const VolunteerAttendanceView: React.FC = () => {
   const { t } = useTranslation(['kidChurch', 'common']);
@@ -130,6 +170,12 @@ export const VolunteerAttendanceView: React.FC = () => {
 
   const { currentMeeting, currentCampus } = useChurchMeetingStatus();
   const { canTakeVolunteerAttendance, isSuperAdmin } = usePermissions();
+
+  const classroomTerm = useKidsTerm('classroom');
+  const classroomsTerm = useKidsTerm('classrooms');
+  const teachersTerm = useKidsTerm('teachers');
+  const teacherTerm = useKidsTerm('teacher');
+  const meetingTerm = useChurchTerm('meeting');
 
   // Guard: Feature flag gating and permission
   useEffect(() => {
@@ -140,6 +186,7 @@ export const VolunteerAttendanceView: React.FC = () => {
 
   const {
     activeCampusId,
+    activeCampusName,
     activeGroupConfigId,
     activeGroupConfigName,
   } = useAppSelector((state) => state.volunteerContextSlice);
@@ -151,6 +198,7 @@ export const VolunteerAttendanceView: React.FC = () => {
   );
 
   const effectiveCampusId = activeCampusId || currentCampus?.id;
+  const effectiveCampusName = activeCampusName || currentCampus?.name;
   const effectiveGroupId =
     activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP'
       ? activeGroupConfigId
@@ -171,43 +219,7 @@ export const VolunteerAttendanceView: React.FC = () => {
   const [optimisticStatusMap, setOptimisticStatusMap] = useState<
     Record<string, VolunteerAttendanceStatus>
   >({});
-  const [selectedAreaId, setSelectedAreaId] = useState<string>('ALL');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [showScrollTop, setShowScrollTop] = useState(false);
-
-  // Monitor scroll position on viewport and main element
-  useEffect(() => {
-    const mainEl = document.querySelector('main');
-    const handleScroll = () => {
-      const scrollPos = mainEl ? mainEl.scrollTop : window.scrollY;
-      setShowScrollTop(scrollPos > 300);
-    };
-
-    if (mainEl) {
-      mainEl.addEventListener('scroll', handleScroll, { passive: true });
-    }
-    window.addEventListener('scroll', handleScroll, { passive: true });
-
-    return () => {
-      if (mainEl) {
-        mainEl.removeEventListener('scroll', handleScroll);
-      }
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  /**
-   * Scrolls the viewport smoothly back to the top.
-   *
-   * @returns {void}
-   */
-  const handleScrollToTop = (): void => {
-    const mainEl = document.querySelector('main');
-    if (mainEl) {
-      mainEl.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
+  const [drawerAreaId, setDrawerAreaId] = useState<string | null>(null);
 
   // Fetch active team assignments for this coordinator's group
   const loadTeamData = React.useCallback(() => {
@@ -247,7 +259,7 @@ export const VolunteerAttendanceView: React.FC = () => {
     },
   );
 
-  // Realtime Live Sync: Receives SSE events and auto-invalidates RTK Query cache
+  // Realtime Live Sync: SSE events and auto-invalidates RTK Query cache
   useVolunteerAttendanceLiveSync({
     churchMeetingId: currentMeeting?.id,
     enabled: Boolean(currentMeeting?.id && (effectiveGroupId || isSuperAdmin)),
@@ -294,142 +306,110 @@ export const VolunteerAttendanceView: React.FC = () => {
     );
   }, [assignments]);
 
-  // Unique available areas extracted and sorted alphabetically with live taken counts
-  const availableAreas = useMemo(() => {
-    const areaMap = new Map<
-      string,
-      { id: string; name: string; count: number; takenCount: number }
-    >();
+  // Computed live metrics per area
+  const areaStatsList: AreaStats[] = useMemo(() => {
+    const areaMap = new Map<string, AreaStats>();
 
     for (const asg of eligibleAssignments) {
       const area = asg.serviceAreaGroup?.ministryArea || asg.ministryArea;
       const id = area?.id || asg.ministryAreaId || asg.serviceAreaGroupId || 'NO_AREA';
       const name = area?.name || t('volunteer_attendance.other_areas');
 
-      const isTaken = Boolean(
-        optimisticStatusMap[asg.id] ?? attendanceMap.get(asg.id)?.attendanceStatus,
-      );
+      const currentStatus =
+        optimisticStatusMap[asg.id] ?? attendanceMap.get(asg.id)?.attendanceStatus;
 
-      const existing = areaMap.get(id);
-      if (existing) {
-        existing.count++;
-        if (isTaken) existing.takenCount++;
-      } else {
-        areaMap.set(id, { id, name, count: 1, takenCount: isTaken ? 1 : 0 });
+      let entry = areaMap.get(id);
+      if (!entry) {
+        entry = {
+          id,
+          name,
+          total: 0,
+          taken: 0,
+          pending: 0,
+          attended: 0,
+          excused: 0,
+          unexcused: 0,
+          exempt: 0,
+          isComplete: false,
+          assignments: [],
+        };
+        areaMap.set(id, entry);
+      }
+
+      entry.total++;
+      entry.assignments.push(asg);
+
+      if (currentStatus) {
+        entry.taken++;
+        if (currentStatus === VolunteerAttendanceStatus.ATTENDED) entry.attended++;
+        else if (currentStatus === VolunteerAttendanceStatus.EXCUSED) entry.excused++;
+        else if (currentStatus === VolunteerAttendanceStatus.UNEXCUSED) entry.unexcused++;
+        else if (currentStatus === VolunteerAttendanceStatus.EXEMPT) entry.exempt++;
       }
     }
 
-    return Array.from(areaMap.values()).sort((a, b) =>
-      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
-    );
-  }, [eligibleAssignments, attendanceMap, optimisticStatusMap, t]);
+    const list = Array.from(areaMap.values()).map((entry) => ({
+      ...entry,
+      pending: Math.max(0, entry.total - entry.taken),
+      isComplete: entry.total > 0 && entry.taken === entry.total,
+    }));
 
-  // Reset selected area if it's no longer present
-  useEffect(() => {
-    if (selectedAreaId !== 'ALL' && !availableAreas.some((a) => a.id === selectedAreaId)) {
-      setSelectedAreaId('ALL');
-    }
-  }, [availableAreas, selectedAreaId]);
+    return list.sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+  }, [eligibleAssignments, optimisticStatusMap, attendanceMap, t]);
 
-  const areaScrollRef = React.useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
+  // Computed Overall Team Metrics
+  const generalStats = useMemo(() => {
+    let attended = 0;
+    let excused = 0;
+    let unexcused = 0;
+    let exempt = 0;
 
-  /**
-   * Checks whether the horizontal area chip list can scroll left or right.
-   *
-   * @returns {void}
-   */
-  const checkAreaScroll = (): void => {
-    if (!areaScrollRef.current) return;
-    const { scrollLeft, scrollWidth, clientWidth } = areaScrollRef.current;
-    setCanScrollLeft(scrollLeft > 6);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
-  };
-
-  /**
-   * Scrolls the area filter chips smoothly left or right.
-   *
-   * @param {'left' | 'right'} direction - Scroll direction.
-   * @returns {void}
-   */
-  const handleScrollArea = (direction: 'left' | 'right'): void => {
-    if (!areaScrollRef.current) return;
-    const offset = direction === 'left' ? -180 : 180;
-    areaScrollRef.current.scrollBy({ left: offset, behavior: 'smooth' });
-    setTimeout(checkAreaScroll, 300);
-  };
-
-  useEffect(() => {
-    const timer = setTimeout(checkAreaScroll, 150);
-    window.addEventListener('resize', checkAreaScroll);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener('resize', checkAreaScroll);
-    };
-  }, [availableAreas]);
-
-  // Filter assignments by area and search term, sorted alphabetically by volunteer name
-  const filteredAssignments = useMemo(() => {
-    return eligibleAssignments
-      .filter((asg) => {
-        // Area filter
-        if (selectedAreaId !== 'ALL') {
-          const area = asg.serviceAreaGroup?.ministryArea || asg.ministryArea;
-          const areaId = area?.id || asg.ministryAreaId || asg.serviceAreaGroupId || 'NO_AREA';
-          if (areaId !== selectedAreaId) return false;
-        }
-
-        // Search term filter
-        if (!searchTerm.trim()) return true;
-
-        const user = asg.churchMember?.user || asg.user;
-        const fullName = `${user?.firstName || ''} ${user?.lastName || ''}`.toLowerCase();
-        const nationalId = (user?.nationalId || '').toLowerCase();
-        const query = searchTerm.toLowerCase().trim();
-
-        return fullName.includes(query) || nationalId.includes(query);
-      })
-      .sort((a, b) => {
-        const userA = a.churchMember?.user || a.user;
-        const userB = b.churchMember?.user || b.user;
-        const nameA = `${userA?.firstName || ''} ${userA?.lastName || ''}`.trim();
-        const nameB = `${userB?.firstName || ''} ${userB?.lastName || ''}`.trim();
-        return nameA.localeCompare(nameB, 'es', { sensitivity: 'base' });
-      });
-  }, [eligibleAssignments, selectedAreaId, searchTerm]);
-
-  // Overall Team Metrics (independent of active filter/search)
-  const totalTeamCount = eligibleAssignments.length;
-  const takenTeamCount = useMemo(() => {
-    let count = 0;
     for (const asg of eligibleAssignments) {
-      const hasStatus =
+      const currentStatus =
         optimisticStatusMap[asg.id] ?? attendanceMap.get(asg.id)?.attendanceStatus;
-      if (hasStatus) count++;
+      if (currentStatus === VolunteerAttendanceStatus.ATTENDED) attended++;
+      else if (currentStatus === VolunteerAttendanceStatus.EXCUSED) excused++;
+      else if (currentStatus === VolunteerAttendanceStatus.UNEXCUSED) unexcused++;
+      else if (currentStatus === VolunteerAttendanceStatus.EXEMPT) exempt++;
     }
-    return count;
-  }, [eligibleAssignments, attendanceMap, optimisticStatusMap]);
-  const pendingTeamCount = Math.max(0, totalTeamCount - takenTeamCount);
 
-  // Active Filter Metrics (filtered by selected area and search)
-  const totalVolunteers = filteredAssignments.length;
-  const takenCount = useMemo(() => {
-    let count = 0;
-    for (const asg of filteredAssignments) {
-      const hasStatus =
-        optimisticStatusMap[asg.id] ?? attendanceMap.get(asg.id)?.attendanceStatus;
-      if (hasStatus) count++;
+    const total = eligibleAssignments.length;
+    const taken = attended + excused + unexcused + exempt;
+    const pending = Math.max(0, total - taken);
+    const percent = total > 0 ? Math.round((taken / total) * 100) : 0;
+    const isComplete = total > 0 && pending === 0;
+
+    return {
+      total,
+      taken,
+      pending,
+      attended,
+      excused,
+      unexcused,
+      exempt,
+      percent,
+      isComplete,
+    };
+  }, [eligibleAssignments, optimisticStatusMap, attendanceMap]);
+
+  // Active drawer context
+  const activeDrawerArea = useMemo(() => {
+    if (!drawerAreaId) return null;
+    if (drawerAreaId === 'ALL') {
+      return {
+        id: 'ALL',
+        name: t('volunteer_attendance.area_drawer_all_title'),
+        assignments: eligibleAssignments,
+      };
     }
-    return count;
-  }, [filteredAssignments, attendanceMap, optimisticStatusMap]);
-  const pendingCount = Math.max(0, totalVolunteers - takenCount);
-
-  // Selected Area object (if filtering by a specific area)
-  const selectedArea = useMemo(() => {
-    if (selectedAreaId === 'ALL') return null;
-    return availableAreas.find((a) => a.id === selectedAreaId) || null;
-  }, [availableAreas, selectedAreaId]);
+    const found = areaStatsList.find((a) => a.id === drawerAreaId);
+    if (!found) return null;
+    return {
+      id: found.id,
+      name: found.name,
+      assignments: found.assignments,
+    };
+  }, [drawerAreaId, areaStatsList, eligibleAssignments, t]);
 
   /**
    * Records or updates volunteer attendance status with optimistic UI responsiveness.
@@ -461,8 +441,6 @@ export const VolunteerAttendanceView: React.FC = () => {
         attendanceDate: todayIso,
         attendanceStatus: status,
       }).unwrap();
-
-      toast.success(t('volunteer_attendance.save_success'));
     } catch {
       // Revert optimistic update on failure
       setOptimisticStatusMap((prev) => {
@@ -484,453 +462,474 @@ export const VolunteerAttendanceView: React.FC = () => {
     }
   };
 
-  const isLoading = isLoadingAssignments || (isLoadingAttendance && recordedAttendances.length === 0);
+  const isLoading =
+    isLoadingAssignments || (isLoadingAttendance && recordedAttendances.length === 0);
 
   return (
-    <div className="flex flex-col min-h-full bg-slate-50 text-slate-900 pb-8">
-      {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 py-3 shadow-xs">
-        <div className="flex items-center justify-between gap-2 max-w-3xl mx-auto">
-          <div className="flex items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => navigate(-1)}
-              className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 transition-colors shrink-0"
-              aria-label={t('common:actions.back')}
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="text-base font-bold text-slate-900 leading-tight">
-                {t('volunteer_attendance.title')}
-              </h1>
-              <p className="text-xs text-slate-500 font-medium leading-none mt-0.5">
-                {activeGroupConfigName || currentCampus?.name || t('volunteer_attendance.subtitle')}
-                {currentMeeting?.name ? ` • ${currentMeeting.name}` : ''}
-              </p>
-            </div>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              loadTeamData();
-              refetchAttendance();
-            }}
-            disabled={isLoading}
-            className="w-8 h-8 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors shrink-0"
-            title={t('common:actions.refresh')}
-          >
-            <RefreshCw className={clsx('w-4 h-4', isLoading && 'animate-spin text-primary')} />
-          </button>
-        </div>
-      </header>
-
-      {/* Progress & Summary Bar */}
-      <div className="bg-white border-b border-slate-200/80 px-4 py-3 shadow-2xs">
-        <div className="max-w-3xl mx-auto space-y-2">
-          {/* Header row: Context label & Status badge */}
-          <div className="flex items-center justify-between gap-2">
-            <div className="min-w-0 flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs font-bold text-slate-900">
-                {selectedArea ? selectedArea.name : t('volunteer_attendance.title_general')}
-              </span>
-              <span className="text-[11px] font-medium text-slate-500 shrink-0">
-                • {selectedArea ? t('volunteer_attendance.area_scope') : t('volunteer_attendance.team_scope')}
-              </span>
-            </div>
-
-            <span
-              className={clsx(
-                'font-bold px-2.5 py-0.5 rounded-full text-[11px] shrink-0 text-center border whitespace-nowrap',
-                (selectedArea ? pendingCount : pendingTeamCount) === 0 &&
-                  (selectedArea ? totalVolunteers : totalTeamCount) > 0
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
-                  : 'bg-amber-50 text-amber-900 border-amber-200',
-              )}
-            >
-              {(selectedArea ? pendingCount : pendingTeamCount) === 0 &&
-              (selectedArea ? totalVolunteers : totalTeamCount) > 0
-                ? selectedArea
-                  ? t('volunteer_attendance.completed_area_alert')
-                  : t('volunteer_attendance.completed_team_badge')
-                : t('volunteer_attendance.pending_count_badge', {
-                    count: selectedArea ? pendingCount : pendingTeamCount,
-                  })}
-            </span>
-          </div>
-
-          {/* Counts & Progress bar */}
-          <div>
-            <div className="flex items-center justify-between text-xs mb-1 font-semibold">
-              <span className="text-slate-700">
-                {t('volunteer_attendance.progress_count', {
-                  taken: selectedArea ? takenCount : takenTeamCount,
-                  total: selectedArea ? totalVolunteers : totalTeamCount,
-                })}
-              </span>
-              <span className="text-[11px] font-bold text-slate-500">
-                {Math.round(
-                  (selectedArea
-                    ? totalVolunteers > 0
-                      ? takenCount / totalVolunteers
-                      : 0
-                    : totalTeamCount > 0
-                      ? takenTeamCount / totalTeamCount
-                      : 0) * 100,
-                )}
-                %
-              </span>
-            </div>
-
-            <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-              <div
-                className={clsx(
-                  'h-full transition-all duration-300 rounded-full',
-                  (selectedArea ? pendingCount : pendingTeamCount) === 0 &&
-                    (selectedArea ? totalVolunteers : totalTeamCount) > 0
-                    ? 'bg-emerald-500'
-                    : 'bg-primary',
-                )}
-                style={{
-                  width: `${
-                    (selectedArea
-                      ? totalVolunteers > 0
-                        ? takenCount / totalVolunteers
-                        : 0
-                      : totalTeamCount > 0
-                        ? takenTeamCount / totalTeamCount
-                        : 0) * 100
-                  }%`,
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Overall Team Subline when an area or search filter is active */}
-          {(selectedArea || searchTerm) && totalTeamCount > 0 && (
-            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-slate-500 pt-1 font-medium border-t border-slate-100">
-              <span>
-                {t('volunteer_attendance.overall_summary', {
-                  taken: takenTeamCount,
-                  total: totalTeamCount,
-                  pending: pendingTeamCount,
-                })}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedAreaId('ALL');
-                  setSearchTerm('');
-                }}
-                className="text-primary hover:text-primary-dark font-bold underline cursor-pointer shrink-0 ml-2"
-              >
-                {t('volunteer_attendance.view_all')}
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Search Bar */}
-      <div className="px-4 pt-2.5 pb-1.5 max-w-3xl mx-auto w-full">
-        <div className="relative">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('volunteer_attendance.search_placeholder')}
-            className="w-full bg-white border border-slate-200 rounded-xl pl-9.5 pr-9 py-2 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-2xs"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={() => setSearchTerm('')}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
-              aria-label={t('volunteer_attendance.clear_filters')}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Area Filter Chips */}
-      {availableAreas.length > 1 && (
-        <div className="px-4 pb-2.5 max-w-3xl mx-auto w-full">
-          {/* Header with explicit swipe hint for older users */}
-          <div className="flex items-center justify-between text-xs text-slate-500 mb-1.5 px-0.5">
-            <span className="font-semibold text-slate-700">
-              {t('volunteer_attendance.filter_by_area')}
-            </span>
-            <span className="text-[11px] text-primary font-semibold flex items-center gap-1">
-              <span>{t('volunteer_attendance.swipe_hint')}</span>
-              <ChevronRight className="w-3.5 h-3.5 shrink-0" />
-            </span>
-          </div>
-
-          <div className="relative group">
-            {/* Left Scroll Button & Fade Gradient */}
-            {canScrollLeft && (
-              <div className="absolute left-0 top-0 bottom-0 z-10 flex items-center pr-3 bg-gradient-to-r from-slate-50 via-slate-50/80 to-transparent pointer-events-none">
-                <button
-                  type="button"
-                  onClick={() => handleScrollArea('left')}
-                  aria-label={t('volunteer_attendance.scroll_left_hint')}
-                  title={t('volunteer_attendance.scroll_left_hint')}
-                  className="pointer-events-auto w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Chips Scroll Track */}
-            <div
-              ref={areaScrollRef}
-              onScroll={checkAreaScroll}
-              className="flex items-center gap-1.5 overflow-x-auto scroll-smooth py-0.5 no-scrollbar"
-            >
-              <button
-                type="button"
-                onClick={() => setSelectedAreaId('ALL')}
-                className={clsx(
-                  'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
-                  selectedAreaId === 'ALL'
-                    ? 'bg-primary text-white shadow-xs'
-                    : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
-                )}
-              >
-                <span>{t('volunteer_attendance.all_areas')}</span>
-                <span
-                  className={clsx(
-                    'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                    selectedAreaId === 'ALL'
-                      ? 'bg-white/25 text-white'
-                      : 'bg-slate-100 text-slate-600',
-                  )}
-                >
-                  {takenTeamCount}/{eligibleAssignments.length}
+    <div className="flex-1 flex flex-col p-3.5 sm:p-6 max-w-4xl mx-auto w-full space-y-3 sm:space-y-4 pb-28 sm:pb-32 bg-slate-50 text-slate-900">
+      {/* Clean Unified Page Header (matching SupervisorTeamView) */}
+      <div className="flex items-start justify-between gap-3 pt-1">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-xl sm:text-2xl font-black text-gray-900 tracking-tight leading-tight shrink-0">
+              {t('volunteer_attendance.title')}
+            </h1>
+            <div className="inline-flex items-center gap-1.5 flex-wrap">
+              {activeGroupConfigName && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-pink-100 text-pink-700 shrink-0">
+                  <UserCheck size={12} />
+                  {activeGroupConfigName}
                 </span>
-              </button>
-
-              {availableAreas.map((area) => {
-                const isSelected = selectedAreaId === area.id;
-                const isAreaComplete = area.takenCount === area.count && area.count > 0;
-                return (
-                  <button
-                    key={area.id}
-                    type="button"
-                    onClick={() => setSelectedAreaId(area.id)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer shadow-2xs',
-                      isSelected
-                        ? 'bg-primary text-white shadow-xs'
-                        : isAreaComplete
-                          ? 'bg-emerald-50/80 text-emerald-800 hover:bg-emerald-100 border border-emerald-200/80'
-                          : 'bg-white text-slate-600 hover:bg-slate-100 border border-slate-200/80',
-                    )}
-                  >
-                    <span className="truncate max-w-[160px]">{area.name}</span>
-                    <span
-                      className={clsx(
-                        'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                        isSelected
-                          ? 'bg-white/25 text-white'
-                          : isAreaComplete
-                            ? 'bg-emerald-200 text-emerald-900'
-                            : 'bg-slate-100 text-slate-600',
-                      )}
-                    >
-                      {area.takenCount}/{area.count}
-                    </span>
-                  </button>
-                );
-              })}
+              )}
+              {effectiveCampusName && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-gray-100 text-gray-600 shrink-0">
+                  <Building2 size={11} />
+                  {effectiveCampusName}
+                </span>
+              )}
             </div>
-
-            {/* Right Scroll Button & Fade Gradient */}
-            {canScrollRight && (
-              <div className="absolute right-0 top-0 bottom-0 z-10 flex items-center pl-3 bg-gradient-to-l from-slate-50 via-slate-50/80 to-transparent pointer-events-none">
-                <button
-                  type="button"
-                  onClick={() => handleScrollArea('right')}
-                  aria-label={t('volunteer_attendance.scroll_right_hint')}
-                  title={t('volunteer_attendance.scroll_right_hint')}
-                  className="pointer-events-auto w-7 h-7 rounded-full bg-white shadow-md border border-slate-200 text-slate-700 flex items-center justify-center hover:bg-slate-50 active:scale-90 transition-all cursor-pointer"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
           </div>
+          <p className="text-xs text-gray-500 font-medium mt-1">
+            {generalStats.total} {teachersTerm}
+            {' • '}
+            {currentMeeting?.name || meetingTerm}
+          </p>
         </div>
-      )}
 
-      {/* Team Volunteer List */}
-      <main className="flex-1 px-4 max-w-3xl mx-auto w-full">
-        <PullToRefresh
-          onRefresh={async () => {
+        <button
+          type="button"
+          onClick={() => {
             loadTeamData();
-            await refetchAttendance();
+            refetchAttendance();
           }}
+          disabled={isLoading}
+          title={t('common:actions.refresh')}
+          className="mt-0.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200/80 shadow-2xs transition-colors active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
         >
-          {isLoading && filteredAssignments.length === 0 ? (
-            <div className="mt-4">
-              <CellListSkeleton count={4} />
-            </div>
-          ) : filteredAssignments.length === 0 ? (
+          <RefreshCw size={13} className={clsx(isLoading && 'animate-spin text-primary')} />
+          <span className="hidden sm:inline">{t('common:actions.refresh')}</span>
+        </button>
+      </div>
+
+      <PullToRefresh
+        onRefresh={async () => {
+          loadTeamData();
+          await refetchAttendance();
+        }}
+      >
+          {isLoading && eligibleAssignments.length === 0 ? (
+            <VolunteerAttendanceDashboardSkeleton />
+          ) : eligibleAssignments.length === 0 ? (
             <div className="text-center py-16 px-4">
               <div className="w-14 h-14 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3 text-slate-400">
                 <Users className="w-7 h-7" />
               </div>
               <p className="text-sm font-semibold text-slate-700">
-                {eligibleAssignments.length === 0
-                  ? t('volunteer_attendance.no_volunteers')
-                  : t('volunteer_attendance.no_volunteers_filter')}
+                {t('volunteer_attendance.no_volunteers')}
               </p>
-              {eligibleAssignments.length > 0 && (selectedAreaId !== 'ALL' || searchTerm) && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedAreaId('ALL');
-                    setSearchTerm('');
-                  }}
-                  className="mt-3 text-xs font-bold text-primary hover:text-primary-dark underline cursor-pointer"
-                >
-                  {t('volunteer_attendance.clear_filters')}
-                </button>
-              )}
             </div>
           ) : (
-            <div className="space-y-3 mt-1">
-              {filteredAssignments.map((assignment) => {
-                const user = assignment.churchMember?.user || assignment.user;
-                const recorded = attendanceMap.get(assignment.id);
-                const currentStatus =
-                  optimisticStatusMap[assignment.id] ?? recorded?.attendanceStatus;
-                const isSaving = Boolean(savingAssignmentIds[assignment.id]);
-                const firstName = user?.firstName || '';
-                const lastName = user?.lastName || '';
-                const fullName = capitalizeWords(`${firstName} ${lastName}`.trim()) || 'Servidor(a)';
-                const initials = `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase() || 'SV';
-                const roleLabel = getVolunteerRoleLabel(assignment.role, {
-                  ministryType: MinistryType.KIDS,
-                  churchOverrides,
-                  ministryOverrides: assignment.ministry?.terminologyOverrides,
-                  short: true,
-                });
+            <div className="space-y-4">
+              {/* Status Banner: Completeness notice depending on attendance step */}
+              {generalStats.isComplete ? (
+                /* Completed State */
+                <div className="bg-emerald-50 border border-emerald-200/90 rounded-2xl p-3.5 sm:p-4 text-emerald-950 shadow-2xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                      <CheckCircle2 className="w-5 h-5 stroke-[2.5]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h2 className="text-sm font-bold text-emerald-900 leading-tight">
+                          {t('volunteer_attendance.banner.complete_title')}
+                        </h2>
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-200 text-emerald-900 shrink-0">
+                          100% {t('volunteer_attendance.completed_team_badge')}
+                        </span>
+                      </div>
+                      <p className="text-xs text-emerald-800/90 mt-1 leading-relaxed">
+                        {t('volunteer_attendance.banner.complete_desc', {
+                          total: generalStats.total,
+                          teachers: teachersTerm.toLowerCase(),
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : generalStats.taken > 0 ? (
+                /* Incomplete / In Progress State */
+                <div className="bg-amber-50 border border-amber-200/90 rounded-2xl p-3.5 sm:p-4 text-amber-950 shadow-2xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h2 className="text-sm font-bold text-amber-900 leading-tight">
+                          {t('volunteer_attendance.banner.incomplete_title')}
+                        </h2>
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-200 text-amber-900 shrink-0">
+                          {t('volunteer_attendance.pending_count_badge', {
+                            count: generalStats.pending,
+                          })}
+                        </span>
+                      </div>
+                      <p className="text-xs text-amber-800/90 mt-1 leading-relaxed">
+                        {t('volunteer_attendance.banner.incomplete_desc', {
+                          pending: generalStats.pending,
+                          total: generalStats.total,
+                          teachers: teachersTerm.toLowerCase(),
+                        })}
+                      </p>
 
-                return (
-                  <div
-                    key={assignment.id}
-                    className={clsx(
-                      'bg-white rounded-2xl p-3 sm:p-3.5 border transition-all shadow-2xs hover:shadow-xs',
-                      currentStatus
-                        ? 'border-slate-200/90'
-                        : 'border-amber-300/80 ring-1 ring-amber-300/40 bg-amber-50/15',
-                    )}
-                  >
-                    {/* Top: Avatar + Full Name & Subtitle on Left, Status Badge on Right */}
-                    <div className="flex items-start justify-between gap-2.5">
-                      <div className="flex items-center gap-3 min-w-0 flex-1">
-                        {user?.photoUrl ? (
-                          <img
-                            src={user.photoUrl}
-                            alt={fullName}
-                            className="w-10 h-10 rounded-full object-cover border border-slate-200 shrink-0"
+                      {/* Mini Progress Bar in Banner */}
+                      <div className="mt-2.5">
+                        <div className="flex items-center justify-between text-[11px] font-semibold text-amber-900/80 mb-1">
+                          <span>
+                            {t('volunteer_attendance.progress_count', {
+                              taken: generalStats.taken,
+                              total: generalStats.total,
+                            })}
+                          </span>
+                          <span>{generalStats.percent}%</span>
+                        </div>
+                        <div className="w-full bg-amber-200/60 h-2 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-amber-600 rounded-full transition-all duration-300"
+                            style={{ width: `${generalStats.percent}%` }}
                           />
-                        ) : (
-                          <div className="w-10 h-10 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center text-xs border border-primary/20 shrink-0">
-                            {initials}
-                          </div>
-                        )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Not Started State */
+                <div className="bg-sky-50 border border-sky-200/90 rounded-2xl p-3.5 sm:p-4 text-sky-950 shadow-2xs">
+                  <div className="flex items-start gap-3">
+                    <div className="w-9 h-9 rounded-xl bg-sky-100 text-sky-700 flex items-center justify-center shrink-0">
+                      <Clock className="w-5 h-5 stroke-[2.5]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <h2 className="text-sm font-bold text-sky-900 leading-tight">
+                          {t('volunteer_attendance.banner.not_started_title')}
+                        </h2>
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-extrabold bg-sky-200 text-sky-900 shrink-0">
+                          0 / {generalStats.total}
+                        </span>
+                      </div>
+                      <p className="text-xs text-sky-800/90 mt-1 leading-relaxed">
+                        {t('volunteer_attendance.banner.not_started_desc', {
+                          total: generalStats.total,
+                          teachers: teachersTerm.toLowerCase(),
+                          meeting: meetingTerm.toLowerCase(),
+                          classroom: classroomTerm.toLowerCase(),
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
 
-                        <div className="min-w-0 flex-1">
-                          <h2 className="text-sm sm:text-base font-bold text-slate-900 leading-snug break-words">
-                            {fullName}
-                          </h2>
-                          <div className="flex items-center gap-1.5 text-xs text-slate-500 flex-wrap mt-0.5">
-                            <span className="font-medium text-slate-700">
-                              {assignment.serviceAreaGroup?.ministryArea?.name || assignment.ministryArea?.name || t('volunteer_attendance.other_areas')}
+              {/* 4 General Statistical Cards */}
+              <div>
+                <div className="flex items-center justify-between mb-2 px-0.5">
+                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    {t('volunteer_attendance.title_general')}
+                  </span>
+                  <span className="text-[11px] font-medium text-slate-500">
+                    {t('volunteer_attendance.stats.summary_bar', {
+                      total: generalStats.total,
+                      taken: generalStats.taken,
+                      pending: generalStats.pending,
+                    })}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
+                  {/* Card 1: Sirviendo (Attended) */}
+                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-emerald-100 hover:border-emerald-200 shadow-2xs transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
+                        <Check className="w-4 h-4 stroke-[3]" />
+                      </div>
+                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
+                        {generalStats.total > 0
+                          ? Math.round((generalStats.attended / generalStats.total) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 tracking-tight leading-none">
+                      {generalStats.attended}
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
+                      {t('volunteer_attendance.stats.attended')}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
+                      {t('volunteer_attendance.stats.attended_desc')}
+                    </div>
+                  </div>
+
+                  {/* Card 2: Con Excusa (Excused) */}
+                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-amber-100 hover:border-amber-200 shadow-2xs transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
+                        <FileText className="w-4 h-4 stroke-[2.5]" />
+                      </div>
+                      <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
+                        {generalStats.total > 0
+                          ? Math.round((generalStats.excused / generalStats.total) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-extrabold text-amber-700 tracking-tight leading-none">
+                      {generalStats.excused}
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
+                      {t('volunteer_attendance.stats.excused')}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
+                      {t('volunteer_attendance.stats.excused_desc')}
+                    </div>
+                  </div>
+
+                  {/* Card 3: Ausentes / Sin Excusa (Unexcused) */}
+                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-rose-100 hover:border-rose-200 shadow-2xs transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
+                        <X className="w-4 h-4 stroke-[3]" />
+                      </div>
+                      <span className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/60">
+                        {generalStats.total > 0
+                          ? Math.round((generalStats.unexcused / generalStats.total) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-extrabold text-rose-700 tracking-tight leading-none">
+                      {generalStats.unexcused}
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
+                      {t('volunteer_attendance.stats.unexcused')}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
+                      {t('volunteer_attendance.stats.unexcused_desc')}
+                    </div>
+                  </div>
+
+                  {/* Card 4: No Aplica (Exempt) */}
+                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200 hover:border-slate-300 shadow-2xs transition-all">
+                    <div className="flex items-center justify-between mb-1.5">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
+                        <Minus className="w-4 h-4 stroke-[3]" />
+                      </div>
+                      <span className="text-[10px] font-extrabold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
+                        {generalStats.total > 0
+                          ? Math.round((generalStats.exempt / generalStats.total) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <div className="text-2xl sm:text-3xl font-extrabold text-slate-700 tracking-tight leading-none">
+                      {generalStats.exempt}
+                    </div>
+                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
+                      {t('volunteer_attendance.stats.exempt')}
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
+                      {t('volunteer_attendance.stats.exempt_desc')}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Area Statistics List Section */}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2 px-0.5">
+                  <div>
+                    <h2 className="text-sm font-bold text-slate-900 leading-tight">
+                      {t('volunteer_attendance.areas_section_title', {
+                        classrooms: classroomsTerm,
+                      })}
+                    </h2>
+                    <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-none">
+                      {t('volunteer_attendance.areas_section_desc', {
+                        classroom: classroomTerm.toLowerCase(),
+                        teachers: teachersTerm.toLowerCase(),
+                      })}
+                    </p>
+                  </div>
+                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/80 shrink-0">
+                    {t('volunteer_attendance.areas_count', {
+                      count: areaStatsList.length,
+                      classrooms: classroomsTerm.toLowerCase(),
+                    })}
+                  </span>
+                </div>
+
+                {/* List of Area Cards */}
+                <div className="space-y-2.5">
+                  {areaStatsList.map((area) => {
+                    const percent =
+                      area.total > 0 ? Math.round((area.taken / area.total) * 100) : 0;
+
+                    return (
+                      <div
+                        key={area.id}
+                        role="button"
+                        tabIndex={0}
+                        onClick={() => setDrawerAreaId(area.id)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            setDrawerAreaId(area.id);
+                          }
+                        }}
+                        className="group bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 hover:border-primary/40 hover:shadow-xs active:scale-[0.99] transition-all cursor-pointer select-none space-y-2.5 shadow-2xs"
+                      >
+                        {/* Top: Salon Name & Count on 1 Line + Status Badge */}
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0 flex-1 flex items-baseline gap-1.5 truncate">
+                            <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight truncate group-hover:text-primary transition-colors">
+                              {area.name}
+                            </h3>
+                            <span className="text-xs sm:text-sm font-semibold text-slate-500 shrink-0">
+                              ({area.total} {teachersTerm})
                             </span>
-                            <span className="text-slate-300">•</span>
-                            <span className="text-slate-600 font-medium">
-                              {roleLabel}
+                          </div>
+
+                          <div className="shrink-0 flex items-center gap-1.5">
+                            {area.isComplete ? (
+                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 flex items-center gap-1">
+                                <Check className="w-3 h-3 stroke-[3]" />
+                                <span>{t('volunteer_attendance.area_complete')}</span>
+                              </span>
+                            ) : (
+                              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-50 text-amber-900 border border-amber-200">
+                                {t('volunteer_attendance.area_pending', {
+                                  count: area.pending,
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Progress Bar of Area */}
+                        <div>
+                          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500 mb-1">
+                            <span>
+                              {t('volunteer_attendance.progress_count', {
+                                taken: area.taken,
+                                total: area.total,
+                              })}
                             </span>
+                            <span>{percent}%</span>
+                          </div>
+                          <div className="w-full bg-slate-100 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className={clsx(
+                                'h-full transition-all duration-300 rounded-full',
+                                area.isComplete ? 'bg-emerald-500' : 'bg-primary',
+                              )}
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        {/* Bottom: 4 Compact Stats & Right Navigation Arrow */}
+                        <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-100">
+                          {/* 4 Compact Stat Pills */}
+                          <div className="grid grid-cols-4 gap-1.5 flex-1 min-w-0">
+                            {/* Sirviendo */}
+                            <div className="flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-emerald-800 bg-emerald-50/80 px-2 py-1 rounded-lg border border-emerald-200/60 truncate">
+                              <Check className="w-3.5 h-3.5 stroke-[3] text-emerald-600 shrink-0" />
+                              <span className="leading-none">{area.attended}</span>
+                              <span className="text-[10px] text-emerald-700/80 font-medium hidden sm:inline leading-none">
+                                {t('volunteer_attendance.stat_compact.attended')}
+                              </span>
+                            </div>
+
+                            {/* Con Excusa */}
+                            <div className="flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-amber-800 bg-amber-50/80 px-2 py-1 rounded-lg border border-amber-200/60 truncate">
+                              <FileText className="w-3.5 h-3.5 stroke-[2.5] text-amber-600 shrink-0" />
+                              <span className="leading-none">{area.excused}</span>
+                              <span className="text-[10px] text-amber-700/80 font-medium hidden sm:inline leading-none">
+                                {t('volunteer_attendance.stat_compact.excused')}
+                              </span>
+                            </div>
+
+                            {/* Ausentes */}
+                            <div className="flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-rose-800 bg-rose-50/80 px-2 py-1 rounded-lg border border-rose-200/60 truncate">
+                              <X className="w-3.5 h-3.5 stroke-[3] text-rose-600 shrink-0" />
+                              <span className="leading-none">{area.unexcused}</span>
+                              <span className="text-[10px] text-rose-700/80 font-medium hidden sm:inline leading-none">
+                                {t('volunteer_attendance.stat_compact.unexcused')}
+                              </span>
+                            </div>
+
+                            {/* No Aplica */}
+                            <div className="flex items-center justify-center sm:justify-start gap-1 text-xs font-bold text-slate-700 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200 truncate">
+                              <Minus className="w-3.5 h-3.5 stroke-[3] text-slate-500 shrink-0" />
+                              <span className="leading-none">{area.exempt}</span>
+                              <span className="text-[10px] text-slate-600 font-medium hidden sm:inline leading-none">
+                                {t('volunteer_attendance.stat_compact.exempt')}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Right Arrow (Visual indicator to take attendance) */}
+                          <div className="shrink-0 flex items-center pl-1 text-slate-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all">
+                            <ChevronRight className="w-5 h-5" />
                           </div>
                         </div>
                       </div>
+                    );
+                  })}
+                </div>
 
-                      {/* Top Right Status Badge (Filling the empty space on the right) */}
-                      <span
-                        className={clsx(
-                          'px-2.5 py-1 rounded-full text-[11px] font-bold shrink-0 border whitespace-nowrap shadow-2xs',
-                          getStatusBadgeClass(currentStatus),
-                        )}
-                      >
-                        {currentStatus
-                          ? t(`volunteer_attendance.short_status.${currentStatus}` as AttendanceStatusKey)
-                          : t('volunteer_attendance.unmarked')}
+                {/* Quick button to view / take attendance of whole team */}
+                {areaStatsList.length > 1 && (
+                  <div className="mt-4 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => setDrawerAreaId('ALL')}
+                      className="w-full py-2.5 px-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-2xs"
+                    >
+                      <Users className="w-4 h-4 text-slate-400" />
+                      <span>
+                        {t('volunteer_attendance.view_all_team_button', {
+                          count: generalStats.total,
+                          teachers: teachersTerm.toLowerCase(),
+                        })}
                       </span>
-                    </div>
-
-                    {/* Bottom: 4 Segmented Status Buttons with Explicit Labels and Icons */}
-                    <div className="grid grid-cols-4 gap-1.5 sm:gap-2 mt-3 pt-2.5 border-t border-slate-100" role="group" aria-label={fullName}>
-                      {STATUS_OPTIONS.map((opt) => {
-                        const isSelected = currentStatus === opt.status;
-                        const Icon = opt.icon;
-                        const label = t(opt.labelKey);
-
-                        return (
-                          <button
-                            key={opt.status}
-                            type="button"
-                            disabled={isSaving}
-                            title={label}
-                            aria-label={`${fullName}: ${label}`}
-                            aria-pressed={isSelected}
-                            onClick={() => handleSelectStatus(assignment.id, opt.status)}
-                            className={clsx(
-                              'flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:px-2 rounded-xl transition-all cursor-pointer select-none active:scale-95 disabled:opacity-50 border',
-                              isSelected ? opt.selectedClass : opt.unselectedClass,
-                            )}
-                          >
-                            <Icon className={clsx('w-4 h-4 shrink-0 stroke-[2.5]', isSelected ? 'text-white' : opt.iconColor)} />
-                            <span className="text-[10px] sm:text-xs font-semibold leading-tight text-center">
-                              {label}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                    </button>
                   </div>
-                );
-              })}
+                )}
+              </div>
 
-              {/* Safe spacer so the last card and buttons never collide with floating BottomNav */}
+              {/* Bottom spacer so content doesn't collide with floating BottomNav */}
               <div className="h-28 sm:h-36 shrink-0 pointer-events-none" aria-hidden="true" />
             </div>
           )}
         </PullToRefresh>
-      </main>
 
-      {/* Floating Scroll To Top Button */}
-      <button
-        type="button"
-        onClick={handleScrollToTop}
-        aria-label={t('volunteer_attendance.scroll_to_top')}
-        title={t('volunteer_attendance.scroll_to_top')}
-        className={clsx(
-          'fixed right-4 sm:right-6 bottom-22 sm:bottom-24 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full bg-white/95 text-slate-700 border border-slate-200/90 shadow-lg hover:shadow-xl hover:text-primary hover:border-primary/40 flex items-center justify-center transition-all duration-300 active:scale-90 cursor-pointer backdrop-blur-xs',
-          showScrollTop
-            ? 'opacity-100 scale-100 pointer-events-auto'
-            : 'opacity-0 scale-75 pointer-events-none',
-        )}
-      >
-        <ArrowUp className="w-5 h-5" />
-      </button>
+      {/* Lateral Slide-Over Drawer for taking attendance per area */}
+      {activeDrawerArea && (
+        <AreaAttendanceDrawer
+          open={Boolean(activeDrawerArea)}
+          onClose={() => setDrawerAreaId(null)}
+          areaName={activeDrawerArea.name}
+          assignments={activeDrawerArea.assignments}
+          onSelectStatus={handleSelectStatus}
+          savingAssignmentIds={savingAssignmentIds}
+          optimisticStatusMap={optimisticStatusMap}
+          attendanceMap={attendanceMap}
+          churchOverrides={churchOverrides}
+        />
+      )}
     </div>
   );
 };

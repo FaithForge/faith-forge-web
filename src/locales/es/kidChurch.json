@@ -191,6 +191,47 @@
     "scroll_left_hint": "Ver áreas anteriores",
     "scroll_right_hint": "Ver más áreas",
     "pending_count_badge": "Faltan {{count}}",
-    "completed_team_badge": "Completado"
+    "completed_team_badge": "Completado",
+    "banner": {
+      "not_started_title": "Asistencia sin iniciar",
+      "not_started_desc": "Aún no se ha registrado la asistencia de los {{total}} {{teachers}} de este {{meeting}}. Selecciona un {{classroom}} para comenzar.",
+      "incomplete_title": "Asistencia en curso (Datos incompletos)",
+      "incomplete_desc": "La información estadística está en proceso. Faltan {{pending}} de {{total}} {{teachers}} por registrar.",
+      "complete_title": "Asistencia completada",
+      "complete_desc": "¡Excelente! Todos los {{teachers}} ({{total}}) han sido registrados con éxito."
+    },
+    "stats": {
+      "attended": "Sirviendo",
+      "attended_desc": "Presentes en el servicio",
+      "excused": "Con excusa",
+      "excused_desc": "Ausencia justificada",
+      "unexcused": "Ausentes",
+      "unexcused_desc": "Sin justificar",
+      "exempt": "No aplica",
+      "exempt_desc": "Exentos de asistencia",
+      "percent_label": "{{percent}}% del equipo",
+      "summary_bar": "Total del equipo: {{total}} • Registrados: {{taken}} • Pendientes: {{pending}}"
+    },
+    "areas_section_title": "Estadísticas por {{classrooms}}",
+    "areas_section_desc": "Toca un {{classroom}} para tomar o revisar la asistencia de sus {{teachers}}",
+    "areas_count": "{{count}} {{classrooms}}",
+    "area_complete": "Completa",
+    "area_pending": "Faltan {{count}}",
+    "area_server_count": "{{name}} ({{count}} {{teachers}})",
+    "server_count_label": "{{teachers}}",
+    "area_drawer_title": "Asistencia: {{area}}",
+    "area_drawer_done": "Listo",
+    "area_drawer_search_placeholder": "Buscar {{teacher}} en {{area}}...",
+    "area_drawer_empty_search": "No se encontraron {{teachers}} con ese término",
+    "area_drawer_empty_classroom": "No hay {{teachers}} asignados a este {{classroom}}",
+    "area_drawer_all_title": "Todo el equipo",
+    "area_drawer_all_search_placeholder": "Buscar {{teacher}} en todo el equipo...",
+    "view_all_team_button": "Tomar asistencia de todo el equipo ({{count}} {{teachers}})",
+    "stat_compact": {
+      "attended": "Sirviendo",
+      "excused": "Excusa",
+      "unexcused": "Ausente",
+      "exempt": "No aplica"
+    }
   }
 }

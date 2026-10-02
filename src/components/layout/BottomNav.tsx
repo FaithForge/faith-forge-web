@@ -1,9 +1,10 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, LucideIcon } from 'lucide-react';
+import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, ClipboardCheck, LucideIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
+import { isFeatureEnabled } from '@/config/features';
 
 const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
 const ReportDrawer = lazy(() => import('@/components/modal/ReportDrawer'));
@@ -40,7 +41,7 @@ const BottomNav = () => {
 
   const meetingTerm = useChurchTerm('meeting');
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
-  const { isServidor, canViewTeam, isKidChurchRole } = usePermissions();
+  const { isServidor, canViewTeam, isKidChurchRole, canTakeVolunteerAttendance } = usePermissions();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
@@ -85,6 +86,14 @@ const BottomNav = () => {
       { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
     if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
+    if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
+      navItems.push({
+        path: APP_ROUTES.kidChurch.volunteerAttendance,
+        icon: ClipboardCheck,
+        label: t('navigation.attendance'),
+        action: 'link',
+      });
+    }
     if (canViewTeam) navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
   } else {
     // Tabs for Kid Registration (KidRegistrationLayout)
@@ -95,6 +104,14 @@ const BottomNav = () => {
       { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
     if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
+    if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
+      navItems.push({
+        path: APP_ROUTES.kidChurch.volunteerAttendance,
+        icon: ClipboardCheck,
+        label: t('navigation.attendance'),
+        action: 'link',
+      });
+    }
     if (canViewTeam) navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
   }
 

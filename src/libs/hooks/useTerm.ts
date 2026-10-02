@@ -38,6 +38,67 @@ export function getKidsTerm(
   if (overrides?.[key]) {
     return overrides[key];
   }
+
+  // Intelligent plural derivation for 'teachers' if singular 'teacher' was configured
+  if (key === 'teachers' && overrides?.['teacher']) {
+    const raw = overrides['teacher'].trim();
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('maestro')) return 'Maestros';
+    if (lower.startsWith('profesor')) return 'Profesores';
+    if (
+      lower.startsWith('tía') ||
+      lower.startsWith('tia') ||
+      lower.startsWith('tio') ||
+      lower.startsWith('tío')
+    ) {
+      return 'Tíos';
+    }
+    if (lower.startsWith('monitor')) return 'Monitores';
+    if (lower.startsWith('servidor')) return 'Servidores';
+    if (lower.startsWith('líder') || lower.startsWith('lider')) return 'Líderes';
+    const clean = raw.replace(/\s*\([a-zA-Z/]+\)/g, '').trim();
+    if (
+      clean.endsWith('r') ||
+      clean.endsWith('n') ||
+      clean.endsWith('l') ||
+      clean.endsWith('d')
+    ) {
+      return `${clean}es`;
+    }
+    return `${clean}s`;
+  }
+
+  // Intelligent plural derivation for 'classrooms' if singular 'classroom' was configured
+  if (key === 'classrooms' && overrides?.['classroom']) {
+    const raw = overrides['classroom'].trim();
+    const lower = raw.toLowerCase();
+    if (lower.startsWith('salón') || lower.startsWith('salon')) return 'Salones';
+    if (lower.startsWith('aula')) return 'Aulas';
+    if (lower.startsWith('clase')) return 'Clases';
+    if (lower.startsWith('nivel')) return 'Niveles';
+    const clean = raw.replace(/\s*\([a-zA-Z/]+\)/g, '').trim();
+    if (clean.endsWith('n') || clean.endsWith('r') || clean.endsWith('l')) {
+      return `${clean}es`;
+    }
+    return `${clean}s`;
+  }
+
+  // Intelligent plural derivation for 'supervisors' if singular 'supervisor' was configured
+  if (key === 'supervisors' && overrides?.['supervisor']) {
+    const raw = overrides['supervisor'].trim();
+    const clean = raw.replace(/\s*\([a-zA-Z/]+\)/g, '').trim();
+    if (clean.endsWith('r') || clean.endsWith('n')) return `${clean}es`;
+    return `${clean}s`;
+  }
+
+  // Intelligent plural derivation for 'coordinators' if singular 'coordinator' was configured
+  if (key === 'coordinators' && overrides?.['coordinator']) {
+    const raw = overrides['coordinator'].trim();
+    const clean = raw.replace(/\s*\([a-zA-Z/]+\)/g, '').trim();
+    if (clean.endsWith('r') || clean.endsWith('n')) return `${clean}es`;
+    return `${clean}s`;
+  }
+
   // If there is no specific module_alias override but the ministry has a configured name, use it
   if (key === 'module_alias' && ministryName?.trim()) {
     return ministryName.trim();
