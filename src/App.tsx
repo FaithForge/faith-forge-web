@@ -71,6 +71,9 @@ const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamV
 const VolunteerAttendanceView = lazy(
   () => import('@/views/kid-church/VolunteerAttendanceView')
 );
+const ChurchReportsView = lazy(
+  () => import('@/views/kid-church/reports/ChurchReportsView')
+);
 const HubView = lazy(() => import('@/views/hub/HubView'));
 const KidGuardianDashboardView = lazy(
   () => import('@/views/kid-guardian/KidGuardianDashboardView')
@@ -323,6 +326,16 @@ function App() {
                   element={
                     isFeatureEnabled('volunteerAttendance') ? (
                       <VolunteerAttendanceView />
+                    ) : (
+                      <Navigate to={APP_ROUTES.kidChurch.root} replace />
+                    )
+                  }
+                />
+                <Route
+                  path={APP_ROUTES.kidChurch.reports}
+                  element={
+                    isFeatureEnabled('churchReports') ? (
+                      <ChurchReportsView />
                     ) : (
                       <Navigate to={APP_ROUTES.kidChurch.root} replace />
                     )

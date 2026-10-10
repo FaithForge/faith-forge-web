@@ -1,4 +1,4 @@
-import React, { useState, useMemo, lazy, Suspense } from 'react';
+import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
 import {
@@ -56,7 +56,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'Admin',
     label: 'Super Administrador',
     themeClass: 'theme-SUPER_ADMIN',
-    color: '#003963',
+    color: '#002744',
     dashboardUrl: APP_ROUTES.admin.root,
   },
   [UserRole.ADMIN]: {
@@ -72,7 +72,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'Admin',
     label: 'Staff',
     themeClass: 'theme-STAFF',
-    color: '#3b82f6',
+    color: '#1E40AF',
     dashboardUrl: APP_ROUTES.admin.root,
   },
   [ChurchRole.MINISTRY_ADMIN]: {
@@ -80,7 +80,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidChurch',
     label: 'Admin General',
     themeClass: 'theme-MINISTRY_ADMIN',
-    color: '#d97706',
+    color: '#B45309',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
   [ChurchRole.KID_CHURCH_GROUP_COORDINATOR]: {
@@ -88,7 +88,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidChurch',
     label: 'Coordinador de Grupo',
     themeClass: 'theme-KID_CHURCH_GROUP_COORDINATOR',
-    color: '#db2777',
+    color: '#BE185D',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
   [ChurchRole.KID_CHURCH_SUPERVISOR]: {
@@ -96,7 +96,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidChurch',
     label: 'Supervisor',
     themeClass: 'theme-KID_CHURCH_SUPERVISOR',
-    color: '#9333ea',
+    color: '#7E22CE',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
   [ChurchRole.KID_CHURCH_USER]: {
@@ -104,7 +104,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidChurch',
     label: 'Servidor',
     themeClass: 'theme-KID_CHURCH_USER',
-    color: '#fbbf24',
+    color: '#D97706',
     dashboardUrl: APP_ROUTES.kidChurch.root,
   },
   [ChurchRole.KID_REGISTER_COORDINATOR]: {
@@ -112,7 +112,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidRegistration',
     label: 'Coordinador de Área',
     themeClass: 'theme-KID_REGISTER_COORDINATOR',
-    color: '#166534',
+    color: '#1B6B4A',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
   [ChurchRole.KID_REGISTER_SUPERVISOR]: {
@@ -120,7 +120,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidRegistration',
     label: 'Supervisor',
     themeClass: 'theme-KID_REGISTER_SUPERVISOR',
-    color: '#15803d',
+    color: '#0D7A5F',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
   [ChurchRole.KID_REGISTER_USER]: {
@@ -128,31 +128,31 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidRegistration',
     label: 'Servidor',
     themeClass: 'theme-KID_REGISTER_USER',
-    color: '#16a34a',
+    color: '#2D6A4F',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
   [ChurchRole.KID_SECURITY_COORDINATOR]: {
     id: ChurchRole.KID_SECURITY_COORDINATOR,
     appTitle: 'KidRegistration',
     label: 'Coordinador de Seguridad',
-    themeClass: 'theme-KID_REGISTER_COORDINATOR',
-    color: '#047857',
+    themeClass: 'theme-KID_SECURITY_COORDINATOR',
+    color: '#064E3B',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
   [ChurchRole.KID_SECURITY_SUPERVISOR]: {
     id: ChurchRole.KID_SECURITY_SUPERVISOR,
     appTitle: 'KidRegistration',
     label: 'Supervisor de Seguridad',
-    themeClass: 'theme-KID_REGISTER_SUPERVISOR',
-    color: '#059669',
+    themeClass: 'theme-KID_SECURITY_SUPERVISOR',
+    color: '#047857',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
   [ChurchRole.KID_SECURITY_USER]: {
     id: ChurchRole.KID_SECURITY_USER,
     appTitle: 'KidRegistration',
     label: 'Servidor de Seguridad',
-    themeClass: 'theme-KID_REGISTER_USER',
-    color: '#10b981',
+    themeClass: 'theme-KID_SECURITY_USER',
+    color: '#059669',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
   [UserRole.USER]: {
@@ -160,7 +160,7 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     appTitle: 'KidChurch',
     label: 'Usuario',
     themeClass: 'theme-USER',
-    color: '#003963',
+    color: '#1E293B',
     dashboardUrl: APP_ROUTES.kidRegistration.root,
   },
 };
@@ -300,6 +300,18 @@ const TopBar = () => {
     if (open) setHasOpenedSettings(true);
     setSettingsDrawerOpen(open);
   };
+
+  // Open settings drawer on external request when BottomNav is not mounted (admin roles)
+  useEffect(() => {
+    const handleOpen = () => {
+      const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
+      if (isAdminRole) {
+        handleOpenSettings(true);
+      }
+    };
+    window.addEventListener('app:open-settings', handleOpen);
+    return () => window.removeEventListener('app:open-settings', handleOpen);
+  }, [currentRole]);
 
   const {
     isChurchVolunteer,
@@ -649,6 +661,7 @@ const TopBar = () => {
 
   React.useEffect(() => {
     // Immediately apply the theme of the active role (defaults to the first role that appears for the user)
+    delete document.body.dataset.role;
     if (activeVisualRole?.themeClass) {
       document.body.className = `${activeVisualRole.themeClass} antialiased`;
     } else {

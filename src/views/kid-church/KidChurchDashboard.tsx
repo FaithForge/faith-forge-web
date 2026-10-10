@@ -373,7 +373,6 @@ const KidChurchDashboard: React.FC = () => {
               onChange={(e) => setSearchText(e.target.value)}
               onClear={() => setSearchText('')}
               wrapperClassName="mb-0"
-              className="border-0 shadow-sm text-base bg-white focus:ring-0"
             />
           </div>
 

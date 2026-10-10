@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import { Search, UserCheck, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTranslation } from 'react-i18next';
 import {
   useLazyGetKidGuardianQuery,
   useCreateKidGuardianMutation,
@@ -52,6 +53,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
 }) => {
   useModalBackClose(open, onClose);
 
+  const { t } = useTranslation(['kidRegistration', 'common']);
   const guardianTerm = useKidsTerm('guardian');
   const [triggerGetGuardian, { isFetching: guardianLoading }] = useLazyGetKidGuardianQuery();
   const [createKidGuardian] = useCreateKidGuardianMutation();
@@ -304,12 +306,16 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
             {/* Phone */}
             <PhoneInput
               label="Teléfono"
-              required={!existingGuardian || !isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
+              required
               dialCode={dialCodePhone}
               phone={phone}
-              disabled={!!existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
               onDialCodeChange={setDialCodePhone}
               onPhoneChange={setPhone}
+              helperNotice={
+                existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)
+                  ? t('kidRegistration:form.update_phone_hint', { guardian: guardianTerm.toLowerCase() })
+                  : undefined
+              }
             />
 
             {/* Gender */}

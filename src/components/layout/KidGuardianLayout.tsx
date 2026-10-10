@@ -86,12 +86,13 @@ const KidGuardianLayout: React.FC<KidGuardianLayoutProps> = ({ children }) => {
   };
 
   React.useEffect(() => {
+    delete document.body.dataset.role;
     document.body.className = 'theme-GUARDIAN antialiased bg-slate-50';
     dispatch(setActiveExperience(UserExperienceEnum.KID_GUARDIAN));
   }, [dispatch]);
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
+    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans theme-GUARDIAN">
       {/* Top Header matching exact TopBar shape and dimensions with clean White color scheme */}
       <header className="bg-white/95 backdrop-blur text-slate-900 px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 border-b border-slate-200/80 shadow-xs z-40 sticky top-0 transition-colors duration-300">
         {/* Left Side: Brand and Scope (Same layout as TopBar) */}

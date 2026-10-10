@@ -90,17 +90,19 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
     return <Navigate to="/" replace />;
   }
 
+  const adminThemeClass = isSuperAdmin
+    ? 'theme-SUPER_ADMIN'
+    : isAdmin
+    ? 'theme-ADMIN'
+    : isStaff
+    ? 'theme-STAFF'
+    : 'theme-ADMIN';
+
   useEffect(() => {
     dispatch(setActiveExperience(UserExperienceEnum.ADMIN));
-    const adminThemeClass = isSuperAdmin
-      ? 'theme-SUPER_ADMIN'
-      : isAdmin
-      ? 'theme-ADMIN'
-      : isStaff
-      ? 'theme-STAFF'
-      : 'theme-ADMIN';
+    delete document.body.dataset.role;
     document.body.className = `${adminThemeClass} antialiased bg-slate-50`;
-  }, [dispatch, isSuperAdmin, isAdmin, isStaff]);
+  }, [dispatch, adminThemeClass]);
 
   const shortName = formatPersonShortName(user?.firstName, user?.lastName) || 'Admin';
   const hasMultipleSpaces = experiences.length > 1;
@@ -129,7 +131,7 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
     : 'AD';
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans">
+    <div className={clsx('min-h-screen bg-slate-50 flex flex-col text-slate-900 font-sans', adminThemeClass)}>
       {/* Top Header matching exact TopBar shape and dimensions with primary blue color scheme */}
       <header className="bg-primary text-primary-foreground px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 border-b border-white/10 shadow-none z-40 sticky top-0 transition-colors duration-300">
         {/* Left Side: Brand and Scope (Same layout as TopBar) */}

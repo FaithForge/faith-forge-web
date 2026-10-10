@@ -37,6 +37,7 @@ export const APP_ROUTES = {
     report: '/kid-church/report',
     myTeam: '/kid-church/my-team',
     volunteerAttendance: '/kid-church/volunteer-attendance',
+    reports: '/kid-church/reports',
   },
   kidRegistration: {
     root: '/kid-registration',

@@ -73,32 +73,33 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
 
   if (asg.role === VolunteerRole.GROUP_COORDINATOR) {
     return {
-      badge: 'bg-pink-100 text-pink-700',
-      avatar: 'bg-pink-100 text-pink-700 border-2 border-pink-200',
-      photoRing: 'ring-2 ring-pink-400 ring-offset-1',
-      highlightBg: 'bg-pink-50/30 hover:bg-pink-50/50',
-      tagBg: 'bg-pink-100 text-pink-700 border-pink-200',
+      badge: 'bg-[#FCE7F3] text-[#831843]',
+      avatar: 'bg-[#FCE7F3] text-[#831843] border-2 border-[#FBCFE8]',
+      photoRing: 'ring-2 ring-[#BE185D] ring-offset-1',
+      highlightBg: 'bg-[#FFF8FA] hover:bg-[#FCE7F3]/40',
+      tagBg: 'bg-[#FCE7F3] text-[#831843] border-[#FBCFE8]',
     };
   }
 
   if (asg.role === VolunteerRole.MINISTRY_GENERAL_COORDINATOR) {
     return {
-      badge: 'bg-amber-100 text-amber-800',
-      avatar: 'bg-amber-100 text-amber-800 border-2 border-amber-300',
-      photoRing: 'ring-2 ring-amber-400 ring-offset-1',
-      highlightBg: 'bg-amber-50/30 hover:bg-amber-50/50',
-      tagBg: 'bg-amber-100 text-amber-800 border-amber-300',
+      badge: 'bg-[#FEF3C7] text-[#78350F]',
+      avatar: 'bg-[#FEF3C7] text-[#78350F] border-2 border-[#FDE68A]',
+      photoRing: 'ring-2 ring-[#B45309] ring-offset-1',
+      highlightBg: 'bg-[#FFFDF7] hover:bg-[#FEF3C7]/40',
+      tagBg: 'bg-[#FEF3C7] text-[#78350F] border-[#FDE68A]',
     };
   }
 
   if (asg.role === VolunteerRole.AREA_GENERAL_COORDINATOR) {
     if (isRegistrationArea) {
+      // Registro Coordinador - Verde Esmeralda (#1B6B4A)
       return {
-        badge: 'bg-emerald-100 text-emerald-800',
-        avatar: 'bg-emerald-100 text-emerald-800 border-2 border-emerald-300',
-        photoRing: 'ring-2 ring-emerald-500 ring-offset-1',
-        highlightBg: 'bg-emerald-50/30 hover:bg-emerald-50/50',
-        tagBg: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+        badge: 'bg-[#D1F2E0] text-[#0F3D2A]',
+        avatar: 'bg-[#D1F2E0] text-[#0F3D2A] border-2 border-[#D3E8DC]',
+        photoRing: 'ring-2 ring-[#1B6B4A] ring-offset-1',
+        highlightBg: 'bg-[#F3FBF6] hover:bg-[#D1F2E0]/40',
+        tagBg: 'bg-[#D1F2E0] text-[#0F3D2A] border-[#D3E8DC]',
       };
     }
     return {
@@ -112,42 +113,42 @@ const getAssignmentRoleTheme = (asg: IVolunteerAssignment): RoleThemeStyle => {
 
   if (asg.role === VolunteerRole.SUPERVISOR) {
     if (isRegistrationArea) {
-      // Registro Supervisor - Green-700 / Forest green (#15803d)
+      // Registro Supervisor - Verde Jade (#0D7A5F)
       return {
-        badge: 'bg-green-200/90 text-green-900 border border-green-400/80 font-bold',
-        avatar: 'bg-green-100 text-green-900 border-2 border-green-600',
-        photoRing: 'ring-2 ring-green-600 ring-offset-1',
-        highlightBg: 'bg-green-50/40 hover:bg-green-50/60',
-        tagBg: 'bg-green-200 text-green-900 border-green-400',
+        badge: 'bg-[#CCFBF1] text-[#0F766E] border border-[#CCEFE7] font-bold',
+        avatar: 'bg-[#CCFBF1] text-[#0F766E] border-2 border-[#0D7A5F]',
+        photoRing: 'ring-2 ring-[#0D7A5F] ring-offset-1',
+        highlightBg: 'bg-[#F0FDF8] hover:bg-[#CCFBF1]/40',
+        tagBg: 'bg-[#CCFBF1] text-[#0F766E] border-[#CCEFE7]',
       };
     }
     return {
-      badge: 'bg-purple-100 text-purple-700 border border-purple-200/70 font-bold',
-      avatar: 'bg-purple-100 text-purple-700 border-2 border-purple-200',
-      photoRing: 'ring-2 ring-purple-400 ring-offset-1',
-      highlightBg: 'bg-purple-50/25 hover:bg-purple-50/40',
-      tagBg: 'bg-purple-100 text-purple-700 border-purple-200',
+      badge: 'bg-[#F3E8FF] text-[#581C87] border border-[#E9D5FF] font-bold',
+      avatar: 'bg-[#F3E8FF] text-[#581C87] border-2 border-[#7E22CE]',
+      photoRing: 'ring-2 ring-[#7E22CE] ring-offset-1',
+      highlightBg: 'bg-[#FAF5FF] hover:bg-[#F3E8FF]/40',
+      tagBg: 'bg-[#F3E8FF] text-[#581C87] border-[#E9D5FF]',
     };
   }
 
   // VOLUNTEER (Servidor)
   if (isRegistrationArea) {
-    // Registro Servidor - Green-600 / Emerald / Mint (#16a34a)
+    // Registro Servidor - Verde Salvia (#2D6A4F)
     return {
-      badge: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80 font-semibold',
-      avatar: 'bg-emerald-50 text-emerald-700 border-2 border-emerald-300',
-      photoRing: 'ring-2 ring-emerald-400 ring-offset-1',
-      highlightBg: 'bg-emerald-50/20 hover:bg-emerald-50/40',
-      tagBg: 'bg-emerald-50 text-emerald-700 border-emerald-300',
+      badge: 'bg-[#E2EFE7] text-[#1E4634] border border-[#D8E8DF] font-semibold',
+      avatar: 'bg-[#E2EFE7] text-[#1E4634] border-2 border-[#3A8663]',
+      photoRing: 'ring-2 ring-[#3A8663] ring-offset-1',
+      highlightBg: 'bg-[#F5F9F6] hover:bg-[#E2EFE7]/40',
+      tagBg: 'bg-[#E2EFE7] text-[#1E4634] border-[#D8E8DF]',
     };
   }
 
   return {
-    badge: 'bg-amber-100 text-amber-800',
-    avatar: 'bg-amber-100 text-amber-800 border-2 border-amber-300',
-    photoRing: 'ring-2 ring-amber-400 ring-offset-1',
-    highlightBg: 'bg-amber-50/25 hover:bg-amber-50/40',
-    tagBg: 'bg-amber-100 text-amber-800 border-amber-300',
+    badge: 'bg-[#FFFBEB] text-[#92400E] border border-[#FDE68A] font-semibold',
+    avatar: 'bg-[#FFFBEB] text-[#92400E] border-2 border-[#D97706]',
+    photoRing: 'ring-2 ring-[#D97706] ring-offset-1',
+    highlightBg: 'bg-[#FFFDF5] hover:bg-[#FFFBEB]/40',
+    tagBg: 'bg-[#FFFBEB] text-[#92400E] border-[#FDE68A]',
   };
 };
 
@@ -626,12 +627,12 @@ export const SupervisorTeamView: React.FC = () => {
 
   const headerBadgeStyle = useMemo(() => {
     if (isRegistrationUser || isAreaCoordinator) {
-      return 'bg-emerald-100 text-emerald-800';
+      return isAreaCoordinator ? 'bg-[#D1F2E0] text-[#0F3D2A]' : 'bg-[#CCFBF1] text-[#0F766E]';
     }
     if (isCoordinator) {
-      return 'bg-pink-100 text-pink-700';
+      return 'bg-[#FCE7F3] text-[#831843]';
     }
-    return 'bg-purple-100 text-purple-700';
+    return 'bg-[#F3E8FF] text-[#581C87]';
   }, [isRegistrationUser, isAreaCoordinator, isCoordinator]);
 
   if (!canAccessTeam) return null;
@@ -678,15 +679,18 @@ export const SupervisorTeamView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={loadTeamData}
-          disabled={isLoading}
-          title={t('supervisor_team.refresh')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200/80 shadow-2xs transition-colors active:scale-95 disabled:opacity-50 cursor-pointer shrink-0"
-        >
-          <RefreshCw size={13} className={clsx(isLoading && 'animate-spin text-primary')} />
-          <span className="hidden sm:inline">{t('supervisor_team.refresh')}</span>
-        </button>
+        <div className="flex items-center gap-1.5 shrink-0">
+
+          <button
+            onClick={loadTeamData}
+            disabled={isLoading}
+            title={t('supervisor_team.refresh')}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-gray-600 bg-white hover:bg-gray-50 border border-gray-200/80 shadow-2xs transition-colors active:scale-95 disabled:opacity-50 cursor-pointer"
+          >
+            <RefreshCw size={13} className={clsx(isLoading && 'animate-spin text-primary')} />
+            <span className="hidden sm:inline">{t('supervisor_team.refresh')}</span>
+          </button>
+        </div>
       </div>
 
       {/* Tab Switcher: Equipo Activo vs Solicitudes */}

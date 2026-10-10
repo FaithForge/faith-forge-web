@@ -28,6 +28,23 @@
     "loading_more": "Cargando más niños...",
     "btn_load_more": "Cargar más niños"
   },
+  "status_card": {
+    "change_button": "Cambiar",
+    "configure_button": "Configurar",
+    "no_meeting_title": "Sin {{meeting}} seleccionada",
+    "no_meeting_subtitle": "Selecciona una {{meeting}} para registrar asistencia",
+    "no_printer_title": "Sin impresora configurada",
+    "no_printer_subtitle": "Selecciona una impresora para imprimir etiquetas",
+    "status_in_progress": "En curso",
+    "status_out_of_schedule": "Fuera de Horario",
+    "status_not_started": "Aún no inicia",
+    "status_concluded": "Finalizado",
+    "status_different_day": "Día diferente",
+    "status_pending_config": "Sin configurar",
+    "admin_access_notice": "Acceso de Administrador: visualización y registro permitidos fuera de horario.",
+    "printer_bluetooth_connected": "Conectada por Bluetooth",
+    "printer_bluetooth_disconnected": "Desconectada (Bluetooth)"
+  },
   "scanner": {
     "title": "Registro por QR",
     "steps": {
@@ -153,6 +170,7 @@
     "guardian_first_name_label": "Nombres de {{guardian}}",
     "guardian_last_name_label": "Apellidos de {{guardian}}",
     "guardian_phone_label": "Teléfono / WhatsApp",
+    "update_phone_hint": "Puedes modificar el teléfono si {{guardian}} cambió de número.",
     "success_kid_created": "¡Niño creado con éxito!",
     "success_kid_updated": "Datos del niño actualizados con éxito",
     "error_creating_kid": "Error al crear el niño",

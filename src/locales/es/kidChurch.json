@@ -233,5 +233,127 @@
       "unexcused": "Ausente",
       "exempt": "No aplica"
     }
+  },
+  "reports": {
+    "title": "Novedades de Servicio",
+    "subtitle": "Registro y seguimiento de novedades durante la reunión",
+    "new_report": "Reportar novedad",
+    "today_section_title": "Novedades de este servicio",
+    "backlog_section_title": "Pendientes de servicios anteriores",
+    "empty_today": "No hay novedades reportadas en este servicio.",
+    "empty_backlog": "No hay novedades pendientes de servicios anteriores.",
+    "reported_by": "Reportado por {{name}}",
+    "closed_by": "Cerrado por {{name}}",
+    "filters": {
+      "all": "Todas",
+      "open": "Abiertas",
+      "closed": "Cerradas",
+      "informative": "Informativas"
+    },
+    "statuses": {
+      "OPEN": "Abierta",
+      "CLOSED": "Cerrada",
+      "INFORMATIVE": "Informativa"
+    },
+    "priorities": {
+      "LOW": "Prioridad Baja",
+      "MEDIUM": "Prioridad Media",
+      "HIGH": "Prioridad Alta"
+    },
+    "types": {
+      "CHILD_INCIDENT": "Incidente con Niño",
+      "GUARDIAN_CALL": "Llamada a Acudiente"
+    },
+    "type_badges": {
+      "CHILD_INCIDENT": "Ministerio de Niños",
+      "GUARDIAN_CALL": "Ministerio de Niños"
+    },
+    "type_descriptions": {
+      "CHILD_INCIDENT": "Golpes, caídas, malestares de salud o atención médica durante el servicio.",
+      "GUARDIAN_CALL": "Registro de llamadas o contacto con acudientes durante el servicio."
+    },
+    "select_type_title": "Selecciona el tipo de novedad",
+    "select_type_subtitle": "¿Qué situación deseas reportar en este momento?",
+    "change_type": "Cambiar tipo de novedad",
+    "child_selector": {
+      "label": "Niño involucrado",
+      "placeholder": "Buscar niño por nombre o código...",
+      "clear": "Cambiar niño",
+      "manual_entry": "Ingresar nombre manualmente si no está registrado",
+      "manual_placeholder": "Nombre completo del niño...",
+      "search_hint": "Escribe para buscar niños en el servicio...",
+      "no_results": "No se encontraron niños",
+      "guardians_title": "Acudientes registrados:"
+    },
+    "child_fields": {
+      "kid_name": "Nombre del niño",
+      "kid_name_placeholder": "Nombre completo del niño",
+      "description": "¿Qué sucedió?",
+      "description_placeholder": "Describe detalladamente lo ocurrido...",
+      "medical_attention_label": "¿Atención médica?",
+      "medical_options": {
+        "NOT_REQUIRED": "No se requirió atención médica",
+        "NO_DOCTOR_AVAILABLE": "No había médico disponible en el servicio",
+        "DOCTOR_ATTENDED": "Sí, fue atendido por un médico"
+      },
+      "doctor_label": "¿Qué médico lo atendió?",
+      "doctor_placeholder": "Nombre del médico...",
+      "guardian_explanation_label": "¿Se explicó al acudiente la situación?",
+      "guardian_options": {
+        "YES_WELL": "Sí, el acudiente lo tomó bien",
+        "YES_BAD": "Sí, el acudiente lo tomó mal",
+        "NO": "No"
+      },
+      "photos_label": "Fotos de soporte",
+      "take_photo": "Tomar foto",
+      "choose_gallery": "Galería",
+      "photo_count": "{{count}} foto(s) adjunta(s)"
+    },
+    "guardian_call_fields": {
+      "guardian_label": "Acudiente al que se llamó",
+      "guardian_placeholder": "Selecciona un acudiente...",
+      "select_kid_first": "Selecciona primero al niño para ver sus acudientes registrados",
+      "loading_guardians": "Cargando acudientes registrados...",
+      "registered_by_badge": "Registró al niño hoy",
+      "custom_guardian": "¿Llamaste a otro contacto no registrado?",
+      "back_to_registered_guardians": "Volver a acudientes registrados",
+      "custom_name": "Nombre de la persona contactada",
+      "custom_name_placeholder": "Nombre completo...",
+      "phone": "Teléfono de contacto",
+      "phone_placeholder": "Número de teléfono...",
+      "relationship": "Parentesco",
+      "relationship_placeholder": "Padre, madre, tío...",
+      "reason": "Motivo de la llamada",
+      "reason_placeholder": "¿Por qué se necesitó llamar al acudiente durante el servicio?..."
+    },
+    "action_type": {
+      "question": "¿Esta novedad requiere acción o seguimiento posterior?",
+      "actionable": "Sí, requiere seguimiento (Abierta)",
+      "informative": "No, es sólo informativa (Informativa)"
+    },
+    "priority_label": "Nivel de prioridad",
+    "actions": {
+      "add_note": "Agregar actualización",
+      "close_case": "Cerrar caso",
+      "saving": "Guardando...",
+      "cancel": "Cancelar",
+      "save": "Guardar novedad",
+      "confirm_close": "Confirmar cierre",
+      "close_notes_label": "¿Cómo se solucionó / cerró esta novedad?",
+      "close_notes_placeholder": "Describe la solución o motivo del cierre...",
+      "note_label": "Detalles de la actualización",
+      "note_placeholder": "Escribe los detalles de la actualización o avance...",
+      "toast_created": "Novedad registrada exitosamente",
+      "toast_closed": "Novedad cerrada exitosamente",
+      "toast_note_added": "Actualización agregada exitosamente",
+      "toast_error": "Ocurrió un error al procesar la solicitud"
+    },
+    "notes_history": "Historial de seguimiento ({{count}})",
+    "no_notes": "Sin eventos registrados aún",
+    "history_actions": {
+      "CREATED": "Reporte registrado",
+      "UPDATE": "Actualización",
+      "CLOSED": "Caso cerrado"
+    }
   }
 }

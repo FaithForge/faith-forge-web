@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Input from '@/components/ui/Input';
-import Alert from '@/components/ui/Alert';
 import { APP_ROUTES } from "@/config/routes";
 import { toast } from 'sonner';
 import Cell from '@/components/ui/Cell';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetKids, GetMoreKids } from '@/libs/state/redux/thunks/kid-church/kid.thunk';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { Loader2, SearchX, RotateCcw, Plus, Lightbulb, ChevronDown, DoorOpen, ChevronRight, Printer, CalendarClock, AlertCircle, Clock } from 'lucide-react';
+import { Loader2, SearchX, RotateCcw, Plus, Lightbulb, ChevronDown, DoorOpen, ChevronRight, Clock } from 'lucide-react';
+import RegistrationStatusCard from './components/RegistrationStatusCard';
 import dayjs from 'dayjs';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
@@ -199,38 +199,8 @@ const RegistrationDashboard = () => {
         </div>
       )}
 
-      {/* Configuration Warnings */}
-      {!isConfigured && (
-        <Alert 
-          type="error"
-          title={t('kidRegistration:dashboard.config_warning_title')}
-          message={t('kidRegistration:dashboard.config_warning_message')}
-        />
-      )}
-
-      {/* Servicio e Impresora Actual */}
-      {isConfigured && currentPrinter && currentMeeting && (
-        <Alert 
-          type="info"
-          hideIcon
-          title={
-            <div className="flex items-center gap-1.5 font-bold">
-              <Printer size={13.5} className="shrink-0 -translate-y-[0.5px]" />
-              <span className="truncate">{currentPrinter.name}</span>
-            </div>
-          }
-          message={
-            <div className="flex items-center gap-1.5">
-              <CalendarClock size={13.5} className="shrink-0 -translate-y-[0.5px]" />
-              <span className="truncate">
-                {currentMeeting.name}
-                {currentCampus?.name && ` (${currentCampus.name})`}
-              </span>
-            </div>
-          }
-          className="bg-cyan-100 text-cyan-800 border-cyan-200"
-        />
-      )}
+      {/* Tarjeta Unificada de Estado de Servicio e Impresora */}
+      <RegistrationStatusCard />
 
       {/* Control de Asistencia Modular (Si la sede no es ONLY_CHECK_IN) */}
       {!shouldBlockKids &&
@@ -260,23 +230,6 @@ const RegistrationDashboard = () => {
             </div>
           </div>
         )}
-
-      {/* Error / Aviso de horario de servicio */}
-      {isConfigured && !isMeetingValid && (
-        <Alert 
-          type={isAdmin ? 'warning' : 'error'}
-          hideIcon
-          message={
-            <div className="flex items-start gap-1.5">
-              <AlertCircle size={13.5} className="shrink-0 mt-0.5" />
-              <span>
-                {meetingErrorMsg}
-                {isAdmin && ` • ${t('kidRegistration:dashboard.admin_out_of_schedule_notice')}`}
-              </span>
-            </div>
-          }
-        />
-      )}
 
       {/* Bloqueo Visual (Empty State) */}
       {shouldBlockKids && isConfigured && (

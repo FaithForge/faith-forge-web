@@ -14,6 +14,8 @@ Vite 6 + React 18 SPA, TypeScript (strict), Tailwind CSS v4, React Router DOM 6 
 8. **Independent async operations use `Promise.all`.**
 9. **Form placeholders are exactly `placeholder:text-gray-400`** (never `gray-500` / `gray-600`).
 10. **WhatsApp always uses `FaWhatsapp`** from `react-icons/fa6`, never Lucide message icons.
+11. **Form inputs must ALWAYS use centralized primitives (`src/components/ui/`).** Never create raw burned `<input>` or `<textarea>` tags with ad-hoc borders, backgrounds, or padding. Always use `Input`, `Textarea`, `PhoneInput`, `PhotoUploadZone`, `PersonSearchInput`, `Select`, or `SelectSearch` from `src/components/ui/`.
+12. **No denormalized person names.** Person names must NEVER be persisted in entity models or mutation payloads when an actor ID is known. Names belong in the user/kid store and must be resolved dynamically in the UI via hooks/caches.
 
 ## Read the matching skill BEFORE starting these tasks
 

@@ -6,3 +6,4 @@ export * from './User';
 export * from './KidAttendanceReport';
 export * from './Ministry';
 export * from './Volunteer';
+export * from './ChurchReport';

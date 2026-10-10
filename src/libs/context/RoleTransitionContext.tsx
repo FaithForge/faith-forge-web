@@ -37,6 +37,7 @@ export const RoleTransitionProvider: React.FC<{ children: React.ReactNode }> = (
 
     // Apply the theme immediately so the background and primary colors transform
     if (info.themeClass && typeof document !== 'undefined') {
+      delete document.body.dataset.role;
       document.body.className = `${info.themeClass} antialiased`;
     }
 

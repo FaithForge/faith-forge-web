@@ -1,6 +1,6 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, ClipboardCheck, LucideIcon } from 'lucide-react';
+import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, ClipboardCheck, AlertTriangle, LucideIcon } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
@@ -41,7 +41,7 @@ const BottomNav = () => {
 
   const meetingTerm = useChurchTerm('meeting');
   const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
-  const { isServidor, canViewTeam, isKidChurchRole, canTakeVolunteerAttendance } = usePermissions();
+  const { isServidor, canViewTeam, isKidChurchRole, canTakeVolunteerAttendance, canManageChurchReports } = usePermissions();
 
   const currentRole = useAppSelector(state => state.authSlice.currentRole);
   const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
@@ -67,6 +67,15 @@ const BottomNav = () => {
     }
   }, [isAdminRole, isConfigured, openSettings]);
 
+  // Permite abrir el drawer de configuración desde componentes externos (ej. RegistrationStatusCard)
+  useEffect(() => {
+    const handleOpen = () => {
+      handleOpenSettings(true);
+    };
+    window.addEventListener('app:open-settings', handleOpen);
+    return () => window.removeEventListener('app:open-settings', handleOpen);
+  }, []);
+
   // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
   if (isAdminRole) return null;
 
@@ -86,6 +95,14 @@ const BottomNav = () => {
       { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
     if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
+    if (isFeatureEnabled('churchReports') && canManageChurchReports) {
+      navItems.push({
+        path: APP_ROUTES.kidChurch.reports,
+        icon: AlertTriangle,
+        label: t('navigation.church_reports', 'Novedades'),
+        action: 'link',
+      });
+    }
     if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
       navItems.push({
         path: APP_ROUTES.kidChurch.volunteerAttendance,
@@ -104,6 +121,14 @@ const BottomNav = () => {
       { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
     ];
     if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
+    if (isFeatureEnabled('churchReports') && canManageChurchReports) {
+      navItems.push({
+        path: APP_ROUTES.kidChurch.reports,
+        icon: AlertTriangle,
+        label: t('navigation.church_reports', 'Novedades'),
+        action: 'link',
+      });
+    }
     if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
       navItems.push({
         path: APP_ROUTES.kidChurch.volunteerAttendance,

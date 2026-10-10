@@ -58,6 +58,7 @@ const HubView: React.FC = () => {
   };
 
   useEffect(() => {
+    delete document.body.dataset.role;
     document.body.className = 'theme-USER antialiased bg-slate-50';
   }, []);
 

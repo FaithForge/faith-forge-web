@@ -115,6 +115,7 @@ const NewKidView = () => {
     setValue: setGuardianValue, 
     getValues: getGuardianValues, 
     clearErrors: clearGuardianErrors,
+    trigger: triggerGuardian,
     formState: { errors: guardianErrors, isDirty: isGuardianDirty } 
   } = useForm({
     defaultValues: {
@@ -201,7 +202,8 @@ const NewKidView = () => {
       setGuardianValue('nationalId', existingGuardian.nationalId);
       setGuardianValue('firstName', existingGuardian.firstName);
       setGuardianValue('lastName', existingGuardian.lastName);
-      setGuardianValue('phone', existingGuardian.phone);
+      setGuardianValue('dialCodePhone', existingGuardian.dialCodePhone || '+57');
+      setGuardianValue('phone', existingGuardian.phone || '');
       setGuardianValue('gender', existingGuardian.gender);
       setGuardianValue('relation', existingGuardian.relation || '');
       clearGuardianErrors(['nationalId', 'firstName', 'lastName', 'phone', 'gender']);
@@ -303,7 +305,8 @@ const NewKidView = () => {
 
   /**
    * Submits guardian information and links it to the newly created child.
-   * If the guardian was found in the database, uses existing data and validates only relationship.
+   * If the guardian was found in the database, uses existing data, validates relationship,
+   * and allows updating their phone number.
    *
    * @param {any} values - Form field values for the guardian.
    * @returns {Promise<void>} Resolves when the guardian is saved and navigates to check-in.
@@ -325,8 +328,8 @@ const NewKidView = () => {
        return;
     }
     
-    const guardianPhone = (values.phone || existingGuardian?.phone)?.trim();
-    const guardianDialCode = values.dialCodePhone || existingGuardian?.dialCodePhone || '+57';
+    const guardianPhone = (values.phone ?? getGuardianValues('phone') ?? existingGuardian?.phone ?? '')?.trim();
+    const guardianDialCode = values.dialCodePhone || getGuardianValues('dialCodePhone') || existingGuardian?.dialCodePhone || '+57';
     const phoneVal = validatePhoneNumber(guardianPhone, guardianDialCode);
     if (!phoneVal.isValid) {
       toast.error(phoneVal.error || `El número de teléfono de ${guardianTerm.toLowerCase()} no es válido. Debe preguntarle el número correcto y actualizarlo.`);
@@ -808,10 +811,11 @@ const NewKidView = () => {
                 name="phone"
                 control={guardianControl}
                 rules={{
-                  required: !existingGuardian || !isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone) ? 'Requerido' : false,
+                  required: 'Requerido',
                   validate: (val) => {
                     const dialCode = watchGuardian('dialCodePhone') || '+57';
-                    const targetVal = val || (existingGuardian ? existingGuardian.phone : '');
+                    const targetVal = (val || '').trim();
+                    if (!targetVal) return 'Requerido';
                     const res = validatePhoneNumber(targetVal, dialCode);
                     return res.isValid ? true : (res.error || 'Número de teléfono inválido');
                   },
@@ -819,13 +823,20 @@ const NewKidView = () => {
                 render={({ field }) => (
                   <PhoneInput
                     label="Teléfono"
-                    required={!existingGuardian || !isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
+                    required
                     dialCode={watchGuardian('dialCodePhone') || '+57'}
                     phone={field.value}
-                    disabled={!!existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)}
-                    onDialCodeChange={(code) => setGuardianValue('dialCodePhone', code)}
+                    onDialCodeChange={(code) => {
+                      setGuardianValue('dialCodePhone', code, { shouldDirty: true, shouldValidate: true });
+                      triggerGuardian('phone');
+                    }}
                     onPhoneChange={field.onChange}
                     error={guardianErrors.phone?.message as string}
+                    helperNotice={
+                      existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)
+                        ? t('kidRegistration:form.update_phone_hint', { guardian: guardianTerm.toLowerCase() })
+                        : undefined
+                    }
                   />
                 )}
               />

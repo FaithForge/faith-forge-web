@@ -6,15 +6,18 @@ import clsx from 'clsx';
 import { Calendar } from 'lucide-react';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { formatDateOnly, toDateOnlyInputValue } from '@/libs/utils/date';
+import Input from './Input';
 
-interface DatePickerWheelProps {
-  label: string;
+export interface DatePickerWheelProps {
+  label?: string;
   required?: boolean;
   value?: string; // YYYY-MM-DD
   onChange?: (date: string) => void;
   minDate?: string;
   maxDate?: string;
   className?: string;
+  error?: string;
+  disabled?: boolean;
 }
 
 interface WheelOption {
@@ -23,24 +26,23 @@ interface WheelOption {
 }
 
 interface WheelColumnProps {
-  title: string;
   options: WheelOption[];
   value: number;
   onChange: (val: number) => void;
 }
 
-const ITEM_HEIGHT = 44;
-const WHEEL_HEIGHT = 264;
-const CENTER_OFFSET = (WHEEL_HEIGHT - ITEM_HEIGHT) / 2; // 110px
+const ITEM_HEIGHT = 46;
+const WHEEL_HEIGHT = 230; // 5 visible items (2 above, selected in center, 2 below)
+const CENTER_OFFSET = (WHEEL_HEIGHT - ITEM_HEIGHT) / 2; // 92px
 
 /**
  * Individual scrollable wheel column with real-time active item tracking,
- * touch snapping, and iOS-style visual lens overlay.
+ * touch snapping, and smooth stepping.
  *
- * @param {WheelColumnProps} props - Options, selected value, change callback, and column title.
- * @returns {JSX.Element}
+ * @param {WheelColumnProps} props - Options, selected value, and change callback.
+ * @returns {JSX.Element} Rendered wheel column.
  */
-const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, title }) => {
+const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout>();
@@ -137,16 +139,11 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, tit
     }
   };
 
+  const selectedIndex = options.findIndex((o) => o.value === activeVisualValue);
+
   return (
     <div className="flex-1 flex flex-col items-center relative select-none">
-      <div className="text-xs font-bold text-gray-500 mb-2 uppercase tracking-wider">{title}</div>
-      <div className="relative w-full h-[264px] overflow-hidden flex justify-center">
-        {/* Selection lens highlight bar */}
-        <div
-          className="absolute left-1 right-1 bg-primary/10 border-y-2 border-primary/30 rounded-xl pointer-events-none z-0 shadow-xs"
-          style={{ top: CENTER_OFFSET, height: ITEM_HEIGHT }}
-        />
-
+      <div className="relative w-full h-[230px] overflow-hidden flex justify-center">
         {/* Scrollable list */}
         <div
           ref={containerRef}
@@ -159,15 +156,19 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, tit
           <div style={{ height: CENTER_OFFSET }} className="shrink-0" />
           {options.map((opt, idx) => {
             const isSelected = activeVisualValue === opt.value;
+            const distance = Math.abs(idx - (selectedIndex !== -1 ? selectedIndex : 0));
+
             return (
               <div
                 key={opt.value}
                 onClick={() => handleItemClick(opt.value, idx)}
                 className={clsx(
-                  'flex items-center justify-center snap-center transition-all duration-100 cursor-pointer select-none',
+                  'flex items-center justify-center snap-center transition-all duration-150 cursor-pointer select-none',
                   isSelected
-                    ? 'text-xl font-extrabold text-primary scale-110'
-                    : 'text-sm font-medium text-gray-400 hover:text-gray-700 opacity-60'
+                    ? 'text-2xl font-black text-primary scale-105'
+                    : distance === 1
+                      ? 'text-lg font-semibold text-gray-400 hover:text-gray-600'
+                      : 'text-base font-medium text-gray-300 hover:text-gray-400',
                 )}
                 style={{ height: ITEM_HEIGHT }}
               >
@@ -177,20 +178,18 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange, tit
           })}
           <div style={{ height: CENTER_OFFSET }} className="shrink-0" />
         </div>
-
-        {/* Top & Bottom gradient fade masks */}
-        <div className="absolute top-0 left-0 right-0 h-[96px] bg-gradient-to-b from-white via-white/85 to-transparent pointer-events-none z-20" />
-        <div className="absolute bottom-0 left-0 right-0 h-[96px] bg-gradient-to-t from-white via-white/85 to-transparent pointer-events-none z-20" />
       </div>
     </div>
   );
 };
 
 /**
- * Mobile-friendly iOS-style DatePicker Wheel bottom sheet with responsive feedback.
+ * Mobile-friendly iOS-style DatePicker Wheel bottom sheet matching the visual specifications.
+ * Features 3 individual capsule highlight lenses, capitalized header preview pill,
+ * smooth column scrolling, and responsive feedback.
  *
  * @param {DatePickerWheelProps} props - Component properties.
- * @returns {JSX.Element}
+ * @returns {JSX.Element} Rendered date picker input trigger and bottom sheet wheel picker.
  */
 const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
   label,
@@ -198,8 +197,10 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
   value,
   onChange,
   minDate = dayjs().subtract(100, 'year').format('YYYY-MM-DD'),
-  maxDate = dayjs().format('YYYY-MM-DD'),
+  maxDate = dayjs().add(20, 'year').format('YYYY-MM-DD'),
   className,
+  error,
+  disabled = false,
 }) => {
   const [open, setOpen] = useState(false);
   useModalBackClose(open, () => setOpen(false));
@@ -246,13 +247,29 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
   // Chronological ascending years from min.year() to max.year()
   const years = Array.from(
     { length: Math.max(1, max.year() - min.year() + 1) },
-    (_, i) => min.year() + i
+    (_, i) => min.year() + i,
   ).map((y) => ({ label: y.toString(), value: y }));
 
   const minMonth = year === min.year() ? min.month() + 1 : 1;
   const maxMonth = year === max.year() ? max.month() + 1 : 12;
-  const monthLabels = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-  const months = Array.from({ length: Math.max(1, maxMonth - minMonth + 1) }, (_, i) => minMonth + i).map((m) => ({
+  const monthLabels = [
+    'Ene',
+    'Feb',
+    'Mar',
+    'Abr',
+    'May',
+    'Jun',
+    'Jul',
+    'Ago',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dic',
+  ];
+  const months = Array.from(
+    { length: Math.max(1, maxMonth - minMonth + 1) },
+    (_, i) => minMonth + i,
+  ).map((m) => ({
     label: monthLabels[m - 1],
     value: m,
   }));
@@ -260,10 +277,12 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
   const daysInMonth = dayjs(`${year}-${month}-01`).daysInMonth();
   const minDay = year === min.year() && month === min.month() + 1 ? min.date() : 1;
   const maxDay = year === max.year() && month === max.month() + 1 ? max.date() : daysInMonth;
-  const days = Array.from({ length: Math.max(1, maxDay - minDay + 1) }, (_, i) => minDay + i).map((d) => ({
-    label: d.toString().padStart(2, '0'),
-    value: d,
-  }));
+  const days = Array.from({ length: Math.max(1, maxDay - minDay + 1) }, (_, i) => minDay + i).map(
+    (d) => ({
+      label: d.toString().padStart(2, '0'),
+      value: d,
+    }),
+  );
 
   useEffect(() => {
     if (day > maxDay) setDay(maxDay);
@@ -278,88 +297,128 @@ const DatePickerWheel: React.FC<DatePickerWheelProps> = ({
     setOpen(false);
   };
 
-  const currentDatePreview = dayjs(`${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`)
+  // Capitalize format like "Viernes, 9 De Mayo De 2026"
+  const rawDateStr = dayjs(
+    `${year}-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
+  )
     .locale('es')
     .format('dddd, D [de] MMMM [de] YYYY');
 
+  const currentDatePreview = rawDateStr.replace(
+    /(?:^|\s|\/|[¿([{"',;:])\S/g,
+    (match) => match.toUpperCase(),
+  );
+
   return (
-    <div className={clsx('w-full', className)}>
-      <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
+    <div className={clsx('w-full group', className)}>
+      <Input
+        label={label}
+        required={required}
+        error={error}
+        disabled={disabled}
+        readOnly
+        placeholder="Seleccionar fecha"
+        value={value ? formatDateOnly(value, 'DD / MM / YYYY') : ''}
+        onClick={() => {
+          if (!disabled) setOpen(true);
+        }}
+        rightElement={
+          <Calendar
+            size={18}
+            className="text-gray-400 group-hover:text-primary transition-colors shrink-0 pointer-events-none"
+          />
+        }
+        className="cursor-pointer select-none"
+      />
 
-      {/* Trigger */}
-      <div className="relative w-full cursor-pointer">
-        <input
-          type="text"
-          readOnly
-          placeholder="Seleccionar fecha"
-          value={value ? formatDateOnly(value, 'DD / MM / YYYY') : ''}
-          className={clsx(
-            'w-full cursor-pointer rounded-xl border-2 border-gray-200 bg-white py-2.5 pl-3 pr-10 focus:border-primary focus:ring-0 transition-colors outline-none text-base shadow-sm text-left text-text-main'
-          )}
-          onFocus={(e) => {
-            e.target.blur();
-            setOpen(true);
-          }}
-          onClick={() => setOpen(true)}
-        />
-        <Calendar size={20} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
-      </div>
-
+      {/* Bottom Sheet Drawer */}
       <Drawer.Root repositionInputs={false} open={open} onOpenChange={setOpen} nested>
         <Drawer.Portal>
           <Drawer.Overlay className="fixed inset-0 bg-black/50 z-[10000]" />
           <Drawer.Content
-            className="bg-gray-50 flex flex-col rounded-t-[28px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[90dvh]"
+            className="bg-white flex flex-col rounded-t-[32px] fixed bottom-0 left-0 right-0 z-[10001] outline-none max-h-[92dvh] shadow-2xl"
             onCloseAutoFocus={(e) => e.preventDefault()}
           >
-            {/* Header */}
-            <div className="w-full bg-white rounded-t-[28px] shadow-xs z-10 px-4 py-3.5 sticky top-0 flex items-center justify-between select-none cursor-grab active:cursor-grabbing touch-pan-y shrink-0 border-b border-gray-100">
+            {/* Grab handle */}
+            <div className="w-12 h-1.5 bg-gray-300/80 rounded-full mx-auto mt-3 mb-1 shrink-0" />
+
+            {/* Header: Cancelar | Seleccionar Fecha | Confirmar */}
+            <div className="w-full px-5 py-3 flex items-center justify-between select-none shrink-0 border-b border-gray-100/80">
               <button
                 type="button"
                 data-vaul-no-drag=""
                 onClick={() => setOpen(false)}
-                className="text-gray-500 font-medium py-1 px-2.5 hover:bg-gray-100 rounded-lg transition-colors text-sm cursor-pointer"
+                className="text-gray-500 font-semibold py-1 px-2 hover:text-gray-800 transition-colors text-sm sm:text-base cursor-pointer"
               >
                 Cancelar
               </button>
-              <Drawer.Title className="font-bold text-gray-800 text-base">Seleccionar Fecha</Drawer.Title>
+
+              <Drawer.Title className="font-bold text-gray-900 text-base sm:text-lg tracking-tight">
+                Seleccionar Fecha
+              </Drawer.Title>
+
               <button
                 type="button"
                 data-vaul-no-drag=""
                 onClick={handleConfirm}
-                className="text-primary font-bold py-1 px-2.5 hover:bg-primary/10 rounded-lg transition-colors text-sm cursor-pointer"
+                className="text-primary font-bold py-1 px-2 hover:opacity-80 transition-opacity text-sm sm:text-base cursor-pointer"
               >
                 Confirmar
               </button>
             </div>
 
-            {/* Live selected date preview */}
-            <div className="bg-white px-4 pt-4 pb-2 flex justify-center">
-              <div className="px-4 py-1.5 bg-primary/10 rounded-full border border-primary/20 text-xs font-semibold text-primary capitalize flex items-center gap-1.5 shadow-xs">
-                <Calendar size={13} className="text-primary" />
+            {/* Live selected date preview pill */}
+            <div className="pt-4 pb-3 flex justify-center px-4">
+              <div className="px-5 py-2 bg-primary/10 rounded-full border border-primary/20 text-xs sm:text-sm font-bold text-primary flex items-center gap-2 shadow-2xs">
+                <Calendar size={15} className="text-primary shrink-0" />
                 <span>{currentDatePreview}</span>
               </div>
             </div>
 
-            {/* Wheels Columns */}
-            <div data-vaul-no-drag="" className="flex px-4 py-4 bg-white">
-              <WheelColumn title="Día" options={days} value={day} onChange={setDay} />
-              <WheelColumn title="Mes" options={months} value={month} onChange={setMonth} />
-              <WheelColumn title="Año" options={years} value={year} onChange={setYear} />
+            {/* Column Titles: DÍA | MES | AÑO */}
+            <div className="grid grid-cols-3 w-full px-6 pt-3 pb-1 text-center">
+              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                DÍA
+              </span>
+              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                MES
+              </span>
+              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">
+                AÑO
+              </span>
             </div>
 
-            <div className="pb-8 pb-safe bg-white" />
+            {/* Wheels Columns with 3 separate capsule highlight lenses */}
+            <div data-vaul-no-drag="" className="relative px-6 py-2">
+              {/* 3 Separate Highlight Capsules */}
+              <div
+                className="absolute inset-x-6 grid grid-cols-3 gap-3 pointer-events-none z-0"
+                style={{ top: CENTER_OFFSET + 8, height: ITEM_HEIGHT }}
+              >
+                <div className="w-full h-full bg-primary/10 rounded-2xl border border-primary/20 shadow-2xs" />
+                <div className="w-full h-full bg-primary/10 rounded-2xl border border-primary/20 shadow-2xs" />
+                <div className="w-full h-full bg-primary/10 rounded-2xl border border-primary/20 shadow-2xs" />
+              </div>
+
+              {/* Scrollable Wheels */}
+              <div className="grid grid-cols-3 gap-3 relative z-10">
+                <WheelColumn options={days} value={day} onChange={setDay} />
+                <WheelColumn options={months} value={month} onChange={setMonth} />
+                <WheelColumn options={years} value={year} onChange={setYear} />
+              </div>
+
+              {/* Top & Bottom gradient fade masks */}
+              <div className="absolute top-2 inset-x-6 h-[70px] bg-gradient-to-b from-white via-white/80 to-transparent pointer-events-none z-20" />
+              <div className="absolute bottom-2 inset-x-6 h-[70px] bg-gradient-to-t from-white via-white/80 to-transparent pointer-events-none z-20" />
+            </div>
+
+            {/* Bottom explanatory helper text */}
+            <p className="text-xs text-gray-500 text-center leading-relaxed max-w-xs mx-auto mt-2 px-6 pb-6 pb-safe">
+              Desliza las columnas o toca los valores para seleccionar la fecha exacta.
+            </p>
           </Drawer.Content>
         </Drawer.Portal>
       </Drawer.Root>
-
-      <style>{`
-        .no-scrollbar::-webkit-scrollbar {
-          display: none;
-        }
-      `}</style>
     </div>
   );
 };

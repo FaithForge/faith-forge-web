@@ -1,12 +1,18 @@
+@import "@fontsource-variable/plus-jakarta-sans";
 @import "tailwindcss";
 
 @theme {
+  --font-sans: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --color-primary: var(--color-primary);
   --color-primary-foreground: var(--color-primary-foreground);
   --color-background: var(--color-background);
   --color-surface: var(--color-surface);
   --color-text-main: var(--color-text-main);
   --color-text-muted: var(--color-text-muted);
+  --color-badge-bg: var(--color-badge-bg);
+  --color-badge-text: var(--color-badge-text);
+  --color-border-subtle: var(--color-border-subtle);
+  --color-header-accent: var(--color-header-accent);
 }
 
 @layer base {
@@ -19,65 +25,276 @@
     --color-surface: #ffffff;
     --color-text-main: #1f2937; /* Gray 800 */
     --color-text-muted: #6b7280; /* Gray 500 */
+    --color-badge-bg: #e2e8f0;
+    --color-badge-text: #1e293b;
+    --color-border-subtle: #e2e8f0;
+    --color-header-accent: #ffffff;
   }
 
   .theme-SUPER_ADMIN {
-    --color-primary: #003963;
-    --color-primary-rgb: 0, 57, 99;
+    /* Super Admin: Azul noche máxima jerarquía */
+    --color-primary: #002744;
+    --color-primary-rgb: 0, 39, 68;
+    --color-primary-hover: #001f36;
+    --color-badge-bg: #e0f2fe;
+    --color-badge-text: #075985;
+    --color-border-subtle: #bae6fd;
+    --color-header-accent: #93c5fd;
+    --role-primary: #003963;
+    --role-badge-bg: #e0f2fe;
+    --role-badge-text: #075985;
+    --role-border-subtle: #bae6fd;
+    --role-header-accent: #93c5fd;
+    --role-avatar-from: #003963;
+    --role-avatar-to: #001f36;
   }
   .theme-ADMIN {
+    /* Admin de Sede: Azul corporativo institucional */
     --color-primary: #003963;
     --color-primary-rgb: 0, 57, 99;
+    --color-primary-hover: #002d4d;
+    --color-badge-bg: #e0f2fe;
+    --color-badge-text: #0369a1;
+    --color-border-subtle: #bae6fd;
+    --color-header-accent: #bfdbfe;
+    --role-primary: #004b80;
+    --role-badge-bg: #e0f2fe;
+    --role-badge-text: #0369a1;
+    --role-border-subtle: #bae6fd;
+    --role-header-accent: #bfdbfe;
+    --role-avatar-from: #004b80;
+    --role-avatar-to: #002d4d;
   }
   .theme-STAFF {
-    --color-primary: #3b82f6; /* blue-500 */
-    --color-primary-rgb: 59, 130, 246;
+    /* Staff de Sede: Azul zafiro operativo */
+    --color-primary: #1e40af;
+    --color-primary-rgb: 30, 64, 175;
+    --color-primary-hover: #1d4ed8;
+    --color-badge-bg: #dbeafe;
+    --color-badge-text: #1e40af;
+    --color-border-subtle: #bfdbfe;
+    --color-header-accent: #dbeafe;
+    --role-primary: #2563eb;
+    --role-badge-bg: #dbeafe;
+    --role-badge-text: #1e40af;
+    --role-border-subtle: #bfdbfe;
+    --role-header-accent: #dbeafe;
+    --role-avatar-from: #3b82f6;
+    --role-avatar-to: #1d4ed8;
   }
   .theme-MINISTRY_ADMIN {
-    --color-primary: #d97706; /* amber-600 */
-    --color-primary-rgb: 217, 119, 6;
+    /* Director General: Ámbar profundo */
+    --color-primary: #b45309;
+    --color-primary-rgb: 180, 83, 9;
+    --color-primary-hover: #92400e;
+    --color-badge-bg: #fef3c7;
+    --color-badge-text: #78350f;
+    --color-border-subtle: #fde68a;
+    --color-header-accent: #fde68a;
+    --role-primary: #b45309;
+    --role-badge-bg: #fef3c7;
+    --role-badge-text: #78350f;
+    --role-border-subtle: #fde68a;
+    --role-header-accent: #fde68a;
+    --role-avatar-from: #d97706;
+    --role-avatar-to: #b45309;
   }
   .theme-KID_REGISTER_COORDINATOR {
-    --color-primary: #166534; /* bg-green-800 */
-    --color-primary-rgb: 22, 101, 52;
+    /* Coordinador (Nivel 1): Verde Esmeralda Profundo */
+    --color-primary: #1b6b4a;
+    --color-primary-rgb: 27, 107, 74;
+    --color-primary-hover: #145339;
+    --color-badge-bg: #d1f2e0;
+    --color-badge-text: #0f3d2a;
+    --color-border-subtle: #d3e8dc;
+    --color-header-accent: #a3e7c9;
+    --role-primary: #1b6b4a;
+    --role-badge-bg: #d1f2e0;
+    --role-badge-text: #0f3d2a;
+    --role-border-subtle: #d3e8dc;
+    --role-header-accent: #a3e7c9;
+    --role-avatar-from: #1b6b4a;
+    --role-avatar-to: #134e37;
   }
   .theme-KID_CHURCH_GROUP_COORDINATOR {
-    --color-primary: #db2777; /* bg-pink-600 */
-    --color-primary-rgb: 219, 39, 119;
+    /* Coordinador de Grupo: Frambuesa firme */
+    --color-primary: #be185d;
+    --color-primary-rgb: 190, 24, 93;
+    --color-primary-hover: #9d174d;
+    --color-badge-bg: #fce7f3;
+    --color-badge-text: #831843;
+    --color-border-subtle: #fbcfe8;
+    --color-header-accent: #fbcfe8;
+    --role-primary: #be185d;
+    --role-badge-bg: #fce7f3;
+    --role-badge-text: #831843;
+    --role-border-subtle: #fbcfe8;
+    --role-header-accent: #fbcfe8;
+    --role-avatar-from: #db2777;
+    --role-avatar-to: #9d174d;
   }
   .theme-KID_REGISTER_SUPERVISOR {
-    --color-primary: #15803d; /* bg-green-700 */
-    --color-primary-rgb: 21, 128, 61;
+    /* Supervisor (Nivel 2): Verde Jade Intenso */
+    --color-primary: #0d7a5f;
+    --color-primary-rgb: 13, 122, 95;
+    --color-primary-hover: #095b46;
+    --color-badge-bg: #ccfbf1;
+    --color-badge-text: #0f766e;
+    --color-border-subtle: #ccefe7;
+    --color-header-accent: #99f6e4;
+    --role-primary: #0d7a5f;
+    --role-badge-bg: #ccfbf1;
+    --role-badge-text: #0f766e;
+    --role-border-subtle: #ccefe7;
+    --role-header-accent: #99f6e4;
+    --role-avatar-from: #0d7a5f;
+    --role-avatar-to: #0a5c47;
   }
   .theme-KID_CHURCH_SUPERVISOR {
-    --color-primary: #9333ea; /* bg-purple-600 */
-    --color-primary-rgb: 147, 51, 234;
+    /* Supervisor de Aula: Púrpura real */
+    --color-primary: #7e22ce;
+    --color-primary-rgb: 126, 34, 206;
+    --color-primary-hover: #6b21a8;
+    --color-badge-bg: #f3e8ff;
+    --color-badge-text: #581c87;
+    --color-border-subtle: #e9d5ff;
+    --color-header-accent: #e9d5ff;
+    --role-primary: #7e22ce;
+    --role-badge-bg: #f3e8ff;
+    --role-badge-text: #581c87;
+    --role-border-subtle: #e9d5ff;
+    --role-header-accent: #e9d5ff;
+    --role-avatar-from: #9333ea;
+    --role-avatar-to: #6b21a8;
   }
   .theme-KID_REGISTER_USER {
-    --color-primary: #16a34a; /* bg-green-600 */
-    --color-primary-rgb: 22, 163, 74;
+    /* Servidor (Nivel 3): Verde Salvia Fresco */
+    --color-primary: #2d6a4f;
+    --color-primary-rgb: 45, 106, 79;
+    --color-primary-hover: #2a664a;
+    --color-badge-bg: #e2efe7;
+    --color-badge-text: #1e4634;
+    --color-border-subtle: #d8e8df;
+    --color-header-accent: #b7e4c7;
+    --role-primary: #2d6a4f;
+    --role-action-primary: #3a8663;
+    --role-badge-bg: #e2efe7;
+    --role-badge-text: #1e4634;
+    --role-border-subtle: #d8e8df;
+    --role-header-accent: #b7e4c7;
+    --role-avatar-from: #3a8663;
+    --role-avatar-to: #2d6a4f;
   }
   .theme-KID_CHURCH_USER {
-    --color-primary: #fbbf24; /* bg-amber-400 */
-    --color-primary-rgb: 251, 191, 36;
+    /* Maestro / Servidor: Ámbar cálido */
+    --color-primary: #d97706;
+    --color-primary-rgb: 217, 119, 6;
+    --color-primary-hover: #b45309;
+    --color-badge-bg: #fffbeb;
+    --color-badge-text: #92400e;
+    --color-border-subtle: #fde68a;
+    --color-header-accent: #fef3c7;
+    --role-primary: #d97706;
+    --role-badge-bg: #fffbeb;
+    --role-badge-text: #92400e;
+    --role-border-subtle: #fde68a;
+    --role-header-accent: #fef3c7;
+    --role-avatar-from: #f59e0b;
+    --role-avatar-to: #d97706;
   }
-  .theme-USER {
-    --color-primary: #003963;
-    --color-primary-rgb: 0, 57, 99;
+  .theme-KID_SECURITY_COORDINATOR {
+    /* Coord. de Seguridad: Esmeralda ultra profundo */
+    --color-primary: #064e3b;
+    --color-primary-rgb: 6, 78, 59;
+    --color-primary-hover: #043f30;
+    --color-badge-bg: #d1fae5;
+    --color-badge-text: #064e3b;
+    --color-border-subtle: #a7f3d0;
+    --color-header-accent: #a7f3d0;
+    --role-primary: #047857;
+    --role-badge-bg: #d1fae5;
+    --role-badge-text: #064e3b;
+    --role-border-subtle: #a7f3d0;
+    --role-header-accent: #a7f3d0;
+    --role-avatar-from: #047857;
+    --role-avatar-to: #064e3b;
+  }
+  .theme-KID_SECURITY_SUPERVISOR {
+    /* Supervisor de Seguridad: Esmeralda institucional */
+    --color-primary: #047857;
+    --color-primary-rgb: 4, 120, 87;
+    --color-primary-hover: #065f46;
+    --color-badge-bg: #d1fae5;
+    --color-badge-text: #065f46;
+    --color-border-subtle: #a7f3d0;
+    --color-header-accent: #a7f3d0;
+    --role-primary: #059669;
+    --role-badge-bg: #d1fae5;
+    --role-badge-text: #065f46;
+    --role-border-subtle: #a7f3d0;
+    --role-header-accent: #a7f3d0;
+    --role-avatar-from: #059669;
+    --role-avatar-to: #065f46;
+  }
+  .theme-KID_SECURITY_USER {
+    /* Servidor de Puerta: Esmeralda medio visible */
+    --color-primary: #059669;
+    --color-primary-rgb: 5, 150, 105;
+    --color-primary-hover: #047857;
+    --color-badge-bg: #ecfdf5;
+    --color-badge-text: #047857;
+    --color-border-subtle: #a7f3d0;
+    --color-header-accent: #d1fae5;
+    --role-primary: #10b981;
+    --role-badge-bg: #ecfdf5;
+    --role-badge-text: #047857;
+    --role-border-subtle: #a7f3d0;
+    --role-header-accent: #d1fae5;
+    --role-avatar-from: #10b981;
+    --role-avatar-to: #047857;
   }
   .theme-GUARDIAN {
-    --color-primary: #4338ca;
-    --color-primary-rgb: 67, 56, 202;
+    /* Padre / Acudiente: Índigo familiar elegante */
+    --color-primary: #3730a3;
+    --color-primary-rgb: 55, 48, 163;
+    --color-primary-hover: #312e81;
     --color-primary-foreground: #ffffff;
-    --color-background: #f8fafc;
-    --color-surface: #ffffff;
+    --color-badge-bg: #eef2ff;
+    --color-badge-text: #312e81;
+    --color-border-subtle: #c7d2fe;
+    --color-header-accent: #c7d2fe;
     --color-text-main: #0f172a;
     --color-text-muted: #64748b;
+    --role-primary: #4338ca;
+    --role-badge-bg: #eef2ff;
+    --role-badge-text: #312e81;
+    --role-border-subtle: #c7d2fe;
+    --role-header-accent: #c7d2fe;
+    --role-avatar-from: #4f46e5;
+    --role-avatar-to: #3730a3;
+  }
+  .theme-USER {
+    /* Usuario Base: Pizarra neutro sobrio */
+    --color-primary: #1e293b;
+    --color-primary-rgb: 30, 41, 59;
+    --color-primary-hover: #0f172a;
+    --color-badge-bg: #f1f5f9;
+    --color-badge-text: #334155;
+    --color-border-subtle: #e2e8f0;
+    --color-header-accent: #cbd5e1;
+    --role-primary: #475569;
+    --role-badge-bg: #f1f5f9;
+    --role-badge-text: #334155;
+    --role-border-subtle: #e2e8f0;
+    --role-header-accent: #cbd5e1;
+    --role-avatar-from: #64748b;
+    --role-avatar-to: #334155;
   }
 
   html,
   body,
   #root {
+    font-family: var(--font-sans);
     background-color: var(--color-background);
     color: var(--color-text-main);
     /* Mobile optimal reset */
@@ -140,4 +357,19 @@
   .hover\:bg-primary\/10:hover { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.10) !important; }
   .hover\:bg-primary\/20:hover { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.20) !important; }
   .hover\:bg-primary\/90:hover { background-color: rgba(var(--color-primary-rgb, 21, 128, 61), 0.90) !important; }
+
+  /* Role design token utilities */
+  .bg-role-badge { background-color: var(--color-badge-bg) !important; }
+  .text-role-badge { color: var(--color-badge-text) !important; }
+  .border-role-subtle { border-color: var(--color-border-subtle) !important; }
+  .text-header-accent { color: var(--color-header-accent) !important; }
+
+  /* Hide scrollbar utility */
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }

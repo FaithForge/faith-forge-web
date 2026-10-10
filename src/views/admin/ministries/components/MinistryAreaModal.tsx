@@ -252,6 +252,12 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
                   desc: 'Permisos de control de acceso al área, seguimiento en vivo y entrega segura de niños.',
                   badge: 'Seguridad',
                 },
+                {
+                  id: MinistryAreaScope.KID_MEDICAL,
+                  label: 'Doctores / Médicos',
+                  desc: 'Atención médica de niños y registro de novedades de salud.',
+                  badge: 'Médicos',
+                },
               ].map((option) => {
                 const isSelected = scope === option.id;
                 return (

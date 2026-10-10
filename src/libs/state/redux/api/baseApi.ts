@@ -158,6 +158,7 @@ export const baseApi = createApi({
     'UserOverview',
     'Notification',
     'UserTerms',
+    'ChurchReport',
   ],
 
   refetchOnReconnect: true,

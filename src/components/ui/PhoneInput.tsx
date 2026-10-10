@@ -91,7 +91,7 @@ export const countryDialCodes: CountryDialCode[] = [
   { name: 'Sudáfrica', code: '+27', flag: '🇿🇦' },
 ];
 
-interface PhoneInputProps {
+export interface PhoneInputProps {
   dialCode: string;
   phone: string;
   onDialCodeChange: (code: string) => void;
@@ -101,20 +101,33 @@ interface PhoneInputProps {
   disabled?: boolean;
   required?: boolean;
   className?: string;
+  helperNotice?: React.ReactNode;
+  helperText?: React.ReactNode;
+  showNotice?: boolean;
 }
 
 const DEFAULT_DIAL_CODE = '+57';
 
+/**
+ * Standard reusable PhoneInput component with country dial code drawer,
+ * formatted masking, clear button, and WhatsApp integration notice.
+ *
+ * @param {PhoneInputProps} props - Phone value, handlers, and optional config.
+ * @returns {JSX.Element} Rendered telephone input card.
+ */
 const PhoneInput: React.FC<PhoneInputProps> = ({
   dialCode = DEFAULT_DIAL_CODE,
   phone,
   onDialCodeChange,
   onPhoneChange,
-  label = 'TELÉFONO MÓVIL',
+  label = 'Teléfono Móvil / WhatsApp',
   error,
   disabled = false,
   required = false,
   className,
+  helperNotice,
+  helperText,
+  showNotice = true,
 }) => {
   const [open, setOpen] = useState(false);
   useModalBackClose(open, () => setOpen(false));
@@ -139,6 +152,11 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
     onPhoneChange(clean);
   };
 
+  const handleClear = () => {
+    if (disabled) return;
+    onPhoneChange('');
+  };
+
   const filteredCountries = useMemo(() => {
     if (!search.trim()) return countryDialCodes;
     const q = search.toLowerCase().trim();
@@ -146,39 +164,47 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
       (c) =>
         c.name.toLowerCase().includes(q) ||
         c.code.includes(q) ||
-        c.code.replace('+', '').includes(q)
+        c.code.replace('+', '').includes(q),
     );
   }, [search]);
 
   return (
-    <div className={twMerge(clsx('w-full', className))}>
+    <div className={twMerge(clsx('w-full group', className))}>
       {label && (
-        <label
-          className={clsx(
-            'block text-xs font-bold mb-1.5 uppercase tracking-wide transition-colors',
-            disabled ? 'text-gray-400' : 'text-gray-700'
-          )}
-        >
-          {label.replace(/\s*\((?:opcional|Opcional)\)/i, '')}
-          {/\((?:opcional|Opcional)\)/i.test(label) && (
-            <span className="text-gray-400 font-medium normal-case tracking-normal ml-1">
-              (opcional)
+        <div className="flex items-center justify-between gap-2 mb-1.5">
+          <label
+            className={clsx(
+              'block text-xs font-bold uppercase tracking-wide transition-colors',
+              disabled ? 'text-gray-400' : 'text-gray-700',
+            )}
+          >
+            {label.replace(/\s*\((?:opcional|Opcional)\)/i, '')}
+            {/\((?:opcional|Opcional)\)/i.test(label) && (
+              <span className="text-gray-400 font-medium normal-case tracking-normal ml-1">
+                (opcional)
+              </span>
+            )}
+          </label>
+
+          {required && (
+            <span className="text-rose-600 text-[11px] font-black uppercase tracking-wider shrink-0">
+              * OBLIGATORIO
             </span>
           )}
-          {required && <span className={disabled ? 'text-gray-300' : 'text-red-500'}> *</span>}
-        </label>
+        </div>
       )}
 
       {/* Contenedor Unificado e Integrado */}
       <div
         className={twMerge(
           clsx(
-            'flex items-center w-full rounded-xl border-2 bg-white transition-all overflow-hidden h-[48px] shadow-sm',
+            'flex items-center w-full rounded-2xl border bg-white p-1.5 sm:p-2 shadow-2xs transition-all gap-2 min-h-[50px]',
             error
-              ? 'border-red-500 ring-1 ring-red-500'
-              : 'border-gray-200 focus-within:border-primary focus-within:ring-1 focus-within:ring-primary/20',
-            disabled && 'bg-gray-100 text-gray-500 border-gray-200 opacity-80 cursor-not-allowed'
-          )
+              ? 'border-rose-300 ring-2 ring-rose-100 focus-within:border-rose-500 focus-within:ring-rose-200'
+              : 'border-gray-200/90 hover:border-gray-300 focus-within:border-primary focus-within:ring-4 focus-within:ring-primary/10',
+            disabled &&
+              'bg-gray-100/80 text-gray-500 border-gray-200 opacity-80 cursor-not-allowed',
+          ),
         )}
       >
         {/* Selector de Indicativo Integrado */}
@@ -191,13 +217,15 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           }}
           className={twMerge(
             clsx(
-              'flex items-center gap-1.5 px-3 h-full bg-gray-50/80 hover:bg-gray-100/90 border-r border-gray-200 text-text-main transition-colors shrink-0 outline-none active:bg-gray-200/60',
-              disabled && 'cursor-not-allowed pointer-events-none'
-            )
+              'flex items-center gap-1.5 px-3 py-2 rounded-xl bg-primary/5 hover:bg-primary/10 border border-primary/10 text-gray-800 transition-colors shrink-0 outline-none cursor-pointer',
+              disabled && 'cursor-not-allowed pointer-events-none opacity-60',
+            ),
           )}
         >
-          <span className="text-lg leading-none">{selectedCountry.flag}</span>
-          <span className="font-bold text-sm text-gray-800 tracking-tight">{selectedCountry.code}</span>
+          <span className="text-base leading-none">{selectedCountry.flag}</span>
+          <span className="font-bold text-sm text-gray-800 tracking-tight">
+            {selectedCountry.code}
+          </span>
           <ChevronDown size={14} className="text-gray-400 ml-0.5" />
         </button>
 
@@ -212,11 +240,37 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
           autoCapitalize="off"
           spellCheck={false}
           onChange={handleInputChange}
-          className="w-full h-full px-3.5 bg-transparent text-text-main placeholder-gray-400 outline-none text-base font-semibold tracking-wide"
+          className="w-full bg-transparent border-0 p-0 text-base sm:text-sm font-semibold text-gray-900 placeholder:text-gray-400 placeholder:font-normal outline-none focus:outline-none focus:ring-0 tracking-wide"
         />
+
+        {/* Botón de limpiar */}
+        {phone && !disabled && (
+          <button
+            type="button"
+            onClick={handleClear}
+            className="mr-1 text-gray-400 hover:text-gray-600 transition-colors shrink-0 cursor-pointer"
+            tabIndex={-1}
+            aria-label="Limpiar teléfono"
+          >
+            <div className="w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition-transform active:scale-90">
+              <X size={12} strokeWidth={2.5} />
+            </div>
+          </button>
+        )}
       </div>
 
-      {error && <span className="text-red-500 text-xs font-medium mt-1 inline-block">{error}</span>}
+      {error && (
+        <span className="text-rose-500 text-xs font-semibold mt-1.5 inline-block pl-0.5">
+          {error}
+        </span>
+      )}
+
+      {/* Notice / Helper text */}
+      {showNotice && (helperNotice || helperText) && !error && (
+        <p className="text-xs text-gray-500 mt-1 pl-0.5 leading-snug">
+          {helperNotice || helperText}
+        </p>
+      )}
 
       {/* Drawer de Búsqueda de Indicativo */}
       <Drawer.Root repositionInputs={false} open={open} onOpenChange={setOpen} nested>
@@ -252,7 +306,7 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                   </div>
                   <input
                     type="text"
-                    className="block w-full pl-10 pr-10 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-text-main focus:border-primary focus:bg-white transition-colors outline-none text-sm font-medium"
+                    className="block w-full pl-10 pr-10 py-2.5 rounded-xl border-2 border-gray-200 bg-gray-50 text-gray-900 placeholder:text-gray-400 focus:border-primary focus:bg-white transition-colors outline-none text-sm font-medium"
                     placeholder="Buscar país o indicativo (+57, Colombia)..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
@@ -303,10 +357,10 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                         setSearch('');
                       }}
                       className={clsx(
-                        'w-full flex items-center justify-between px-4 py-3.5 border-b border-gray-50 transition-colors last:border-0 rounded-xl',
+                        'w-full flex items-center justify-between px-4 py-3.5 border-b border-gray-50 transition-colors last:border-0 rounded-xl cursor-pointer',
                         isSelected
                           ? 'bg-primary/5 text-primary font-bold'
-                          : 'text-gray-700 hover:bg-gray-50 font-medium'
+                          : 'text-gray-700 hover:bg-gray-50 font-medium',
                       )}
                     >
                       <div className="flex items-center gap-3">
@@ -314,7 +368,12 @@ const PhoneInput: React.FC<PhoneInputProps> = ({
                         <span className="text-sm">{c.name}</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className={clsx('text-sm font-semibold', isSelected ? 'text-primary' : 'text-gray-500')}>
+                        <span
+                          className={clsx(
+                            'text-sm font-semibold',
+                            isSelected ? 'text-primary' : 'text-gray-500',
+                          )}
+                        >
                           {c.code}
                         </span>
                         {isSelected && <Check size={16} className="text-primary" />}

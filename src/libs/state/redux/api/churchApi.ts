@@ -11,6 +11,11 @@ import {
   CreateVolunteerAttendancePayload,
   BatchCreateVolunteerAttendancePayload,
   IVolunteer,
+  IChurchReport,
+  CreateChurchReportPayload,
+  UpdateChurchReportStatusPayload,
+  AddChurchReportNotePayload,
+  QueryChurchReportsArgs,
 } from '@/libs/models';
 import { baseApi } from './baseApi';
 
@@ -262,6 +267,72 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result ? [{ type: 'VolunteerAssignment', id: result.id }] : [],
     }),
+
+    getChurchReports: builder.query<IChurchReport[], QueryChurchReportsArgs | void>({
+      query: (args) => {
+        const params: Record<string, unknown> = {};
+        if (args?.churchCampusId) params.churchCampusId = args.churchCampusId;
+        if (args?.churchMeetingId) params.churchMeetingId = args.churchMeetingId;
+        if (args?.date) params.date = args.date;
+        if (args?.ministryId) params.ministryId = args.ministryId;
+        if (args?.serviceAreaGroupId) params.serviceAreaGroupId = args.serviceAreaGroupId;
+        if (args?.type) params.type = args.type;
+        if (args?.statuses && args.statuses.length > 0) params.statuses = args.statuses.join(',');
+        if (args?.excludeClosed !== undefined) params.excludeClosed = args.excludeClosed;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/church/reports',
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      providesTags: (result) => [
+        { type: 'ChurchReport', id: 'LIST' },
+        ...(result || []).map((report) => ({
+          type: 'ChurchReport' as const,
+          id: report.id,
+        })),
+      ],
+    }),
+
+    createChurchReport: builder.mutation<IChurchReport, CreateChurchReportPayload>({
+      query: (payload) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church/reports',
+        method: HttpRequestMethod.POST,
+        data: payload,
+      }),
+      invalidatesTags: [{ type: 'ChurchReport', id: 'LIST' }],
+    }),
+
+    updateChurchReportStatus: builder.mutation<
+      IChurchReport,
+      UpdateChurchReportStatusPayload
+    >({
+      query: ({ id, ...body }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church/reports/${id}/status`,
+        method: HttpRequestMethod.PATCH,
+        data: body,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'ChurchReport', id: 'LIST' },
+        { type: 'ChurchReport', id: arg.id },
+      ],
+    }),
+
+    addChurchReportNote: builder.mutation<IChurchReport, AddChurchReportNotePayload>({
+      query: ({ id, ...body }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church/reports/${id}/notes`,
+        method: HttpRequestMethod.POST,
+        data: body,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'ChurchReport', id: 'LIST' },
+        { type: 'ChurchReport', id: arg.id },
+      ],
+    }),
   }),
   overrideExisting: false,
 });
@@ -285,5 +356,10 @@ export const {
   useRecordBatchVolunteerAttendanceMutation,
   useGetVolunteerByUserIdQuery,
   useLazyGetVolunteerByUserIdQuery,
+  useGetChurchReportsQuery,
+  useLazyGetChurchReportsQuery,
+  useCreateChurchReportMutation,
+  useUpdateChurchReportStatusMutation,
+  useAddChurchReportNoteMutation,
 } = churchApi;
 

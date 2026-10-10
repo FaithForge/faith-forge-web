@@ -220,6 +220,49 @@ export const usePermissions = () => {
     hasVolunteerRole,
   ]);
 
+  /**
+   * Whether the active role can manage church reports / service novedades.
+   * Exclusivo para coordinadores de grupo de Kids Church o super administradores generales.
+   * No permitido para supervisores, coordinadores de área (ej. Regikids), servidores o apoyo.
+   */
+  const canManageChurchReports = useMemo(() => {
+    if (isExplicitServidor || isApoyo) return false;
+
+    if (currentRole) {
+      if (
+        currentRole === ChurchRole.KID_REGISTER_COORDINATOR ||
+        currentRole === ChurchRole.MINISTRY_ADMIN ||
+        currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+        currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+        currentRole === ChurchRole.KID_SECURITY_SUPERVISOR ||
+        currentRole === ChurchRole.KID_SECURITY_COORDINATOR
+      ) {
+        return false;
+      }
+      return (
+        currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+        (isSuperAdmin && currentRole === UserRole.SUPER_ADMIN)
+      );
+    }
+
+    if (activeVolunteerRole) {
+      return activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR;
+    }
+
+    return (
+      hasRole(ChurchRole.KID_CHURCH_GROUP_COORDINATOR) ||
+      hasVolunteerRole(VolunteerRole.GROUP_COORDINATOR)
+    );
+  }, [
+    isExplicitServidor,
+    isApoyo,
+    currentRole,
+    isSuperAdmin,
+    activeVolunteerRole,
+    hasRole,
+    hasVolunteerRole,
+  ]);
+
   return {
     user,
     currentRole,
@@ -246,5 +289,6 @@ export const usePermissions = () => {
     canViewCreatorInfo,
     canViewRegistrationLog,
     canTakeVolunteerAttendance,
+    canManageChurchReports,
   };
 };
