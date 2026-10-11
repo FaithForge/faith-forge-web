@@ -6,7 +6,6 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   CartesianGrid,
   Cell,
   LabelList,
@@ -18,29 +17,6 @@ export interface KidsAgeDistributionChartProps {
   data: AgeDistributionItem[];
   totalKids: number;
 }
-
-/**
- * Custom Tooltip for Age Distribution Chart.
- */
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const item: AgeDistributionItem = payload[0].payload;
-    return (
-      <div className="bg-slate-900/95 backdrop-blur-md text-white p-2.5 rounded-2xl shadow-xl border border-slate-800 text-xs space-y-1">
-        <p className="font-black text-slate-100">{item.bracket}</p>
-        <div className="flex items-center justify-between gap-3 text-slate-300">
-          <span>Niños registrados:</span>
-          <span className="font-black text-teal-400">{item.count}</span>
-        </div>
-        <div className="flex items-center justify-between gap-3 text-slate-400 text-[11px]">
-          <span>Porcentaje:</span>
-          <span className="font-bold text-slate-200">{item.percent}%</span>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
 
 /**
  * Recharts BarChart visualizing kid age brackets distribution.
@@ -82,7 +58,7 @@ export const KidsAgeDistributionChart: React.FC<KidsAgeDistributionChartProps> =
         )}
       </div>
 
-      <div className="w-full h-52 sm:h-60">
+      <div className="w-full h-52 sm:h-60 select-none pointer-events-none">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -102,7 +78,6 @@ export const KidsAgeDistributionChart: React.FC<KidsAgeDistributionChartProps> =
               axisLine={{ stroke: '#e2e8f0' }}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
             <Bar
               dataKey="count"
               isAnimationActive={false}

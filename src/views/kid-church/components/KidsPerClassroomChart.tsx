@@ -6,15 +6,12 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   CartesianGrid,
   Cell,
   LabelList,
 } from 'recharts';
 import { Building2 } from 'lucide-react';
-import { FaChild, FaChildDress } from 'react-icons/fa6';
-import { isFeatureEnabled } from '@/config/features';
-import { useKidsTerm, useChurchTerm } from '@/libs/hooks/useTerm';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import { ClassroomMetricItem } from '../hooks/useGroupCoordinatorStats';
 
 export interface KidsPerClassroomChartProps {
@@ -23,60 +20,6 @@ export interface KidsPerClassroomChartProps {
   classroomsTerm?: string;
   volunteersTerm?: string;
 }
-
-interface CustomTooltipProps {
-  active?: unknown;
-  payload?: any[];
-  classroomTerm: string;
-  volunteersTerm: string;
-}
-
-/**
- * Custom Tooltip for Recharts Classroom BarChart.
- */
-const CustomTooltip = ({
-  active,
-  payload,
-  classroomTerm,
-  volunteersTerm,
-}: CustomTooltipProps) => {
-  if (active && payload && payload.length) {
-    const item: ClassroomMetricItem = payload[0].payload;
-    const isVolunteerAttendanceEnabled = isFeatureEnabled('volunteerAttendance');
-
-    return (
-      <div className="bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-xl border border-slate-800 text-xs space-y-1.5 min-w-[170px]">
-        <p className="font-black text-slate-100 text-sm">{item.name}</p>
-        <p className="text-[11px] text-slate-400 font-medium">{item.ageRange}</p>
-        <div className="pt-1 border-t border-slate-800/80 space-y-1">
-          <div className="flex justify-between items-center text-slate-200">
-            <span className="font-medium">Total Niños:</span>
-            <span className="font-black text-indigo-400">{item.totalKids}</span>
-          </div>
-          <div className="flex justify-between items-center text-slate-300 text-[11px]">
-            <span className="inline-flex items-center gap-1">
-              <FaChild className="text-indigo-400 w-3 h-3" /> Niños:
-            </span>
-            <span className="font-bold">{item.boys}</span>
-          </div>
-          <div className="flex justify-between items-center text-slate-300 text-[11px]">
-            <span className="inline-flex items-center gap-1">
-              <FaChildDress className="text-pink-400 w-3 h-3" /> Niñas:
-            </span>
-            <span className="font-bold">{item.girls}</span>
-          </div>
-          {isVolunteerAttendanceEnabled && (
-            <div className="flex justify-between items-center text-slate-400 text-[10px] pt-0.5">
-              <span>{volunteersTerm} en {classroomTerm.toLowerCase()}:</span>
-              <span className="font-bold text-emerald-400">{item.serversAttended}</span>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
 
 /**
  * Recharts BarChart visualizing total kids attendance across classrooms using horizontal bars.
@@ -89,16 +32,14 @@ export const KidsPerClassroomChart: React.FC<KidsPerClassroomChartProps> = ({
   data,
   classroomTerm,
   classroomsTerm,
-  volunteersTerm,
+  volunteersTerm: _volunteersTerm,
 }) => {
   const { t } = useTranslation(['kidChurch', 'common']);
   const defaultClassroom = useKidsTerm('classroom');
   const defaultClassrooms = useKidsTerm('classrooms');
-  const defaultVolunteers = useChurchTerm('volunteers');
 
   const effectiveClassroom = classroomTerm || defaultClassroom;
   const effectiveClassrooms = classroomsTerm || defaultClassrooms;
-  const effectiveVolunteers = volunteersTerm || defaultVolunteers;
 
   const chartData = data.map((c) => ({
     ...c,
@@ -149,7 +90,7 @@ export const KidsPerClassroomChart: React.FC<KidsPerClassroomChartProps> = ({
           </span>
         </div>
       ) : (
-        <div className="w-full" style={{ height: chartHeight }}>
+        <div className="w-full select-none pointer-events-none" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
@@ -172,15 +113,6 @@ export const KidsPerClassroomChart: React.FC<KidsPerClassroomChartProps> = ({
                 tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }}
                 axisLine={{ stroke: '#e2e8f0' }}
                 tickLine={false}
-              />
-              <Tooltip
-                content={
-                  <CustomTooltip
-                    classroomTerm={effectiveClassroom}
-                    volunteersTerm={effectiveVolunteers}
-                  />
-                }
-                cursor={{ fill: '#f8fafc' }}
               />
               <Bar
                 dataKey="totalKids"

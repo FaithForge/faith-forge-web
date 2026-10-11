@@ -6,7 +6,6 @@ import {
   Bar,
   XAxis,
   YAxis,
-  Tooltip,
   CartesianGrid,
   Cell,
   LabelList,
@@ -23,60 +22,6 @@ export interface ServersPerAreaChartProps {
 }
 
 /**
- * Custom Tooltip for Recharts Servers Per Area BarChart.
- */
-const CustomTooltip = ({
-  active,
-  payload,
-  volunteersTerm,
-  teachersTerm,
-  supervisorsTerm,
-  coordinatorsTerm,
-}: any) => {
-  if (active && payload && payload.length) {
-    const item: AreaMetricItem = payload[0].payload;
-    return (
-      <div className="bg-slate-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-xl border border-slate-800 text-xs space-y-1.5 min-w-[170px]">
-        <p className="font-black text-slate-100 text-sm">{item.name}</p>
-        <div className="pt-1 border-t border-slate-800/80 space-y-1">
-          <div className="flex justify-between items-center text-slate-200">
-            <span className="font-medium">{volunteersTerm} presentes:</span>
-            <span className="font-black text-emerald-400">
-              {item.attended} / {item.assigned}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-slate-300 text-[11px]">
-            <span className="font-medium">{teachersTerm}:</span>
-            <span className="font-bold text-slate-100">
-              {item.teachersAttended} / {item.teachersAssigned}
-            </span>
-          </div>
-          <div className="flex justify-between items-center text-slate-300 text-[11px]">
-            <span className="font-medium">{supervisorsTerm}:</span>
-            <span className="font-bold text-slate-100">
-              {item.supervisorsAttended} / {item.supervisorsAssigned}
-            </span>
-          </div>
-          {item.coordinatorsAssigned > 0 && (
-            <div className="flex justify-between items-center text-slate-300 text-[11px]">
-              <span className="font-medium">{coordinatorsTerm}:</span>
-              <span className="font-bold text-slate-100">
-                {item.coordinatorsAttended} / {item.coordinatorsAssigned}
-              </span>
-            </div>
-          )}
-          <div className="flex justify-between items-center text-slate-400 text-[10px] pt-0.5 border-t border-slate-800/60">
-            <span>Asistencia:</span>
-            <span className="font-bold text-emerald-300">{item.percent}%</span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  return null;
-};
-
-/**
  * Horizontal Recharts BarChart displaying servers attendance per area.
  * Displays numbers directly on the bars without requiring interaction.
  *
@@ -85,10 +30,10 @@ const CustomTooltip = ({
  */
 export const ServersPerAreaChart: React.FC<ServersPerAreaChartProps> = ({
   data,
-  volunteersTerm,
-  teachersTerm,
-  supervisorsTerm,
-  coordinatorsTerm = 'Coordinadores',
+  volunteersTerm: _volunteersTerm,
+  teachersTerm: _teachersTerm,
+  supervisorsTerm: _supervisorsTerm,
+  coordinatorsTerm: _coordinatorsTerm = 'Coordinadores',
 }) => {
   const { t } = useTranslation(['kidChurch', 'common']);
 
@@ -133,7 +78,7 @@ export const ServersPerAreaChart: React.FC<ServersPerAreaChartProps> = ({
           <span>{t('coordinator_dashboard.chart_empty', 'Sin áreas configuradas')}</span>
         </div>
       ) : (
-        <div className="w-full" style={{ height: chartHeight }}>
+        <div className="w-full select-none pointer-events-none" style={{ height: chartHeight }}>
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               layout="vertical"
@@ -156,17 +101,6 @@ export const ServersPerAreaChart: React.FC<ServersPerAreaChartProps> = ({
                 tick={{ fontSize: 11, fill: '#334155', fontWeight: 600 }}
                 axisLine={{ stroke: '#e2e8f0' }}
                 tickLine={false}
-              />
-              <Tooltip
-                content={
-                  <CustomTooltip
-                    volunteersTerm={volunteersTerm}
-                    teachersTerm={teachersTerm}
-                    supervisorsTerm={supervisorsTerm}
-                    coordinatorsTerm={coordinatorsTerm}
-                  />
-                }
-                cursor={{ fill: '#f8fafc' }}
               />
               <Bar
                 dataKey="attended"

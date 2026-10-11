@@ -1,6 +1,6 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
-import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip } from 'recharts';
+import { ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { GenderMetricItem } from '../hooks/useGroupCoordinatorStats';
@@ -9,27 +9,6 @@ export interface KidsGenderChartProps {
   data: GenderMetricItem[];
   totalKids: number;
 }
-
-/**
- * Custom Tooltip for Gender Donut Chart.
- */
-const CustomTooltip = ({ active, payload }: any) => {
-  if (active && payload && payload.length) {
-    const item: GenderMetricItem = payload[0].payload;
-    const isBoys = item.key === 'boys';
-    const Icon = isBoys ? FaChild : FaChildDress;
-
-    return (
-      <div className="bg-slate-900/95 backdrop-blur-md text-white px-3 py-2 rounded-2xl shadow-xl border border-slate-800 text-xs flex items-center gap-2">
-        <Icon className={isBoys ? 'text-indigo-400 w-3.5 h-3.5' : 'text-pink-400 w-3.5 h-3.5'} />
-        <span className="font-semibold text-slate-200">{item.name}:</span>
-        <span className="font-black text-white">{item.value}</span>
-        <span className="text-slate-400 font-bold">({item.percent}%)</span>
-      </div>
-    );
-  }
-  return null;
-};
 
 /**
  * Donut chart showing Gender distribution (Boys vs Girls) with Recharts.
@@ -74,10 +53,9 @@ export const KidsGenderChart: React.FC<KidsGenderChartProps> = ({ data, totalKid
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-1">
         {/* Donut Chart Container */}
-        <div className="relative w-44 h-44 sm:w-48 sm:h-48 shrink-0">
+        <div className="relative w-44 h-44 sm:w-48 sm:h-48 shrink-0 select-none pointer-events-none">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              {totalKids > 0 && <Tooltip content={<CustomTooltip />} />}
               <Pie
                 isAnimationActive={false}
                 data={totalKids === 0 ? [{ name: 'Empty', value: 1, color: '#e2e8f0' }] : data}
