@@ -33,7 +33,7 @@ const URGENT_NOTICE_VIBRATION_PATTERN = [
   1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000, 250, 1000,
 ];
 
-interface KidDetailsDrawerProps {
+interface KidDetailsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   kid?: IKid;
@@ -44,10 +44,10 @@ interface KidDetailsDrawerProps {
  * Bottom sheet drawer displaying complete details of a registered kid in the kids ministry.
  * Uses the exact design language, styling, and card layout from KidCheckInView.
  *
- * @param {KidDetailsDrawerProps} props - Open state, kid data, and optional showEpsAlert override.
+ * @param {KidDetailsModalProps} props - Open state, kid data, and optional showEpsAlert override.
  * @returns {JSX.Element | null}
  */
-const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
+const KidDetailsModal: React.FC<KidDetailsModalProps> = ({
   open,
   onOpenChange,
   kid: propKid,
@@ -73,7 +73,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
 
   const kid = fetchedKid || propKid;
 
-  const { user, currentRole, canViewCreatorInfo, isSupervisor } = usePermissions();
+  const { user, currentRole, canViewCreatorInfo, can } = usePermissions();
 
   const kidsModuleName = useKidsTerm('module_alias');
   const kidsTeacherTerm = useKidsTerm('teacher');
@@ -506,7 +506,7 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
                       </span>
                     </div>
 
-                      {isSupervisor && (() => {
+                      {can('checkin:view-log') && (() => {
                         const parsed = getRegistrationLogInfo(kid.currentKidRegistration);
                         if (!parsed) return null;
                         return (
@@ -718,5 +718,5 @@ const KidDetailsDrawer: React.FC<KidDetailsDrawerProps> = ({
   );
 };
 
-export default KidDetailsDrawer;
+export default KidDetailsModal;
 

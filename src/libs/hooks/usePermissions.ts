@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from 'react';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
+import { AppCapability, hasCapability } from '@/libs/utils/auth/capabilities';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 
 /**
@@ -36,12 +37,25 @@ export const usePermissions = () => {
     [activeVolunteerRole],
   );
 
-  // An explicit volunteer/server role switch (e.g. Servidor, Servidor - Apoyo, Maestro)
+  // Explicit scoped role switches that must NOT inherit broader account-level admin/coordinator privileges:
   const isExplicitServidor =
     currentRole === ChurchRole.KID_REGISTER_USER ||
     currentRole === ChurchRole.KID_CHURCH_USER ||
     currentRole === ChurchRole.KID_SECURITY_USER ||
     activeVolunteerRole === VolunteerRole.VOLUNTEER;
+
+  const isExplicitSupervisor =
+    currentRole === ChurchRole.KID_REGISTER_SUPERVISOR ||
+    currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
+    currentRole === ChurchRole.KID_SECURITY_SUPERVISOR ||
+    activeVolunteerRole === VolunteerRole.SUPERVISOR;
+
+  const isExplicitGroupCoordinator =
+    currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+    activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR;
+
+  const isExplicitScopedRole =
+    isExplicitServidor || isExplicitSupervisor || isExplicitGroupCoordinator;
 
   const {
     activeGroupConfigId,
@@ -61,13 +75,13 @@ export const usePermissions = () => {
   const isAccountSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
   const isAccountAdmin = isAccountSuperAdmin || userRoles.includes(UserRole.ADMIN);
 
-  const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN) || (!isExplicitServidor && isAccountSuperAdmin);
-  const isAdmin = hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN) || (!isExplicitServidor && isAccountAdmin);
-  const isStaff = isAdmin || activeRoles.has(UserRole.STAFF) || (!isExplicitServidor && userRoles.includes(UserRole.STAFF));
-  const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN) || (!isExplicitServidor && userRoles.includes(ChurchRole.MINISTRY_ADMIN));
+  const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN) || (!isExplicitScopedRole && isAccountSuperAdmin);
+  const isAdmin = hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN) || (!isExplicitScopedRole && isAccountAdmin);
+  const isStaff = isAdmin || activeRoles.has(UserRole.STAFF) || (!isExplicitScopedRole && userRoles.includes(UserRole.STAFF));
+  const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN) || (!isExplicitScopedRole && userRoles.includes(ChurchRole.MINISTRY_ADMIN));
 
   const isAreaCoordinator =
-    !isExplicitServidor &&
+    !isExplicitScopedRole &&
     (isMinistryAdmin ||
       hasRole(ChurchRole.KID_REGISTER_COORDINATOR) ||
       hasVolunteerRole(
@@ -81,13 +95,16 @@ export const usePermissions = () => {
 
   const isGroupCoordinator =
     !isExplicitServidor &&
+    !isExplicitSupervisor &&
     (isAreaCoordinator ||
+      isExplicitGroupCoordinator ||
       hasRole(ChurchRole.KID_CHURCH_GROUP_COORDINATOR) ||
       hasVolunteerRole(VolunteerRole.GROUP_COORDINATOR));
 
   const isSupervisor =
     !isExplicitServidor &&
     (isGroupCoordinator ||
+      isExplicitSupervisor ||
       hasRole(
         ChurchRole.KID_REGISTER_SUPERVISOR,
         ChurchRole.KID_CHURCH_SUPERVISOR,
@@ -263,6 +280,43 @@ export const usePermissions = () => {
     hasVolunteerRole,
   ]);
 
+  /**
+   * Helper to check whether the active user satisfies a semantic capability.
+   *
+   * @param {AppCapability} capability - Semantic action (e.g. 'attendance:take-attendance').
+   * @returns {boolean} True if allowed.
+   */
+  const can = useCallback(
+    (capability: AppCapability): boolean => {
+      return hasCapability(capability, {
+        isAdmin,
+        isSuperAdmin,
+        isAreaCoordinator,
+        isGroupCoordinator,
+        isSupervisor,
+        isServidor,
+        canTakeVolunteerAttendance,
+        canManageChurchReports,
+        canViewTeam,
+        canViewCreatorInfo,
+        canViewRegistrationLog,
+      });
+    },
+    [
+      isAdmin,
+      isSuperAdmin,
+      isAreaCoordinator,
+      isGroupCoordinator,
+      isSupervisor,
+      isServidor,
+      canTakeVolunteerAttendance,
+      canManageChurchReports,
+      canViewTeam,
+      canViewCreatorInfo,
+      canViewRegistrationLog,
+    ],
+  );
+
   return {
     user,
     currentRole,
@@ -281,6 +335,8 @@ export const usePermissions = () => {
     isGroupCoordinator,
     isSupervisor,
     isServidor,
+    isExplicitSupervisor,
+    isExplicitGroupCoordinator,
     isApoyo,
     hasAssignedGroup,
     isKidChurchRole,
@@ -290,5 +346,7 @@ export const usePermissions = () => {
     canViewRegistrationLog,
     canTakeVolunteerAttendance,
     canManageChurchReports,
+    can,
   };
 };
+

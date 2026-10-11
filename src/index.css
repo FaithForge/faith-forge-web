@@ -372,4 +372,9 @@
     -ms-overflow-style: none;
     scrollbar-width: none;
   }
+
+  /* Recharts label text stability: prevent hover / pointer-events flickering */
+  .recharts-text.recharts-label {
+    pointer-events: none !important;
+  }
 }

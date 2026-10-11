@@ -1,273 +1,44 @@
-import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
-import { Home, UserPlus, QrCode, Settings, FileText, Users, UserCheck, ClipboardCheck, AlertTriangle, LucideIcon } from 'lucide-react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import clsx from 'clsx';
-import { APP_ROUTES } from '@/config/routes';
-import { isFeatureEnabled } from '@/config/features';
-
-const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
-const ReportDrawer = lazy(() => import('@/components/modal/ReportDrawer'));
-const KidChurchReportDrawer = lazy(() => import('@/components/modal/KidChurchReportDrawer'));
-import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { markKidsNeedsRefresh } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import React from 'react';
+import { useLocation } from 'react-router-dom';
+import { useAppSelector } from '@/libs/state/redux/hooks';
 import { usePermissions } from '@/libs/hooks/usePermissions';
-import { useChurchTerm } from '@/libs/hooks/useTerm';
-import { toast } from 'sonner';
+import { APP_ROUTES } from '@/config/routes';
+import RegistrationBottomNav from './RegistrationBottomNav';
+import KidChurchBottomNav from './KidChurchBottomNav';
 
-const BottomNav = () => {
-  const { t } = useTranslation(['common']);
+/**
+ * Dispatcher for the floating bottom navigation bar.
+ * Cleanly separates the two operational workspaces to prevent cross-role conflicts:
+ * - When in Kid Church workspace (`/kid-church`) -> Renders KidChurchBottomNav.
+ * - Otherwise (Registration, `/kid-registration`) -> Renders RegistrationBottomNav.
+ *
+ * Hides completely for administrative roles matching AdminLayout behavior.
+ *
+ * @returns {JSX.Element | null}
+ */
+const BottomNav: React.FC = () => {
   const { pathname } = useLocation();
-  const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-  const { requestNavigation } = useNavigationGuard();
-  
-  const [openSettings, setOpenSettings] = useState(false);
-  const [openReport, setOpenReport] = useState(false);
-  const [hasOpenedSettings, setHasOpenedSettings] = useState(false);
-  const [hasOpenedReport, setHasOpenedReport] = useState(false);
+  const currentRole = useAppSelector((state) => state.authSlice.currentRole);
+  const { isKidChurchRole } = usePermissions();
 
-  const handleOpenSettings = (open: boolean) => {
-    if (open) setHasOpenedSettings(true);
-    setOpenSettings(open);
-  };
+  const isAdminRole =
+    currentRole === 'ADMIN' ||
+    currentRole === 'SUPER_ADMIN' ||
+    currentRole === 'STAFF';
 
-  const handleOpenReport = (open: boolean) => {
-    if (open) setHasOpenedReport(true);
-    setOpenReport(open);
-  };
-
-  const meetingTerm = useChurchTerm('meeting');
-  const { isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
-  const { isServidor, canViewTeam, isKidChurchRole, canTakeVolunteerAttendance, canManageChurchReports } = usePermissions();
-
-  const currentRole = useAppSelector(state => state.authSlice.currentRole);
-  const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
-
-  const {
-    isChurchVolunteer,
-    isOnboardingCompleted,
-    campuses: volunteerCampuses,
-    activeCampusId,
-    activeVolunteerRole,
-    userMsRoles = [],
-  } = useAppSelector((state) => state.volunteerContextSlice);
-
-  const isUserMsRole = currentRole && userMsRoles.includes(currentRole);
-  const isChurchRole = isChurchVolunteer && !isUserMsRole;
-
-
-
-  // Apertura automática de configuración inicial cuando no está configurado
-  useEffect(() => {
-    if (!isAdminRole && !isConfigured && !openSettings) {
-      handleOpenSettings(true);
-    }
-  }, [isAdminRole, isConfigured, openSettings]);
-
-  // Permite abrir el drawer de configuración desde componentes externos (ej. RegistrationStatusCard)
-  useEffect(() => {
-    const handleOpen = () => {
-      handleOpenSettings(true);
-    };
-    window.addEventListener('app:open-settings', handleOpen);
-    return () => window.removeEventListener('app:open-settings', handleOpen);
-  }, []);
-
-  // If admin, hide the bottom navigation bar (matching legacy AdminLayout behavior)
+  // If admin, hide the bottom navigation bar
   if (isAdminRole) return null;
 
-  interface BottomNavItem {
-    path: string;
-    icon: LucideIcon;
-    label: string;
-    action: 'link' | 'settings' | 'report';
+  // Determine active workspace by route and active role context
+  const isKidChurchPath =
+    pathname.startsWith(APP_ROUTES.kidChurch.root) ||
+    (isKidChurchRole && !pathname.startsWith(APP_ROUTES.kidRegistration.root));
+
+  if (isKidChurchPath) {
+    return <KidChurchBottomNav />;
   }
 
-  let navItems: BottomNavItem[] = [];
-
-  if (isKidChurchRole) {
-    // Tabs for Kid Church (KidChurchLayout)
-    navItems = [
-      { path: APP_ROUTES.kidChurch.root, icon: Users, label: t('navigation.registered_kids'), action: 'link' },
-      { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
-    ];
-    if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
-    if (isFeatureEnabled('churchReports') && canManageChurchReports) {
-      navItems.push({
-        path: APP_ROUTES.kidChurch.reports,
-        icon: AlertTriangle,
-        label: t('navigation.church_reports', 'Novedades'),
-        action: 'link',
-      });
-    }
-    if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
-      navItems.push({
-        path: APP_ROUTES.kidChurch.volunteerAttendance,
-        icon: ClipboardCheck,
-        label: t('navigation.attendance'),
-        action: 'link',
-      });
-    }
-    if (canViewTeam) navItems.push({ path: APP_ROUTES.kidChurch.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
-  } else {
-    // Tabs for Kid Registration (KidRegistrationLayout)
-    navItems = [
-      { path: APP_ROUTES.kidRegistration.root, icon: Home, label: t('navigation.home'), action: 'link' },
-      { path: APP_ROUTES.kidRegistration.new, icon: UserPlus, label: t('navigation.new_kid'), action: 'link' },
-      { path: APP_ROUTES.kidRegistration.scanner, icon: QrCode, label: t('navigation.scan_qr'), action: 'link' },
-      { path: '#', icon: Settings, label: t('navigation.configure'), action: 'settings' },
-    ];
-    if (!isServidor) navItems.push({ path: '#', icon: FileText, label: t('navigation.report'), action: 'report' });
-    if (isFeatureEnabled('churchReports') && canManageChurchReports) {
-      navItems.push({
-        path: APP_ROUTES.kidChurch.reports,
-        icon: AlertTriangle,
-        label: t('navigation.church_reports', 'Novedades'),
-        action: 'link',
-      });
-    }
-    if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
-      navItems.push({
-        path: APP_ROUTES.kidChurch.volunteerAttendance,
-        icon: ClipboardCheck,
-        label: t('navigation.attendance'),
-        action: 'link',
-      });
-    }
-    if (canViewTeam) navItems.push({ path: APP_ROUTES.kidRegistration.myTeam, icon: UserCheck, label: t('navigation.my_team'), action: 'link' });
-  }
-
-  return (
-    <>
-      <div className="fixed bottom-3 inset-x-3 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 sm:w-[460px] z-40 pointer-events-none pb-safe">
-        <nav className="pointer-events-auto bg-white/95 backdrop-blur-xl border border-gray-200/80 shadow-xl shadow-black/10 rounded-full py-1.5 px-2 flex justify-between items-center">
-          {navItems.map((item) => {
-            const isActive = pathname === item.path && item.action === 'link';
-            const isKidAction = item.path === APP_ROUTES.kidRegistration.new || item.path === APP_ROUTES.kidRegistration.scanner;
-            const isBlocked = shouldBlockKids && isKidAction;
-            const Icon = item.icon;
-
-            const handleClick = (e: React.MouseEvent) => {
-              e.preventDefault();
-              if (isBlocked) {
-                toast.error(meetingErrorMsg || `La ${meetingTerm.toLowerCase()} se encuentra fuera del horario de registro.`);
-                return;
-              }
-              if (!isConfigured && isKidAction) {
-                handleOpenSettings(true);
-                toast.info(`Por favor selecciona la ${meetingTerm.toLowerCase()} a registrar antes de continuar.`);
-                return;
-              }
-              if (item.action === 'settings') {
-                handleOpenSettings(true);
-                return;
-              }
-              if (item.action === 'report') {
-                handleOpenReport(true);
-                return;
-              }
-
-              const isRegistrationHomeClick = item.label === 'Inicio' || item.path === APP_ROUTES.kidRegistration.root;
-              const isKidChurchHomeClick = item.label === 'Niños Registrados' || item.path === APP_ROUTES.kidChurch.root;
-
-              // If already on the active tab:
-              if (pathname === item.path) {
-                if (isRegistrationHomeClick) {
-                  dispatch(markKidsNeedsRefresh());
-                  window.dispatchEvent(new CustomEvent('reset-registration-dashboard'));
-                } else if (isKidChurchHomeClick) {
-                  window.dispatchEvent(new CustomEvent('reset-kid-church-dashboard'));
-                }
-                return;
-              }
-
-              if (isRegistrationHomeClick) {
-                dispatch(markKidsNeedsRefresh());
-                window.dispatchEvent(new CustomEvent('reset-registration-dashboard'));
-                navigate(item.path);
-                return;
-              }
-
-              if (isKidChurchHomeClick) {
-                window.dispatchEvent(new CustomEvent('reset-kid-church-dashboard'));
-                navigate(item.path);
-                return;
-              }
-
-              // Check navigation guard before navigating
-              if (requestNavigation(item.path)) navigate(item.path);
-            };
-
-            return (
-              <Link
-                key={item.label}
-                to={item.path}
-                onClick={handleClick}
-                className={clsx(
-                  "flex flex-col items-center py-0.5 px-1 flex-1 group transition-transform active:scale-95 select-none",
-                  isBlocked ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-                )}
-              >
-                {/* Pill container around icon (Telegram style) */}
-                <div
-                  className={clsx(
-                    "w-11 sm:w-13 h-7 rounded-full flex items-center justify-center transition-all duration-200",
-                    isBlocked
-                      ? "text-gray-400"
-                      : isActive
-                      ? "bg-primary/15 text-primary scale-105"
-                      : "text-gray-400 group-hover:text-gray-600"
-                  )}
-                >
-                  <Icon
-                    size={20}
-                    className={clsx(
-                      "transition-transform",
-                      !isBlocked && isActive && "stroke-[2.3px]"
-                    )}
-                  />
-                </div>
-                <span
-                  className={clsx(
-                    "text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[68px] text-center mt-0.5 transition-colors",
-                    isBlocked
-                      ? "text-gray-400 font-medium"
-                      : isActive
-                      ? "text-primary font-bold"
-                      : "text-gray-500 font-medium group-hover:text-gray-700"
-                  )}
-                >
-                  {item.label}
-                </span>
-              </Link>
-            );
-          })}
-        </nav>
-      </div>
-
-      {/* Drawer Modals */}
-      {hasOpenedSettings && (
-        <Suspense fallback={null}>
-          <SettingsDrawer
-            open={openSettings}
-            onOpenChange={handleOpenSettings}
-          />
-        </Suspense>
-      )}
-      {hasOpenedReport && (
-        <Suspense fallback={null}>
-          {isKidChurchRole ? (
-            <KidChurchReportDrawer open={openReport} onOpenChange={handleOpenReport} />
-          ) : (
-            <ReportDrawer open={openReport} onOpenChange={handleOpenReport} />
-          )}
-        </Suspense>
-      )}
-    </>
-  );
+  return <RegistrationBottomNav />;
 };
 
 export default BottomNav;

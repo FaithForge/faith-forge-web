@@ -29,9 +29,9 @@ import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 
 const UserProfileModal = lazy(() => import('@/components/modal/UserProfileModal'));
-const ChangelogDrawer = lazy(() => import('@/components/modal/ChangelogDrawer'));
-const SettingsDrawer = lazy(() => import('@/components/modal/SettingsDrawer'));
-const NotificationsDrawer = lazy(() => import('@/components/modal/NotificationsDrawer'));
+const ChangelogModal = lazy(() => import('@/components/modal/ChangelogModal'));
+const SettingsModal = lazy(() => import('@/components/modal/SettingsModal'));
+const NotificationsModal = lazy(() => import('@/components/modal/NotificationsModal'));
 
 import { APP_VERSION } from '@/constants/version';
 import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole, UserExperienceEnum } from '@/libs/utils/auth';
@@ -40,6 +40,7 @@ import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
 import { useRoleTransition } from '@/libs/context/RoleTransitionContext';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 
 export type ThemeRole = {
   id: AppRole;
@@ -257,7 +258,7 @@ const TopBar = () => {
   const dispatch = useAppDispatch();
   const [profileOpen, setProfileOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [settingsDrawerOpen, setSettingsDrawerOpen] = useState(false);
+  const [settingsDrawerOpen, setSettingsModalOpen] = useState(false);
 
   const { isSearchAvailable, isScrolledPastSearch, triggerFocusSearch } = useSearchScroll();
   const { startTransition } = useRoleTransition();
@@ -298,8 +299,10 @@ const TopBar = () => {
 
   const handleOpenSettings = (open: boolean) => {
     if (open) setHasOpenedSettings(true);
-    setSettingsDrawerOpen(open);
+    setSettingsModalOpen(open);
   };
+
+  const { isConfigured } = useChurchMeetingStatus();
 
   // Open settings drawer on external request when BottomNav is not mounted (admin roles)
   useEffect(() => {
@@ -312,6 +315,18 @@ const TopBar = () => {
     window.addEventListener('app:open-settings', handleOpen);
     return () => window.removeEventListener('app:open-settings', handleOpen);
   }, [currentRole]);
+
+  // Auto-open configuration modal on first visit for admin roles in operational workspaces
+  useEffect(() => {
+    const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
+    const isOperationalWorkspace =
+      location.pathname.startsWith(APP_ROUTES.kidRegistration.root) ||
+      location.pathname.startsWith(APP_ROUTES.kidChurch.root);
+
+    if (isAdminRole && isOperationalWorkspace && !isConfigured && !settingsDrawerOpen) {
+      handleOpenSettings(true);
+    }
+  }, [currentRole, location.pathname, isConfigured, settingsDrawerOpen]);
 
   const {
     isChurchVolunteer,
@@ -1326,14 +1341,14 @@ const TopBar = () => {
       {/* Changelog Drawer */}
       {hasOpenedChangelog && (
         <Suspense fallback={null}>
-          <ChangelogDrawer open={changelogOpen} onOpenChange={handleOpenChangelog} />
+          <ChangelogModal open={changelogOpen} onOpenChange={handleOpenChangelog} />
         </Suspense>
       )}
 
       {/* Drawer para cambiar de sede o grupo manualmente */}
       {hasOpenedSettings && (
         <Suspense fallback={null}>
-          <SettingsDrawer
+          <SettingsModal
             open={settingsDrawerOpen}
             onOpenChange={handleOpenSettings}
           />
@@ -1343,7 +1358,7 @@ const TopBar = () => {
       {/* Notifications Drawer */}
       {hasOpenedNotifications && (
         <Suspense fallback={null}>
-          <NotificationsDrawer
+          <NotificationsModal
             open={notificationsOpen}
             onOpenChange={setNotificationsOpen}
             experience={currentExperience}

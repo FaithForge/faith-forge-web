@@ -1,5 +1,14 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Layers, Plus, Edit2, CheckCircle2, XCircle, Inbox, ShieldCheck } from 'lucide-react';
+import {
+  Layers,
+  Plus,
+  Edit2,
+  CheckCircle2,
+  XCircle,
+  Inbox,
+  ShieldCheck,
+  Stethoscope,
+} from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -153,8 +162,23 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({
                 className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex items-center justify-between gap-3 hover:border-gray-300 transition-all"
               >
                 <div className="flex items-start gap-3 min-w-0 flex-1">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 border border-blue-100 flex items-center justify-center shrink-0 mt-0.5">
-                    <Layers size={18} />
+                  <div
+                    className={clsx(
+                      'w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 mt-0.5 transition-colors',
+                      area.scope === MinistryAreaScope.KID_MEDICAL
+                        ? 'bg-rose-50 text-rose-600 border-rose-200/80'
+                        : area.scope === MinistryAreaScope.KID_REGISTRATION
+                          ? 'bg-amber-50 text-amber-600 border-amber-200/80'
+                          : area.scope === MinistryAreaScope.KID_SECURITY
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200/80'
+                            : 'bg-blue-50 text-blue-600 border-blue-100',
+                    )}
+                  >
+                    {area.scope === MinistryAreaScope.KID_MEDICAL ? (
+                      <Stethoscope size={18} />
+                    ) : (
+                      <Layers size={18} />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
@@ -192,6 +216,11 @@ export const MinistryAreasTab: React.FC<MinistryAreasTabProps> = ({
                       {area.scope === MinistryAreaScope.KID_SECURITY && (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shrink-0">
                           <ShieldCheck size={10} /> Seguridad
+                        </span>
+                      )}
+                      {area.scope === MinistryAreaScope.KID_MEDICAL && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200/80 shrink-0">
+                          <Stethoscope size={10} /> Doctores / Médicos
                         </span>
                       )}
 

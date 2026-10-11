@@ -196,7 +196,7 @@ const renderNotificationBody = (
   return notif.body || '';
 };
 
-interface NotificationsDrawerProps {
+interface NotificationsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   experience?: UserExperienceEnum;
@@ -206,10 +206,10 @@ interface NotificationsDrawerProps {
  * In-app Notification Center drawer displaying alerts and check-in updates
  * scoped to the active user and segmented by experience within the last 24 hours.
  *
- * @param {NotificationsDrawerProps} props - Component properties.
+ * @param {NotificationsModalProps} props - Component properties.
  * @returns {JSX.Element} The rendered notification drawer.
  */
-export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
+export const NotificationsModal: React.FC<NotificationsModalProps> = ({
   open,
   onOpenChange,
   experience: propExperience,
@@ -599,4 +599,4 @@ export const NotificationsDrawer: React.FC<NotificationsDrawerProps> = ({
   );
 };
 
-export default NotificationsDrawer;
+export default NotificationsModal;

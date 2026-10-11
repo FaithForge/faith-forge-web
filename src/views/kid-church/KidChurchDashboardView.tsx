@@ -8,7 +8,7 @@ import dayjs from 'dayjs';
 import Cell from '@/components/ui/Cell';
 import Alert from '@/components/ui/Alert';
 import Input from '@/components/ui/Input';
-import KidDetailsDrawer from '@/components/modal/KidDetailsDrawer';
+import KidDetailsModal from '@/components/modal/KidDetailsModal';
 import {
   useGetKidGroupsQuery,
   useGetKidGroupAttendanceQuery,
@@ -38,7 +38,7 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
  *
  * @returns {JSX.Element}
  */
-const KidChurchDashboard: React.FC = () => {
+export const KidChurchDashboardView: React.FC = () => {
   const { t } = useTranslation(['kidChurch', 'common']);
   const navigate = useNavigate();
   const { currentMeeting, currentCampus, isConfigured } = useChurchMeetingStatus();
@@ -528,7 +528,7 @@ const KidChurchDashboard: React.FC = () => {
       )}
 
       {/* Kid Details Bottom Sheet (Alerta de EPS deshabilitada para coordinadores, supervisores y maestros) */}
-      <KidDetailsDrawer
+      <KidDetailsModal
         open={openKidDrawer}
         onOpenChange={setOpenKidDrawer}
         kid={selectedKid}
@@ -538,4 +538,4 @@ const KidChurchDashboard: React.FC = () => {
   );
 };
 
-export default KidChurchDashboard;
+export default KidChurchDashboardView;

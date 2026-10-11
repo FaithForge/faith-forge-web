@@ -22,6 +22,9 @@ check "Placeholders must be placeholder:text-gray-400" 'placeholder:text-gray-[5
 check "'Faith Forge' must not appear in user-facing locale strings" 'Faith Forge' src/locales
 check "DaisyUI / React-Vant are forbidden" 'daisyui|react-vant' package.json
 check "One-line if must not have braces" 'if\s*\([^)]*\)\s*\{[^}\n]+;?\s*\}' src --include='*.ts' --include='*.tsx'
+check "Raw canManageChurchReports is forbidden in views/components (use can('reports:...'))" '\bcanManageChurchReports\b' src/views src/components --include='*.tsx'
+check "Raw isServidor is forbidden in views/components (use can('...'))" '\bisServidor\b' src/views src/components --include='*.tsx'
+check "Modals must be named *Modal, not *Drawer in src/components/modal" 'export.*Drawer\b' src/components/modal --include='*.tsx'
 
 # New createAsyncThunk in staged changes (skipped when nothing is staged / not a git repo)
 if git rev-parse --git-dir >/dev/null 2>&1; then

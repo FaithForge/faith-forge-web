@@ -31,18 +31,23 @@ export const useVolunteerAttendanceLiveSync = ({
     )}`;
     const eventSource = new EventSource(sseUrl);
 
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null;
+
     eventSource.onmessage = (event) => {
       try {
         if (!event.data) return;
         const payload = JSON.parse(event.data);
 
         if (payload?.type === 'VOLUNTEER_ATTENDANCE_UPDATED') {
-          dispatch(
-            churchApi.util.invalidateTags([
-              { type: 'VolunteerAttendance', id: 'LIST' },
-              { type: 'VolunteerAttendance', id: 'SUMMARY' },
-            ]),
-          );
+          if (debounceTimer) clearTimeout(debounceTimer);
+          debounceTimer = setTimeout(() => {
+            dispatch(
+              churchApi.util.invalidateTags([
+                { type: 'VolunteerAttendance', id: 'LIST' },
+                { type: 'VolunteerAttendance', id: 'SUMMARY' },
+              ]),
+            );
+          }, 1200);
         }
       } catch {
         // Heartbeats or non-JSON messages are ignored gracefully
@@ -54,6 +59,7 @@ export const useVolunteerAttendanceLiveSync = ({
     };
 
     return () => {
+      if (debounceTimer) clearTimeout(debounceTimer);
       eventSource.close();
     };
   }, [churchMeetingId, enabled, dispatch]);

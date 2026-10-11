@@ -21,6 +21,7 @@ import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { APP_ROUTES } from '@/config/routes';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useKidChurchLiveSync } from '@/libs/hooks/useKidChurchLiveSync';
 import {
   useGetKidLiveTrackingQuery,
@@ -48,15 +49,16 @@ type TabStatusFilter = 'ALL' | KidAttendanceStatusEnum;
 const AttendanceTrackingView: React.FC = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
   const navigate = useNavigate();
-  const { currentMeeting, currentCampus, isConfigured, shouldBlockKids, isAdmin, meetingErrorMsg } = useChurchMeetingStatus();
+  const { currentMeeting, currentCampus, isConfigured, shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
+  const { can } = usePermissions();
 
   // Security and schedule guard: Block tracking view if service is not started or out of schedule
   useEffect(() => {
-    if (shouldBlockKids && !isAdmin) {
+    if (shouldBlockKids && !can('checkin:bypass-schedule')) {
       toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado.');
       navigate(APP_ROUTES.kidRegistration.root, { replace: true });
     }
-  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
+  }, [shouldBlockKids, can, meetingErrorMsg, navigate]);
 
   const flowMode = currentCampus?.kidAttendanceFlowMode || KidAttendanceFlowModeEnum.ONLY_CHECK_IN;
   const isOnlyCheckIn = flowMode === KidAttendanceFlowModeEnum.ONLY_CHECK_IN;

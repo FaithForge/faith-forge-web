@@ -23,8 +23,8 @@ import { APP_VERSION } from '@/constants/version';
 import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 
 const UserProfileModal = lazy(() => import('@/components/modal/UserProfileModal'));
-const ChangelogDrawer = lazy(() => import('@/components/modal/ChangelogDrawer'));
-const NotificationsDrawer = lazy(() => import('@/components/modal/NotificationsDrawer'));
+const ChangelogModal = lazy(() => import('@/components/modal/ChangelogModal'));
+const NotificationsModal = lazy(() => import('@/components/modal/NotificationsModal'));
 
 /**
  * Inner shell for Church Administration workspace (/admin).
@@ -287,14 +287,14 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
       {/* Changelog Drawer */}
       {hasOpenedChangelog && (
         <Suspense fallback={null}>
-          <ChangelogDrawer open={changelogOpen} onOpenChange={handleOpenChangelog} />
+          <ChangelogModal open={changelogOpen} onOpenChange={handleOpenChangelog} />
         </Suspense>
       )}
 
       {/* Notifications Drawer */}
       {hasOpenedNotifications && (
         <Suspense fallback={null}>
-          <NotificationsDrawer
+          <NotificationsModal
             open={notificationsOpen}
             onOpenChange={setNotificationsOpen}
             experience={UserExperienceEnum.ADMIN}

@@ -45,7 +45,7 @@ const CENTER_OFFSET = (WHEEL_HEIGHT - ITEM_HEIGHT) / 2; // 92px
 const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const isUserScrollingRef = useRef(false);
-  const scrollTimeoutRef = useRef<NodeJS.Timeout>();
+  const scrollTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
   const [activeVisualValue, setActiveVisualValue] = useState<number>(value);
 
   // Synchronize scroll position with selected value when not actively being scrolled by user
@@ -67,7 +67,7 @@ const WheelColumn: React.FC<WheelColumnProps> = ({ options, value, onChange }) =
     const el = containerRef.current;
     if (!el) return;
 
-    let wheelTimer: NodeJS.Timeout;
+    let wheelTimer: ReturnType<typeof setTimeout>;
     const onWheel = (e: WheelEvent) => {
       e.preventDefault();
       clearTimeout(wheelTimer);

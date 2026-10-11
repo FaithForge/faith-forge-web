@@ -12,6 +12,7 @@ import {
   FileText,
   Minus,
   RefreshCw,
+  ShieldCheck,
   UserCheck,
   Users,
   X,
@@ -28,6 +29,7 @@ import {
 import {
   EntityState,
   IVolunteerAssignment,
+  MinistryAreaScope,
   VolunteerAttendanceStatus,
   VolunteerRole,
 } from '@/libs/models';
@@ -38,9 +40,39 @@ import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { isFeatureEnabled } from '@/config/features';
 import { APP_ROUTES } from '@/config/routes';
 import PullToRefresh from '@/components/ui/PullToRefresh';
-import AreaAttendanceDrawer from './components/AreaAttendanceDrawer';
+import TeamAttendanceSummaryCard from '@/views/kid-church/components/TeamAttendanceSummaryCard';
+import AreaAttendanceDrawer, {
+  isCoordinatorRole,
+  isSupervisorRole,
+} from './components/AreaAttendanceDrawer';
 
 const EMPTY_ASSIGNMENTS: IVolunteerAssignment[] = [];
+
+/**
+ * Determines whether a ministry area manages children groups/classrooms.
+ * Evaluates strictly by functional scope (KID_GROUP_MANAGEMENT) or explicit kid group relation,
+ * avoiding brittle name-string heuristics.
+ *
+ * @param {object} [area] - Ministry area object or partial relation.
+ * @returns {boolean} True if the area manages kid groups, false otherwise.
+ */
+export const isClassroomArea = (
+  area?: {
+    scope?: MinistryAreaScope | null;
+    kidGroups?: unknown[];
+    kidGroupId?: string;
+    kidGroupIds?: string[];
+    name?: string;
+  } | null,
+): boolean => {
+  if (!area) return false;
+  if (area.scope === MinistryAreaScope.KID_GROUP_MANAGEMENT) return true;
+  if (Array.isArray(area.kidGroups) && area.kidGroups.length > 0) return true;
+  if (area.kidGroupId || (Array.isArray(area.kidGroupIds) && area.kidGroupIds.length > 0)) {
+    return true;
+  }
+  return false;
+};
 
 export interface AreaStats {
   id: string;
@@ -54,6 +86,10 @@ export interface AreaStats {
   exempt: number;
   isComplete: boolean;
   assignments: IVolunteerAssignment[];
+  teachersCount: number;
+  supervisorsCount: number;
+  coordinatorsCount: number;
+  isClassroom: boolean;
 }
 
 /**
@@ -90,35 +126,79 @@ const VolunteerAttendanceDashboardSkeleton: React.FC = () => {
         </div>
       </div>
 
-      {/* 2. 4 General Statistics Cards Skeleton */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 sm:gap-3">
-        {[0, 1, 2, 3].map((idx) => (
-          <div
-            key={idx}
-            className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200 shadow-2xs flex flex-col justify-between"
-          >
-            <div className="flex items-center justify-between">
-              <div className="w-7 h-7 rounded-lg bg-slate-200" />
-              <div className="h-6 w-8 bg-slate-200 rounded-md" />
+      {/* 2. Asistencia General Summary Card Skeleton (1 row with 4 columns) */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
+        <div className="flex items-center justify-between gap-2 px-0.5">
+          <div className="h-4 w-36 bg-slate-200 rounded-md" />
+          <div className="h-3.5 w-44 bg-slate-100 rounded-md" />
+        </div>
+        <div className="grid grid-cols-4 gap-1.5 sm:gap-2.5">
+          {[0, 1, 2, 3].map((idx) => (
+            <div
+              key={idx}
+              className="bg-slate-50 rounded-2xl p-2 sm:p-2.5 border border-slate-100 flex flex-col items-center justify-between min-w-0 space-y-2 text-center"
+            >
+              <div className="flex items-center justify-between w-full px-0.5">
+                <div className="w-5 h-5 rounded-full bg-slate-200" />
+                <div className="h-3.5 w-6 rounded-full bg-slate-200" />
+              </div>
+              <div className="h-6 w-8 bg-slate-200 rounded-md my-0.5" />
+              <div className="space-y-1 w-full flex flex-col items-center">
+                <div className="h-3 w-12 bg-slate-200 rounded-md" />
+                <div className="h-2.5 w-10 bg-slate-100 rounded-md" />
+              </div>
             </div>
-            <div className="mt-2.5">
-              <div className="h-3.5 w-16 bg-slate-200 rounded-md" />
-              <div className="h-2.5 w-24 bg-slate-100 rounded-md mt-1" />
+          ))}
+        </div>
+      </div>
+
+      {/* 3. Staff Distribution Cards Skeleton (2 distinct cards with 2 sub-boxes each) */}
+      <div className="space-y-3">
+        {[0, 1].map((cardIdx) => (
+          <div
+            key={cardIdx}
+            className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-2xs space-y-3.5"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-9 h-9 rounded-xl bg-slate-200 shrink-0" />
+                <div className="space-y-1">
+                  <div className="h-4 w-36 bg-slate-200 rounded-md" />
+                  <div className="h-3 w-28 bg-slate-100 rounded-md" />
+                </div>
+              </div>
+              <div className="h-6 w-24 bg-slate-200 rounded-full shrink-0" />
+            </div>
+
+            {/* 2 Sub-boxes */}
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3">
+              {[0, 1].map((subIdx) => (
+                <div
+                  key={subIdx}
+                  className="bg-slate-50 rounded-2xl p-3 sm:p-3.5 border border-slate-100 flex flex-col justify-between space-y-2"
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="h-6 sm:h-7 w-10 bg-slate-200 rounded-md" />
+                    <div className="h-4 w-9 bg-slate-200 rounded-full" />
+                  </div>
+                  <div className="h-3.5 w-16 bg-slate-200 rounded-md mt-1" />
+                </div>
+              ))}
             </div>
           </div>
         ))}
       </div>
 
-      {/* 3. Section Title Skeleton */}
+      {/* 4. Section Title Skeleton */}
       <div className="flex items-center justify-between pt-1">
         <div className="flex items-center gap-2">
           <div className="h-4 w-36 bg-slate-200 rounded-md" />
-          <div className="h-4 w-12 bg-slate-200 rounded-full" />
+          <div className="h-4 w-14 bg-slate-200 rounded-full" />
         </div>
-        <div className="h-3.5 w-16 bg-slate-100 rounded-md" />
       </div>
 
-      {/* 4. Area Cards Skeleton (3 cards) */}
+      {/* 5. Area Cards Skeleton (3 cards) */}
       <div className="space-y-3">
         {[0, 1, 2].map((idx) => (
           <div
@@ -175,7 +255,11 @@ export const VolunteerAttendanceView: React.FC = () => {
   const classroomsTerm = useKidsTerm('classrooms');
   const teachersTerm = useKidsTerm('teachers');
   const teacherTerm = useKidsTerm('teacher');
+  const supervisorTerm = useKidsTerm('supervisor');
+  const supervisorsTerm = useKidsTerm('supervisors');
   const meetingTerm = useChurchTerm('meeting');
+  const volunteersTerm = useChurchTerm('volunteers');
+  const volunteerTerm = useChurchTerm('volunteer');
 
   // Guard: Feature flag gating and permission
   useEffect(() => {
@@ -215,7 +299,9 @@ export const VolunteerAttendanceView: React.FC = () => {
     (state) => state.volunteerSlice.loadingByPartition[partitionKey] || false,
   );
 
-  const [savingAssignmentIds, setSavingAssignmentIds] = useState<Record<string, boolean>>({});
+  const [savingAssignmentIds, setSavingAssignmentIds] = useState<
+    Record<string, VolunteerAttendanceStatus | boolean>
+  >({});
   const [optimisticStatusMap, setOptimisticStatusMap] = useState<
     Record<string, VolunteerAttendanceStatus>
   >({});
@@ -299,7 +385,7 @@ export const VolunteerAttendanceView: React.FC = () => {
     }
   }, [recordedAttendances, attendanceMap]);
 
-  // Exclude higher leadership roles if listed
+  // Exclude only the top-level ministry general coordinator, but allow coordinators for attendance
   const eligibleAssignments = useMemo(() => {
     return assignments.filter(
       (asg) => asg.role !== VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
@@ -332,12 +418,24 @@ export const VolunteerAttendanceView: React.FC = () => {
           exempt: 0,
           isComplete: false,
           assignments: [],
+          teachersCount: 0,
+          supervisorsCount: 0,
+          coordinatorsCount: 0,
+          isClassroom: isClassroomArea(area),
         };
         areaMap.set(id, entry);
       }
 
       entry.total++;
       entry.assignments.push(asg);
+
+      if (isSupervisorRole(asg.role)) {
+        entry.supervisorsCount++;
+      } else if (isCoordinatorRole(asg.role)) {
+        entry.coordinatorsCount++;
+      } else {
+        entry.teachersCount++;
+      }
 
       if (currentStatus) {
         entry.taken++;
@@ -364,13 +462,72 @@ export const VolunteerAttendanceView: React.FC = () => {
     let unexcused = 0;
     let exempt = 0;
 
+    let totalSupervisors = 0;
+    let totalTeachers = 0;
+
+    let classroomAssignedTotal = 0;
+    let classroomAssignedTeachers = 0;
+    let classroomAssignedSupervisors = 0;
+
+    let otherAreasAssignedTotal = 0;
+    let otherAreasAssignedTeachers = 0;
+    let otherAreasAssignedSupervisors = 0;
+
+    let classroomAttendedTotal = 0;
+    let classroomAttendedTeachers = 0;
+    let classroomAttendedSupervisors = 0;
+
+    let otherAreasAttendedTotal = 0;
+    let otherAreasAttendedTeachers = 0;
+    let otherAreasAttendedSupervisors = 0;
+
     for (const asg of eligibleAssignments) {
+      const area = asg.serviceAreaGroup?.ministryArea || asg.ministryArea;
+      const isCoord = isCoordinatorRole(asg.role);
+      const isSup = isSupervisorRole(asg.role);
+      const isClassroom = isClassroomArea(area);
+
+      if (isSup) {
+        totalSupervisors++;
+      } else if (!isCoord) {
+        totalTeachers++;
+      }
+
+      // Coordinators are NOT counted in the two distribution cards (Salones and Otras Áreas)
+      if (!isCoord) {
+        if (isClassroom) {
+          classroomAssignedTotal++;
+          if (isSup) classroomAssignedSupervisors++;
+          else classroomAssignedTeachers++;
+        } else {
+          otherAreasAssignedTotal++;
+          if (isSup) otherAreasAssignedSupervisors++;
+          else otherAreasAssignedTeachers++;
+        }
+      }
+
       const currentStatus =
         optimisticStatusMap[asg.id] ?? attendanceMap.get(asg.id)?.attendanceStatus;
-      if (currentStatus === VolunteerAttendanceStatus.ATTENDED) attended++;
-      else if (currentStatus === VolunteerAttendanceStatus.EXCUSED) excused++;
-      else if (currentStatus === VolunteerAttendanceStatus.UNEXCUSED) unexcused++;
-      else if (currentStatus === VolunteerAttendanceStatus.EXEMPT) exempt++;
+      if (currentStatus === VolunteerAttendanceStatus.ATTENDED) {
+        attended++;
+        if (!isCoord) {
+          if (isClassroom) {
+            classroomAttendedTotal++;
+            if (isSup) classroomAttendedSupervisors++;
+            else classroomAttendedTeachers++;
+          } else {
+            otherAreasAttendedTotal++;
+            if (isSup) otherAreasAttendedSupervisors++;
+            else otherAreasAttendedTeachers++;
+          }
+        }
+      } else if (currentStatus === VolunteerAttendanceStatus.EXCUSED) {
+        excused++;
+      } else if (currentStatus === VolunteerAttendanceStatus.UNEXCUSED) {
+        unexcused++;
+      } else if (currentStatus === VolunteerAttendanceStatus.EXEMPT) {
+        exempt++;
+      }
     }
 
     const total = eligibleAssignments.length;
@@ -378,6 +535,13 @@ export const VolunteerAttendanceView: React.FC = () => {
     const pending = Math.max(0, total - taken);
     const percent = total > 0 ? Math.round((taken / total) * 100) : 0;
     const isComplete = total > 0 && pending === 0;
+
+    const classroomAreasCount = areaStatsList.filter(
+      (a) => a.isClassroom && a.assignments.some((asg) => !isCoordinatorRole(asg.role)),
+    ).length;
+    const otherAreasCount = areaStatsList.filter(
+      (a) => !a.isClassroom && a.assignments.some((asg) => !isCoordinatorRole(asg.role)),
+    ).length;
 
     return {
       total,
@@ -389,8 +553,30 @@ export const VolunteerAttendanceView: React.FC = () => {
       exempt,
       percent,
       isComplete,
+      totalSupervisors,
+      totalTeachers,
+      classroomTotal: classroomAssignedTotal,
+      classroomTeachers: classroomAssignedTeachers,
+      classroomSupervisors: classroomAssignedSupervisors,
+      classroomAssignedTotal,
+      classroomAssignedTeachers,
+      classroomAssignedSupervisors,
+      classroomAttendedTotal,
+      classroomAttendedTeachers,
+      classroomAttendedSupervisors,
+      classroomAreasCount,
+      otherAreasTotal: otherAreasAssignedTotal,
+      otherAreasTeachers: otherAreasAssignedTeachers,
+      otherAreasSupervisors: otherAreasAssignedSupervisors,
+      otherAreasAssignedTotal,
+      otherAreasAssignedTeachers,
+      otherAreasAssignedSupervisors,
+      otherAreasAttendedTotal,
+      otherAreasAttendedTeachers,
+      otherAreasAttendedSupervisors,
+      otherAreasCount,
     };
-  }, [eligibleAssignments, optimisticStatusMap, attendanceMap]);
+  }, [eligibleAssignments, optimisticStatusMap, attendanceMap, areaStatsList]);
 
   // Active drawer context
   const activeDrawerArea = useMemo(() => {
@@ -422,6 +608,9 @@ export const VolunteerAttendanceView: React.FC = () => {
     assignmentId: string,
     status: VolunteerAttendanceStatus,
   ): Promise<void> => {
+    // Prevent overlapping attendance requests while one is in progress
+    if (Object.keys(savingAssignmentIds).length > 0) return;
+
     if (!currentMeeting?.id) {
       toast.error(t('dashboard.missing_config_desc'));
       return;
@@ -430,9 +619,9 @@ export const VolunteerAttendanceView: React.FC = () => {
     const previousStatus =
       optimisticStatusMap[assignmentId] ?? attendanceMap.get(assignmentId)?.attendanceStatus;
 
-    // Optimistically update status and mark assignment as saving
+    // Optimistically update status and mark assignment as saving with the target status
     setOptimisticStatusMap((prev) => ({ ...prev, [assignmentId]: status }));
-    setSavingAssignmentIds((prev) => ({ ...prev, [assignmentId]: true }));
+    setSavingAssignmentIds((prev) => ({ ...prev, [assignmentId]: status }));
 
     try {
       await recordAttendanceMutation({
@@ -460,6 +649,33 @@ export const VolunteerAttendanceView: React.FC = () => {
         return next;
       });
     }
+  };
+
+  /**
+   * Finalizes the drawer session when clicking 'Listo'.
+   * Awaits any in-flight individual saves, performs a full authoritative refetch
+   * from the server to guarantee 100% data consistency even if network dropped,
+   * and closes the drawer.
+   *
+   * @returns {Promise<void>} Resolves when the sync refetch settles and drawer closes.
+   */
+  const handleFinishDrawer = async (): Promise<void> => {
+    // 1. Wait for any in-flight individual saves to complete (up to 4s)
+    let attempts = 0;
+    while (Object.keys(savingAssignmentIds).length > 0 && attempts < 40) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      attempts++;
+    }
+
+    // 2. Fetch authoritative updated list from server in real-time
+    try {
+      await refetchAttendance();
+    } catch {
+      // Ignored if offline
+    }
+
+    // 3. Close the drawer
+    setDrawerAreaId(null);
   };
 
   const isLoading =
@@ -490,7 +706,9 @@ export const VolunteerAttendanceView: React.FC = () => {
             </div>
           </div>
           <p className="text-xs text-gray-500 font-medium mt-1">
-            {generalStats.total} {teachersTerm}
+            {generalStats.totalSupervisors > 0
+              ? `${generalStats.totalTeachers} ${generalStats.otherAreasTotal > 0 ? volunteersTerm : teachersTerm} • ${generalStats.totalSupervisors} ${supervisorsTerm}`
+              : `${generalStats.total} ${generalStats.otherAreasTotal > 0 ? volunteersTerm : teachersTerm}`}
             {' • '}
             {currentMeeting?.name || meetingTerm}
           </p>
@@ -632,142 +850,27 @@ export const VolunteerAttendanceView: React.FC = () => {
                 </div>
               )}
 
-              {/* 4 General Statistical Cards */}
-              <div>
-                <div className="flex items-center justify-between mb-2 px-0.5">
-                  <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                    {t('volunteer_attendance.title_general')}
-                  </span>
-                  <span className="text-[11px] font-medium text-slate-500">
-                    {t('volunteer_attendance.stats.summary_bar', {
-                      total: generalStats.total,
-                      taken: generalStats.taken,
-                      pending: generalStats.pending,
-                    })}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-3">
-                  {/* Card 1: Sirviendo (Attended) */}
-                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-emerald-100 hover:border-emerald-200 shadow-2xs transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center">
-                        <Check className="w-4 h-4 stroke-[3]" />
-                      </div>
-                      <span className="text-[10px] font-extrabold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200/60">
-                        {generalStats.total > 0
-                          ? Math.round((generalStats.attended / generalStats.total) * 100)
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-emerald-700 tracking-tight leading-none">
-                      {generalStats.attended}
-                    </div>
-                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
-                      {t('volunteer_attendance.stats.attended')}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
-                      {t('volunteer_attendance.stats.attended_desc')}
-                    </div>
-                  </div>
-
-                  {/* Card 2: Con Excusa (Excused) */}
-                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-amber-100 hover:border-amber-200 shadow-2xs transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-700 flex items-center justify-center">
-                        <FileText className="w-4 h-4 stroke-[2.5]" />
-                      </div>
-                      <span className="text-[10px] font-extrabold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/60">
-                        {generalStats.total > 0
-                          ? Math.round((generalStats.excused / generalStats.total) * 100)
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-amber-700 tracking-tight leading-none">
-                      {generalStats.excused}
-                    </div>
-                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
-                      {t('volunteer_attendance.stats.excused')}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
-                      {t('volunteer_attendance.stats.excused_desc')}
-                    </div>
-                  </div>
-
-                  {/* Card 3: Ausentes / Sin Excusa (Unexcused) */}
-                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-rose-100 hover:border-rose-200 shadow-2xs transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-rose-100 text-rose-700 flex items-center justify-center">
-                        <X className="w-4 h-4 stroke-[3]" />
-                      </div>
-                      <span className="text-[10px] font-extrabold text-rose-700 bg-rose-50 px-2 py-0.5 rounded-full border border-rose-200/60">
-                        {generalStats.total > 0
-                          ? Math.round((generalStats.unexcused / generalStats.total) * 100)
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-rose-700 tracking-tight leading-none">
-                      {generalStats.unexcused}
-                    </div>
-                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
-                      {t('volunteer_attendance.stats.unexcused')}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
-                      {t('volunteer_attendance.stats.unexcused_desc')}
-                    </div>
-                  </div>
-
-                  {/* Card 4: No Aplica (Exempt) */}
-                  <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-slate-200 hover:border-slate-300 shadow-2xs transition-all">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <div className="w-8 h-8 rounded-xl bg-slate-100 text-slate-700 flex items-center justify-center">
-                        <Minus className="w-4 h-4 stroke-[3]" />
-                      </div>
-                      <span className="text-[10px] font-extrabold text-slate-700 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-200">
-                        {generalStats.total > 0
-                          ? Math.round((generalStats.exempt / generalStats.total) * 100)
-                          : 0}
-                        %
-                      </span>
-                    </div>
-                    <div className="text-2xl sm:text-3xl font-extrabold text-slate-700 tracking-tight leading-none">
-                      {generalStats.exempt}
-                    </div>
-                    <div className="text-xs font-bold text-slate-800 mt-1.5 leading-tight">
-                      {t('volunteer_attendance.stats.exempt')}
-                    </div>
-                    <div className="text-[11px] text-slate-500 font-medium leading-none mt-0.5">
-                      {t('volunteer_attendance.stats.exempt_desc')}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              {/* Asistencia General Summary Card */}
+              <TeamAttendanceSummaryCard stats={generalStats} />
 
               {/* Area Statistics List Section */}
               <div className="pt-2">
-                <div className="flex items-center justify-between mb-2 px-0.5">
-                  <div>
-                    <h2 className="text-sm font-bold text-slate-900 leading-tight">
-                      {t('volunteer_attendance.areas_section_title', {
-                        classrooms: classroomsTerm,
-                      })}
-                    </h2>
-                    <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-none">
-                      {t('volunteer_attendance.areas_section_desc', {
-                        classroom: classroomTerm.toLowerCase(),
-                        teachers: teachersTerm.toLowerCase(),
-                      })}
+                <div className="flex items-center justify-between mb-2.5 px-0.5 gap-2">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-sm font-bold text-slate-900 leading-tight">
+                        {t('volunteer_attendance.areas_section_title')}
+                      </h2>
+                      <span className="text-[11px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/80 shrink-0">
+                        {t('volunteer_attendance.areas_count', {
+                          count: areaStatsList.length,
+                        })}
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-500 font-medium mt-0.5 leading-tight">
+                      {t('volunteer_attendance.areas_section_desc')}
                     </p>
                   </div>
-                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full border border-slate-200/80 shrink-0">
-                    {t('volunteer_attendance.areas_count', {
-                      count: areaStatsList.length,
-                      classrooms: classroomsTerm.toLowerCase(),
-                    })}
-                  </span>
                 </div>
 
                 {/* List of Area Cards */}
@@ -790,15 +893,58 @@ export const VolunteerAttendanceView: React.FC = () => {
                         }}
                         className="group bg-white rounded-2xl p-3.5 sm:p-4 border border-slate-200/90 hover:border-primary/40 hover:shadow-xs active:scale-[0.99] transition-all cursor-pointer select-none space-y-2.5 shadow-2xs"
                       >
-                        {/* Top: Salon Name & Count on 1 Line + Status Badge */}
+                        {/* Top: Salon Name & Staff Breakdown + Status Badge */}
                         <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0 flex-1 flex items-baseline gap-1.5 truncate">
+                          <div className="min-w-0 flex-1">
                             <h3 className="text-base sm:text-lg font-black text-slate-900 leading-tight truncate group-hover:text-primary transition-colors">
                               {area.name}
                             </h3>
-                            <span className="text-xs sm:text-sm font-semibold text-slate-500 shrink-0">
-                              ({area.total} {teachersTerm})
-                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              {area.teachersCount > 0 && (
+                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-600">
+                                  <Users className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                                  <span>
+                                    {area.teachersCount}{' '}
+                                    {area.isClassroom
+                                      ? (area.teachersCount === 1 ? teacherTerm : teachersTerm)
+                                      : (area.teachersCount === 1 ? volunteerTerm : volunteersTerm)}
+                                  </span>
+                                </span>
+                              )}
+                              {area.supervisorsCount > 0 && (
+                                <>
+                                  {area.teachersCount > 0 && <span className="text-slate-300">•</span>}
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-200/80">
+                                    <ShieldCheck className="w-3 h-3 text-amber-600 shrink-0" />
+                                    <span>
+                                      {area.supervisorsCount}{' '}
+                                      {area.supervisorsCount === 1
+                                        ? supervisorTerm
+                                        : supervisorsTerm}
+                                    </span>
+                                  </span>
+                                </>
+                              )}
+                              {area.coordinatorsCount > 0 && (
+                                <>
+                                  {(area.teachersCount > 0 || area.supervisorsCount > 0) && (
+                                    <span className="text-slate-300">•</span>
+                                  )}
+                                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-indigo-800 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-200/80">
+                                    <ShieldCheck className="w-3 h-3 text-indigo-600 shrink-0" />
+                                    <span>
+                                      {area.coordinatorsCount}{' '}
+                                      {area.coordinatorsCount === 1 ? 'Coordinador(a)' : 'Coordinadores'}
+                                    </span>
+                                  </span>
+                                </>
+                              )}
+                              {area.teachersCount === 0 && area.supervisorsCount === 0 && area.coordinatorsCount === 0 && (
+                                <span className="text-[11px] font-medium text-slate-400">
+                                  {t('volunteer_attendance.no_supervisors')}
+                                </span>
+                              )}
+                            </div>
                           </div>
 
                           <div className="shrink-0 flex items-center gap-1.5">
@@ -921,6 +1067,7 @@ export const VolunteerAttendanceView: React.FC = () => {
         <AreaAttendanceDrawer
           open={Boolean(activeDrawerArea)}
           onClose={() => setDrawerAreaId(null)}
+          onFinish={handleFinishDrawer}
           areaName={activeDrawerArea.name}
           assignments={activeDrawerArea.assignments}
           onSelectStatus={handleSelectStatus}

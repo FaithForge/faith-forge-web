@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Camera, Image as ImageIcon, Plus, Loader2, X } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
+import ModalOverlay from '@/components/ui/ModalOverlay';
 import { compressPhoto, CompressPhotoOptions } from '@/libs/utils/image';
 
 export interface PhotoUploadZoneProps {
@@ -9,6 +10,14 @@ export interface PhotoUploadZoneProps {
   value: string[];
   /** Handler invoked when images are added or removed */
   onChange: (photos: string[]) => void;
+  /** Array of local compressed File objects waiting for submission */
+  files?: File[];
+  /** Handler invoked when local File objects are added or removed */
+  onFilesChange?: (files: File[]) => void;
+  /** Optional custom uploader returning the public storage URL */
+  onUpload?: (file: File) => Promise<string>;
+  /** Optional callback to notify parent whether an upload/processing task is ongoing */
+  onUploadingChange?: (uploading: boolean) => void;
   /** Maximum number of photos allowed (default: 3) */
   maxPhotos?: number;
   /** Whether multiple photo uploads are supported (default: true) */
@@ -30,11 +39,10 @@ export interface PhotoUploadZoneProps {
 }
 
 /**
- * Reusable photo upload zone matching the exact visual structure:
+ * Reusable photo upload zone matching the updated visual structure:
  * - Header with title, optional badge, and counter pill (e.g. "● 1 de 3 fotos").
- * - Previews row with uploaded photos (top-right X button, bottom-left "Foto N" badge)
- *   and a single dashed "+ Añadir foto" card with remaining counter.
- * - Bottom action buttons: "Tomar Foto" (primary) and "Galería / Archivos" (secondary).
+ * - Action buttons: "Tomar Foto" (primary) and "Galería / Archivos" (secondary).
+ * - Previews row below action buttons with uploaded thumbnails and dashed "+ Añadir foto" card.
  *
  * @param {PhotoUploadZoneProps} props - Component configuration and image handlers.
  * @returns {JSX.Element} Rendered photo upload zone.
@@ -42,6 +50,10 @@ export interface PhotoUploadZoneProps {
 export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
   value = [],
   onChange,
+  files,
+  onFilesChange,
+  onUpload,
+  onUploadingChange,
   maxPhotos = 3,
   multiple = true,
   title = 'Fotos de soporte',
@@ -69,20 +81,22 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
    *
    * @param {FileList | null} files - Selected file list from camera or gallery input.
    */
-  const processFiles = async (files: FileList | null) => {
-    if (!files || files.length === 0 || isFull || disabled) return;
+  const processFiles = async (fileList: FileList | null) => {
+    if (!fileList || fileList.length === 0 || isFull || disabled || isCompressing) return;
 
-    const filesToProcess = Array.from(files)
+    const filesToProcess = Array.from(fileList)
       .filter((file) => file.type.startsWith('image/'))
       .slice(0, remainingSlots);
 
     if (filesToProcess.length === 0) return;
 
     setIsCompressing(true);
+    onUploadingChange?.(true);
     setCompressProgress(15);
 
     try {
-      const compressedResults: string[] = [];
+      const results: string[] = [];
+      const newCompressedFiles: File[] = [];
       const total = filesToProcess.length;
 
       for (let i = 0; i < total; i++) {
@@ -90,20 +104,31 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
         setCompressProgress(Math.round(((i + 0.3) / total) * 100));
 
         const compressed = await compressPhoto(file, compressOptions);
-        compressedResults.push(compressed.dataUrl);
+
+        if (onUpload) {
+          setCompressProgress(Math.round(((i + 0.6) / total) * 100));
+          const uploadedUrl = await onUpload(compressed.file);
+          results.push(uploadedUrl);
+        } else {
+          results.push(compressed.dataUrl);
+        }
+        newCompressedFiles.push(compressed.file);
 
         setCompressProgress(Math.round(((i + 1) / total) * 100));
       }
 
       if (multiple) {
-        onChange([...value, ...compressedResults]);
+        onChange([...value, ...results]);
+        onFilesChange?.([...(files || []), ...newCompressedFiles]);
       } else {
-        onChange(compressedResults.slice(0, 1));
+        onChange(results.slice(0, 1));
+        onFilesChange?.(newCompressedFiles.slice(0, 1));
       }
-    } catch {
-      toast.error('Ocurrió un error al procesar y comprimir la imagen.');
+    } catch (err: any) {
+      toast.error(err?.message || 'Ocurrió un error al procesar y comprimir la imagen.');
     } finally {
       setIsCompressing(false);
+      onUploadingChange?.(false);
       setCompressProgress(0);
       if (cameraInputRef.current) cameraInputRef.current.value = '';
       if (galleryInputRef.current) galleryInputRef.current.value = '';
@@ -116,15 +141,21 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
    * @param {number} indexToRemove - Index of the photo to remove.
    */
   const handleRemovePhoto = (indexToRemove: number) => {
-    if (disabled) return;
+    if (disabled || isCompressing) return;
     const updated = value.filter((_, idx) => idx !== indexToRemove);
     onChange(updated);
+    if (files && onFilesChange) {
+      const updatedFiles = files.filter((_, idx) => idx !== indexToRemove);
+      onFilesChange(updatedFiles);
+    }
   };
+
 
   /**
    * Triggers the mobile native camera input capture.
    */
   const handleTriggerCamera = () => {
+    if (disabled || isCompressing) return;
     if (isFull) {
       toast.info(`Ya alcanzaste el límite de ${effectiveMaxPhotos} foto(s).`);
       return;
@@ -136,12 +167,14 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
    * Triggers the gallery / file manager input.
    */
   const handleTriggerGallery = () => {
+    if (disabled || isCompressing) return;
     if (isFull) {
       toast.info(`Ya alcanzaste el límite de ${effectiveMaxPhotos} foto(s).`);
       return;
     }
     galleryInputRef.current?.click();
   };
+
 
   return (
     <div className={clsx('space-y-3.5', className)}>
@@ -191,103 +224,16 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
 
       {subtitle && <p className="text-xs text-gray-500 -mt-1">{subtitle}</p>}
 
-      {/* Previews and Add Photo row */}
-      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5">
-        {/* Uploaded photos list */}
-        {value.map((photoUrl, idx) => (
-          <div
-            key={`photo-${idx}`}
-            className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border border-gray-200 shadow-2xs group shrink-0 aspect-square bg-gray-50"
-          >
-            <img
-              src={photoUrl}
-              alt={`Foto ${idx + 1}`}
-              className="w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
-              onClick={() => setPreviewPhoto(photoUrl)}
-            />
-
-            {/* Top right close / delete button */}
-            {!disabled && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRemovePhoto(idx);
-                }}
-                className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors cursor-pointer shadow-xs active:scale-90"
-                aria-label={`Eliminar foto ${idx + 1}`}
-              >
-                <X size={14} strokeWidth={2.5} />
-              </button>
-            )}
-
-            {/* Bottom left badge: Foto 1, Foto 2 */}
-            <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md pointer-events-none">
-              Foto {idx + 1}
-            </div>
-          </div>
-        ))}
-
-        {/* Compressing placeholder */}
-        {isCompressing && (
-          <div className="h-24 sm:h-28 px-5 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 flex items-center gap-3 shrink-0 animate-pulse">
-            <Loader2 size={24} className="animate-spin text-primary" />
-            <div className="text-left">
-              <span className="text-xs font-bold text-primary block">Procesando...</span>
-              <span className="text-[11px] text-gray-500 font-medium">
-                {compressProgress > 0 ? `${compressProgress}%` : 'Comprimiendo'}
-              </span>
-            </div>
-          </div>
-        )}
-
-        {/* Single dashed "+ Añadir foto" card (when not full and not compressing) */}
-        {!isFull && !isCompressing && (
-          <button
-            type="button"
-            disabled={disabled}
-            onClick={handleTriggerGallery}
-            className={clsx(
-              'h-24 sm:h-28 px-4 rounded-2xl border-2 border-dashed bg-white flex items-center gap-3.5 transition-all cursor-pointer shrink-0 text-left group',
-              disabled
-                ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
-                : 'border-gray-300 hover:border-primary hover:bg-primary/[0.03] active:scale-[0.99]',
-            )}
-          >
-            {/* Primary circular icon with Camera/Plus */}
-            <div className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-              <div className="relative">
-                <Camera size={20} />
-                <Plus size={11} strokeWidth={3} className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full" />
-              </div>
-            </div>
-
-            {/* Text details */}
-            <div className="space-y-0.5">
-              <span className="text-sm font-bold text-primary transition-colors block">
-                + Añadir foto
-              </span>
-              <span className="text-xs text-gray-500 font-medium block">
-                Hasta {remainingSlots} {remainingSlots === 1 ? 'foto más' : 'fotos más'}
-              </span>
-            </div>
-          </button>
-        )}
-      </div>
-
-      {/* Error feedback if provided */}
-      {error && <p className="text-xs text-rose-600 font-semibold pl-0.5">{error}</p>}
-
       {/* Bottom dual action buttons */}
-      <div className="grid grid-cols-2 gap-3 pt-1">
+      <div className="grid grid-cols-2 gap-3 pt-0.5">
         {/* Tomar Foto button (primary solid) */}
         <button
           type="button"
           onClick={handleTriggerCamera}
-          disabled={disabled || isFull}
+          disabled={disabled || isFull || isCompressing}
           className={clsx(
             'flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm shadow-2xs transition-all select-none cursor-pointer group active:scale-[0.98]',
-            isFull || disabled
+            isFull || disabled || isCompressing
               ? 'bg-gray-200 text-gray-400 opacity-60 cursor-not-allowed'
               : 'bg-primary hover:bg-primary/90 text-primary-foreground',
           )}
@@ -300,10 +246,10 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
         <button
           type="button"
           onClick={handleTriggerGallery}
-          disabled={disabled || isFull}
+          disabled={disabled || isFull || isCompressing}
           className={clsx(
             'flex items-center justify-center gap-2 py-3 px-4 rounded-xl font-bold text-sm transition-all select-none cursor-pointer group active:scale-[0.98]',
-            isFull || disabled
+            isFull || disabled || isCompressing
               ? 'bg-gray-100 text-gray-400 opacity-60 cursor-not-allowed'
               : 'bg-primary/10 hover:bg-primary/15 text-primary border border-primary/20',
           )}
@@ -313,29 +259,132 @@ export const PhotoUploadZone: React.FC<PhotoUploadZoneProps> = ({
         </button>
       </div>
 
-      {/* Lightbox Preview Modal */}
-      {previewPhoto && (
-        <div
-          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
-          onClick={() => setPreviewPhoto(null)}
-        >
-          <div className="relative max-w-lg w-full max-h-[85vh] flex items-center justify-center">
+      {/* Previews and Add Photo row (miniaturas) */}
+      {(value.length > 0 || isCompressing) && (
+        <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5">
+          {/* Uploaded photos list */}
+          {value.map((photoUrl, idx) => (
+            <div
+              key={`photo-${idx}`}
+              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-2xl overflow-hidden border border-gray-200 shadow-2xs group shrink-0 aspect-square bg-gray-50"
+            >
+              <img
+                src={photoUrl}
+                alt={`Foto ${idx + 1}`}
+                className="w-full h-full object-cover cursor-pointer transition-transform duration-300 group-hover:scale-105"
+                onClick={() => setPreviewPhoto(photoUrl)}
+              />
+
+              {/* Top right close / delete button */}
+              {!disabled && !isCompressing && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemovePhoto(idx);
+                  }}
+                  className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 hover:bg-black/80 text-white flex items-center justify-center transition-colors cursor-pointer shadow-xs active:scale-90"
+                  aria-label={`Eliminar foto ${idx + 1}`}
+                >
+                  <X size={14} strokeWidth={2.5} />
+                </button>
+              )}
+
+              {/* Bottom left badge: Foto 1, Foto 2 */}
+              <div className="absolute bottom-1.5 left-1.5 bg-black/60 backdrop-blur-xs text-white text-[10px] font-bold px-2 py-0.5 rounded-md pointer-events-none">
+                Foto {idx + 1}
+              </div>
+            </div>
+          ))}
+
+          {/* Compressing placeholder */}
+          {isCompressing && (
+            <div className="h-24 sm:h-28 px-5 rounded-2xl border-2 border-dashed border-primary/40 bg-primary/5 flex items-center gap-3 shrink-0 animate-pulse">
+              <Loader2 size={24} className="animate-spin text-primary" />
+              <div className="text-left">
+                <span className="text-xs font-bold text-primary block">
+                  {onUpload ? 'Subiendo...' : 'Procesando...'}
+                </span>
+                <span className="text-[11px] text-gray-500 font-medium">
+                  {compressProgress > 0 ? `${compressProgress}%` : 'Cargando'}
+                </span>
+              </div>
+            </div>
+          )}
+
+
+          {/* Single dashed "+ Añadir foto" card (when not full and not compressing) */}
+          {!isFull && !isCompressing && value.length > 0 && (
+            <button
+              type="button"
+              disabled={disabled}
+              onClick={handleTriggerGallery}
+              className={clsx(
+                'h-24 sm:h-28 px-4 rounded-2xl border-2 border-dashed bg-white flex items-center gap-3.5 transition-all cursor-pointer shrink-0 text-left group',
+                disabled
+                  ? 'border-gray-200 bg-gray-50 opacity-60 cursor-not-allowed'
+                  : 'border-gray-300 hover:border-primary hover:bg-primary/[0.03] active:scale-[0.99]',
+              )}
+            >
+              {/* Primary circular icon with Camera/Plus */}
+              <div className="w-11 h-11 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                <div className="relative">
+                  <Camera size={20} />
+                  <Plus
+                    size={11}
+                    strokeWidth={3}
+                    className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full"
+                  />
+                </div>
+              </div>
+
+              {/* Text details */}
+              <div className="space-y-0.5">
+                <span className="text-sm font-bold text-primary transition-colors block">
+                  + Añadir foto
+                </span>
+                <span className="text-xs text-gray-500 font-medium block">
+                  Hasta {remainingSlots} {remainingSlots === 1 ? 'foto más' : 'fotos más'}
+                </span>
+              </div>
+            </button>
+          )}
+        </div>
+      )}
+
+      {/* Error feedback if provided */}
+      {error && <p className="text-xs text-rose-600 font-semibold pl-0.5">{error}</p>}
+
+      {/* Lightbox Preview Modal with Portal and Backdrop click-to-close */}
+      <ModalOverlay
+        open={Boolean(previewPhoto)}
+        onClose={() => setPreviewPhoto(null)}
+        closeOnBackdropClick
+        wrapperClassName="items-center justify-center p-4"
+        backdropClassName="bg-black/90 backdrop-blur-md"
+        panelClassName="max-w-xl w-full flex flex-col items-center justify-center bg-transparent border-none shadow-none"
+      >
+        {previewPhoto && (
+          <div className="relative max-w-full flex flex-col items-center">
+            {/* Prominent floating close button always visible in top-right corner of screen */}
             <button
               type="button"
               onClick={() => setPreviewPhoto(null)}
-              className="absolute -top-10 right-0 w-8 h-8 rounded-full bg-white/20 hover:bg-white/40 text-white flex items-center justify-center cursor-pointer transition-colors"
+              className="fixed top-4 right-4 sm:top-6 sm:right-6 w-11 h-11 rounded-full bg-white/20 hover:bg-white/35 active:scale-90 text-white flex items-center justify-center cursor-pointer transition-all shadow-2xl z-50 backdrop-blur-xs"
+              aria-label="Cerrar vista previa"
             >
-              <X size={18} />
+              <X size={22} strokeWidth={2.5} />
             </button>
+
             <img
               src={previewPhoto}
               alt="Vista previa"
-              className="max-w-full max-h-[80vh] rounded-2xl object-contain shadow-2xl"
+              className="max-w-full max-h-[82vh] rounded-2xl object-contain shadow-2xl select-none"
               onClick={(e) => e.stopPropagation()}
             />
           </div>
-        </div>
-      )}
+        )}
+      </ModalOverlay>
     </div>
   );
 };

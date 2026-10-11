@@ -85,6 +85,7 @@ export const formatMeetingHour = (timeStr?: string): string => {
  */
 export interface MeetingStatus {
   isConfigured: boolean;
+  isPrinterConfigured: boolean;
   isMeetingValid: boolean;
   isMeetingNotStarted: boolean;
   isMeetingConcluded: boolean;
@@ -122,7 +123,7 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
   const currentPrinter = useAppSelector((state) => state.churchPrinterSlice.current);
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const {
-    isKidChurchRole,
+    can,
     isSupervisor,
     isSuperAdmin,
     isAdmin: isSystemAdmin,
@@ -131,7 +132,9 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
     isAccountAdmin,
     isAccountSuperAdmin,
   } = usePermissions();
+  const canBypassSchedule = can('checkin:bypass-schedule');
   const isAdmin =
+    canBypassSchedule ||
     isSuperAdmin ||
     isSystemAdmin ||
     isAccountAdmin ||
@@ -203,12 +206,13 @@ export const useChurchMeetingStatus = (): MeetingStatus => {
 
   const isPrinterConfigured =
     printerMode === 'BLUETOOTH' ? !!bluetoothDevice?.isConnected : !!currentPrinter;
-  const isConfigured = isKidChurchRole ? !!currentMeeting : !!currentMeeting && isPrinterConfigured;
+  const isConfigured = !!currentMeeting;
 
-  const shouldBlockKids = !isAdmin && (!isMeetingValid || !isConfigured);
+  const shouldBlockKids = !canBypassSchedule && !isMeetingValid && isConfigured;
 
   return {
     isConfigured,
+    isPrinterConfigured,
     isMeetingValid,
     isMeetingNotStarted,
     isMeetingConcluded,

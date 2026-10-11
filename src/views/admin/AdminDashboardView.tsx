@@ -19,8 +19,8 @@ import {
 
 import { APP_ROUTES } from '@/config/routes';
 import clsx from 'clsx';
-import { ClearCacheDrawer } from '@/components/modal/ClearCacheDrawer';
-import { TerminologyDrawer } from '@/components/modal/TerminologyDrawer';
+import { ClearCacheModal } from '@/components/modal/ClearCacheModal';
+import { TerminologyModal } from '@/components/modal/TerminologyModal';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 
 interface AdminActionItem {
@@ -44,7 +44,7 @@ interface AdminCategory {
 /**
  * Vista Principal del Panel de Administración
  */
-const AdminDashboard: React.FC = () => {
+export const AdminDashboardView: React.FC = () => {
   const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
   const [clearCacheOpen, setClearCacheOpen] = useState(false);
@@ -260,13 +260,13 @@ const AdminDashboard: React.FC = () => {
       </div>
 
       {/* Drawer for Segmented System Cache Management */}
-      <ClearCacheDrawer
+      <ClearCacheModal
         open={clearCacheOpen}
         onOpenChange={setClearCacheOpen}
       />
 
       {/* Drawer for Church and Ministry Terminology Customization */}
-      <TerminologyDrawer
+      <TerminologyModal
         open={terminologyOpen}
         onOpenChange={setTerminologyOpen}
       />
@@ -274,4 +274,4 @@ const AdminDashboard: React.FC = () => {
   );
 };
 
-export default AdminDashboard;
+export default AdminDashboardView;

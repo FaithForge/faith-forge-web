@@ -40,7 +40,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
   const [selectedUser, setSelectedUser] = useState<IUser | null>(null);
   const [searching, setSearching] = useState(false);
   const [submitting, setSubmitting] = useState(false);
-  const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const searchTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (open) {

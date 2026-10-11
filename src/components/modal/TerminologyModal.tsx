@@ -31,7 +31,7 @@ import {
 import { FaChild } from 'react-icons/fa6';
 import clsx from 'clsx';
 
-interface TerminologyDrawerProps {
+interface TerminologyModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -55,10 +55,10 @@ const FIELD_ICONS: Record<string, LucideIcon | React.ComponentType<{ size?: numb
  * Drawer para personalizar la terminología institucional de la iglesia y del ministerio infantil.
  * Utiliza los tokens de diseño estándar de Faith Forge con botones inmunes a captura táctil de Vaul.
  *
- * @param {TerminologyDrawerProps} props - Propiedades del componente.
+ * @param {TerminologyModalProps} props - Propiedades del componente.
  * @returns {JSX.Element} Drawer renderizado.
  */
-export const TerminologyDrawer: React.FC<TerminologyDrawerProps> = ({
+export const TerminologyModal: React.FC<TerminologyModalProps> = ({
   open,
   onOpenChange,
 }) => {

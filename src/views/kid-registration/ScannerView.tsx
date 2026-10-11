@@ -19,6 +19,7 @@ import { isDateToday } from '@/libs/utils/date';
 import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import StepProgress from '@/components/ui/StepProgress';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
@@ -41,7 +42,8 @@ const ScannerView = () => {
   const printerModeSlice = useAppSelector(state => state.printerModeSlice);
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
-  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, isAdmin, currentPrinter } = useChurchMeetingStatus();
+  const { shouldBlockKids, isMeetingValid, meetingErrorMsg, currentPrinter } = useChurchMeetingStatus();
+  const { can } = usePermissions();
   
   const [step, setStep] = useState(1);
   const [scanResult, setScanResult] = useState<string | null>(null);
@@ -66,11 +68,11 @@ const ScannerView = () => {
 
   // Security and schedule guard: Block scanner if service is not started or out of schedule
   useEffect(() => {
-    if (shouldBlockKids && !isAdmin) {
+    if (shouldBlockKids && !can('checkin:bypass-schedule')) {
       toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado. El escáner de registro no está disponible.');
       navigate(APP_ROUTES.kidRegistration.root, { replace: true });
     }
-  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
+  }, [shouldBlockKids, can, meetingErrorMsg, navigate]);
 
   const handleCancelClick = () => {
     if (step === 3) {
@@ -109,7 +111,7 @@ const ScannerView = () => {
   };
 
   const handleScan = async (detectedCodes: IDetectedBarcode[]) => {
-    if (!isMeetingValid && !isAdmin) {
+    if (!isMeetingValid && !can('checkin:bypass-schedule')) {
       toast.error(meetingErrorMsg || 'El servicio actual ha finalizado. No se pueden realizar registros.');
       return;
     }
@@ -249,7 +251,7 @@ const ScannerView = () => {
   const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isMeetingValid) {
-      if (isAdmin) {
+      if (can('checkin:bypass-schedule')) {
         setShowAdminOutOfScheduleModal(true);
         return;
       } else {
@@ -353,7 +355,7 @@ const ScannerView = () => {
                 const displayedGroupName = isKidVolunteer ? specialGroupName : (kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom'));
                 const isStatic = isKidVolunteer ? false : !!kid.staticGroup;
                 const hasMaxAge = isKidOverage(kid);
-                const isBlockedByAge = hasMaxAge && !isKidVolunteer && !isAdmin;
+                const isBlockedByAge = hasMaxAge && !isKidVolunteer && !can('checkin:bypass-age-limit');
                 const isBday = isDateToday(kid.birthday);
 
                 return (

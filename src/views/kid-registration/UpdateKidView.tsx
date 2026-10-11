@@ -30,6 +30,7 @@ import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import SelectSearch from '@/components/ui/SelectSearch';
+import Textarea from '@/components/ui/Textarea';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';
 import { useTranslation } from 'react-i18next';
 
@@ -151,7 +152,7 @@ const UpdateKidView: React.FC = () => {
         gender: values.gender,
         staticGroup,
         staticKidGroupId: staticGroup ? values.kidGroup : undefined,
-        observations: values.observations || undefined,
+        observations: values.observations !== undefined && values.observations !== null ? values.observations.trim() : '',
         healthSecurityEntity: values.healthSecurityEntity || undefined,
         medicalConditionId: values.medicalCondition || undefined,
       };
@@ -390,22 +391,13 @@ const UpdateKidView: React.FC = () => {
             )}
 
             {/* Observaciones */}
-            <div className="mb-1">
-              <label className="block text-xs font-bold text-gray-700 mb-1.5 uppercase tracking-wide">
-                Observaciones Generales
-              </label>
-              <textarea
-                {...register('observations')}
-                autoComplete="off"
-                autoCorrect="off"
-                autoCapitalize="off"
-                spellCheck={false}
-                className="block w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3 focus:border-primary outline-none text-base shadow-sm"
-                rows={3}
-                maxLength={300}
-                placeholder="Si tiene alguna otra observación médica, alimentaria o a la que debamos prestar atención, anótala aquí..."
-              />
-            </div>
+            <Textarea
+              label="Observaciones Generales"
+              {...register('observations')}
+              rows={3}
+              maxLength={300}
+              placeholder="Si tiene alguna otra observación médica, alimentaria o a la que debamos prestar atención, anótala aquí..."
+            />
           </div>
 
           <Button

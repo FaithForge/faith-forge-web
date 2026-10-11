@@ -18,7 +18,7 @@ import { FaChild } from 'react-icons/fa6';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 
-interface ClearCacheDrawerProps {
+interface ClearCacheModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -28,10 +28,10 @@ interface ClearCacheDrawerProps {
  * Presenta una lista unificada para actualizar secciones específicas (impresoras, servicios,
  * registros) o ejecutar una purga completa del sistema con espaciado generoso y diseño refinado.
  *
- * @param {ClearCacheDrawerProps} props - Propiedades del componente.
+ * @param {ClearCacheModalProps} props - Propiedades del componente.
  * @returns {JSX.Element} Drawer con diseño segmentado unificado.
  */
-export const ClearCacheDrawer: React.FC<ClearCacheDrawerProps> = ({
+export const ClearCacheModal: React.FC<ClearCacheModalProps> = ({
   open,
   onOpenChange,
 }) => {
@@ -249,4 +249,4 @@ export const ClearCacheDrawer: React.FC<ClearCacheDrawerProps> = ({
   );
 };
 
-export default ClearCacheDrawer;
+export default ClearCacheModal;

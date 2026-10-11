@@ -203,6 +203,7 @@ export interface IKid {
   relations?: IKidGuardian[];
   createdById?: string;
   createdBy?: IKidCreator;
+  createdAt?: string;
 }
 
 export interface IKidGuardian {
@@ -269,6 +270,7 @@ export interface IKidRegistration {
     registerMinistryName?: string;
     registerRole?: string;
     checkedOutGuardianFullName?: string;
+    isNew?: boolean;
   };
 }
 

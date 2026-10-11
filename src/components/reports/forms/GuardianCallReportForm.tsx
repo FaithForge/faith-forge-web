@@ -123,6 +123,7 @@ export const GuardianCallReportForm: React.FC<GuardianCallReportFormProps> = ({
           setGuardianRelationship('');
         }}
         churchMeetingId={churchMeetingId}
+        date={date}
         showGuardiansPreview={false}
       />
 

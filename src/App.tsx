@@ -32,12 +32,12 @@ const UpdateKidView = lazy(() => import('@/views/kid-registration/UpdateKidView'
 const AttendanceTrackingView = lazy(
   () => import('@/views/kid-registration/AttendanceTrackingView'),
 );
-const AdminDashboard = lazy(() => import('@/views/admin/AdminDashboard'));
+const AdminDashboardView = lazy(() => import('@/views/admin/AdminDashboardView'));
 const CreateUserView = lazy(() => import('@/views/admin/users/CreateUserView'));
 const UserManagementView = lazy(() => import('@/views/admin/users/UserManagementView'));
 const UserDetailView = lazy(() => import('@/views/admin/users/UserDetailView'));
 const UpdateUserView = lazy(() => import('@/views/admin/users/UpdateUserView'));
-const ChurchMeetingsView = lazy(() => import('@/views/admin/ChurchMeetingsView'));
+const ChurchMeetingsView = lazy(() => import('@/views/admin/meetings/ChurchMeetingsView'));
 const CampusesManagementView = lazy(
   () => import('@/views/admin/campuses/CampusesManagementView'),
 );
@@ -66,10 +66,12 @@ const TermsOfServiceView = lazy(() => import('@/views/legal/TermsOfServiceView')
 const PrivacyPolicyView = lazy(() => import('@/views/legal/PrivacyPolicyView'));
 
 const ProfileRoute = lazy(() => import('@/views/profile/ProfileRoute'));
-const KidChurchDashboard = lazy(() => import('@/views/kid-church/KidChurchDashboard'));
-const SupervisorTeamView = lazy(() => import('@/views/kid-church/SupervisorTeamView'));
+const KidChurchDashboardRoute = lazy(
+  () => import('@/views/kid-church/KidChurchDashboardRoute'),
+);
+const MyTeamView = lazy(() => import('@/views/volunteers/MyTeamView'));
 const VolunteerAttendanceView = lazy(
-  () => import('@/views/kid-church/VolunteerAttendanceView')
+  () => import('@/views/volunteers/VolunteerAttendanceView')
 );
 const ChurchReportsView = lazy(
   () => import('@/views/kid-church/reports/ChurchReportsView')
@@ -135,7 +137,7 @@ const IndexRedirect = () => {
   if (experiences.includes(UserExperienceEnum.ADMIN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.KID_GUARDIAN)) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
-  if (experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) || enabledRoles.length > 0) {
+  if (enabledRoles.length > 0) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const dashboardUrl =
       isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
@@ -280,7 +282,7 @@ function App() {
 
               {/* Admin Experience Layout (Decoupled from Kids Ministry) */}
               <Route element={<AdminLayout />}>
-                <Route path={APP_ROUTES.admin.root} element={<AdminDashboard />} />
+                <Route path={APP_ROUTES.admin.root} element={<AdminDashboardView />} />
                 <Route path={APP_ROUTES.admin.createUser} element={<CreateUserView />} />
                 <Route path={APP_ROUTES.admin.users} element={<UserManagementView />} />
                 <Route path={APP_ROUTES.admin.userDetailDynamic} element={<UserDetailView />} />
@@ -319,8 +321,8 @@ function App() {
 
               {/* Operational Volunteers Layout (Kids Ministry) */}
               <Route element={<MainLayout />}>
-                <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboard />} />
-                <Route path={APP_ROUTES.kidChurch.myTeam} element={<SupervisorTeamView />} />
+                <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboardRoute />} />
+                <Route path={APP_ROUTES.kidChurch.myTeam} element={<MyTeamView />} />
                 <Route
                   path={APP_ROUTES.kidChurch.volunteerAttendance}
                   element={
@@ -342,7 +344,7 @@ function App() {
                   }
                 />
                 <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />
-                <Route path={APP_ROUTES.kidRegistration.myTeam} element={<SupervisorTeamView />} />
+                <Route path={APP_ROUTES.kidRegistration.myTeam} element={<MyTeamView />} />
                 <Route path={APP_ROUTES.kidRegistration.new} element={<NewKidView />} />
                 <Route
                   path={APP_ROUTES.kidRegistration.checkInDynamic}

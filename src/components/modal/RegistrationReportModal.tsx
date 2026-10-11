@@ -8,7 +8,7 @@ import { useAppSelector } from '@/libs/state/redux/hooks';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import dayjs from 'dayjs';
 
-interface ReportDrawerProps {
+interface RegistrationReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -78,7 +78,7 @@ const defaultState = {
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
-const ReportDrawer = ({ open, onOpenChange }: ReportDrawerProps) => {
+const RegistrationReportModal = ({ open, onOpenChange }: RegistrationReportModalProps) => {
   const currentCampus = useAppSelector(state => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector(state => state.churchMeetingSlice.current);
 
@@ -309,4 +309,4 @@ ${state.observationGeneral}`;
 );
 };
 
-export default ReportDrawer;
+export default RegistrationReportModal;

@@ -41,6 +41,7 @@ import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/utils/phone';
 
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import StepProgress from '@/components/ui/StepProgress';
 import { useTranslation } from 'react-i18next';
@@ -55,15 +56,16 @@ const NewKidView = () => {
     t('kidRegistration:form.step_guardian_info', { guardian: guardianTerm })
   ], [guardianTerm, t]);
   const { registerGuard } = useNavigationGuard();
-  const { shouldBlockKids, meetingErrorMsg, isAdmin } = useChurchMeetingStatus();
+  const { shouldBlockKids, meetingErrorMsg } = useChurchMeetingStatus();
+  const { can } = usePermissions();
 
   // Security and schedule guard: Block kid creation if service is not started or out of schedule
   useEffect(() => {
-    if (shouldBlockKids && !isAdmin) {
+    if (shouldBlockKids && !can('checkin:bypass-schedule')) {
       toast.error(meetingErrorMsg || 'El servicio aún no ha comenzado. El registro de niños no está disponible.');
       navigate(APP_ROUTES.kidRegistration.root, { replace: true });
     }
-  }, [shouldBlockKids, isAdmin, meetingErrorMsg, navigate]);
+  }, [shouldBlockKids, can, meetingErrorMsg, navigate]);
 
   const [step, setStep] = useState(1);
   const [staticGroup, setStaticGroup] = useState(false);

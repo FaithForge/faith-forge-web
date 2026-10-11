@@ -298,14 +298,14 @@ const MainLayoutContent: React.FC<MainLayoutProps> = ({ children }) => {
       <main
         ref={mainRef}
         onScroll={handleScroll}
-        className="flex-1 overflow-y-auto relative flex flex-col bg-slate-50 min-h-0"
+        className="flex-1 overflow-y-auto overflow-x-hidden relative flex flex-col bg-slate-50 min-h-0 w-full min-w-0"
       >
         <motion.div
           key={isTransitioning ? 'role-transitioning' : pathname}
           initial={isTransitioning ? false : { opacity: 0.35 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.15, ease: 'easeOut' }}
-          className={clsx("flex-1 flex flex-col min-h-0", !isAdminRole ? "pb-32 sm:pb-36" : "pb-4")}
+          className={clsx("flex-1 flex flex-col min-h-0 w-full min-w-0 max-w-full", !isAdminRole ? "pb-32 sm:pb-36" : "pb-4")}
         >
           {children || <Outlet />}
         </motion.div>

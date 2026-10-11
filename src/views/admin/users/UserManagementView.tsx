@@ -32,7 +32,7 @@ const UserManagementView: React.FC = () => {
   const volunteerTerm = useChurchTerm('volunteer');
 
   const [searchText, setSearchText] = useState('');
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();

@@ -16,8 +16,8 @@ import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 import { APP_VERSION } from '@/constants/version';
 
 const UserProfileModal = React.lazy(() => import('@/components/modal/UserProfileModal'));
-const NotificationsDrawer = React.lazy(() => import('@/components/modal/NotificationsDrawer'));
-const ChangelogDrawer = React.lazy(() => import('@/components/modal/ChangelogDrawer'));
+const NotificationsModal = React.lazy(() => import('@/components/modal/NotificationsModal'));
+const ChangelogModal = React.lazy(() => import('@/components/modal/ChangelogModal'));
 
 /**
  * Dedicated layout for the Kid Guardian (acudiente) experience.
@@ -248,7 +248,7 @@ const KidGuardianLayout: React.FC<KidGuardianLayoutProps> = ({ children }) => {
       {/* Lazy-loaded Notifications Drawer */}
       {hasOpenedNotifications && (
         <React.Suspense fallback={null}>
-          <NotificationsDrawer
+          <NotificationsModal
             open={notificationsOpen}
             onOpenChange={setNotificationsOpen}
             experience={UserExperienceEnum.KID_GUARDIAN}
@@ -259,7 +259,7 @@ const KidGuardianLayout: React.FC<KidGuardianLayoutProps> = ({ children }) => {
       {/* Lazy-loaded Changelog Drawer */}
       {hasOpenedChangelog && (
         <React.Suspense fallback={null}>
-          <ChangelogDrawer
+          <ChangelogModal
             open={changelogOpen}
             onOpenChange={handleOpenChangelog}
           />

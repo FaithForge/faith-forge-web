@@ -66,7 +66,7 @@ const getTranslatedDay = (dayString?: string): string => {
   return DAY_TRANSLATIONS[key] || dayString;
 };
 
-interface KidChurchReportDrawerProps {
+interface KidChurchReportModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -76,10 +76,10 @@ type ReportData = IAttendanceReportData;
 /**
  * Bottom sheet drawer for kids ministry service attendance and statistics reporting.
  *
- * @param {KidChurchReportDrawerProps} props - Open state and toggle callback.
+ * @param {KidChurchReportModalProps} props - Open state and toggle callback.
  * @returns {JSX.Element}
  */
-const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onOpenChange }) => {
+const KidChurchReportModal: React.FC<KidChurchReportModalProps> = ({ open, onOpenChange }) => {
   const { t } = useTranslation(['kidChurch', 'common']);
   useModalBackClose(open, () => onOpenChange(false));
 
@@ -479,4 +479,4 @@ const KidChurchReportDrawer: React.FC<KidChurchReportDrawerProps> = ({ open, onO
   );
 };
 
-export default KidChurchReportDrawer;
+export default KidChurchReportModal;

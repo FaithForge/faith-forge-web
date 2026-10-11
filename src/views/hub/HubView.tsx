@@ -8,6 +8,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { setActiveExperience, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
 import { UserLogout } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { UserExperienceEnum, UserRole, ChurchRole } from '@/libs/utils/auth';
+import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { formatPersonShortName } from '@/libs/utils/text';
@@ -48,8 +49,8 @@ const HubView: React.FC = () => {
       navigate(APP_ROUTES.admin.root, { replace });
     } else if (exp === UserExperienceEnum.KID_CHURCH_STAFF) {
       const operationalRole = (user?.roles || []).find((r: any) =>
-        ![UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF].includes(r)
-      ) || ChurchRole.MINISTRY_ADMIN;
+        ![UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF].includes(r) && isRoleEnabled(r)
+      ) || ChurchRole.KID_REGISTER_USER;
       dispatch(changeCurrentRole(operationalRole as any));
       navigate(APP_ROUTES.kidRegistration.root, { replace });
     } else if (exp === UserExperienceEnum.KID_GUARDIAN) {
@@ -61,22 +62,6 @@ const HubView: React.FC = () => {
     delete document.body.dataset.role;
     document.body.className = 'theme-USER antialiased bg-slate-50';
   }, []);
-
-  // If the user only has 1 experience, automatically redirect them without showing the hub
-  useEffect(() => {
-    if (experiences.length === 1) {
-      routeUserToExperience(experiences[0], true);
-    }
-  }, [experiences]);
-
-  const handleSelectExperience = (exp: UserExperienceEnum) => {
-    routeUserToExperience(exp, false);
-  };
-
-  const handleLogout = async () => {
-    await dispatch(UserLogout());
-    navigate(APP_ROUTES.auth.login, { replace: true });
-  };
 
   // Card definitions ordered: 1. Admin, 2. Staff, 3. Kid Guardian
   const cardsConfig = [
@@ -132,7 +117,37 @@ const HubView: React.FC = () => {
     },
   ];
 
-  const availableCards = cardsConfig.filter((card) => experiences.includes(card.id));
+  // Filter cards so KID_CHURCH_STAFF is ONLY shown if user has at least one active, enabled operational role
+  const hasActiveStaffRole = (user?.roles || []).some(
+    (r: any) =>
+      r !== UserRole.USER &&
+      (r as string) !== 'USER' &&
+      isRoleEnabled(r)
+  );
+
+  const availableCards = cardsConfig.filter((card) => {
+    if (!experiences.includes(card.id)) return false;
+    if (card.id === UserExperienceEnum.KID_CHURCH_STAFF && !hasActiveStaffRole) {
+      return false;
+    }
+    return true;
+  });
+
+  // If the user only has 1 available card, automatically redirect them without showing the hub
+  useEffect(() => {
+    if (availableCards.length === 1) {
+      routeUserToExperience(availableCards[0].id, true);
+    }
+  }, [availableCards.length]);
+
+  const handleSelectExperience = (exp: UserExperienceEnum) => {
+    routeUserToExperience(exp, false);
+  };
+
+  const handleLogout = async () => {
+    await dispatch(UserLogout());
+    navigate(APP_ROUTES.auth.login, { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 flex flex-col justify-between p-4 sm:p-6 font-sans">

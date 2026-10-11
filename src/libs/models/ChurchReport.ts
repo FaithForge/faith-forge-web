@@ -174,3 +174,21 @@ export interface QueryChurchReportsArgs {
   statuses?: ReportStatus[];
   excludeClosed?: boolean;
 }
+
+/**
+ * Request payload for acquiring a presigned Cloudflare R2 upload URL for report photos.
+ */
+export interface RequestPresignedReportUploadUrlPayload {
+  fileName: string;
+  contentType: string;
+}
+
+/**
+ * Presigned URL response containing direct upload endpoint and target public URL.
+ */
+export interface PresignedUploadUrlResponse {
+  uploadUrl: string;
+  key: string;
+  publicUrl: string;
+}
+

@@ -5,6 +5,7 @@ import {
   ArrowLeft,
   Check,
   FileText,
+  Loader2,
   Minus,
   Search,
   ShieldCheck,
@@ -104,14 +105,24 @@ const getStatusBadgeClass = (status?: VolunteerAttendanceStatus): string => {
 };
 
 /**
- * Determines whether a volunteer assignment belongs to a supervisory or leadership role.
+ * Determines whether a volunteer assignment belongs to a supervisory role.
+ * Coordinators are handled separately as general leadership.
  *
  * @param {VolunteerRole} [role] - The volunteer assignment role.
- * @returns {boolean} True if the role is supervisory or coordinating, false otherwise.
+ * @returns {boolean} True if the role is supervisory, false otherwise.
  */
 export const isSupervisorRole = (role?: VolunteerRole): boolean => {
+  return role === VolunteerRole.SUPERVISOR;
+};
+
+/**
+ * Determines whether a volunteer assignment belongs to a coordinating or general leadership role.
+ *
+ * @param {VolunteerRole} [role] - The volunteer assignment role.
+ * @returns {boolean} True if the role is coordinating, false otherwise.
+ */
+export const isCoordinatorRole = (role?: VolunteerRole): boolean => {
   return (
-    role === VolunteerRole.SUPERVISOR ||
     role === VolunteerRole.GROUP_COORDINATOR ||
     role === VolunteerRole.AREA_GENERAL_COORDINATOR ||
     role === VolunteerRole.MINISTRY_GENERAL_COORDINATOR
@@ -121,13 +132,14 @@ export const isSupervisorRole = (role?: VolunteerRole): boolean => {
 export interface AreaAttendanceDrawerProps {
   open: boolean;
   onClose: () => void;
+  onFinish?: () => Promise<void> | void;
   areaName: string;
   assignments: IVolunteerAssignment[];
   onSelectStatus: (
     assignmentId: string,
     status: VolunteerAttendanceStatus,
   ) => Promise<void>;
-  savingAssignmentIds: Record<string, boolean>;
+  savingAssignmentIds: Record<string, VolunteerAttendanceStatus | boolean>;
   optimisticStatusMap: Record<string, VolunteerAttendanceStatus>;
   attendanceMap: Map<string, { attendanceStatus: VolunteerAttendanceStatus }>;
   churchOverrides?: Record<string, string>;
@@ -142,6 +154,7 @@ export interface AreaAttendanceDrawerProps {
 export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
   open,
   onClose,
+  onFinish,
   areaName,
   assignments,
   onSelectStatus,
@@ -151,11 +164,36 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
   churchOverrides,
 }) => {
   const { t } = useTranslation(['kidChurch', 'common']);
-  useModalBackClose(open, onClose);
+
+  const [isFinishing, setIsFinishing] = useState(false);
+  const isAnySaving = Object.keys(savingAssignmentIds).length > 0;
+
+  const handleSafeClose = () => {
+    if (isAnySaving || isFinishing) return;
+    onClose();
+  };
+
+  const handleFinish = async () => {
+    if (isAnySaving || isFinishing) return;
+    setIsFinishing(true);
+    try {
+      if (onFinish) {
+        await onFinish();
+      } else {
+        onClose();
+      }
+    } finally {
+      setIsFinishing(false);
+    }
+  };
+
+  useModalBackClose(open, handleSafeClose);
 
   const classroomTerm = useKidsTerm('classroom');
   const teacherTerm = useKidsTerm('teacher');
   const teachersTerm = useKidsTerm('teachers');
+  const supervisorTerm = useKidsTerm('supervisor');
+  const supervisorsTerm = useKidsTerm('supervisors');
 
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -231,7 +269,7 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
     for (const asg of assignments) {
       if (!matchesQuery(asg)) continue;
 
-      if (isSupervisorRole(asg.role)) {
+      if (isSupervisorRole(asg.role) || isCoordinatorRole(asg.role)) {
         supervisors.push(asg);
       } else {
         volunteers.push(asg);
@@ -320,7 +358,8 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
     const recorded = attendanceMap.get(assignment.id);
     const currentStatus =
       optimisticStatusMap[assignment.id] ?? recorded?.attendanceStatus;
-    const isSaving = Boolean(savingAssignmentIds[assignment.id]);
+    const savingStatus = savingAssignmentIds[assignment.id];
+    const isThisCardSaving = Boolean(savingStatus);
     const firstName = user?.firstName || '';
     const lastName = user?.lastName || '';
     const fullName =
@@ -416,6 +455,10 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
         >
           {STATUS_OPTIONS.map((opt) => {
             const isSelected = currentStatus === opt.status;
+            const isThisButtonLoading =
+              isThisCardSaving &&
+              (savingStatus === opt.status || savingStatus === true);
+            const isDisabled = isAnySaving;
             const Icon = opt.icon;
             const label = t(opt.labelKey);
 
@@ -423,22 +466,36 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
               <button
                 key={opt.status}
                 type="button"
-                disabled={isSaving}
+                disabled={isDisabled}
                 title={label}
                 aria-label={`${fullName}: ${label}`}
                 aria-pressed={isSelected}
                 onClick={() => onSelectStatus(assignment.id, opt.status)}
                 className={clsx(
-                  'flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:px-2 rounded-xl transition-all cursor-pointer select-none active:scale-95 disabled:opacity-50 border',
+                  'flex flex-col sm:flex-row items-center justify-center gap-1 sm:gap-1.5 py-2 px-1 sm:px-2 rounded-xl transition-all select-none border',
                   isSelected ? opt.selectedClass : opt.unselectedClass,
+                  isThisButtonLoading
+                    ? 'cursor-wait opacity-95 ring-2 ring-primary/40'
+                    : isDisabled
+                      ? 'cursor-not-allowed opacity-40 pointer-events-none'
+                      : 'cursor-pointer active:scale-95',
                 )}
               >
-                <Icon
-                  className={clsx(
-                    'w-4 h-4 shrink-0 stroke-[2.5]',
-                    isSelected ? 'text-white' : opt.iconColor,
-                  )}
-                />
+                {isThisButtonLoading ? (
+                  <Loader2
+                    className={clsx(
+                      'w-4 h-4 shrink-0 animate-spin',
+                      isSelected ? 'text-white' : opt.iconColor,
+                    )}
+                  />
+                ) : (
+                  <Icon
+                    className={clsx(
+                      'w-4 h-4 shrink-0 stroke-[2.5]',
+                      isSelected ? 'text-white' : opt.iconColor,
+                    )}
+                  />
+                )}
                 <span className="text-[10px] sm:text-xs font-semibold leading-tight text-center">
                   {label}
                 </span>
@@ -461,7 +518,7 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-slate-900/50 backdrop-blur-2xs transition-opacity duration-300 animate-in fade-in"
-        onClick={onClose}
+        onClick={handleSafeClose}
         aria-hidden="true"
       />
 
@@ -473,8 +530,14 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
             <div className="flex items-center gap-2.5 min-w-0">
               <button
                 type="button"
-                onClick={onClose}
-                className="w-9 h-9 rounded-full flex items-center justify-center text-slate-600 hover:bg-slate-100 active:scale-95 transition-all shrink-0 cursor-pointer"
+                onClick={handleSafeClose}
+                disabled={isAnySaving}
+                className={clsx(
+                  'w-9 h-9 rounded-full flex items-center justify-center text-slate-600 transition-all shrink-0',
+                  isAnySaving
+                    ? 'opacity-40 cursor-not-allowed pointer-events-none'
+                    : 'hover:bg-slate-100 active:scale-95 cursor-pointer',
+                )}
                 aria-label={t('common:actions.back')}
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -483,12 +546,15 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
                 <h2 className="text-base font-bold text-slate-900 leading-tight truncate">
                   {t('volunteer_attendance.area_drawer_title', { area: areaName })}
                 </h2>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className="text-xs text-slate-500 font-medium">
-                    {t('volunteer_attendance.progress_count', {
-                      taken: takenCount,
-                      total: totalCount,
-                    })}
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <span className="text-xs text-slate-600 font-semibold">
+                    {volunteerAssignments.length}{' '}
+                    {volunteerAssignments.length === 1 ? teacherTerm : teachersTerm}
+                  </span>
+                  <span className="text-slate-300">•</span>
+                  <span className="text-xs text-amber-800 font-bold">
+                    {supervisorAssignments.length}{' '}
+                    {supervisorAssignments.length === 1 ? supervisorTerm : supervisorsTerm}
                   </span>
                   <span className="text-slate-300">•</span>
                   <span
@@ -515,7 +581,9 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
               type="button"
               variant="primary"
               size="sm"
-              onClick={onClose}
+              onClick={handleFinish}
+              disabled={isAnySaving || isFinishing}
+              loading={isFinishing}
               className="shrink-0 font-bold"
             >
               {t('volunteer_attendance.area_drawer_done')}
@@ -542,16 +610,23 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
             <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
             <input
               type="text"
+              disabled={isAnySaving}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder={searchPlaceholder}
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9.5 pr-9 py-2 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-2xs"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-9.5 pr-9 py-2 text-sm text-slate-800 placeholder:text-gray-400 focus:outline-hidden focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-2xs disabled:opacity-50 disabled:cursor-not-allowed"
             />
             {searchTerm && (
               <button
                 type="button"
+                disabled={isAnySaving}
                 onClick={() => setSearchTerm('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition-colors cursor-pointer"
+                className={clsx(
+                  'absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full flex items-center justify-center text-slate-400 transition-colors',
+                  isAnySaving
+                    ? 'opacity-40 cursor-not-allowed pointer-events-none'
+                    : 'hover:text-slate-600 hover:bg-slate-200 cursor-pointer',
+                )}
                 aria-label={t('volunteer_attendance.clear_filters')}
               >
                 <X className="w-3.5 h-3.5" />
@@ -640,7 +715,9 @@ export const AreaAttendanceDrawer: React.FC<AreaAttendanceDrawerProps> = ({
           <Button
             type="button"
             variant="primary"
-            onClick={onClose}
+            disabled={isAnySaving || isFinishing}
+            loading={isFinishing}
+            onClick={handleFinish}
             className="w-full font-bold flex items-center justify-center gap-2"
           >
             <Check className="w-4 h-4" />

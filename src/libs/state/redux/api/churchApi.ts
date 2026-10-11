@@ -11,12 +11,17 @@ import {
   CreateVolunteerAttendancePayload,
   BatchCreateVolunteerAttendancePayload,
   IVolunteer,
+  IVolunteerAssignment,
+  GetVolunteerAssignmentsPayload,
   IChurchReport,
   CreateChurchReportPayload,
   UpdateChurchReportStatusPayload,
   AddChurchReportNotePayload,
   QueryChurchReportsArgs,
+  RequestPresignedReportUploadUrlPayload,
+  PresignedUploadUrlResponse,
 } from '@/libs/models';
+
 import { baseApi } from './baseApi';
 
 export interface GetChurchMeetingsArgs {
@@ -237,7 +242,6 @@ export const churchApi = baseApi.injectEndpoints({
         data,
       }),
       invalidatesTags: [
-        { type: 'VolunteerAttendance', id: 'LIST' },
         { type: 'VolunteerAttendance', id: 'SUMMARY' },
       ],
     }),
@@ -333,6 +337,87 @@ export const churchApi = baseApi.injectEndpoints({
         { type: 'ChurchReport', id: arg.id },
       ],
     }),
+
+    getPresignedReportUploadUrl: builder.mutation<
+      PresignedUploadUrlResponse,
+      RequestPresignedReportUploadUrlPayload
+    >({
+      query: (payload) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church/reports/presigned-upload-url',
+        method: HttpRequestMethod.POST,
+        data: payload,
+      }),
+    }),
+
+    uploadReportPhoto: builder.mutation<PresignedUploadUrlResponse, FormData>({
+      query: (formData) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church/reports/upload-photo',
+        method: HttpRequestMethod.POST,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
+    }),
+
+    getVolunteerAssignments: builder.query<
+
+      IVolunteerAssignment[],
+      GetVolunteerAssignmentsPayload | void
+    >({
+      query: (args) => {
+        const params: Record<string, string | number | boolean> = {};
+        if (args?.order) params.order = args.order;
+        if (args?.ministryId) params.ministryId = args.ministryId;
+        if (args?.churchCampusId) params.churchCampusId = args.churchCampusId;
+        if (args?.ministryAreaId) params.ministryAreaId = args.ministryAreaId;
+        if (args?.ministryGroupConfigId) params.ministryGroupConfigId = args.ministryGroupConfigId;
+        if (args?.serviceAreaGroupId) params.serviceAreaGroupId = args.serviceAreaGroupId;
+        if (args?.volunteerId) params.volunteerId = args.volunteerId;
+        if (args?.role) params.role = args.role;
+        if (args?.state !== undefined) params.state = args.state;
+
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/volunteer-assignment',
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      transformResponse: (
+        response: { data: IVolunteerAssignment[] } | IVolunteerAssignment[],
+      ) => {
+        const isArray = Array.isArray(response);
+        const raw = (isArray ? response : response?.data || []) as any[];
+        return raw.map((asg) => {
+          const volunteer = asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
+          const volunteerId =
+            asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
+          const user = asg.churchMember?.user || asg.user || volunteer.user;
+
+          return {
+            ...asg,
+            volunteerId,
+            user,
+            volunteer: {
+              ...volunteer,
+              id: volunteer.id || volunteerId,
+              userId: volunteer.userId || user?.id,
+              user,
+            },
+          } as IVolunteerAssignment;
+        });
+      },
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'VolunteerAssignment' as const, id })),
+              { type: 'VolunteerAssignment', id: 'LIST' },
+            ]
+          : [{ type: 'VolunteerAssignment', id: 'LIST' }],
+    }),
   }),
   overrideExisting: false,
 });
@@ -348,6 +433,8 @@ export const {
   useLazyGetChurchPrintersQuery,
   useDeleteVolunteerAssignmentMutation,
   useClearCacheMutation,
+  useGetVolunteerAssignmentsQuery,
+  useLazyGetVolunteerAssignmentsQuery,
   useGetVolunteerAttendanceQuery,
   useLazyGetVolunteerAttendanceQuery,
   useGetVolunteerAttendanceSummaryQuery,
@@ -361,5 +448,8 @@ export const {
   useCreateChurchReportMutation,
   useUpdateChurchReportStatusMutation,
   useAddChurchReportNoteMutation,
+  useGetPresignedReportUploadUrlMutation,
+  useUploadReportPhotoMutation,
 } = churchApi;
+
 

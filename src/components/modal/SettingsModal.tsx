@@ -56,7 +56,7 @@ import { APP_ROUTES } from '@/config/routes';
 import { formatPersonShortName } from '@/libs/utils/text';
 import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 
-interface SettingsDrawerProps {
+interface SettingsModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Kept for backwards compatibility */
@@ -174,10 +174,10 @@ const getVolunteerRoleBadgeLabel = (role: string | undefined): string => {
   }
 };
 
-const SettingsDrawer = ({
+const SettingsModal = ({
   open,
   onOpenChange,
-}: SettingsDrawerProps) => {
+}: SettingsModalProps) => {
   useModalBackClose(open, () => onOpenChange(false));
 
   const { t } = useTranslation(['common']);
@@ -596,11 +596,7 @@ const SettingsDrawer = ({
   const isBluetoothMode = selectedMode === 'BLUETOOTH';
   const isBluetoothConnected = printerModeSlice?.bluetoothDevice?.isConnected;
 
-  const isConfigured = isKidChurchRole
-    ? !!meetings.current
-    : isBluetoothMode
-    ? !!meetings.current && !!isBluetoothConnected
-    : !!meetings.current && !!printers.current;
+  const isConfigured = !!meetings.current;
 
   const isMeetingLoading = meetings.loading && rawMeetings.length === 0;
   const isMeetingDisabled = !selectedCampusId || isMeetingLoading;
@@ -634,7 +630,7 @@ const SettingsDrawer = ({
     !selectedMeetingId ||
     isSelectedMeetingBlockedForRegistration ||
     (availableGroups.length > 0 && !selectedGroupId) ||
-    (!isKidChurchRole && !isBluetoothMode && !selectedPrinterId) ||
+    (!isKidChurchRole && !isBluetoothMode && availablePrinters.length > 0 && !selectedPrinterId) ||
     (!isKidChurchRole && isBluetoothMode && !isBluetoothConnected);
 
   // Shows full given name(s) and only the first last name (e.g. "Juan Carlos Peña" or "Juan Peña")
@@ -1052,4 +1048,4 @@ const SettingsDrawer = ({
   );
 };
 
-export default SettingsDrawer;
+export default SettingsModal;

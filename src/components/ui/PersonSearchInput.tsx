@@ -201,6 +201,7 @@ export const PersonSearchInput: React.FC<PersonSearchInputProps> = ({
               placeholder={placeholder}
               onChange={(e) => onSearchChange(e.target.value)}
               onFocus={onFocus}
+              onClick={onFocus}
               autoComplete="off"
               autoCorrect="off"
               autoCapitalize="off"

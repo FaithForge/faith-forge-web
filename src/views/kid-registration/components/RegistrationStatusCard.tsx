@@ -4,6 +4,7 @@ import { CalendarCheck, Printer } from 'lucide-react';
 import clsx from 'clsx';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { useChurchMeetingStatus, formatMeetingHour } from '@/libs/hooks/useChurchMeetingStatus';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { Days } from '@/libs/common-types/constants/days';
 
@@ -68,7 +69,6 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
     isMeetingNotStarted,
     isMeetingConcluded,
     meetingErrorMsg,
-    isAdmin,
   } = useChurchMeetingStatus();
 
   const printerMode = useAppSelector((state) => state.printerModeSlice?.mode || 'NETWORK');
@@ -165,18 +165,20 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
     };
   }, [currentMeeting, isMeetingValid, isMeetingNotStarted, isMeetingConcluded, t]);
 
+  const { can } = usePermissions();
+
   // Tooltip details for hover or screen readers
   const meetingTooltip = useMemo(() => {
     const parts = [meetingDisplayTitle];
     if (scheduleRange) parts.push(`Horario: ${scheduleRange}`);
     if (meetingStatusLabel) parts.push(`Estado: ${meetingStatusLabel}`);
-    if (!isMeetingValid && isAdmin) {
+    if (!isMeetingValid && can('checkin:bypass-schedule')) {
       parts.push(t('kidRegistration:status_card.admin_access_notice'));
     } else if (!isMeetingValid && meetingErrorMsg) {
       parts.push(meetingErrorMsg);
     }
     return parts.join(' • ');
-  }, [meetingDisplayTitle, scheduleRange, meetingStatusLabel, isMeetingValid, isAdmin, meetingErrorMsg, t]);
+  }, [meetingDisplayTitle, scheduleRange, meetingStatusLabel, isMeetingValid, can, meetingErrorMsg, t]);
 
   // Printer configuration & status
   const isBluetooth = printerMode === 'BLUETOOTH';
@@ -218,7 +220,8 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
     <div className={clsx('grid grid-cols-2 gap-2.5 sm:gap-3', className)}>
       {/* Tarjeta 1: Servicio / Reunión */}
       <div
-        className="bg-white rounded-2xl border border-gray-100 shadow-2xs p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px] sm:min-h-[104px] transition-all"
+        onClick={handleOpenSettings}
+        className="bg-white rounded-2xl border border-gray-100 shadow-2xs p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px] sm:min-h-[104px] transition-all cursor-pointer hover:shadow-xs active:scale-[0.99]"
         title={meetingTooltip}
       >
         <div className="flex items-center justify-between gap-1.5">
@@ -233,7 +236,10 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
 
           <button
             type="button"
-            onClick={handleOpenSettings}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenSettings();
+            }}
             className={clsx(
               'px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 cursor-pointer transition-all active:scale-95 border',
               meetingTheme.button
@@ -258,7 +264,10 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
       </div>
 
       {/* Tarjeta 2: Impresora */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-2xs p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px] sm:min-h-[104px] transition-all">
+      <div
+        onClick={handleOpenSettings}
+        className="bg-white rounded-2xl border border-gray-100 shadow-2xs p-3 sm:p-3.5 flex flex-col justify-between min-h-[96px] sm:min-h-[104px] transition-all cursor-pointer hover:shadow-xs active:scale-[0.99]"
+      >
         <div className="flex items-center justify-between gap-1.5">
           <div
             className={clsx(
@@ -271,7 +280,10 @@ export const RegistrationStatusCard: React.FC<RegistrationStatusCardProps> = ({
 
           <button
             type="button"
-            onClick={handleOpenSettings}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleOpenSettings();
+            }}
             className={clsx(
               'px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full text-[11px] sm:text-xs font-semibold shrink-0 cursor-pointer transition-all active:scale-95 border',
               printerTheme.button

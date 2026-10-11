@@ -5,7 +5,7 @@ import { AppDrawer } from '@/components/ui/AppDrawer';
 import { APP_CHANGELOG, APP_VERSION, SEMVER_META, ChangelogItem } from '@/constants/version';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
-interface ChangelogDrawerProps {
+interface ChangelogModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
@@ -18,14 +18,14 @@ interface ChangelogGroup {
 }
 
 /**
- * ChangelogDrawer displays the version history of the application following the SemVer standard.
+ * ChangelogModal displays the version history of the application following the SemVer standard.
  * It groups patch releases under their parent minor/major version without creating separate dropdowns,
  * keeping the history organized and clear for end users.
  *
- * @param {ChangelogDrawerProps} props - Component props.
+ * @param {ChangelogModalProps} props - Component props.
  * @returns {JSX.Element} The rendered drawer.
  */
-export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenChange }) => {
+export const ChangelogModal: React.FC<ChangelogModalProps> = ({ open, onOpenChange }) => {
   useModalBackClose(open, () => onOpenChange(false));
 
   // Groups releases by Major.Minor series (e.g. 3.1.x, 3.0.x)
@@ -368,4 +368,4 @@ export const ChangelogDrawer: React.FC<ChangelogDrawerProps> = ({ open, onOpenCh
   );
 };
 
-export default ChangelogDrawer;
+export default ChangelogModal;

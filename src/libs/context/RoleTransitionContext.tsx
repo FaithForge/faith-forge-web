@@ -25,8 +25,8 @@ export const useRoleTransition = () => useContext(RoleTransitionContext);
 export const RoleTransitionProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [transitionInfo, setTransitionInfo] = useState<RoleTransitionInfo | null>(null);
   const [isVisible, setIsVisible] = useState(false);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const midwayRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const midwayRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const startTransition = useCallback((info: RoleTransitionInfo, onMidway?: () => void) => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);

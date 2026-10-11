@@ -14,6 +14,7 @@ import {
   ChevronUp,
   MessageSquare,
   ShieldAlert,
+  ChevronRight,
 } from 'lucide-react';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
@@ -24,11 +25,16 @@ import {
   useGetChurchReportsQuery,
   useGetVolunteerAttendanceQuery,
 } from '@/libs/state/redux/api/churchApi';
-import { useGetKidsQuery } from '@/libs/state/redux/api/kidChurchApi';
+import {
+  useGetKidGroupAttendanceQuery,
+  useGetKidsQuery,
+} from '@/libs/state/redux/api/kidChurchApi';
+import { IKid, IKidGuardian } from '@/libs/models';
 import {
   IChildIncidentReportDetails,
   IChurchReport,
   IGuardianCallReportDetails,
+  MedicalAttentionType,
   ReportHistoryAction,
   ReportPriority,
   ReportStatus,
@@ -37,10 +43,12 @@ import {
 import { CreateChurchReportModal } from '@/components/reports/CreateChurchReportModal';
 import { CloseChurchReportModal } from './CloseChurchReportModal';
 import { AddChurchReportNoteModal } from './AddChurchReportNoteModal';
+import { ChurchReportDetailDrawer } from './ChurchReportDetailDrawer';
 import { isFeatureEnabled } from '@/config/features';
 import { APP_ROUTES } from '@/config/routes';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { formatPersonShortName } from '@/libs/utils/text';
+
 
 type FilterStatusType = 'ALL' | ReportStatus;
 
@@ -54,24 +62,26 @@ type FilterStatusType = 'ALL' | ReportStatus;
 export const ChurchReportsView: React.FC = () => {
   const { t } = useTranslation(['kidChurch', 'common']);
   const navigate = useNavigate();
-  const { canManageChurchReports } = usePermissions();
+  const { can } = usePermissions();
 
   useEffect(() => {
-    if (!isFeatureEnabled('churchReports') || !canManageChurchReports) {
+    if (!isFeatureEnabled('churchReports') || !can('reports:manage')) {
       navigate(APP_ROUTES.kidChurch.root, { replace: true });
     }
-  }, [navigate, canManageChurchReports]);
+  }, [navigate, can]);
 
   const { currentMeeting, currentCampus } = useChurchMeetingStatus();
-  const { activeCampusId, activeGroupConfigId } = useAppSelector(
+  const { activeCampusId, activeGroupConfigId, campuses } = useAppSelector(
     (state) => state.volunteerContextSlice,
   );
 
   const effectiveCampusId = activeCampusId || currentCampus?.id || '';
-  const effectiveGroupId =
-    activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP'
-      ? activeGroupConfigId
-      : undefined;
+  const currentVolunteerCampus = campuses?.find((c) => c.id === effectiveCampusId);
+  const currentGroupContext = currentVolunteerCampus?.groups?.find(
+    (g) => g.id === activeGroupConfigId,
+  );
+  const effectiveServiceAreaGroupId =
+    currentGroupContext?.areas?.find((a) => a.serviceAreaGroupId)?.serviceAreaGroupId || undefined;
 
   const todayStr = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
 
@@ -82,6 +92,7 @@ export const ChurchReportsView: React.FC = () => {
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [closingReportId, setClosingReportId] = useState<string | null>(null);
   const [notingReportId, setNotingReportId] = useState<string | null>(null);
+  const [selectedReport, setSelectedReport] = useState<IChurchReport | null>(null);
 
   // Expanded notes state per report
   const [expandedNotes, setExpandedNotes] = useState<Record<string, boolean>>({});
@@ -95,7 +106,6 @@ export const ChurchReportsView: React.FC = () => {
   } = useGetChurchReportsQuery(
     {
       churchCampusId: effectiveCampusId || undefined,
-      serviceAreaGroupId: effectiveGroupId,
       churchMeetingId: currentMeeting?.id || undefined,
     },
     { skip: !effectiveCampusId },
@@ -186,6 +196,37 @@ export const ChurchReportsView: React.FC = () => {
     { skip: !currentMeeting?.id },
   );
 
+  const { data: rawAttendanceKids = [] } = useGetKidGroupAttendanceQuery(
+    {
+      date: todayStr,
+      churchMeetingId: currentMeeting?.id,
+    },
+    { skip: !currentMeeting?.id },
+  );
+
+  const attendanceKids = useMemo<IKid[]>(() => {
+    if (!rawAttendanceKids) return [];
+    if (Array.isArray(rawAttendanceKids)) return rawAttendanceKids;
+    if (typeof rawAttendanceKids === 'string') {
+      try {
+        return JSON.parse(rawAttendanceKids);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [rawAttendanceKids]);
+
+  const guardiansMap = useMemo<Record<string, IKidGuardian>>(() => {
+    const map: Record<string, IKidGuardian> = {};
+    attendanceKids.forEach((k) => {
+      (k.relations || []).forEach((g) => {
+        map[g.id] = g;
+      });
+    });
+    return map;
+  }, [attendanceKids]);
+
   const { data: volunteerAttendances = [] } = useGetVolunteerAttendanceQuery(
     { churchMeetingId: currentMeeting?.id, limit: 100 },
     { skip: !currentMeeting?.id },
@@ -198,8 +239,11 @@ export const ChurchReportsView: React.FC = () => {
         map[k.id] = formatPersonShortName(`${k.firstName} ${k.lastName}`);
       });
     }
+    attendanceKids.forEach((k) => {
+      map[k.id] = formatPersonShortName(`${k.firstName} ${k.lastName}`);
+    });
     return map;
-  }, [kidsResponse]);
+  }, [kidsResponse, attendanceKids]);
 
   const volunteerNameMap = useMemo(() => {
     const map: Record<string, string> = {};
@@ -214,10 +258,15 @@ export const ChurchReportsView: React.FC = () => {
     return map;
   }, [volunteerAttendances]);
 
-  const renderReportCard = (report: IChurchReport) => {
-    const isHistoryExpanded = expandedNotes[report.id] ?? false;
-    const historyCount = report.history?.length || 0;
+  // Keep selected report updated when reports list refetches
+  useEffect(() => {
+    if (selectedReport) {
+      const updated = reports.find((r) => r.id === selectedReport.id);
+      if (updated) setSelectedReport(updated);
+    }
+  }, [reports, selectedReport]);
 
+  const renderReportCard = (report: IChurchReport) => {
     const isIncident = report.type === ReportType.CHILD_INCIDENT;
     const isGuardianCall = report.type === ReportType.GUARDIAN_CALL;
     const incidentDetails = isIncident
@@ -230,235 +279,109 @@ export const ChurchReportsView: React.FC = () => {
     const targetKidId = incidentDetails?.kidId || callDetails?.kidId;
     const resolvedKidName = targetKidId ? kidNameMap[targetKidId] : '';
 
-    const description = incidentDetails?.description || '';
-    const medicalAttentionType = incidentDetails?.medicalAttentionType || '';
-    const attendingDoctor = incidentDetails?.attendingDoctorVolunteerId
-      ? volunteerNameMap[incidentDetails.attendingDoctorVolunteerId] || 'Voluntario Médico'
-      : '';
-    const guardianExplanation = incidentDetails?.guardianExplanationResponse || '';
-    const photos = incidentDetails?.photos || [];
-
-    const targetKid = targetKidId
-      ? kidsResponse?.data?.find((k) => k.id === targetKidId)
-      : null;
-    const matchedGuardian = callDetails?.guardianId
-      ? targetKid?.relations?.find((g) => g.id === callDetails.guardianId)
-      : null;
+    const matchedGuardian = callDetails?.guardianId ? guardiansMap[callDetails.guardianId] : null;
     const guardianName = matchedGuardian
-      ? formatPersonShortName(`${matchedGuardian.firstName} ${matchedGuardian.lastName}`)
-      : t('reports.guardian_call_fields.registered_guardian', {
-          ns: 'kidChurch',
-          defaultValue: 'Acudiente registrado',
-        });
-    const guardianPhone = matchedGuardian?.phone || '';
+      ? formatPersonShortName(`${matchedGuardian.firstName} ${matchedGuardian.lastName}`.trim())
+      : null;
     const guardianRel = callDetails?.guardianRelationship || (matchedGuardian ? matchedGuardian.relation : '');
-    const callReason = callDetails?.reason || '';
+
+    const historyCount = report.history?.length || 0;
+    const photoCount = incidentDetails?.photos?.length || 0;
 
     return (
       <div
         key={report.id}
-        className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs p-4 sm:p-5 transition-shadow hover:shadow-xs space-y-3.5"
+        onClick={() => setSelectedReport(report)}
+        className="bg-white rounded-2xl border border-gray-200/90 shadow-2xs p-3.5 sm:p-4 transition-all hover:border-primary/40 hover:shadow-xs active:scale-[0.99] cursor-pointer group"
       >
-        {/* Card Header */}
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1 space-y-1.5">
+            {/* Top row: Novedad resaltada (Título principal) + Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm sm:text-base font-bold text-gray-900 tracking-tight">
-                {resolvedKidName || (t(`reports.types.${report.type}` as any) || report.type)}
+              <h3 className="text-sm sm:text-base font-bold text-gray-900 tracking-tight group-hover:text-primary transition-colors truncate">
+                {t(`reports.types.${report.type}` as any, { defaultValue: report.type })}
               </h3>
               {getStatusBadge(report.status)}
               {getPriorityBadge(report.priority)}
             </div>
 
-            <div className="flex items-center gap-3 text-[11px] text-gray-500 font-medium mt-1 flex-wrap">
-              <span className="flex items-center gap-1">
-                <Calendar size={12} />
+            {/* Subtítulo: De quién fue la novedad en letras pequeñas */}
+            <div className="flex items-center gap-1.5 text-xs text-gray-500 font-normal flex-wrap">
+              <span className="text-gray-400 font-normal">Niño:</span>
+              <span className="font-semibold text-gray-700">
+                {resolvedKidName || t('common.unassigned', { ns: 'common', defaultValue: 'Sin asignar' })}
+              </span>
+              <span className="text-gray-300">•</span>
+              <span className="flex items-center gap-1 text-[11px] text-gray-400">
+                <Calendar size={11} className="text-gray-400" />
                 {dayjs(report.date).format('DD MMM YYYY')}
               </span>
-              <span className="text-gray-400">•</span>
-              <span className="font-semibold text-gray-600">
-                {t(`reports.types.${report.type}` as any)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Details based on report type */}
-        {report.type === ReportType.GUARDIAN_CALL ? (
-          <div className="text-xs text-gray-700 leading-relaxed bg-blue-50/50 p-3 rounded-xl border border-blue-100 space-y-2">
-            <div>
-              <span className="font-bold text-gray-800">
-                {t('reports.guardian_call_fields.guardian_label', { ns: 'kidChurch' })}:{' '}
-              </span>
-              <span className="font-semibold text-blue-900">{guardianName}</span>
-              {(guardianRel || guardianPhone) && (
-                <span className="text-gray-600">
-                  {' '}
-                  ({[guardianRel, guardianPhone].filter(Boolean).join(' • ')})
-                </span>
-              )}
             </div>
 
-            {callReason && (
-              <div>
-                <span className="font-bold text-gray-800">
-                  {t('reports.guardian_call_fields.reason', { ns: 'kidChurch' })}:{' '}
-                </span>
-                <span>{callReason}</span>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="text-xs text-gray-700 leading-relaxed bg-gray-50/70 p-3 rounded-xl border border-gray-100 space-y-2">
-            {description && (
-              <div>
-                <span className="font-bold text-gray-800">
-                  {t('reports.child_fields.description', { ns: 'kidChurch' })}:{' '}
-                </span>
-                <span>{description}</span>
-              </div>
-            )}
-
-            {medicalAttentionType && (
-              <div>
-                <span className="font-bold text-gray-800">
-                  {t('reports.child_fields.medical_attention_label', { ns: 'kidChurch' })}:{' '}
-                </span>
-                <span className="text-gray-700">
-                  {t(`reports.child_fields.medical_options.${medicalAttentionType}` as any)}
-                </span>
-                {attendingDoctor && (
-                  <span className="text-amber-800 font-semibold"> — {attendingDoctor}</span>
+            {/* Contenido / Detalle de la novedad */}
+            {isIncident && incidentDetails && (
+              <div className="flex items-center gap-2 text-xs pt-0.5">
+                {incidentDetails.description && (
+                  <p className="font-medium text-gray-800 truncate flex-1">
+                    {incidentDetails.description}
+                  </p>
+                )}
+                {photoCount > 0 && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-gray-100 text-gray-600 shrink-0">
+                    📸 {photoCount}
+                  </span>
+                )}
+                {incidentDetails.medicalAttentionType === MedicalAttentionType.DOCTOR_ATTENDED && (
+                  <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-50 text-amber-700 shrink-0 border border-amber-200/50">
+                    🩺 Médico
+                  </span>
                 )}
               </div>
             )}
 
-            {guardianExplanation && (
-              <div className="pt-1 border-t border-gray-200/50">
-                <span className="font-bold text-gray-800">
-                  {t('reports.child_fields.guardian_explanation_label', { ns: 'kidChurch' })}:{' '}
-                </span>
-                <span className="font-semibold text-gray-700">
-                  {t(`reports.child_fields.guardian_options.${guardianExplanation}` as any)}
-                </span>
-              </div>
-            )}
-
-            {/* Photos attached */}
-            {photos.length > 0 && (
-              <div className="pt-1.5 border-t border-gray-200/50">
-                <p className="font-bold text-gray-800 mb-1.5">
-                  {t('reports.child_fields.photos_label', { ns: 'kidChurch' })} ({photos.length}):
-                </p>
-                <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                  {photos.map((src, idx) => (
-                    <img
-                      key={idx}
-                      src={src}
-                      alt={`Evidence ${idx + 1}`}
-                      className="w-14 h-14 rounded-xl object-cover border border-gray-200 shadow-2xs shrink-0"
-                    />
-                  ))}
-                </div>
+            {isGuardianCall && (
+              <div className="text-xs pt-0.5 truncate">
+                {callDetails?.reason ? (
+                  <div className="flex items-center gap-1.5 truncate">
+                    <span className="font-medium text-gray-800 truncate">
+                      {callDetails.reason}
+                    </span>
+                    <span className="text-gray-400 font-normal shrink-0">—</span>
+                    <span className="text-gray-500 text-[11px] truncate shrink-0">
+                      {guardianName ? `${guardianName}${guardianRel ? ` (${guardianRel})` : ''}` : guardianRel ? `(${guardianRel})` : 'Acudiente'}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="text-gray-600 text-xs">
+                    <span className="text-gray-400">Acudiente: </span>
+                    <span className="font-medium text-gray-700">
+                      {guardianName ? `${guardianName}${guardianRel ? ` (${guardianRel})` : ''}` : guardianRel ? `(${guardianRel})` : 'Acudiente registrado'}
+                    </span>
+                  </div>
+                )}
               </div>
             )}
           </div>
-        )}
 
-        {/* History Timeline Accordion */}
-        {historyCount > 0 && (
-          <div className="border-t border-gray-100 pt-2">
-            <button
-              type="button"
-              onClick={() => toggleNotes(report.id)}
-              className="flex items-center justify-between w-full text-xs font-bold text-gray-600 hover:text-gray-900 py-1 transition-colors cursor-pointer"
-            >
-              <span className="flex items-center gap-1.5">
-                <Clock size={13} />
-                {t('reports.notes_history', { count: historyCount, ns: 'kidChurch' })}
+          {/* Right Chevron & history pill */}
+          <div className="flex flex-col items-end justify-between self-stretch shrink-0 pl-1">
+            <ChevronRight
+              size={18}
+              className="text-gray-400 group-hover:text-primary group-hover:translate-x-0.5 transition-all"
+            />
+            {historyCount > 0 && (
+              <span className="text-[10px] font-semibold text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded-full border border-gray-100">
+                {historyCount} {historyCount === 1 ? 'nota' : 'notas'}
               </span>
-              {isHistoryExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-
-            {isHistoryExpanded && (
-              <div className="mt-2 space-y-2.5 pl-2 border-l-2 border-primary/30">
-                {report.history?.map((entry) => {
-                  const isCreated = entry.action === ReportHistoryAction.CREATED;
-                  const isClosed = entry.action === ReportHistoryAction.CLOSED;
-                  const isUpdate = entry.action === ReportHistoryAction.UPDATE;
-
-                  return (
-                    <div
-                      key={entry.id}
-                      className={clsx(
-                        'text-xs p-2.5 rounded-xl space-y-1',
-                        isClosed && 'bg-emerald-50/70 border border-emerald-200/60 text-emerald-950',
-                        isCreated && 'bg-blue-50/60 border border-blue-200/60 text-blue-950',
-                        isUpdate && 'bg-gray-50 border border-gray-100 text-gray-800',
-                      )}
-                    >
-                      <div className="flex items-center justify-between text-[11px] font-semibold gap-2 flex-wrap">
-                        <span className="inline-flex items-center gap-1">
-                          {isClosed && <CheckCircle2 size={12} className="text-emerald-600" />}
-                          {isCreated && <Info size={12} className="text-blue-600" />}
-                          {isUpdate && <MessageSquare size={12} className="text-primary" />}
-                          <span
-                            className={clsx(
-                              'uppercase font-bold tracking-wider text-[10px]',
-                              isClosed && 'text-emerald-700',
-                              isCreated && 'text-blue-700',
-                              isUpdate && 'text-gray-700',
-                            )}
-                          >
-                            {t(`reports.history_actions.${entry.action}` as any) || entry.action}
-                          </span>
-                        </span>
-                        <span className="text-gray-500 font-normal">
-                          {dayjs(entry.createdAt).format('DD/MM/YYYY HH:mm')}
-                        </span>
-                      </div>
-                      {entry.note && (
-                        <p
-                          className={clsx(
-                            'leading-relaxed',
-                            isClosed ? 'text-emerald-900 font-medium' : 'text-gray-700',
-                          )}
-                        >
-                          {entry.note}
-                        </p>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
             )}
           </div>
-        )}
-
-        {/* Action Buttons for OPEN reports */}
-        {report.status === ReportStatus.OPEN && (
-          <div className="flex items-center justify-end gap-2 pt-1 border-t border-gray-100">
-            <button
-              type="button"
-              onClick={() => setNotingReportId(report.id)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors cursor-pointer"
-            >
-              {t('reports.actions.add_note', { ns: 'kidChurch' })}
-            </button>
-            <button
-              type="button"
-              onClick={() => setClosingReportId(report.id)}
-              className="px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 transition-colors cursor-pointer"
-            >
-              {t('reports.actions.close_case', { ns: 'kidChurch' })}
-            </button>
-          </div>
-        )}
+        </div>
       </div>
     );
   };
 
   return (
+
     <div className="flex-1 flex flex-col p-3.5 sm:p-6 max-w-4xl mx-auto w-full space-y-4 pb-28 sm:pb-32">
       {/* Top Header */}
       <div className="flex items-center justify-between gap-3 pt-1">
@@ -603,7 +526,7 @@ export const ChurchReportsView: React.FC = () => {
         onClose={() => setIsCreateOpen(false)}
         churchCampusId={effectiveCampusId}
         churchMeetingId={currentMeeting?.id}
-        serviceAreaGroupId={effectiveGroupId}
+        serviceAreaGroupId={effectiveServiceAreaGroupId}
         date={todayStr}
         onSuccess={() => refetch()}
       />
@@ -623,8 +546,21 @@ export const ChurchReportsView: React.FC = () => {
         date={todayStr}
         onSuccess={() => refetch()}
       />
+
+      {/* Detail Drawer */}
+      <ChurchReportDetailDrawer
+        report={selectedReport}
+        open={Boolean(selectedReport)}
+        onClose={() => setSelectedReport(null)}
+        kidNameMap={kidNameMap}
+        volunteerNameMap={volunteerNameMap}
+        guardiansMap={guardiansMap}
+        onAddNote={(id) => setNotingReportId(id)}
+        onCloseReport={(id) => setClosingReportId(id)}
+      />
     </div>
   );
 };
+
 
 export default ChurchReportsView;
