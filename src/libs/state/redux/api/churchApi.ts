@@ -54,6 +54,8 @@ export interface GetChurchesArgs {
   page?: number;
   limit?: number;
   order?: 'ASC' | 'DESC';
+  search?: string;
+  state?: string;
 }
 
 export interface GetChurchMembersArgs {
@@ -92,13 +94,17 @@ export const churchApi = baseApi.injectEndpoints({
         result ? [{ type: 'Church', id: result.id }, { type: 'Church', id: 'CURRENT' }] : [{ type: 'Church', id: 'CURRENT' }],
     }),
 
-    getChurches: builder.query<{ data: IChurch[]; total: number }, GetChurchesArgs | void>({
+    getChurches: builder.query<
+      { data: IChurch[]; total: number; totalPages?: number; page?: number },
+      GetChurchesArgs | void
+    >({
       query: (args) => {
-        const params: Record<string, string | number> = {
-          page: args?.page ?? 1,
-          limit: args?.limit ?? 100,
-          order: args?.order ?? 'ASC',
-        };
+        const params: Record<string, string | number> = {};
+        if (args?.page) params.page = args.page;
+        if (args?.limit) params.limit = args.limit;
+        if (args?.order) params.order = args.order;
+        if (args?.search) params.search = args.search;
+        if (args?.state) params.state = args.state;
         return {
           microservice: MicroserviceEnum.Church,
           url: '/church',
@@ -106,13 +112,17 @@ export const churchApi = baseApi.injectEndpoints({
           params,
         };
       },
-      transformResponse: (response: { data?: IChurch[]; total?: number } | IChurch[]) => {
+      transformResponse: (
+        response: { data?: IChurch[]; total?: number; totalPages?: number; page?: number } | IChurch[],
+      ) => {
         if (Array.isArray(response)) {
-          return { data: response, total: response.length };
+          return { data: response, total: response.length, totalPages: 1, page: 1 };
         }
         return {
           data: response?.data || [],
           total: response?.total ?? (response?.data?.length || 0),
+          totalPages: response?.totalPages ?? 1,
+          page: response?.page ?? 1,
         };
       },
       providesTags: (result) =>

@@ -26,7 +26,11 @@ type StatusFilter = 'ALL' | 'ACTIVE' | 'INACTIVE';
  */
 const ChurchesManagementView: React.FC = () => {
   const { t } = useTranslation(['admin', 'common']);
-  const { data: churchesResponse, isLoading } = useGetChurchesQuery({ limit: 100 });
+  const { data: churchesResponse, isLoading } = useGetChurchesQuery({
+page: 1,
+    limit: 100,
+    order: 'ASC',
+  });
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
