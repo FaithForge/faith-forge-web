@@ -98,12 +98,42 @@ import {
 } from '@/libs/utils/tenant';
 import { useResolveChurchTenantQuery } from '@/libs/state/redux/api/churchApi';
 import { setChurch } from '@/libs/state/redux/slices/church/churchCampus.slice';
+import { useChurchModules } from '@/libs/hooks/useChurchModules';
+import { ChurchModule } from '@/libs/models/Church';
+
+/**
+ * Route protection wrapper requiring a specific church platform module to be active.
+ *
+ * @param {object} props - Component props
+ * @param {ChurchModule} props.module - Required module enum
+ * @param {React.ReactNode} props.children - Child elements to render if module is enabled
+ * @returns {JSX.Element} Children or redirection to hub
+ */
+const ModuleRoute: React.FC<{ module: ChurchModule; children: React.ReactNode }> = ({
+  module,
+  children,
+}) => {
+  const { hasModule } = useChurchModules();
+  if (!hasModule(module)) {
+    return <Navigate to={APP_ROUTES.hub} replace />;
+  }
+  return <>{children}</>;
+};
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
   const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
-  const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
+  const rawExperiences = useAppSelector((state) => state.authSlice.experiences) || [];
   const user = useAppSelector((state) => state.authSlice.user);
+  const { hasModule } = useChurchModules();
+
+  const hasKidChurch = hasModule(ChurchModule.KID_CHURCH);
+  const experiences = rawExperiences.filter((exp) => {
+    if (exp === UserExperienceEnum.KID_CHURCH_STAFF || exp === UserExperienceEnum.KID_GUARDIAN) {
+      return hasKidChurch;
+    }
+    return true;
+  });
 
   const userRoles = (user?.roles || []) as AppRole[];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
@@ -113,7 +143,7 @@ const IndexRedirect = () => {
   const isMultiRoleUser =
     experiences.length > 1 ||
     isSuperAdmin ||
-    enabledRoles.length > 1;
+    (hasKidChurch && enabledRoles.length > 1);
 
   // 1. If user has multiple experiences and has not picked an active one, go to Hub
   if (isMultiRoleUser && !activeExperience) {
@@ -121,13 +151,13 @@ const IndexRedirect = () => {
   }
 
   // 2. Active experience explicitly selected
-  if (activeExperience === UserExperienceEnum.KID_GUARDIAN) {
+  if (activeExperience === UserExperienceEnum.KID_GUARDIAN && hasKidChurch) {
     return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
   }
   if (activeExperience === UserExperienceEnum.ADMIN) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
-  if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF) {
+  if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF && hasKidChurch) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const dashboardUrl =
       isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
@@ -148,7 +178,7 @@ const IndexRedirect = () => {
   if (experiences.includes(UserExperienceEnum.ADMIN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.KID_GUARDIAN)) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
-  if (enabledRoles.length > 0) {
+  if (hasKidChurch && enabledRoles.length > 0) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const dashboardUrl =
       isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
@@ -337,7 +367,14 @@ function App() {
               <Route path={APP_ROUTES.profile} element={<ProfileRoute />} />
 
               {/* Kid Guardian Experience */}
-              <Route path={APP_ROUTES.kidGuardian.root} element={<KidGuardianLayout />}>
+              <Route
+                path={APP_ROUTES.kidGuardian.root}
+                element={
+                  <ModuleRoute module={ChurchModule.KID_CHURCH}>
+                    <KidGuardianLayout />
+                  </ModuleRoute>
+                }
+              >
                 <Route index element={<KidGuardianDashboardView />} />
               </Route>
 
@@ -381,7 +418,13 @@ function App() {
               <Route path="/" element={<IndexRedirect />} />
 
               {/* Operational Volunteers Layout (Kids Ministry) */}
-              <Route element={<MainLayout />}>
+              <Route
+                element={
+                  <ModuleRoute module={ChurchModule.KID_CHURCH}>
+                    <MainLayout />
+                  </ModuleRoute>
+                }
+              >
                 <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboardRoute />} />
                 <Route path={APP_ROUTES.kidChurch.myTeam} element={<MyTeamView />} />
                 <Route

@@ -11,6 +11,8 @@ import { UserExperienceEnum, UserRole, ChurchRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import { useChurchModules } from '@/libs/hooks/useChurchModules';
+import { ChurchModule } from '@/libs/models/Church';
 import { formatPersonShortName } from '@/libs/utils/text';
 
 /**
@@ -29,6 +31,7 @@ const HubView: React.FC = () => {
   const kidsModuleName = useKidsTerm('module_alias');
   const volunteerTerm = useChurchTerm('volunteer');
   const guardianTerm = useKidsTerm('guardian');
+  const { hasModule } = useChurchModules();
 
   const shortName = formatPersonShortName(user?.firstName, user?.lastName) || 'Usuario';
 
@@ -127,8 +130,12 @@ const HubView: React.FC = () => {
 
   const availableCards = cardsConfig.filter((card) => {
     if (!experiences.includes(card.id)) return false;
-    if (card.id === UserExperienceEnum.KID_CHURCH_STAFF && !hasActiveStaffRole) {
-      return false;
+    if (card.id === UserExperienceEnum.KID_CHURCH_STAFF) {
+      if (!hasModule(ChurchModule.KID_CHURCH)) return false;
+      if (!hasActiveStaffRole) return false;
+    }
+    if (card.id === UserExperienceEnum.KID_GUARDIAN) {
+      if (!hasModule(ChurchModule.KID_CHURCH)) return false;
     }
     return true;
   });

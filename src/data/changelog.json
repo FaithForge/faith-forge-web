@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.15.1",
+    "type": "patch",
+    "timestamp": "2026-10-16T22:31:25.830Z",
+    "dateFormatted": "16/10/2026 05:31 PM",
+    "title": "Control de acceso y módulos activos",
+    "changes": [
+      "Soporte para habilitación modular de funciones según las necesidades de cada congregación",
+      "Optimización de la navegación y acceso al panel principal"
+    ]
+  },
+  {
     "version": "3.15.0",
     "type": "minor",
     "timestamp": "2026-10-15T22:39:27.387Z",

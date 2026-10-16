@@ -36,6 +36,10 @@ export enum KidAttendanceFlowModeEnum {
   FULL_FLOW = 'FULL_FLOW',
 }
 
+export enum ChurchModule {
+  KID_CHURCH = 'KID_CHURCH',
+}
+
 export interface IChurchBranding {
   appName?: string;
   shortName?: string;
@@ -57,6 +61,7 @@ export interface IChurch {
   branding?: IChurchBranding;
   description?: string;
   state?: EntityState;
+  enabledModules?: ChurchModule[];
   terminologyOverrides?: Record<string, string>;
   ministryTerminologyOverrides?: Record<string, Record<string, string>>;
   campuses?: IChurchCampus[];
@@ -69,6 +74,7 @@ export interface CreateChurchPayload {
   branding?: IChurchBranding;
   description?: string;
   state?: EntityState;
+  enabledModules?: ChurchModule[];
   terminologyOverrides?: Record<string, string>;
   ministryTerminologyOverrides?: Record<string, Record<string, string>>;
 }
@@ -97,8 +103,7 @@ export enum ChurchStaffRole {
 export const ChurchStaffStateEnum = {
   ...EntityState,
 } as const;
-export type ChurchStaffStateEnum =
-  (typeof ChurchStaffStateEnum)[keyof typeof ChurchStaffStateEnum];
+export type ChurchStaffStateEnum = (typeof ChurchStaffStateEnum)[keyof typeof ChurchStaffStateEnum];
 
 export interface IChurchStaff {
   id: string;
