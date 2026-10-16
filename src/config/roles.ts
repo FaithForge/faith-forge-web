@@ -1,4 +1,4 @@
-import { AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
+import { AppRole, ChurchRole, ChurchStaffRole, UserRole } from '@/libs/utils/auth';
 
 /**
  * Configuración centralizada de activación y visibilidad de roles en la aplicación.
@@ -11,8 +11,12 @@ import { AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
 export const ROLE_VISIBILITY_CONFIG: Record<AppRole, boolean> = {
   // Administración General
   [UserRole.SUPER_ADMIN]: true,
-  [UserRole.ADMIN]: false,
+  [UserRole.ADMIN]: true,
   [UserRole.STAFF]: false,
+
+  // Administración de Iglesia Local
+  [ChurchStaffRole.CHURCH_ADMIN]: true,
+  [ChurchStaffRole.CHURCH_STAFF]: false,
 
   // Ministerio de Niños (Salones y clases)
   [ChurchRole.MINISTRY_ADMIN]: false,                  // Niños - Admin General

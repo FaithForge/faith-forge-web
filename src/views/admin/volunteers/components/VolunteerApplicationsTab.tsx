@@ -388,7 +388,7 @@ export const VolunteerApplicationsTab: React.FC<VolunteerApplicationsTabProps> =
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-3.5">
           {applications.map((app) => {
             const applicantUser = app.user;
             const firstName = applicantUser?.firstName || '';

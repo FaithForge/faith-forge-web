@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Printer,
@@ -45,6 +45,7 @@ type StatusFilterType = 'ALL' | 'ACTIVE' | 'INACTIVE';
 const PrintersManagementView: React.FC = () => {
   const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
 
   const campusTerm = useChurchTerm('campus');
@@ -52,7 +53,9 @@ const PrintersManagementView: React.FC = () => {
   const campuses = useAppSelector((state) => state.churchCampusSlice);
   const printersSlice = useAppSelector((state) => state.churchPrinterSlice);
 
-  const [selectedCampusId, setSelectedCampusId] = useState<string>('');
+  const [selectedCampusId, setSelectedCampusId] = useState<string>(() => {
+    return searchParams.get('campusId') || '';
+  });
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('ALL');
   const [modalOpen, setModalOpen] = useState(false);
@@ -68,12 +71,24 @@ const PrintersManagementView: React.FC = () => {
     }
   }, [dispatch, campuses.data.length]);
 
-  // Auto-select first campus
+  // Sync selected campus with query params and fallback
   useEffect(() => {
-    if (!selectedCampusId && campuses.data.length > 0) {
-      setSelectedCampusId(campuses.data[0].id);
+    const urlCampusId = searchParams.get('campusId');
+    if (urlCampusId && campuses.data.some((c) => c.id === urlCampusId)) {
+      if (urlCampusId !== selectedCampusId) {
+        setSelectedCampusId(urlCampusId);
+      }
+    } else if (!selectedCampusId && campuses.data.length > 0) {
+      const defaultId = campuses.data[0].id;
+      setSelectedCampusId(defaultId);
+      setSearchParams({ campusId: defaultId }, { replace: true });
     }
-  }, [campuses.data, selectedCampusId]);
+  }, [campuses.data, searchParams, selectedCampusId, setSearchParams]);
+
+  const handleCampusChange = (newCampusId: string) => {
+    setSelectedCampusId(newCampusId);
+    setSearchParams({ campusId: newCampusId }, { replace: true });
+  };
 
   // Fetch printers when selected campus changes
   const fetchPrinters = useCallback(async () => {
@@ -165,6 +180,7 @@ const PrintersManagementView: React.FC = () => {
       <PageHeader
         title={t('admin:printers.header_title')}
         onBack={() => navigate(APP_ROUTES.admin.root)}
+        className="lg:hidden"
         rightAction={
           <button
             type="button"
@@ -178,7 +194,7 @@ const PrintersManagementView: React.FC = () => {
       />
 
       <PullToRefresh onRefresh={fetchPrinters}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-4 sm:pt-5 flex flex-col gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-5">
           {/* Header Summary Banner */}
           <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
             <div className="flex items-start sm:items-center gap-3 min-w-0">
@@ -223,8 +239,8 @@ const PrintersManagementView: React.FC = () => {
           </div>
 
           {/* Filters Bar: Campus Selector + Status Tabs + Search */}
-          <div className="flex flex-col gap-2.5">
-            <div className="flex flex-col sm:flex-row gap-2.5">
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               {/* Campus Selector */}
               <div className="w-full sm:w-72 shrink-0">
                 <SelectSearch
@@ -232,7 +248,7 @@ const PrintersManagementView: React.FC = () => {
                   placeholder={t('admin:printers.select_campus_placeholder', { campus: campusTerm })}
                   options={campusOptions}
                   value={selectedCampusId}
-                  onChange={setSelectedCampusId}
+                  onChange={handleCampusChange}
                 />
               </div>
 
@@ -321,7 +337,7 @@ const PrintersManagementView: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="flex flex-col gap-2.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
               {filteredPrinters.map((printer) => {
                 const isActive = printer.state === ChurchPrinterStateEnum.ACTIVE;
 
@@ -332,7 +348,7 @@ const PrintersManagementView: React.FC = () => {
                       setPrinterToEdit(printer);
                       setModalOpen(true);
                     }}
-                    className="group bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-200/80 shadow-2xs hover:shadow-xs hover:border-gray-300 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-[0.995]"
+                    className="group bg-white rounded-2xl p-4 border border-gray-200/80 shadow-2xs hover:shadow-xs hover:border-cyan-300 transition-all cursor-pointer flex items-center justify-between gap-3 active:scale-[0.99]"
                   >
                     {/* Left: Icon, Name and Status Badge */}
                     <div className="flex items-center gap-3 min-w-0">
@@ -347,31 +363,33 @@ const PrintersManagementView: React.FC = () => {
                         <Printer size={18} />
                       </div>
 
-                      <div className="flex items-center gap-2 flex-wrap min-w-0">
-                        <h2 className="text-sm sm:text-base font-extrabold text-gray-900 truncate">
+                      <div className="flex flex-col min-w-0">
+                        <h2 className="text-sm font-extrabold text-gray-900 truncate">
                           {printer.name}
                         </h2>
 
-                        <span
-                          className={clsx(
-                            'text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0',
-                            isActive
-                              ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                              : 'bg-rose-50 text-rose-700 border border-rose-200/80',
-                          )}
-                        >
-                          {isActive ? (
-                            <>
-                              <CheckCircle2 size={11} />
-                              <span>{t('admin:printers.status_active')}</span>
-                            </>
-                          ) : (
-                            <>
-                              <XCircle size={11} />
-                              <span>{t('admin:printers.status_inactive')}</span>
-                            </>
-                          )}
-                        </span>
+                        <div className="mt-1">
+                          <span
+                            className={clsx(
+                              'text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1 shrink-0',
+                              isActive
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                                : 'bg-rose-50 text-rose-700 border border-rose-200/80',
+                            )}
+                          >
+                            {isActive ? (
+                              <>
+                                <CheckCircle2 size={11} />
+                                <span>{t('admin:printers.status_active')}</span>
+                              </>
+                            ) : (
+                              <>
+                                <XCircle size={11} />
+                                <span>{t('admin:printers.status_inactive')}</span>
+                              </>
+                            )}
+                          </span>
+                        </div>
                       </div>
                     </div>
 

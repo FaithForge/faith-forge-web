@@ -12,7 +12,8 @@ import {
   EyeOff,
   Check,
   Copy,
-  CheckCheck
+  CheckCheck,
+  ArrowLeft,
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'sonner';
@@ -370,12 +371,12 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con Ã
     return (
       <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
         {/* Header */}
-        <div className="bg-primary text-primary-foreground p-4 sticky top-0 z-30 shadow-md flex items-center justify-between">
+        <div className="bg-primary text-primary-foreground p-4 sticky top-0 z-30 shadow-md flex items-center justify-between lg:hidden">
           <span className="font-bold text-base">Cuenta de Usuario Creada</span>
           <div className="w-6" />
         </div>
 
-        <div className="max-w-xl mx-auto p-4 sm:p-6 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-300">
+        <div className="max-w-2xl mx-auto p-4 sm:p-6 lg:py-8 flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-300">
           
           {/* Card de Ã‰xito y Resumen */}
           <div className="bg-white rounded-2xl p-6 border border-gray-200/80 shadow-xs text-center flex flex-col items-center">
@@ -478,9 +479,23 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con Ã
   // =========================================================================
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
-      <PageHeader title="Crear Usuario" onBack={handleBackClick} />
+      <PageHeader title="Crear Usuario" onBack={handleBackClick} className="lg:hidden" />
 
-      <div className="max-w-2xl mx-auto p-4 sm:p-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:py-8">
+        <div className="hidden lg:flex items-center gap-3 mb-6">
+          <button
+            type="button"
+            onClick={handleBackClick}
+            className="p-2 rounded-xl bg-white border border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Crear Usuario</h1>
+            <p className="text-xs text-gray-500">Registra un nuevo miembro, voluntario o cuenta de acceso en el sistema</p>
+          </div>
+        </div>
+
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-6">
           
           {/* Card 1: Foto de Perfil */}

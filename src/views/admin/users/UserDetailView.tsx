@@ -14,7 +14,8 @@ import {
   Clock,
   Layers,
   Award,
-  MapPin
+  MapPin,
+  ArrowLeft,
 } from 'lucide-react';
 import { FaWhatsapp } from 'react-icons/fa6';
 import { toast } from 'sonner';
@@ -252,13 +253,28 @@ const UserDetailView: React.FC = () => {
       <PageHeader
         title="Perfil de Usuario"
         onBack={() => navigate(APP_ROUTES.admin.users)}
+        className="lg:hidden"
       />
 
-      <div className="p-4 max-w-3xl mx-auto animate-in fade-in duration-300">
+      <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:py-8 flex flex-col gap-6 animate-in fade-in duration-300">
+        <div className="hidden lg:flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => navigate(APP_ROUTES.admin.users)}
+            className="p-2 rounded-xl bg-white border border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Perfil de Usuario</h1>
+            <p className="text-xs text-gray-500">Consulta los detalles, credenciales, membresía y permisos del usuario</p>
+          </div>
+        </div>
+
         {(!user || user.id !== id || loading) && <KidCheckInSkeleton />}
 
         {user && user.id === id && !loading && (
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-6">
             {/* Header Profile Card */}
             <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex gap-4 items-center">
@@ -382,8 +398,12 @@ const UserDetailView: React.FC = () => {
               </div>
             </div>
 
-            {/* Tarjeta: Datos del Usuario */}
-            <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+            {/* 2-Column Desktop Grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+              {/* Left Column (5 cols): Datos Personales + Credenciales */}
+              <div className="lg:col-span-5 flex flex-col gap-6">
+                {/* Tarjeta: Datos del Usuario */}
+                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
               <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-3.5">
                 <h3 className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
                   <UserCheck size={16} className="text-primary" /> Datos Personales y de Contacto
@@ -561,9 +581,12 @@ const UserDetailView: React.FC = () => {
                 </div>
               )}
             </div>
+          </div>
 
+          {/* Right Column (7 cols): Roles + Voluntariado + Permisos */}
+          <div className="lg:col-span-7 flex flex-col gap-6">
             {/* Tarjeta: Roles Asignados */}
-                <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
+              <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-100">
                   <div className="flex items-center justify-between pb-3 border-b border-gray-100 mb-4">
                     <div className="flex items-center gap-2">
                       <div className="w-7 h-7 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center">
@@ -951,8 +974,10 @@ const UserDetailView: React.FC = () => {
               )}
             </div>
           </div>
-        )}
+        </div>
       </div>
+    )}
+  </div>
 
       {/* Assign User to Ministry Modal */}
       <AssignUserMinistryModal

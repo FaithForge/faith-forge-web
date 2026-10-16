@@ -1,7 +1,7 @@
 import { EntityState, IChurchCampus, IChurchMeeting } from './Church';
 import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup } from './Ministry';
 import { IUser } from './User';
-import { UserExperienceEnum } from '../utils/auth';
+import { UserExperienceEnum, UserRole } from '../utils/auth';
 
 
 export const MinistryVolunteerStateEnum = {
@@ -34,6 +34,7 @@ export interface IVolunteer {
   id: string;
   userId: string;
   churchId?: string;
+  roles?: UserRole[];
   state?: MinistryVolunteerStateEnum;
   user?: Partial<IUser>;
   assignments?: IVolunteerAssignment[];
@@ -47,6 +48,7 @@ export interface IChurchMember {
   user?: Partial<IUser>;
   assignments?: IVolunteerAssignment[];
 }
+
 
 export interface IVolunteerAssignment {
   id: string;

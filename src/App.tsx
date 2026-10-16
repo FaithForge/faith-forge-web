@@ -80,13 +80,24 @@ const HubView = lazy(() => import('@/views/hub/HubView'));
 const KidGuardianDashboardView = lazy(
   () => import('@/views/kid-guardian/KidGuardianDashboardView')
 );
+const ChurchesManagementView = lazy(
+  () => import('@/views/super-admin/ChurchesManagementView')
+);
 import { isFeatureEnabled } from '@/config/features';
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
+import SuperAdminLayout from '@/components/layout/SuperAdminLayout';
 import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
 import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
 import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
+import {
+  resolveTenantHostContext,
+  applyChurchBrandingToDom,
+  getActiveTenantChurchId,
+} from '@/libs/utils/tenant';
+import { useResolveChurchTenantQuery } from '@/libs/state/redux/api/churchApi';
+import { setChurch } from '@/libs/state/redux/slices/church/churchCampus.slice';
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
@@ -164,18 +175,35 @@ const IndexRedirect = () => {
 function App() {
   const dispatch = useAppDispatch();
   const token = useAppSelector((state) => state.authSlice.token);
+  const hostContext = resolveTenantHostContext();
   useScreenWakeLock();
+
+  const { data: resolvedTenantChurch } = useResolveChurchTenantQuery(
+    {
+      slug: hostContext.tenantSlug || undefined,
+      host: hostContext.hostname || undefined,
+      churchId: import.meta.env.VITE_CHURCH_ID || undefined,
+    },
+    { skip: hostContext.isSuperAdminHost },
+  );
+
+  // Sync resolved church tenant branding and Redux state immediately (even before login)
+  useEffect(() => {
+    if (hostContext.isSuperAdminHost || !resolvedTenantChurch) return;
+    applyChurchBrandingToDom(resolvedTenantChurch);
+    dispatch(setChurch(resolvedTenantChurch));
+  }, [dispatch, hostContext.isSuperAdminHost, resolvedTenantChurch]);
 
   // Global bootstrap: Ensure church settings, campuses, and ministries (custom terminology)
   // are loaded as soon as an authenticated session is active.
   useEffect(() => {
-    if (!token) return;
-    const churchId = import.meta.env.VITE_CHURCH_ID;
+    if (!token || hostContext.isSuperAdminHost) return;
+    const churchId = resolvedTenantChurch?.id || getActiveTenantChurchId();
     if (churchId) dispatch(GetChurchById(churchId));
     dispatch(GetChurchCampuses());
     dispatch(GetMinistries());
     dispatch(FetchMyVolunteerPermissions());
-  }, [dispatch, token]);
+  }, [dispatch, token, hostContext.isSuperAdminHost, resolvedTenantChurch?.id]);
 
   // Request notification permissions on app startup
   useEffect(() => {
@@ -226,6 +254,39 @@ function App() {
       window.removeEventListener('storage', handleStorageChange);
     };
   }, [dispatch]);
+
+  if (hostContext.isSuperAdminHost) {
+    return (
+      <>
+        <NetworkStatusBanner />
+        <Toaster position="top-center" richColors swipeDirections={['top', 'left', 'right']} />
+        {import.meta.env.PROD && (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        )}
+        <BrowserRouter>
+          <ScrollToTop />
+          <Suspense fallback={<PageLoader />}>
+            <Routes>
+              <Route path={APP_ROUTES.auth.login} element={<LoginView />} />
+              <Route element={<PrivateRoute />}>
+                <Route element={<SuperAdminLayout />}>
+                  <Route path={APP_ROUTES.superAdmin.root} element={<ChurchesManagementView />} />
+                  <Route
+                    path={APP_ROUTES.superAdmin.churches}
+                    element={<ChurchesManagementView />}
+                  />
+                  <Route path="*" element={<Navigate to={APP_ROUTES.superAdmin.root} replace />} />
+                </Route>
+              </Route>
+            </Routes>
+          </Suspense>
+        </BrowserRouter>
+      </>
+    );
+  }
 
   return (
     <>

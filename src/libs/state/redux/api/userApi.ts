@@ -1,6 +1,5 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
 import {
-  IActivationTokenResponse,
   ICompleteAccountSetupPayload,
   ICompleteAccountSetupResponse,
   IInAppNotificationsResponse,
@@ -60,10 +59,7 @@ export const userApi = baseApi.injectEndpoints({
       }),
     }),
 
-    unsubscribePushNotification: builder.mutation<
-      { success: boolean },
-      { endpoint: string }
-    >({
+    unsubscribePushNotification: builder.mutation<{ success: boolean }, { endpoint: string }>({
       query: (payload) => ({
         microservice: MicroserviceEnum.User,
         url: '/push/unsubscribe',
@@ -116,17 +112,16 @@ export const userApi = baseApi.injectEndpoints({
       invalidatesTags: ['Notification'],
     }),
 
-    clearReadInAppNotifications: builder.mutation<
-      { success: boolean; deletedCount: number },
-      void
-    >({
-      query: () => ({
-        microservice: MicroserviceEnum.User,
-        url: '/user/notifications/read',
-        method: HttpRequestMethod.DELETE,
-      }),
-      invalidatesTags: ['Notification'],
-    }),
+    clearReadInAppNotifications: builder.mutation<{ success: boolean; deletedCount: number }, void>(
+      {
+        query: () => ({
+          microservice: MicroserviceEnum.User,
+          url: '/user/notifications/read',
+          method: HttpRequestMethod.DELETE,
+        }),
+        invalidatesTags: ['Notification'],
+      },
+    ),
 
     getPendingTerms: builder.query<
       {
@@ -225,5 +220,3 @@ export const {
   useLazyVerifyActivationTokenQuery,
   useCompleteAccountSetupMutation,
 } = userApi;
-
-

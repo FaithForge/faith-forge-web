@@ -1,6 +1,7 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { ChurchMeetingStateEnum, ChurchPrinterStateEnum, IChurch } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { getActiveTenantChurchId } from '@/libs/utils/tenant';
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { RootState } from '../../store';
@@ -10,13 +11,14 @@ export const GetChurchCampuses = createAsyncThunk(
   async (payload: { force?: boolean } | void, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
+    const activeChurchId = state.churchCampusSlice.church?.id || getActiveTenantChurchId();
     const response = (
       await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
         url: `/church-campus`,
         options: {
-          params: { churchId: import.meta.env.VITE_CHURCH_ID },
+          params: activeChurchId ? { churchId: activeChurchId } : {},
           headers: { Authorization: `Bearer ${token}` },
           forceRefresh: true,
           cache: false,
@@ -201,11 +203,18 @@ export const GetChurchPrinters = createAsyncThunk(
 export const CreateChurchCampus = createAsyncThunk(
   'church/CreateChurchCampus',
   async (
-    payload: { name: string; description?: string; position?: number; state?: string; kidAttendanceFlowMode?: string },
+    payload: {
+      name: string;
+      description?: string;
+      position?: number;
+      state?: string;
+      kidAttendanceFlowMode?: string;
+    },
     { getState, rejectWithValue, dispatch },
   ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
+    const activeChurchId = state.churchCampusSlice.church?.id || getActiveTenantChurchId();
     try {
       await microserviceApiRequest({
         microservice: MS.Church,
@@ -214,7 +223,7 @@ export const CreateChurchCampus = createAsyncThunk(
         options: {
           data: {
             ...payload,
-            churchId: import.meta.env.VITE_CHURCH_ID,
+            churchId: activeChurchId,
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -238,7 +247,14 @@ export const CreateChurchCampus = createAsyncThunk(
 export const UpdateChurchCampus = createAsyncThunk(
   'church/UpdateChurchCampus',
   async (
-    payload: { id: string; name?: string; description?: string; position?: number; state?: string; kidAttendanceFlowMode?: string },
+    payload: {
+      id: string;
+      name?: string;
+      description?: string;
+      position?: number;
+      state?: string;
+      kidAttendanceFlowMode?: string;
+    },
     { getState, rejectWithValue, dispatch },
   ) => {
     const { id, ...data } = payload;
@@ -648,5 +664,3 @@ export const GetChurchById = createAsyncThunk(
     }
   },
 );
-
-

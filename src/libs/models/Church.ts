@@ -1,6 +1,6 @@
- 
 import { Days } from '../common-types/constants';
 import { ReduxDefaultState } from './Redux';
+import type { IUser } from './User';
 
 export const EntityState = {
   ACTIVE: 'ACTIVE',
@@ -36,14 +36,45 @@ export enum KidAttendanceFlowModeEnum {
   FULL_FLOW = 'FULL_FLOW',
 }
 
+export interface IChurchBranding {
+  appName?: string;
+  shortName?: string;
+  primaryColor?: string;
+  themeColor?: string;
+  backgroundColor?: string;
+  logoUrl?: string;
+  icon192Url?: string;
+  icon512Url?: string;
+  maskableIconUrl?: string;
+  appleTouchIconUrl?: string;
+}
+
 export interface IChurch {
   id: string;
   name: string;
+  slug?: string;
+  customDomains?: string[];
+  branding?: IChurchBranding;
   description?: string;
   state?: EntityState;
   terminologyOverrides?: Record<string, string>;
   ministryTerminologyOverrides?: Record<string, Record<string, string>>;
   campuses?: IChurchCampus[];
+}
+
+export interface CreateChurchPayload {
+  name: string;
+  slug?: string;
+  customDomains?: string[];
+  branding?: IChurchBranding;
+  description?: string;
+  state?: EntityState;
+  terminologyOverrides?: Record<string, string>;
+  ministryTerminologyOverrides?: Record<string, Record<string, string>>;
+}
+
+export interface UpdateChurchPayload extends Partial<CreateChurchPayload> {
+  id: string;
 }
 
 export interface IChurchCampus {
@@ -56,6 +87,40 @@ export interface IChurchCampus {
   kidAttendanceFlowMode?: KidAttendanceFlowModeEnum;
   meetings?: IChurchMeeting[];
   printers?: IChurchPrinter[];
+}
+
+export enum ChurchStaffRole {
+  CHURCH_ADMIN = 'CHURCH_ADMIN',
+  CHURCH_STAFF = 'CHURCH_STAFF',
+}
+
+export const ChurchStaffStateEnum = {
+  ...EntityState,
+} as const;
+export type ChurchStaffStateEnum =
+  (typeof ChurchStaffStateEnum)[keyof typeof ChurchStaffStateEnum];
+
+export interface IChurchStaff {
+  id: string;
+  userId: string;
+  churchId: string;
+  roles: ChurchStaffRole[];
+  state?: ChurchStaffStateEnum;
+  createdAt?: string;
+  updatedAt?: string;
+  user?: Partial<IUser>;
+  church?: IChurch;
+}
+
+export interface UpdateChurchStaffRolesPayload {
+  userId: string;
+  churchId: string;
+  roles: ChurchStaffRole[];
+}
+
+export interface DeleteChurchStaffPayload {
+  userId: string;
+  churchId: string;
 }
 
 export interface IChurchMeeting {

@@ -18,9 +18,10 @@ const VolunteerApplicationsView: React.FC = () => {
       <PageHeader
         title="Solicitudes de Servidores"
         onBack={() => navigate(APP_ROUTES.admin.root)}
+        className="lg:hidden"
       />
 
-      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-5 flex-1 w-full">
         <VolunteerApplicationsTab />
       </div>
     </div>

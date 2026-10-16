@@ -1,0 +1,387 @@
+import React from 'react';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
+import clsx from 'clsx';
+import {
+  LayoutDashboard,
+  MapPin,
+  CalendarClock,
+  Printer,
+  Layers,
+  UserCheck,
+  Users,
+  UserPlus,
+  Sparkles,
+  Database,
+  ChevronLeft,
+  ChevronRight,
+  LayoutGrid,
+  Crown,
+  X,
+  ExternalLink,
+} from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { APP_ROUTES } from '@/config/routes';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import { UserRole } from '@/libs/utils/auth';
+import { APP_VERSION } from '@/constants/version';
+
+interface NavItem {
+  id: string;
+  label: string;
+  to: string;
+  icon: React.ElementType;
+  badge?: string;
+  exact?: boolean;
+}
+
+interface NavSection {
+  title: string;
+  items: NavItem[];
+}
+
+interface AdminSidebarProps {
+  collapsed?: boolean;
+  onToggleCollapse?: () => void;
+  onCloseMobile?: () => void;
+  isMobileDrawer?: boolean;
+  onOpenTerminology: () => void;
+  onOpenClearCache: () => void;
+  onOpenChangelog: () => void;
+}
+
+/**
+ * Sidebar navigation component for church administration desktop layout.
+ *
+ * @param {AdminSidebarProps} props - Component properties.
+ * @returns {JSX.Element} Rendered sidebar.
+ */
+export const AdminSidebar: React.FC<AdminSidebarProps> = ({
+  collapsed = false,
+  onToggleCollapse,
+  onCloseMobile,
+  isMobileDrawer = false,
+  onOpenTerminology,
+  onOpenClearCache,
+  onOpenChangelog,
+}) => {
+  const { t } = useTranslation(['admin', 'common']);
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  const user = useAppSelector((state) => state.authSlice.user);
+  const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
+  const activeChurch = useAppSelector((state) => state.churchCampusSlice.church);
+
+  const campusesTerm = useChurchTerm('campuses');
+  const meetingsTerm = useChurchTerm('meetings');
+  const volunteersTerm = useChurchTerm('volunteers');
+
+  const isSuperAdmin = (user?.roles || []).includes(UserRole.SUPER_ADMIN);
+  const isAdmin = (user?.roles || []).includes(UserRole.ADMIN);
+  const hasMultipleSpaces = experiences.length > 1;
+
+  const roleLabel = isSuperAdmin
+    ? 'Super Administrador'
+    : isAdmin
+    ? 'Administrador'
+    : 'Staff';
+
+  const sections: NavSection[] = [
+    {
+      title: t('admin:dashboard.title', { defaultValue: 'Principal' }),
+      items: [
+        {
+          id: 'dashboard',
+          label: t('common:navigation.dashboard', { defaultValue: 'Dashboard' }),
+          to: APP_ROUTES.admin.root,
+          icon: LayoutDashboard,
+          exact: true,
+        },
+      ],
+    },
+    {
+      title: t('admin:dashboard.facilities_cat', {
+        campuses: campusesTerm,
+        defaultValue: 'Instalaciones',
+      }),
+      items: [
+        {
+          id: 'campuses',
+          label: campusesTerm,
+          to: APP_ROUTES.admin.campuses,
+          icon: MapPin,
+        },
+        {
+          id: 'church-meetings',
+          label: meetingsTerm,
+          to: APP_ROUTES.admin.churchMeetings,
+          icon: CalendarClock,
+        },
+        {
+          id: 'printers',
+          label: t('admin:printers.header_title', { defaultValue: 'Impresoras' }),
+          to: APP_ROUTES.admin.printers,
+          icon: Printer,
+        },
+      ],
+    },
+    {
+      title: t('admin:dashboard.ministries_cat', {
+        volunteers: volunteersTerm,
+        defaultValue: 'Ministerios',
+      }),
+      items: [
+        {
+          id: 'ministries',
+          label: t('admin:ministry_workspace.title', { defaultValue: 'Ministerios' }),
+          to: APP_ROUTES.admin.ministries,
+          icon: Layers,
+        },
+        {
+          id: 'volunteer-applications',
+          label: t('admin:dashboard.volunteer_applications_title', {
+            volunteers: volunteersTerm,
+            defaultValue: 'Solicitudes',
+          }),
+          to: APP_ROUTES.admin.volunteerApplications,
+          icon: UserCheck,
+        },
+      ],
+    },
+    {
+      title: t('admin:dashboard.user_management_cat', { defaultValue: 'Personas' }),
+      items: [
+        {
+          id: 'users',
+          label: t('admin:dashboard.users_directory_title', {
+            volunteers: volunteersTerm,
+            defaultValue: 'Directorio de Personas',
+          }),
+          to: APP_ROUTES.admin.users,
+          icon: Users,
+        },
+        {
+          id: 'create-user',
+          label: t('admin:dashboard.create_user_title', { defaultValue: 'Nuevo Usuario' }),
+          to: APP_ROUTES.admin.createUser,
+          icon: UserPlus,
+        },
+      ],
+    },
+  ];
+
+  const handleNavClick = () => {
+    if (isMobileDrawer && onCloseMobile) {
+      onCloseMobile();
+    }
+  };
+
+  const isItemActive = (item: NavItem) => {
+    if (item.exact) {
+      return location.pathname === item.to;
+    }
+    return location.pathname.startsWith(item.to);
+  };
+
+  return (
+    <aside
+      className={clsx(
+        'h-full flex flex-col bg-white border-r border-slate-200/80 transition-all duration-300 select-none z-30 shrink-0',
+        collapsed && !isMobileDrawer ? 'w-20' : 'w-72'
+      )}
+    >
+      {/* Sidebar Header: Brand & Church Name */}
+      <div className="h-16 px-4 flex items-center justify-between border-b border-slate-100 shrink-0">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-blue-700 text-white flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
+            <Crown className="w-5 h-5 text-amber-300 fill-amber-300" />
+          </div>
+          {(!collapsed || isMobileDrawer) && (
+            <div className="min-w-0 flex flex-col">
+              <span className="font-extrabold text-sm text-slate-900 truncate leading-tight tracking-tight">
+                {activeChurch?.name || 'Administración'}
+              </span>
+              <span className="text-[11px] font-semibold text-primary truncate mt-0.5">
+                {roleLabel}
+              </span>
+            </div>
+          )}
+        </div>
+
+        {isMobileDrawer ? (
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
+            title={t('common:actions.close', { defaultValue: 'Cerrar' })}
+          >
+            <X size={18} />
+          </button>
+        ) : (
+          onToggleCollapse && (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              className={clsx(
+                'w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors',
+                collapsed && 'mx-auto'
+              )}
+              title={collapsed ? 'Expandir barra lateral' : 'Colapsar barra lateral'}
+            >
+              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+            </button>
+          )
+        )}
+      </div>
+
+      {/* Navigation Sections */}
+      <div className="flex-1 overflow-y-auto px-3 py-4 space-y-6">
+        {sections.map((section) => (
+          <div key={section.title} className="space-y-1">
+            {(!collapsed || isMobileDrawer) && (
+              <h2 className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+                {section.title}
+              </h2>
+            )}
+            <div className="space-y-0.5">
+              {section.items.map((item) => {
+                const ItemIcon = item.icon;
+                const active = isItemActive(item);
+
+                return (
+                  <NavLink
+                    key={item.id}
+                    to={item.to}
+                    onClick={handleNavClick}
+                    title={collapsed && !isMobileDrawer ? item.label : undefined}
+                    className={clsx(
+                      'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                      active
+                        ? 'bg-primary/10 text-primary font-bold shadow-2xs'
+                        : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900',
+                      collapsed && !isMobileDrawer && 'justify-center px-0'
+                    )}
+                  >
+                    <div
+                      className={clsx(
+                        'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                        active
+                          ? 'bg-primary text-white shadow-xs'
+                          : 'text-slate-500 group-hover:text-slate-800'
+                      )}
+                    >
+                      <ItemIcon size={18} />
+                    </div>
+
+                    {(!collapsed || isMobileDrawer) && (
+                      <span className="truncate flex-1">{item.label}</span>
+                    )}
+
+                    {(!collapsed || isMobileDrawer) && item.badge && (
+                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+
+        {/* Configuration Actions Section */}
+        <div className="pt-2 border-t border-slate-100 space-y-1">
+          {(!collapsed || isMobileDrawer) && (
+            <h2 className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+              {t('admin:dashboard.system_cat', { defaultValue: 'Ajustes' })}
+            </h2>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              handleNavClick();
+              onOpenTerminology();
+            }}
+            title={collapsed && !isMobileDrawer ? t('admin:dashboard.terminology_title') : undefined}
+            className={clsx(
+              'w-full group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors',
+              collapsed && !isMobileDrawer && 'justify-center px-0'
+            )}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-amber-500 group-hover:scale-110 transition-transform">
+              <Sparkles size={18} />
+            </div>
+            {(!collapsed || isMobileDrawer) && (
+              <span className="truncate flex-1 text-left">
+                {t('admin:dashboard.terminology_title', { defaultValue: 'Vocabulario' })}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              handleNavClick();
+              onOpenClearCache();
+            }}
+            title={collapsed && !isMobileDrawer ? t('admin:dashboard.clear_cache_title') : undefined}
+            className={clsx(
+              'w-full group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors',
+              collapsed && !isMobileDrawer && 'justify-center px-0'
+            )}
+          >
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-cyan-600 group-hover:scale-110 transition-transform">
+              <Database size={18} />
+            </div>
+            {(!collapsed || isMobileDrawer) && (
+              <span className="truncate flex-1 text-left">
+                {t('admin:dashboard.clear_cache_title', { defaultValue: 'Limpiar Caché' })}
+              </span>
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* Sidebar Footer: App Switcher & Version */}
+      <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2 shrink-0">
+        {hasMultipleSpaces && (
+          <button
+            type="button"
+            onClick={() => navigate(APP_ROUTES.hub)}
+            title={collapsed && !isMobileDrawer ? 'Cambiar a Espacio Móvil' : undefined}
+            className={clsx(
+              'w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 shadow-2xs hover:bg-slate-100 transition-all cursor-pointer',
+              collapsed && !isMobileDrawer && 'justify-center px-0'
+            )}
+          >
+            <LayoutGrid size={16} className="text-primary shrink-0" />
+            {(!collapsed || isMobileDrawer) && (
+              <span className="truncate flex-1 text-left">Cambiar de espacio</span>
+            )}
+            {(!collapsed || isMobileDrawer) && <ExternalLink size={13} className="text-slate-400" />}
+          </button>
+        )}
+
+        {(!collapsed || isMobileDrawer) ? (
+          <button
+            type="button"
+            onClick={onOpenChangelog}
+            className="w-full text-center text-[11px] text-slate-400 hover:text-slate-600 transition-colors py-1 cursor-pointer"
+          >
+            v{APP_VERSION} · <span className="underline decoration-dotted">Ver novedades</span>
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={onOpenChangelog}
+            title={`v${APP_VERSION} - Novedades`}
+            className="w-full text-center text-[10px] font-bold text-slate-400 hover:text-slate-600 transition-colors py-1 cursor-pointer"
+          >
+            v{APP_VERSION}
+          </button>
+        )}
+      </div>
+    </aside>
+  );
+};

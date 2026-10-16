@@ -8,6 +8,11 @@ export const APP_ROUTES = {
     signupConfirmation: '/signup/confirmation',
   },
 
+  superAdmin: {
+    root: '/',
+    churches: '/churches',
+  },
+
   admin: {
     root: '/admin',
     campuses: '/admin/campuses',

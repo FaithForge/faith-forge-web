@@ -1,6 +1,13 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
 import {
   GetMinistryWorkspaceArgs,
+  IChurch,
+  CreateChurchPayload,
+  UpdateChurchPayload,
+  IChurchMember,
+  IChurchStaff,
+  UpdateChurchStaffRolesPayload,
+  DeleteChurchStaffPayload,
   IChurchCampus,
   IChurchMeeting,
   IChurchPrinter,
@@ -21,6 +28,7 @@ import {
   RequestPresignedReportUploadUrlPayload,
   PresignedUploadUrlResponse,
 } from '@/libs/models';
+import { getActiveTenantChurchId } from '@/libs/utils/tenant';
 
 import { baseApi } from './baseApi';
 
@@ -36,6 +44,25 @@ export interface GetChurchCampusesArgs {
   churchId?: string;
 }
 
+export interface ResolveChurchTenantArgs {
+  slug?: string;
+  host?: string;
+  churchId?: string;
+}
+
+export interface GetChurchesArgs {
+  page?: number;
+  limit?: number;
+  order?: 'ASC' | 'DESC';
+}
+
+export interface GetChurchMembersArgs {
+  churchId?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}
+
 export type CacheScope = 'all' | 'printers' | 'services' | 'registrations';
 
 export interface ClearCacheArgs {
@@ -48,6 +75,182 @@ export interface ClearCacheArgs {
  */
 export const churchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
+    resolveChurchTenant: builder.query<IChurch | null, ResolveChurchTenantArgs | void>({
+      query: (args) => {
+        const params: Record<string, string> = {};
+        if (args?.slug) params.slug = args.slug;
+        if (args?.host) params.host = args.host;
+        if (args?.churchId) params.churchId = args.churchId;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/church/public/resolve',
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      providesTags: (result) =>
+        result ? [{ type: 'Church', id: result.id }, { type: 'Church', id: 'CURRENT' }] : [{ type: 'Church', id: 'CURRENT' }],
+    }),
+
+    getChurches: builder.query<{ data: IChurch[]; total: number }, GetChurchesArgs | void>({
+      query: (args) => {
+        const params: Record<string, string | number> = {
+          page: args?.page ?? 1,
+          limit: args?.limit ?? 100,
+          order: args?.order ?? 'ASC',
+        };
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/church',
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      transformResponse: (response: { data?: IChurch[]; total?: number } | IChurch[]) => {
+        if (Array.isArray(response)) {
+          return { data: response, total: response.length };
+        }
+        return {
+          data: response?.data || [],
+          total: response?.total ?? (response?.data?.length || 0),
+        };
+      },
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'Church' as const, id })),
+              { type: 'Church', id: 'LIST' },
+            ]
+          : [{ type: 'Church', id: 'LIST' }],
+    }),
+
+    createChurch: builder.mutation<IChurch, CreateChurchPayload>({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+      invalidatesTags: [{ type: 'Church', id: 'LIST' }],
+    }),
+
+    updateChurch: builder.mutation<IChurch, UpdateChurchPayload>({
+      query: ({ id, ...data }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church/${id}`,
+        method: HttpRequestMethod.PATCH,
+        data,
+      }),
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'Church', id: 'LIST' },
+        { type: 'Church', id: arg.id },
+        { type: 'Church', id: 'CURRENT' },
+      ],
+    }),
+
+    uploadChurchBrandingLogo: builder.mutation<
+      IChurch,
+      { churchId: string; file: File }
+    >({
+      query: ({ churchId, file }) => {
+        const formData = new FormData();
+        formData.append('file', file);
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: `/church/${churchId}/branding/logo`,
+          method: HttpRequestMethod.POST,
+          data: formData,
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        };
+      },
+      invalidatesTags: (_result, _error, arg) => [
+        { type: 'Church', id: 'LIST' },
+        { type: 'Church', id: arg.churchId },
+        { type: 'Church', id: 'CURRENT' },
+      ],
+    }),
+
+    getChurchMembers: builder.query<
+      { data: IChurchMember[]; total: number },
+      GetChurchMembersArgs | void
+    >({
+      query: (args) => {
+        const params: Record<string, string | number> = {
+          page: args?.page ?? 1,
+          limit: args?.limit ?? 100,
+        };
+        if (args?.churchId) params.churchId = args.churchId;
+        if (args?.search) params.search = args.search;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/church-member',
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      transformResponse: (response: { data?: IChurchMember[]; total?: number } | IChurchMember[]) => {
+        if (Array.isArray(response)) {
+          return { data: response, total: response.length };
+        }
+        return {
+          data: response?.data || [],
+          total: response?.total ?? (response?.data?.length || 0),
+        };
+      },
+      providesTags: (result) =>
+        result?.data
+          ? [
+              ...result.data.map(({ id }) => ({ type: 'ChurchMember' as const, id })),
+              { type: 'ChurchMember', id: 'LIST' },
+            ]
+          : [{ type: 'ChurchMember', id: 'LIST' }],
+    }),
+
+    getChurchStaff: builder.query<IChurchStaff[], { churchId: string }>({
+      query: ({ churchId }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-staff',
+        method: HttpRequestMethod.GET,
+        params: { churchId },
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'ChurchStaff' as const, id })),
+              { type: 'ChurchStaff', id: 'LIST' },
+            ]
+          : [{ type: 'ChurchStaff', id: 'LIST' }],
+    }),
+
+    updateChurchStaffRoles: builder.mutation<
+      IChurchStaff,
+      UpdateChurchStaffRolesPayload
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-staff/roles',
+        method: HttpRequestMethod.PUT,
+        data,
+      }),
+      invalidatesTags: [{ type: 'ChurchStaff', id: 'LIST' }, 'UserOverview'],
+    }),
+
+    deleteChurchStaff: builder.mutation<
+      void,
+      DeleteChurchStaffPayload
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-staff',
+        method: HttpRequestMethod.DELETE,
+        data,
+      }),
+      invalidatesTags: [{ type: 'ChurchStaff', id: 'LIST' }, 'UserOverview'],
+    }),
+
+
     getMinistryWorkspaceOverview: builder.query<
       IMinistryWorkspaceOverview,
       GetMinistryWorkspaceArgs | void
@@ -88,7 +291,7 @@ export const churchApi = baseApi.injectEndpoints({
 
     getChurchCampuses: builder.query<IChurchCampus[], GetChurchCampusesArgs | void>({
       query: (args) => {
-        const churchId = args?.churchId || import.meta.env.VITE_CHURCH_ID;
+        const churchId = args?.churchId || getActiveTenantChurchId();
         return {
           microservice: MicroserviceEnum.Church,
           url: '/church-campus',
@@ -423,6 +626,19 @@ export const churchApi = baseApi.injectEndpoints({
 });
 
 export const {
+  useResolveChurchTenantQuery,
+  useLazyResolveChurchTenantQuery,
+  useGetChurchesQuery,
+  useLazyGetChurchesQuery,
+  useCreateChurchMutation,
+  useUpdateChurchMutation,
+  useUploadChurchBrandingLogoMutation,
+  useGetChurchMembersQuery,
+  useLazyGetChurchMembersQuery,
+  useGetChurchStaffQuery,
+  useLazyGetChurchStaffQuery,
+  useUpdateChurchStaffRolesMutation,
+  useDeleteChurchStaffMutation,
   useGetMinistryWorkspaceOverviewQuery,
   useLazyGetMinistryWorkspaceOverviewQuery,
   useGetChurchMeetingsQuery,

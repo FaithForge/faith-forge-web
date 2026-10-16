@@ -116,6 +116,28 @@
         window.__deferredPwaPrompt = e;
         window.dispatchEvent(new CustomEvent('pwa-prompt-available'));
       });
+      try {
+        var cachedBranding = localStorage.getItem('ff_tenant_branding_cache');
+        if (cachedBranding) {
+          var parsedBranding = JSON.parse(cachedBranding);
+          if (parsedBranding && parsedBranding.appName) {
+            document.title = parsedBranding.appName;
+          }
+          if (parsedBranding && parsedBranding.logoUrl) {
+            var splashImg = document.querySelector('.app-splash-logo');
+            if (splashImg) {
+              splashImg.src = parsedBranding.logoUrl;
+              splashImg.alt = parsedBranding.appName || 'Logo';
+            }
+          }
+          if (parsedBranding && parsedBranding.primaryColor) {
+            var loaderBar = document.querySelector('.app-splash-loader-bar');
+            if (loaderBar) {
+              loaderBar.style.background = parsedBranding.primaryColor;
+            }
+          }
+        }
+      } catch (e) {}
       setTimeout(function() {
         var fallback = document.getElementById('app-splash-fallback');
         if (fallback) {

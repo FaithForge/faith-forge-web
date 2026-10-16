@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Loader2, UserPlus, Users, Award, ChevronDown } from 'lucide-react';
+import { Loader2, UserPlus, Users, Award, ChevronDown, Sparkles } from 'lucide-react';
 import Input from '@/components/ui/Input';
 import Cell from '@/components/ui/Cell';
 import Button from '@/components/ui/Button';
@@ -157,21 +157,55 @@ const UserManagementView: React.FC = () => {
       <PageHeader
         title="Gestión de Usuarios"
         onBack={() => navigate(APP_ROUTES.admin.root)}
+        className="lg:hidden"
         rightAction={rightHeaderAction}
       />
 
-      <div className="p-3 sm:p-4 max-w-4xl mx-auto flex flex-col gap-3 flex-1 w-full">
-        {/* Search Bar (scrolls with content, revealed as lupa in TopBar on scroll) */}
-        <div className="py-1">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-5 flex-1 w-full">
+        {/* Header Summary Banner */}
+        <div className="bg-white rounded-2xl p-4 sm:p-5 border border-gray-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <div className="w-10 h-10 sm:w-11 sm:h-11 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0">
+              <Users size={20} />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-[11px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">
+                <Sparkles size={12} />
+                <span>Directorio Central</span>
+              </div>
+              <h1 className="text-lg sm:text-xl font-extrabold text-gray-900 tracking-tight truncate">
+                Gestión de Usuarios
+              </h1>
+              <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+                Administra feligreses, voluntarios y roles de acceso a la congregación
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-100 w-full sm:w-auto justify-between sm:justify-end">
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => navigate(APP_ROUTES.admin.createUser)}
+              className="hidden sm:inline-flex items-center gap-1.5 text-xs shadow-xs"
+            >
+              <UserPlus size={15} />
+              <span>Nuevo Usuario</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Search Bar */}
+        <div className="w-full">
           <Input
             ref={searchInputRef}
             icon="search"
-            placeholder="Buscar usuario por nombre o documento"
+            placeholder="Buscar usuario por nombre o documento..."
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
             onClear={handleClearSearch}
             wrapperClassName="mb-0"
-            className="border-0 shadow-sm text-base focus:ring-0 transition-colors bg-white"
+            className="border-gray-200 shadow-2xs text-sm placeholder:text-gray-400 bg-white"
           />
         </div>
 
@@ -205,14 +239,13 @@ const UserManagementView: React.FC = () => {
             )}
 
             {!loading && users.length > 0 && (
-              <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
+              <div className="grid grid-cols-1 xl:grid-cols-2 gap-3 w-full">
                 {users.map((user) => {
                   const rolesCount =
                     user.roles?.filter((r) => r !== UserRole.USER && (r as string) !== 'USER').length || 0;
                   const isVolunteer = user.roles?.some(
                     (r) => (r as string) === 'VOLUNTEER' || r.startsWith('KID_'),
                   );
-                  const isInactive = user.state === UserState.DISABLE || user.state === UserState.INACTIVE;
 
                   const badgeElement = (
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -257,19 +290,23 @@ const UserManagementView: React.FC = () => {
                   }`;
 
                   return (
-                    <Cell
+                    <div
                       key={user.id}
-                      title={capitalizeWords(`${user.firstName} ${user.lastName}`)}
-                      subtitle={subtitleText}
-                      gender={user.gender === 'F' ? 'F' : 'M'}
-                      iconType="user"
-                      photoUrl={user.photoUrl}
-                      badge={badgeElement}
-                      onClick={() => {
-                        dispatch(updateCurrentUser(user));
-                        navigate(APP_ROUTES.admin.userDetail(user.id));
-                      }}
-                    />
+                      className="bg-white rounded-2xl border border-gray-200/80 shadow-2xs hover:shadow-xs transition-all overflow-hidden"
+                    >
+                      <Cell
+                        title={capitalizeWords(`${user.firstName} ${user.lastName}`)}
+                        subtitle={subtitleText}
+                        gender={user.gender === 'F' ? 'F' : 'M'}
+                        iconType="user"
+                        photoUrl={user.photoUrl}
+                        badge={badgeElement}
+                        onClick={() => {
+                          dispatch(updateCurrentUser(user));
+                          navigate(APP_ROUTES.admin.userDetail(user.id));
+                        }}
+                      />
+                    </div>
                   );
                 })}
               </div>

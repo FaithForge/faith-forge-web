@@ -9,7 +9,8 @@ import {
   RotateCcw,
   CheckCircle2,
   User as UserIcon,
-  Loader2
+  Loader2,
+  ArrowLeft,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -307,7 +308,7 @@ const UpdateUserView: React.FC = () => {
   if (isLoadingUser) {
     return (
       <div className="min-h-full flex-1 w-full bg-slate-50 pb-20">
-        <PageHeader title="Editar Usuario" onBack={handleBack} />
+        <PageHeader title="Editar Usuario" onBack={handleBack} className="lg:hidden" />
         <div className="flex justify-center items-center py-24">
           <Loader2 className="animate-spin text-primary" size={32} />
         </div>
@@ -317,9 +318,22 @@ const UpdateUserView: React.FC = () => {
 
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
-      <PageHeader title="Editar Usuario" onBack={handleBack} />
+      <PageHeader title="Editar Usuario" onBack={handleBack} className="lg:hidden" />
 
-      <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
+      <div className="max-w-4xl mx-auto p-4 sm:p-6 lg:py-8 flex flex-col gap-6">
+        <div className="hidden lg:flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleBack}
+            className="p-2 rounded-xl bg-white border border-gray-200/80 text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition-all shadow-2xs cursor-pointer"
+          >
+            <ArrowLeft size={18} />
+          </button>
+          <div>
+            <h1 className="text-xl font-extrabold text-gray-900 tracking-tight">Editar Usuario</h1>
+            <p className="text-xs text-gray-500">Modifica los datos personales, de contacto y el estado de la cuenta</p>
+          </div>
+        </div>
         
         {/* Header Card */}
         <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">

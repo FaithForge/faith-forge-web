@@ -30,7 +30,10 @@ export type AppCapability =
   | 'classroom:manage'
   | 'classroom:view-assigned-only'
   // Dashboards & Analítica
-  | 'dashboard:view-group-coordinator';
+  | 'dashboard:view-group-coordinator'
+  // Plataforma Multi-Tenant & Configuración de Iglesia
+  | 'platform:manage-churches'
+  | 'church:manage-settings';
 
 /**
  * Contexto mínimo necesario para resolver capabilities.
@@ -107,6 +110,11 @@ export const hasCapability = (cap: AppCapability, ctx: CapabilityContext): boole
 
     case 'dashboard:view-group-coordinator':
       return ctx.isSuperAdmin || ctx.isAdmin || ctx.isAreaCoordinator || ctx.isGroupCoordinator;
+
+    case 'platform:manage-churches':
+      return ctx.isSuperAdmin;
+    case 'church:manage-settings':
+      return ctx.isSuperAdmin || ctx.isAdmin;
 
     default:
       return false;

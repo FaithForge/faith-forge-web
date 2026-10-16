@@ -227,6 +227,7 @@ export interface ICreateUser {
   birthday?: string | Date;
   gender: UserGenderCode | string;
   healthSecurityEntity?: string;
+  churchId?: string;
 }
 
 /** Interface for user account creation payload (POST /user/account) */

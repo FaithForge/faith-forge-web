@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import { useAppSelector } from '@/libs/state/redux/hooks';
-import { AppRole, ChurchRole, UserRole } from '@/libs/utils/auth';
+import { AppRole, ChurchRole, ChurchStaffRole, UserRole } from '@/libs/utils/auth';
 import { AppCapability, hasCapability } from '@/libs/utils/auth/capabilities';
 import { VolunteerRole } from '@/libs/models/Volunteer';
 
@@ -73,11 +73,21 @@ export const usePermissions = () => {
   );
 
   const isAccountSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
-  const isAccountAdmin = isAccountSuperAdmin || userRoles.includes(UserRole.ADMIN);
+  const isAccountAdmin =
+    isAccountSuperAdmin ||
+    userRoles.includes(UserRole.ADMIN) ||
+    userRoles.includes(ChurchStaffRole.CHURCH_ADMIN);
 
   const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN) || (!isExplicitScopedRole && isAccountSuperAdmin);
-  const isAdmin = hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN) || (!isExplicitScopedRole && isAccountAdmin);
-  const isStaff = isAdmin || activeRoles.has(UserRole.STAFF) || (!isExplicitScopedRole && userRoles.includes(UserRole.STAFF));
+  const isAdmin =
+    hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN, ChurchStaffRole.CHURCH_ADMIN) ||
+    (!isExplicitScopedRole && isAccountAdmin);
+  const isStaff =
+    isAdmin ||
+    activeRoles.has(UserRole.STAFF) ||
+    activeRoles.has(ChurchStaffRole.CHURCH_STAFF) ||
+    (!isExplicitScopedRole &&
+      (userRoles.includes(UserRole.STAFF) || userRoles.includes(ChurchStaffRole.CHURCH_STAFF)));
   const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN) || (!isExplicitScopedRole && userRoles.includes(ChurchRole.MINISTRY_ADMIN));
 
   const isAreaCoordinator =

@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/manifest.webmanifest",
+      "destination": "/api/manifest"
+    },
+    {
+      "source": "/manifest.json",
+      "destination": "/api/manifest"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }

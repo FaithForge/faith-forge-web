@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { 
   CalendarClock, 
@@ -38,7 +38,6 @@ import SelectSearch from '@/components/ui/SelectSearch';
 import Button from '@/components/ui/Button';
 import ChurchMeetingModal from './components/ChurchMeetingModal';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
-
 
 // ---------------------------------------------------------------------------
 // Helper Constants and Dictionaries
@@ -151,24 +150,23 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
     [ChurchMeetingStateEnum.DELETED]: {
       label: t('admin:meetings.status_deleted'),
       shortLabel: t('admin:meetings.status_deleted'),
-      icon: Trash2,
-      activeClass: 'bg-gray-600 text-white border-gray-600 shadow-xs',
-      badgeClass: 'bg-gray-50 text-gray-700 border border-gray-200/80',
-      textClass: 'text-gray-600',
+      icon: XCircle,
+      activeClass: 'bg-slate-400 text-white border-slate-400',
+      badgeClass: 'bg-slate-50 text-slate-700 border border-slate-200/80',
+      textClass: 'text-slate-500',
     },
   };
 
-   
-  const m = meeting as any;
-  const initTime = formatTime(m.initialRegistrationHour ?? m.initialHour);
-  const finalTime = formatTime(m.finalRegistrationHour ?? m.finalHour);
   const config = stateConfig[currentState] || stateConfig[ChurchMeetingStateEnum.ACTIVE];
   const CurrentIcon = config.icon;
+
+  const initTime = formatTime(meeting.initialRegistrationHour);
+  const finalTime = formatTime(meeting.finalRegistrationHour);
 
   return (
     <div
       className={clsx(
-        'p-4 sm:p-5 transition-colors flex flex-col gap-3.5 hover:bg-gray-50/60',
+        'p-4 sm:p-5 transition-colors flex flex-col gap-3.5 hover:bg-slate-50/60',
         isModified && 'bg-primary/5'
       )}
     >
@@ -176,7 +174,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
       <div className="flex items-start justify-between gap-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-extrabold text-sm sm:text-base text-gray-900 leading-tight">
+            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">
               {meeting.name}
             </h3>
             {isModified && (
@@ -186,7 +184,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
             )}
           </div>
           {meeting.description && (
-            <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">
+            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
               {meeting.description}
             </p>
           )}
@@ -208,7 +206,7 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
             <button
               type="button"
               onClick={onEdit}
-              className="p-1.5 rounded-lg border border-gray-200 bg-white hover:bg-slate-50 text-gray-500 hover:text-gray-800 transition-all shadow-2xs cursor-pointer"
+              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all shadow-2xs cursor-pointer"
               title={t('admin:meetings.edit_tooltip', { meeting: meetingTerm })}
             >
               <Edit2 size={13} />
@@ -230,16 +228,16 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
 
       {/* Horario y Detalles */}
       {(initTime || finalTime) && (
-        <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-          <Clock size={13} className="text-gray-400" />
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+          <Clock size={13} className="text-slate-400" />
           <span>
-            {t('admin:meetings.registration_schedule')} <strong className="text-gray-700">{initTime} – {finalTime}</strong>
+            {t('admin:meetings.registration_schedule')} <strong className="text-slate-700">{initTime} – {finalTime}</strong>
           </span>
         </div>
       )}
 
       {/* Segmented State Selector (Pills) */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-gray-200/70">
+      <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-slate-200/70">
         {[
           ChurchMeetingStateEnum.ACTIVE,
           ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
@@ -255,13 +253,13 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
               type="button"
               onClick={() => onStateChange(stateKey)}
               className={clsx(
-                'flex items-center justify-center gap-1.5 py-2 px-2 rounded-lg text-xs font-bold transition-all duration-150 cursor-pointer',
+                'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer truncate',
                 isSelected
                   ? itemConfig.activeClass
-                  : 'text-gray-600 hover:text-gray-900 hover:bg-white/60 bg-transparent'
+                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
               )}
             >
-              <ItemIcon size={14} className={isSelected ? 'text-white' : itemConfig.textClass} />
+              <ItemIcon size={12} className={clsx('shrink-0', !isSelected && itemConfig.textClass)} />
               <span className="truncate">{itemConfig.shortLabel}</span>
             </button>
           );
@@ -271,36 +269,38 @@ const MeetingCard: React.FC<MeetingCardProps> = ({
   );
 };
 
-
 // ---------------------------------------------------------------------------
-// Vista Principal
+// Main Church Meetings Management View
 // ---------------------------------------------------------------------------
 
 /**
- * Admin view to manage church meeting states by campus.
- * Allows individual or bulk state updates saved via PATCH /church-meeting/bulk-state.
+ * Main view for managing church meetings across campuses at /admin/church-meetings.
+ * Upgraded with Desktop-First multi-column layout, responsive days grid, and query param campus sync.
  *
- * @returns {JSX.Element} Rendered view component.
+ * @returns {JSX.Element} Rendered view.
  */
 const ChurchMeetingsView: React.FC = () => {
   const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const dispatch = useAppDispatch();
 
-  const meetingTerm = useChurchTerm('meeting');
-  const meetingsTerm = useChurchTerm('meetings');
   const campusTerm = useChurchTerm('campus');
   const campusesTerm = useChurchTerm('campuses');
+  const meetingTerm = useChurchTerm('meeting');
+  const meetingsTerm = useChurchTerm('meetings');
 
   const campuses = useAppSelector((state) => state.churchCampusSlice);
-  const { meetings, loadingMeetings, loadingUpdate, error, success } =
-    useAppSelector((state) => state.adminChurchMeetingSlice);
+  const { meetings, loadingMeetings, loadingUpdate, success, error } = useAppSelector(
+    (state) => state.adminChurchMeetingSlice
+  );
 
+  const queryCampusId = searchParams.get('campusId');
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
   const [selectedStateFilter, setSelectedStateFilter] = useState<'ALL' | ChurchMeetingStateEnum>('ALL');
   /** Local registry of pending changes: meetingId -> new state */
   const [pendingChanges, setPendingChanges] = useState<Record<string, ChurchMeetingStateEnum>>({});
-  /** Tracks which days are expanded. Default is empty (all closed). */
+  /** Tracks which days are expanded. Default is all expanded on desktop for visibility */
   const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -315,12 +315,17 @@ const ChurchMeetingsView: React.FC = () => {
     }
   }, [dispatch, campuses.data.length]);
 
-  // Auto-select the first available campus if none is selected
+  // Sync selected campus with query params or first available campus
   useEffect(() => {
-    if (!selectedCampusId && campuses.data.length > 0) {
+    if (campuses.data.length === 0) return;
+
+    if (queryCampusId && campuses.data.some((c) => c.id === queryCampusId)) {
+      setSelectedCampusId(queryCampusId);
+    } else if (!selectedCampusId) {
       setSelectedCampusId(campuses.data[0].id);
+      setSearchParams({ campusId: campuses.data[0].id }, { replace: true });
     }
-  }, [campuses.data, selectedCampusId]);
+  }, [campuses.data, queryCampusId, selectedCampusId, setSearchParams]);
 
   // Load meetings for the selected campus
   useEffect(() => {
@@ -328,11 +333,15 @@ const ChurchMeetingsView: React.FC = () => {
       dispatch(resetAdminChurchMeetingStatus());
       dispatch(GetAllChurchMeetingsAdmin(selectedCampusId));
       setPendingChanges({});
-      setExpandedDays(new Set());
     }
   }, [selectedCampusId, dispatch]);
 
-  // Notificaciones de éxito y error
+  const handleSelectCampus = (newId: string) => {
+    setSelectedCampusId(newId);
+    setSearchParams({ campusId: newId });
+  };
+
+  // Toast feedback
   useEffect(() => {
     if (success) {
       toast.success(t('admin:meetings.updated_success', { meetings: meetingsTerm.toLowerCase() }));
@@ -448,6 +457,15 @@ const ChurchMeetingsView: React.FC = () => {
     return grouped;
   }, [nonDeletedMeetings]);
 
+  const allDayKeys = useMemo(() => Object.keys(meetingsByDay), [meetingsByDay]);
+
+  // Auto-expand all days by default for comfortable desktop browsing
+  useEffect(() => {
+    if (allDayKeys.length > 0 && expandedDays.size === 0) {
+      setExpandedDays(new Set(allDayKeys));
+    }
+  }, [allDayKeys, expandedDays.size]);
+
   const toggleDay = useCallback((day: string) => {
     setExpandedDays((prev) => {
       const next = new Set(prev);
@@ -460,7 +478,6 @@ const ChurchMeetingsView: React.FC = () => {
     });
   }, []);
 
-  const allDayKeys = useMemo(() => Object.keys(meetingsByDay), [meetingsByDay]);
   const allDaysExpanded = useMemo(() => {
     if (allDayKeys.length === 0) return false;
     return allDayKeys.every((d) => expandedDays.has(d));
@@ -521,8 +538,10 @@ const ChurchMeetingsView: React.FC = () => {
   const selectedCampusName = campuses.data.find((c) => c.id === selectedCampusId)?.name ?? '';
 
   return (
-    <div className="min-h-full flex-1 w-full bg-slate-50 pb-28">
+    <div className="min-h-full flex-1 w-full bg-slate-50/60 pb-28">
+      {/* Mobile-only header with back button */}
       <PageHeader
+        className="lg:hidden"
         title={t('admin:meetings.header_title', { meetings: meetingsTerm })}
         onBack={() => navigate(APP_ROUTES.admin.root)}
         rightAction={
@@ -542,308 +561,331 @@ const ChurchMeetingsView: React.FC = () => {
         }
       />
 
-
-      <div className="max-w-2xl mx-auto p-4 sm:p-6 flex flex-col gap-6">
-        {/* Card de Encabezado Informativo */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-1">
-            <Sparkles size={14} />
-            <span>{t('admin:meetings.info_badge', { meetings: meetingsTerm })}</span>
-          </div>
-          <h1 className="text-xl sm:text-2xl font-extrabold text-gray-900 tracking-tight">
-            {t('admin:meetings.availability_title', { campus: campusTerm })}
-          </h1>
-          <p className="text-xs sm:text-sm text-gray-500 mt-1">
-            {t('admin:meetings.availability_subtitle', { meetings: meetingsTerm.toLowerCase() })}
-          </p>
-        </div>
-
-        {/* Campus Selector */}
-        <div className="bg-white rounded-2xl p-5 sm:p-6 border border-gray-200/80 shadow-xs flex flex-col gap-3">
-          <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
-            <div className="w-6 h-6 rounded-md bg-primary/10 text-primary flex items-center justify-center">
-              <MapPin size={14} />
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-6">
+        {/* Header Summary Banner (Desktop-First) */}
+        <div className="bg-white rounded-3xl p-5 sm:p-6 lg:p-7 border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="flex items-start sm:items-center gap-4 min-w-0">
+            <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20">
+              <CalendarClock size={24} className="lg:w-7 lg:h-7" />
             </div>
-            <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wide">
-              {t('admin:meetings.campus_label', { campus: campusTerm })}
-            </h2>
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-primary uppercase tracking-wider mb-1">
+                <Sparkles size={13} />
+                <span>{t('admin:meetings.info_badge', { meetings: meetingsTerm })}</span>
+              </div>
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-slate-900 tracking-tight truncate">
+                {t('admin:meetings.availability_title', { campus: campusTerm })}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-500 mt-1 line-clamp-1">
+                {t('admin:meetings.availability_subtitle', { meetings: meetingsTerm.toLowerCase() })}
+              </p>
+            </div>
           </div>
 
-          <SelectSearch
-            label=""
-            placeholder={t('admin:meetings.select_campus_placeholder', { campus: campusTerm.toLowerCase() })}
-            options={campusOptions}
-            value={selectedCampusId}
-            onChange={(val) => setSelectedCampusId(val)}
-            searchable={campusOptions.length > 4}
-            disabled={campuses.loading}
-          />
+          {/* Integrated Campus Selector & Desktop Action */}
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
+            <div className="w-full sm:w-64">
+              <SelectSearch
+                label=""
+                placeholder={t('admin:meetings.select_campus_placeholder', { campus: campusTerm.toLowerCase() })}
+                options={campusOptions}
+                value={selectedCampusId}
+                onChange={handleSelectCampus}
+                searchable={campusOptions.length > 4}
+                disabled={campuses.loading}
+              />
+            </div>
+
+            {selectedCampusId && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={() => {
+                  setMeetingToEdit(null);
+                  setModalOpen(true);
+                }}
+                className="hidden sm:inline-flex items-center gap-2 text-sm shadow-sm cursor-pointer whitespace-nowrap"
+              >
+                <Plus size={16} />
+                <span>{t('admin:meetings.new_meeting_btn', { meeting: meetingTerm })}</span>
+              </Button>
+            )}
+          </div>
         </div>
 
-        {/* Listado de Servicios */}
+        {/* Content Area */}
         {selectedCampusId && (
           <div className="flex flex-col gap-5">
             {loadingMeetings ? (
               <CellListSkeleton count={3} />
             ) : meetings.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 border border-gray-100 shadow-xs text-center flex flex-col items-center justify-center gap-2">
-                <CalendarClock size={40} className="text-gray-300" />
-                <h3 className="font-bold text-gray-800 text-base mt-2">
+              <div className="bg-white rounded-3xl p-12 border border-slate-200/80 shadow-xs text-center flex flex-col items-center justify-center gap-3">
+                <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+                  <CalendarClock size={28} />
+                </div>
+                <h3 className="font-bold text-slate-800 text-base sm:text-lg mt-1">
                   {t('admin:meetings.no_meetings_title', { meetings: meetingsTerm.toLowerCase() })}
                 </h3>
-                <p className="text-xs text-gray-500 max-w-sm">
+                <p className="text-xs sm:text-sm text-slate-500 max-w-md">
                   {t('admin:meetings.no_meetings_desc', { campus: campusTerm.toLowerCase(), meetings: meetingsTerm.toLowerCase() })}
                 </p>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    setMeetingToEdit(null);
+                    setModalOpen(true);
+                  }}
+                  className="mt-3 flex items-center gap-2 text-xs"
+                >
+                  <Plus size={14} />
+                  <span>{t('admin:meetings.new_meeting_btn', { meeting: meetingTerm })}</span>
+                </Button>
               </div>
             ) : (
               <>
-                {/* Resumen de Servicios */}
-                <div className="flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">
-                      {selectedCampusName}
-                    </span>
-                    <span className="text-xs text-gray-400">•</span>
-                    <span className="text-xs font-semibold text-gray-600">
-                      {t('admin:meetings.meetings_count', { count: meetings.length, meetings: meetingsTerm.toLowerCase() })}
-                    </span>
-                  </div>
-
-                  {dirtyCount > 0 && (
-                    <span className="text-xs font-extrabold px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                      {dirtyCount === 1
-                        ? t('admin:meetings.pending_changes_count', { count: dirtyCount })
-                        : t('admin:meetings.pending_changes_count_plural', { count: dirtyCount })}
-                    </span>
-                  )}
-                </div>
-
-                {/* State Filter Pills */}
-                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStateFilter('ALL')}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border cursor-pointer',
-                      selectedStateFilter === 'ALL'
-                        ? 'bg-primary text-white border-primary shadow-2xs'
-                        : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                    )}
-                  >
-                    {t('admin:meetings.filter_all', { count: stateCounts.total })}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
-                      selectedStateFilter === ChurchMeetingStateEnum.ACTIVE
-                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                        : 'bg-white text-emerald-700 border-gray-200 hover:bg-emerald-50'
-                    )}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                    {t('admin:meetings.filter_active', { count: stateCounts.active })}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
-                      selectedStateFilter === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY
-                        ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
-                        : 'bg-white text-amber-700 border-gray-200 hover:bg-amber-50'
-                    )}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    {t('admin:meetings.filter_no_visible', { count: stateCounts.noVisible })}
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.DISABLE)}
-                    className={clsx(
-                      'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
-                      selectedStateFilter === ChurchMeetingStateEnum.DISABLE
-                        ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
-                        : 'bg-white text-rose-700 border-gray-200 hover:bg-rose-50'
-                    )}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    {t('admin:meetings.filter_inactive', { count: stateCounts.inactive })}
-                  </button>
-                </div>
-
-                {/* Expand / Collapse All Trigger */}
-                {allDayKeys.length > 1 && (
-                  <div className="flex items-center justify-end px-1 -mb-1">
+                {/* Status Filter Bar & Summary */}
+                <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  {/* State Filter Pills */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
                     <button
                       type="button"
-                      onClick={toggleAllDays}
-                      className="text-xs font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
+                      onClick={() => setSelectedStateFilter('ALL')}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border cursor-pointer',
+                        selectedStateFilter === 'ALL'
+                          ? 'bg-primary text-white border-primary shadow-2xs'
+                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+                      )}
                     >
-                      {allDaysExpanded ? t('admin:meetings.collapse_all') : t('admin:meetings.expand_all')}
+                      {t('admin:meetings.filter_all', { count: stateCounts.total })}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
+                        selectedStateFilter === ChurchMeetingStateEnum.ACTIVE
+                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                          : 'bg-white text-emerald-700 border-slate-200 hover:bg-emerald-50'
+                      )}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                      {t('admin:meetings.filter_active', { count: stateCounts.active })}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
+                        selectedStateFilter === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY
+                          ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
+                          : 'bg-white text-amber-700 border-slate-200 hover:bg-amber-50'
+                      )}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-amber-500" />
+                      {t('admin:meetings.filter_no_visible', { count: stateCounts.noVisible })}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.DISABLE)}
+                      className={clsx(
+                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
+                        selectedStateFilter === ChurchMeetingStateEnum.DISABLE
+                          ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
+                          : 'bg-white text-rose-700 border-slate-200 hover:bg-rose-50'
+                      )}
+                    >
+                      <span className="w-2 h-2 rounded-full bg-rose-500" />
+                      {t('admin:meetings.filter_inactive', { count: stateCounts.inactive })}
                     </button>
                   </div>
-                )}
 
-                {/* Grouped by Days & Categorized by State */}
-                {Object.entries(meetingsByDay).map(([day, dayMeetings]) => {
-                  const filteredDayMeetings = dayMeetings.filter((meeting) => {
-                    if (selectedStateFilter === 'ALL') return true;
-                    const effectiveState =
-                      pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                    return effectiveState === selectedStateFilter;
-                  });
+                  {/* Right: Expand/Collapse All and Dirty indicator */}
+                  <div className="flex items-center gap-3 justify-between sm:justify-end">
+                    {dirtyCount > 0 && (
+                      <span className="text-xs font-extrabold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
+                        {dirtyCount === 1
+                          ? t('admin:meetings.pending_changes_count', { count: dirtyCount })
+                          : t('admin:meetings.pending_changes_count_plural', { count: dirtyCount })}
+                      </span>
+                    )}
 
-                  if (filteredDayMeetings.length === 0) return null;
-
-                  const isExpanded = expandedDays.has(day);
-                  const hasModifiedInDay = dayMeetings.some(
-                    (meeting) => pendingChanges[meeting.id] !== undefined
-                  );
-
-                  return (
-                    <div
-                      key={day}
-                      className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden transition-all"
-                    >
-                      {/* Day Header Dropdown Button */}
+                    {allDayKeys.length > 1 && (
                       <button
                         type="button"
-                        onClick={() => toggleDay(day)}
-                        aria-expanded={isExpanded}
-                        className={clsx(
-                          'w-full flex items-center justify-between p-4 sm:p-4.5 text-left cursor-pointer transition-colors',
-                          isExpanded
-                            ? 'bg-slate-50/70 border-b border-gray-200/70'
-                            : 'hover:bg-slate-50/60'
-                        )}
+                        onClick={toggleAllDays}
+                        className="text-xs font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
                       >
-                        <div className="flex items-center gap-3">
-                          <div
-                            className={clsx(
-                              'w-8 h-8 rounded-xl flex items-center justify-center transition-colors shadow-2xs',
-                              isExpanded
-                                ? 'bg-primary text-white shadow-primary/20'
-                                : 'bg-indigo-50 text-indigo-600'
-                            )}
-                          >
-                            <CalendarDays size={16} />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-xs sm:text-sm font-extrabold text-gray-900 uppercase tracking-wider">
-                              {getDayLabel(day)}
-                            </h3>
-                            <span className="px-2 py-0.5 text-[11px] font-bold rounded-full bg-slate-100 text-gray-600 border border-gray-200/80">
-                              {filteredDayMeetings.length}
-                            </span>
-                            {hasModifiedInDay && (
-                              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                                {t('admin:meetings.modified_badge')}
-                              </span>
-                            )}
-                          </div>
-                        </div>
+                        {allDaysExpanded ? t('admin:meetings.collapse_all') : t('admin:meetings.expand_all')}
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-                        <div
+                {/* Grouped by Days & Categorized by State */}
+                <div className="flex flex-col gap-4">
+                  {Object.entries(meetingsByDay).map(([day, dayMeetings]) => {
+                    const filteredDayMeetings = dayMeetings.filter((meeting) => {
+                      if (selectedStateFilter === 'ALL') return true;
+                      const effectiveState =
+                        pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                      return effectiveState === selectedStateFilter;
+                    });
+
+                    if (filteredDayMeetings.length === 0) return null;
+
+                    const isExpanded = expandedDays.has(day);
+                    const hasModifiedInDay = dayMeetings.some(
+                      (meeting) => pendingChanges[meeting.id] !== undefined
+                    );
+
+                    return (
+                      <div
+                        key={day}
+                        className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden transition-all"
+                      >
+                        {/* Day Header Dropdown Button */}
+                        <button
+                          type="button"
+                          onClick={() => toggleDay(day)}
+                          aria-expanded={isExpanded}
                           className={clsx(
-                            'w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 transition-transform duration-200',
-                            isExpanded && 'rotate-180 text-gray-700'
+                            'w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors',
+                            isExpanded
+                              ? 'bg-slate-50/70 border-b border-slate-200/70'
+                              : 'hover:bg-slate-50/60'
                           )}
                         >
-                          <ChevronDown size={18} />
-                        </div>
-                      </button>
+                          <div className="flex items-center gap-3">
+                            <div
+                              className={clsx(
+                                'w-9 h-9 rounded-2xl flex items-center justify-center transition-colors shadow-2xs',
+                                isExpanded
+                                  ? 'bg-primary text-white shadow-primary/20'
+                                  : 'bg-indigo-50 text-indigo-600'
+                              )}
+                            >
+                              <CalendarDays size={18} />
+                            </div>
+                            <div className="flex items-center gap-2.5">
+                              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 uppercase tracking-wider">
+                                {getDayLabel(day)}
+                              </h3>
+                              <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
+                                {filteredDayMeetings.length}
+                              </span>
+                              {hasModifiedInDay && (
+                                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
+                                  {t('admin:meetings.modified_badge')}
+                                </span>
+                              )}
+                            </div>
+                          </div>
 
-                      {/* Categorized Subsections - strictly INSIDE the Day Card */}
-                      {isExpanded && (
-                        <div className="p-3.5 sm:p-5 bg-slate-50/50 flex flex-col gap-5 animate-in fade-in duration-200">
-                          {stateCategories.map((cat) => {
-                            if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
-                              return null;
-                            }
+                          <div
+                            className={clsx(
+                              'w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-transform duration-200',
+                              isExpanded && 'rotate-180 text-slate-700'
+                            )}
+                          >
+                            <ChevronDown size={20} />
+                          </div>
+                        </button>
 
-                            // Filter items belonging to this category in original DB order
-                            const catMeetings = dayMeetings.filter((meeting) => {
-                              const effectiveState =
-                                pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                              return effectiveState === cat.state;
-                            });
+                        {/* Categorized Subsections strictly inside the Day Card */}
+                        {isExpanded && (
+                          <div className="p-4 sm:p-6 bg-slate-50/40 flex flex-col gap-6 animate-in fade-in duration-200">
+                            {stateCategories.map((cat) => {
+                              if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
+                                return null;
+                              }
 
-                            if (catMeetings.length === 0) return null;
+                              const catMeetings = dayMeetings.filter((meeting) => {
+                                const effectiveState =
+                                  pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                                return effectiveState === cat.state;
+                              });
 
-                            const CatIcon = cat.icon;
+                              if (catMeetings.length === 0) return null;
 
-                            return (
-                              <div key={cat.state} className="flex flex-col gap-2.5">
-                                {/* Category Header */}
-                                <div className="flex items-center justify-between px-1">
-                                  <div className="flex items-center gap-2">
-                                    <div className={clsx('w-5 h-5 rounded-md flex items-center justify-center', cat.iconBg)}>
-                                      <CatIcon size={13} />
+                              const CatIcon = cat.icon;
+
+                              return (
+                                <div key={cat.state} className="flex flex-col gap-3">
+                                  {/* Category Header */}
+                                  <div className="flex items-center justify-between px-1">
+                                    <div className="flex items-center gap-2">
+                                      <div className={clsx('w-6 h-6 rounded-lg flex items-center justify-center', cat.iconBg)}>
+                                        <CatIcon size={14} />
+                                      </div>
+                                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                                        {cat.label}
+                                      </h4>
                                     </div>
-                                    <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
-                                      {cat.label}
-                                    </h4>
+                                    <span className={clsx('px-2.5 py-0.5 text-xs font-bold rounded-full border', cat.badgeClass)}>
+                                      {catMeetings.length}
+                                    </span>
                                   </div>
-                                  <span className={clsx('px-2 py-0.5 text-[11px] font-bold rounded-full border', cat.badgeClass)}>
-                                    {catMeetings.length}
-                                  </span>
-                                </div>
 
-                                {/* Cards in original DB order */}
-                                <div className="bg-white rounded-3xl border border-gray-100 shadow-xs divide-y divide-gray-100 overflow-hidden">
-                                  {catMeetings.map((meeting) => {
-                                    const effectiveState =
-                                      pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                                    const isModified = pendingChanges[meeting.id] !== undefined;
+                                  {/* Cards Grid on Desktop */}
+                                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                                    {catMeetings.map((meeting) => {
+                                      const effectiveState =
+                                        pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
+                                      const isModified = pendingChanges[meeting.id] !== undefined;
 
-                                    return (
-                                      <MeetingCard
-                                        key={meeting.id}
-                                        meeting={meeting}
-                                        currentState={effectiveState}
-                                        isModified={isModified}
-                                        onStateChange={(newState) =>
-                                          handleStateChange(meeting.id, meeting.state, newState)
-                                        }
-                                        onEdit={() => {
-                                          setMeetingToEdit(meeting);
-                                          setModalOpen(true);
-                                        }}
-                                        onDelete={() => setMeetingToDelete(meeting)}
-                                      />
-                                    );
-                                  })}
+                                      return (
+                                        <div
+                                          key={meeting.id}
+                                          className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow overflow-hidden"
+                                        >
+                                          <MeetingCard
+                                            meeting={meeting}
+                                            currentState={effectiveState}
+                                            isModified={isModified}
+                                            onStateChange={(newState) =>
+                                              handleStateChange(meeting.id, meeting.state, newState)
+                                            }
+                                            onEdit={() => {
+                                              setMeetingToEdit(meeting);
+                                              setModalOpen(true);
+                                            }}
+                                            onDelete={() => setMeetingToDelete(meeting)}
+                                          />
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
-                              </div>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </>
             )}
           </div>
         )}
       </div>
 
-      {/* Barra de Acciones Flotante Fija */}
+      {/* Floating Save/Discard Action Bar (Centered Desktop Pill) */}
       {dirtyCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-gray-200/80 shadow-2xl p-4 animate-in slide-in-from-bottom duration-300">
-          <div className="max-w-2xl mx-auto flex items-center gap-3">
+        <div className="fixed bottom-6 left-0 right-0 z-40 px-4 pointer-events-none flex justify-center animate-in slide-in-from-bottom duration-300">
+          <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xl rounded-2xl p-3 sm:p-4 flex items-center gap-3 w-full max-w-lg">
             <button
               type="button"
               onClick={handleDiscardChanges}
               disabled={loadingUpdate}
-              className="flex items-center justify-center gap-1.5 py-3 px-4 rounded-xl border border-gray-300 bg-white text-gray-700 font-bold text-xs hover:bg-gray-50 active:bg-gray-100 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold text-xs hover:bg-slate-50 active:bg-slate-100 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
             >
-              <RotateCcw size={16} />
+              <RotateCcw size={15} />
               <span>{t('admin:meetings.discard_btn')}</span>
             </button>
 
@@ -853,15 +895,15 @@ const ChurchMeetingsView: React.FC = () => {
               block
               disabled={loadingUpdate}
               onClick={handleSave}
-              className="py-3 font-bold text-sm flex items-center justify-center gap-2 shadow-sm"
+              className="py-2.5 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
             >
               {loadingUpdate ? (
                 <>
-                  <Loader2 size={18} className="animate-spin" /> {t('admin:meetings.saving')}
+                  <Loader2 size={16} className="animate-spin" /> {t('admin:meetings.saving')}
                 </>
               ) : (
                 <>
-                  <Save size={18} /> {dirtyCount === 1 ? t('admin:meetings.save_btn', { count: dirtyCount }) : t('admin:meetings.save_btn_plural', { count: dirtyCount })}
+                  <Save size={16} /> {dirtyCount === 1 ? t('admin:meetings.save_btn', { count: dirtyCount }) : t('admin:meetings.save_btn_plural', { count: dirtyCount })}
                 </>
               )}
             </Button>
@@ -893,10 +935,8 @@ const ChurchMeetingsView: React.FC = () => {
         type="danger"
         onConfirm={handleConfirmDelete}
       />
-
     </div>
   );
 };
-
 
 export default ChurchMeetingsView;

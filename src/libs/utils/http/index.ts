@@ -1,6 +1,7 @@
 import { HttpRequestMethod, MicroserviceEnum, API_BASE_URL } from '@/libs/common-types/global';
 import axios, { AxiosResponse, ResponseType } from 'axios';
 import { isTokenExpiringSoon } from '../jwt';
+import { getActiveTenantChurchId } from '../tenant';
 
 export interface ApiRequestOptions {
   params?: Record<string, unknown>;
@@ -166,6 +167,14 @@ const executeApiRequest = async (
   let { headers = {} } = options;
   const { params = {}, data = {}, responseType, cache, forceRefresh } = options;
 
+  const activeChurchId = getActiveTenantChurchId();
+  if (activeChurchId && !headers['x-church-id']) {
+    headers = {
+      ...headers,
+      'x-church-id': activeChurchId,
+    };
+  }
+
   const isAuthEndpoint =
     url.includes('/user/login') ||
     url.includes('/user/refresh-token') ||
@@ -178,7 +187,7 @@ const executeApiRequest = async (
     (cache === true || (cache !== false && isCatalogEndpoint(url)));
 
   const cacheKey = shouldCache
-    ? `${baseURL}${url}?${JSON.stringify(params)}`
+    ? `${activeChurchId || 'default'}:${baseURL}${url}?${JSON.stringify(params)}`
     : null;
 
   if (cacheKey && memoryHttpCache.has(cacheKey)) {

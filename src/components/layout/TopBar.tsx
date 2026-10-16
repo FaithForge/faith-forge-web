@@ -34,7 +34,7 @@ const SettingsModal = lazy(() => import('@/components/modal/SettingsModal'));
 const NotificationsModal = lazy(() => import('@/components/modal/NotificationsModal'));
 
 import { APP_VERSION } from '@/constants/version';
-import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, UserRole, UserExperienceEnum } from '@/libs/utils/auth';
+import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, ChurchStaffRole, UserRole, UserExperienceEnum } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { toast } from 'sonner';
 import { capitalizeWords } from '@/libs/utils/text';
@@ -72,6 +72,22 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
     id: UserRole.STAFF,
     appTitle: 'Admin',
     label: 'Staff',
+    themeClass: 'theme-STAFF',
+    color: '#1E40AF',
+    dashboardUrl: APP_ROUTES.admin.root,
+  },
+  [ChurchStaffRole.CHURCH_ADMIN]: {
+    id: ChurchStaffRole.CHURCH_ADMIN,
+    appTitle: 'Admin',
+    label: 'Administrador de Iglesia',
+    themeClass: 'theme-ADMIN',
+    color: '#003963',
+    dashboardUrl: APP_ROUTES.admin.root,
+  },
+  [ChurchStaffRole.CHURCH_STAFF]: {
+    id: ChurchStaffRole.CHURCH_STAFF,
+    appTitle: 'Admin',
+    label: 'Staff de Iglesia',
     themeClass: 'theme-STAFF',
     color: '#1E40AF',
     dashboardUrl: APP_ROUTES.admin.root,

@@ -330,6 +330,7 @@ export const MinistryWorkspaceView: React.FC = () => {
       <PageHeader
         title={t('ministry_workspace.title')}
         onBack={() => navigate(APP_ROUTES.admin.root)}
+        className="lg:hidden"
         rightAction={
           <div className="flex items-center gap-1.5">
             <Button
@@ -345,7 +346,7 @@ export const MinistryWorkspaceView: React.FC = () => {
         }
       />
 
-      <div className="max-w-3xl mx-auto p-3.5 sm:p-5 flex flex-col gap-3.5">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-5">
         {/* Campus & Ministry Selector Strip */}
         <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-200/80 shadow-2xs flex flex-col gap-3">
           {/* Top Row: Full Width Campus Dropdown */}
