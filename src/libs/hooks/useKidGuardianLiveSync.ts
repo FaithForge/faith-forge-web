@@ -31,7 +31,7 @@ export const useKidGuardianLiveSync = ({
   useEffect(() => {
     if (!enabled || !guardianId) return;
 
-    const sseUrl = `${API_BASE_URL}/ms-kid-church/kid-guardian/events?guardianId=${encodeURIComponent(
+    const sseUrl = `${API_BASE_URL}/v1/kid-guardian/events?guardianId=${encodeURIComponent(
       guardianId
     )}`;
     const eventSource = new EventSource(sseUrl);

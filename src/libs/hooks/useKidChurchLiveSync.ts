@@ -27,7 +27,7 @@ export const useKidChurchLiveSync = ({
     if (!enabled || !churchMeetingId) return;
 
     // Connect to SSE stream
-    const sseUrl = `${API_BASE_URL}/ms-kid-church/kid-group/events?churchMeetingId=${encodeURIComponent(
+    const sseUrl = `${API_BASE_URL}/v1/kid-group/events?churchMeetingId=${encodeURIComponent(
       churchMeetingId
     )}`;
     const eventSource = new EventSource(sseUrl);

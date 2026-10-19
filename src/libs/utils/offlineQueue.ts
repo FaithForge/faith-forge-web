@@ -207,7 +207,7 @@ export const processOfflineQueue = async (
     const currentQueue = [...getOfflineQueue()];
 
     for (const item of currentQueue) {
-      const baseURL = `${API_BASE_URL}/ms-${item.microservice}`;
+      const baseURL = `${API_BASE_URL}/v1`;
       const url = item.url;
       const headers: Record<string, string> = {
         'Idempotency-Key': item.idempotencyKey,

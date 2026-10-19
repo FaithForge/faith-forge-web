@@ -26,7 +26,7 @@ export const useVolunteerAttendanceLiveSync = ({
   useEffect(() => {
     if (!enabled || !churchMeetingId) return;
 
-    const sseUrl = `${API_BASE_URL}/ms-church/volunteer-attendance/events?churchMeetingId=${encodeURIComponent(
+    const sseUrl = `${API_BASE_URL}/v1/volunteer-attendance/events?churchMeetingId=${encodeURIComponent(
       churchMeetingId,
     )}`;
     const eventSource = new EventSource(sseUrl);

@@ -114,7 +114,7 @@ export const triggerSilentRefresh = async (): Promise<string> => {
   refreshPromise = (async () => {
     try {
       const response = await axios.post(
-        `${API_BASE_URL}/ms-user/user/refresh-token`,
+        `${API_BASE_URL}/v1/user/refresh-token`,
         {
           refreshToken: currentRefreshToken,
         },
@@ -379,23 +379,23 @@ const executeApiRequest = async (
 };
 
 /**
- * Makes an API request to a specific microservice.
+ * Makes an API request to the unified backend gateway (/v1).
  *
  * @param {Object} payload - The payload object containing details for the request.
- * @param {MicroserviceEnum} payload.microservice - The microservice to target.
+ * @param {MicroserviceEnum} [payload.microservice] - The domain microservice identifier.
  * @param {HttpRequestMethod} payload.method - The HTTP method to use.
- * @param {string} payload.url - The endpoint URL relative to the microservice.
+ * @param {string} payload.url - The endpoint URL relative to the unified gateway.
  * @param {ApiRequestOptions} [payload.options] - Optional request parameters, data, and headers.
- * @returns {Promise<AxiosResponse<any, any>>} - A promise that resolves with the Axios response.
+ * @returns {Promise<AxiosResponse<any, any>>} A promise that resolves with the Axios response.
  */
 export const microserviceApiRequest = async (payload: {
-  microservice: MicroserviceEnum;
+  microservice?: MicroserviceEnum;
   method: HttpRequestMethod;
   url: string;
   options?: ApiRequestOptions;
 }): Promise<AxiosResponse<any, any>> => {
-  const { microservice, method, url, options } = payload;
-  const baseURL = `${API_BASE_URL}/ms-${microservice}`;
+  const { method, url, options } = payload;
+  const baseURL = `${API_BASE_URL}/v1`;
   return executeApiRequest(baseURL, method, url, options);
 };
 
