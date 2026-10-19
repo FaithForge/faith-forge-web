@@ -22,7 +22,6 @@ import { useGetKidQuery, useGetKidGroupsQuery } from '@/libs/state/redux/api/kid
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
-import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY } from '@/libs/common-types/constants';
 import { capitalizeWords } from '@/libs/utils/text';
 import { APP_ROUTES } from '@/config/routes';
@@ -67,14 +66,12 @@ const KidCheckInView: React.FC = () => {
   const [observationType, setObservationType] = useState<string>('NONE');
   const [customObservation, setCustomObservation] = useState<string>('');
   const [selectedGuardianToUpdate, setSelectedGuardianToUpdate] = useState<any>(null);
-  const [isKidVolunteer, setIsKidVolunteer] = useState(false);
 
   // Modals & Menu state
   const [showMenu, setShowMenu] = useState(false);
   const [showAssignGuardianModal, setShowAssignGuardianModal] = useState(false);
   const [showDeleteKidModal, setShowDeleteKidModal] = useState(false);
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
-  const [showVolunteerConfirmModal, setShowVolunteerConfirmModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [imageError, setImageError] = useState(false);
 
@@ -106,7 +103,6 @@ const KidCheckInView: React.FC = () => {
   } = useKidCheckInData({
     kid,
     guardianTerm,
-    isKidVolunteer,
     selectedGuardian,
   });
 
@@ -131,7 +127,6 @@ const KidCheckInView: React.FC = () => {
     setSelectedGuardian,
     observationType,
     customObservation,
-    isKidVolunteer,
     isOverage,
     isSelectedGuardianPhoneInvalid,
     currentCampus,
@@ -154,26 +149,15 @@ const KidCheckInView: React.FC = () => {
 
   const isRegistered = !!kid?.currentKidRegistration;
 
-  const specialGroup =
-    kidGroups.find((g) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') ||
-    kidGroups[0];
-  const specialGroupName = specialGroup?.name || 'Servidor Infantil';
+  const registeredGroup = isRegistered
+    ? kidGroups.find((g) => g.id === kid?.currentKidRegistration?.groupId)
+    : undefined;
 
   const displayedGroupName = isRegistered
-    ? kid?.currentKidRegistration?.groupId !== kid?.kidGroup?.id
-      ? specialGroupName
-      : kid?.kidGroup?.name || 'General'
-    : isKidVolunteer
-      ? specialGroupName
-      : kid?.kidGroup?.name || 'Sin grupo';
+    ? registeredGroup?.name || kid?.kidGroup?.name || 'General'
+    : kid?.kidGroup?.name || 'Sin salón';
 
-  const isStaticGroup = isRegistered
-    ? kid?.currentKidRegistration?.groupId !== kid?.kidGroup?.id
-      ? false
-      : kid?.staticGroup
-    : isKidVolunteer
-      ? false
-      : kid?.staticGroup;
+  const isStaticGroup = !!kid?.staticGroup;
 
   const rightMenuAction = (
     <div className="relative">
@@ -253,14 +237,11 @@ const KidCheckInView: React.FC = () => {
               isBirthdayToday={isBirthdayToday}
               isOverage={isOverage}
               isRegistered={isRegistered}
-              isKidVolunteer={isKidVolunteer}
               displayedGroupName={displayedGroupName}
               isStaticGroup={isStaticGroup}
-              specialGroupName={specialGroupName}
               imageError={imageError}
               setImageError={setImageError}
               onOpenPhotoModal={() => setShowPhotoModal(true)}
-              onOpenVolunteerModal={() => setShowVolunteerConfirmModal(true)}
             />
 
             <KidInfoCard
@@ -387,17 +368,6 @@ const KidCheckInView: React.FC = () => {
         cancelText={t('common:actions.cancel')}
         type="warning"
         onConfirm={executeRegistration}
-      />
-
-      <ConfirmModal
-        open={showVolunteerConfirmModal}
-        onOpenChange={setShowVolunteerConfirmModal}
-        title={`Cambiar niño a ${isKidVolunteer ? kid?.kidGroup?.name || 'salón habitual' : specialGroupName}`}
-        description={`El niño será registrado ${isKidVolunteer ? `para recibir en su salón habitual (${kid?.kidGroup?.name || 'Salón habitual'})` : `en el área de servidores (${specialGroupName})`}. Por favor confirma si deseas realizar esta acción.`}
-        confirmText={t('common:actions.confirm')}
-        cancelText={t('common:actions.cancel')}
-        type="info"
-        onConfirm={() => setIsKidVolunteer(!isKidVolunteer)}
       />
 
       <ConfirmModal

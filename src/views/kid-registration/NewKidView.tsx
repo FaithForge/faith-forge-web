@@ -30,7 +30,6 @@ import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 
 import { healthSecurityEntitySelect, IdType, UserIdType, UserGenderCode } from '@/libs/models/User';
 import { kidRelationSelect, ICreateKid, ICreateKidGuardian, KidGuardianRelationEnum, IKidGuardian } from '@/libs/models';
-import { KidGroupType } from '@/libs/models/KidChurch';
 import { 
   KID_MAX_AGE_YEARS, 
   KID_AGE_COPY, 
@@ -418,11 +417,7 @@ const NewKidView = () => {
     }
   };
 
-  const staticKidGroups = useMemo(() => {
-    return kidGroups.filter(
-      (g: any) => g.type !== KidGroupType.SPECIAL,
-    );
-  }, [kidGroups]);
+  const staticKidGroups = kidGroups;
 
   return (
     <div className="min-h-full bg-background flex flex-col flex-1 pb-6 sm:pb-8">

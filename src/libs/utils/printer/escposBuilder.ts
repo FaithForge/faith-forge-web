@@ -21,7 +21,6 @@ export interface KidTicketData {
   campusName?: string;
   meetingName?: string;
   date?: string;
-  isVolunteer?: boolean;
   gender?: string;
 }
 
@@ -286,16 +285,6 @@ export const buildKidRegistrationTicket = (data: KidTicketData): Uint8Array => {
     .size('normal')
     .bold(false)
     .line(`Salón: ${data.kidGroup || 'General'}`);
-
-  if (data.isVolunteer) {
-    builder
-      .align('center')
-      .invert(true)
-      .bold(true)
-      .line(' VOLUNTARIO / SERVIDOR ')
-      .invert(false)
-      .bold(false);
-  }
 
   // Security Code (Prominent box / inverted)
   if (data.securityCode) {

@@ -11,7 +11,6 @@ import {
 } from '@/libs/state/redux/api/kidChurchApi';
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
-import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY } from '@/libs/common-types/constants';
 import { APP_ROUTES } from '@/config/routes';
 import { FormattedRelation } from './useKidCheckInData';
@@ -24,7 +23,6 @@ interface UseKidCheckInActionsProps {
   setSelectedGuardian: (id: string) => void;
   observationType: string;
   customObservation: string;
-  isKidVolunteer: boolean;
   isOverage: boolean;
   isSelectedGuardianPhoneInvalid: boolean;
   currentCampus: any;
@@ -53,7 +51,6 @@ export const useKidCheckInActions = ({
   setSelectedGuardian,
   observationType,
   customObservation,
-  isKidVolunteer,
   isOverage,
   isSelectedGuardianPhoneInvalid,
   currentCampus,
@@ -101,10 +98,7 @@ export const useKidCheckInActions = ({
       return;
     }
 
-    const specialGroup =
-      kidGroups.find((g) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') ||
-      kidGroups[0];
-    const targetGroupId = isKidVolunteer && specialGroup?.id ? specialGroup.id : kid.kidGroup.id;
+    const targetGroupId = kid.kidGroup.id;
 
     let finalObservation = '';
     if (observationType === 'OTHER') {
@@ -151,7 +145,6 @@ export const useKidCheckInActions = ({
           observation: finalObservation || undefined,
           campusName: currentCampus?.name,
           meetingName: currentMeeting?.name,
-          isVolunteer: isKidVolunteer,
           gender: kid.gender,
         });
         toast.success('¡Etiqueta impresa por Bluetooth con éxito!');
@@ -224,7 +217,6 @@ export const useKidCheckInActions = ({
           guardianPhone: guardian?.displayPhone || guardian?.rawPhone,
           campusName: currentCampus?.name,
           meetingName: currentMeeting?.name,
-          isVolunteer: isKidVolunteer,
           gender: kid.gender || (kid as any).sex,
         });
         toast.success(t('kidRegistration:check_in.reprint_success_bluetooth'));

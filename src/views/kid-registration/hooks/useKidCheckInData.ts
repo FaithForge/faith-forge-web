@@ -25,7 +25,6 @@ export interface FormattedRelation {
 interface UseKidCheckInDataProps {
   kid: any;
   guardianTerm: string;
-  isKidVolunteer: boolean;
   selectedGuardian: string;
 }
 
@@ -38,7 +37,6 @@ interface UseKidCheckInDataProps {
 export const useKidCheckInData = ({
   kid,
   guardianTerm,
-  isKidVolunteer,
   selectedGuardian,
 }: UseKidCheckInDataProps) => {
   const getTranslatedRelation = (code: string) => {
@@ -132,9 +130,8 @@ export const useKidCheckInData = ({
   }, [kid?.birthday, kid?.age, kid?.ageInMonths]);
 
   const isOverage = useMemo(() => {
-    if (isKidVolunteer) return false;
     return isKidOverage(kid);
-  }, [kid, isKidVolunteer]);
+  }, [kid]);
 
   const selectedGuardianObj = useMemo(() => {
     return relationsList.find(

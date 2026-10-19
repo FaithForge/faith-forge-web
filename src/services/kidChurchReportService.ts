@@ -50,11 +50,10 @@ export const generatePreviewAttendanceData = (params: IFetchAttendanceReportPara
     count: g.count,
     percentage: totalKids > 0 ? Math.round((g.count / totalKids) * 100) : 0,
   })) || [
-    { groupId: 'jeremias', groupName: 'Jeremias', count: 6, percentage: 24 },
-    { groupId: 'iglekids', groupName: 'Yo Soy Iglekids', count: 5, percentage: 20 },
-    { groupId: 'zaqueos', groupName: 'Zaqueos', count: 5, percentage: 20 },
-    { groupId: 'timoteos', groupName: 'Timoteos', count: 3, percentage: 12 },
-    { groupId: 'caminadores', groupName: 'Caminadores', count: 3, percentage: 12 },
+    { groupId: 'jeremias', groupName: 'Jeremias', count: 7, percentage: 28 },
+    { groupId: 'zaqueos', groupName: 'Zaqueos', count: 6, percentage: 24 },
+    { groupId: 'timoteos', groupName: 'Timoteos', count: 5, percentage: 20 },
+    { groupId: 'caminadores', groupName: 'Caminadores', count: 4, percentage: 16 },
     { groupId: 'titos', groupName: 'Titos', count: 2, percentage: 8 },
     { groupId: 'bebes', groupName: 'Bebes', count: 1, percentage: 4 },
   ];

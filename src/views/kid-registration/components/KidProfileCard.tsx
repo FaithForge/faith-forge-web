@@ -1,5 +1,5 @@
 import React from 'react';
-import { Eye, Cake, ArrowLeftRight } from 'lucide-react';
+import { Eye, Cake } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
@@ -13,14 +13,11 @@ interface KidProfileCardProps {
   isBirthdayToday: boolean;
   isOverage: boolean;
   isRegistered: boolean;
-  isKidVolunteer: boolean;
   displayedGroupName: string;
   isStaticGroup?: boolean;
-  specialGroupName: string;
   imageError: boolean;
   setImageError: (err: boolean) => void;
   onOpenPhotoModal: () => void;
-  onOpenVolunteerModal: () => void;
 }
 
 /**
@@ -36,14 +33,11 @@ export const KidProfileCard: React.FC<KidProfileCardProps> = ({
   isBirthdayToday,
   isOverage,
   isRegistered,
-  isKidVolunteer,
   displayedGroupName,
   isStaticGroup,
-  specialGroupName,
   imageError,
   setImageError,
   onOpenPhotoModal,
-  onOpenVolunteerModal,
 }) => {
   const { t } = useTranslation(['kidRegistration', 'common']);
 
@@ -129,20 +123,6 @@ export const KidProfileCard: React.FC<KidProfileCardProps> = ({
                 <span className="px-2.5 py-0.5 text-xs font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
                   {t('kidRegistration:dashboard.badge_registered')}
                 </span>
-              )}
-              {!isRegistered && (
-                <button
-                  type="button"
-                  onClick={onOpenVolunteerModal}
-                  className="w-7 h-7 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-600 flex items-center justify-center transition-all hover:scale-105 active:scale-95 border border-gray-200"
-                  title={
-                    isKidVolunteer
-                      ? 'Cambiar a recibir en su salón habitual'
-                      : `Cambiar a ${specialGroupName} (Servidor)`
-                  }
-                >
-                  <ArrowLeftRight size={13} />
-                </button>
               )}
             </div>
           </div>

@@ -12,7 +12,6 @@
  * 4: Jeremías (4 - 6 años)
  * 5: Timoteos (7 - 9 años)
  * 6: Titos (10 - 12 años)
- * 7: Yo Soy Iglekids / Especial (Servidores / Multiedad)
  */
 export const KNOWN_CLASSROOM_ORDER: Array<{ match: string; rank: number }> = [
   { match: 'bebe', rank: 1 },
@@ -40,9 +39,6 @@ export const KNOWN_CLASSROOM_ORDER: Array<{ match: string; rank: number }> = [
   { match: 'prejuvenil', rank: 6 },
   { match: 'preadolescente', rank: 6 },
   { match: 'conquistador', rank: 6 },
-  { match: 'yo soy', rank: 7 },
-  { match: 'servidor', rank: 7 },
-  { match: 'especial', rank: 7 },
 ];
 
 /**

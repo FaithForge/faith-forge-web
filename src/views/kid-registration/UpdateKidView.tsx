@@ -15,7 +15,6 @@ import {
 } from '@/libs/state/redux/api/kidChurchApi';
 import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
 import { userGenderSelect, healthSecurityEntitySelect } from '@/libs/models';
-import { KidGroupType } from '@/libs/models/KidChurch';
 import { 
   KID_AGE_COPY, 
   isKidUnderMinAge 
@@ -176,12 +175,10 @@ const UpdateKidView: React.FC = () => {
   };
 
   const kidGroupOptions = useMemo(() => {
-    return kidGroups
-      .filter((g) => g.type !== KidGroupType.SPECIAL)
-      .map((g) => ({
-        id: g.id,
-        name: g.name,
-      }));
+    return kidGroups.map((g) => ({
+      id: g.id,
+      name: g.name,
+    }));
   }, [kidGroups]);
 
   const medicalConditionOptions = [

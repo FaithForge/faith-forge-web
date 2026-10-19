@@ -85,9 +85,7 @@
     "cancel_modal_cancel": "Continuar escaneando",
     "out_of_schedule_modal_title": "¿Registrar niños fuera de horario?",
     "out_of_schedule_modal_description": "{{message}} Como administrador, ¿deseas proceder con el registro de los niños seleccionados?",
-    "out_of_schedule_modal_confirm": "Sí, registrar niños",
-    "toast_switched_habitual": "Cambiado a salón habitual ({{group}})",
-    "toast_switched_server": "Cambiado a {{group}} (Servidor)"
+    "out_of_schedule_modal_confirm": "Sí, registrar niños"
   },
   "check_in": {
     "title": "Detalle y Registro",
@@ -103,8 +101,6 @@
     "notes_label": "Observaciones médicas / alergias",
     "classroom_section_title": "Salón Asignado",
     "static_group_badge": "Grupo Permanente",
-    "switch_server_title": "Servidor Infantil",
-    "switch_server_subtitle": "Asignar al grupo especial de servidores",
     "guardians_section_title": "{{guardians}} Responsables",
     "no_guardians_warning": "No hay {{guardians}} registrados para este niño.",
     "btn_assign_guardian": "Asignar {{guardian}}",

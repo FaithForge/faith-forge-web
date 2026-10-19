@@ -29,10 +29,6 @@ export const getKidGroupStyle = (kidGroup?: string) => {
     case 'Titos':
       backgroundColor = '#00344D';
       break;
-    case 'Yo Soy Iglekids':
-      backgroundColor = '#EFCB68';
-      color = '#1F2937'; // Dark text for high contrast on gold
-      break;
     default:
       backgroundColor = '#004C6D';
       break;

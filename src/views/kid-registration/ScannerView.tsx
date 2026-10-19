@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, ChevronDown, Info, ArrowLeftRight, Printer } from 'lucide-react';
+import { Check, ChevronRight, ChevronDown, Info, Printer } from 'lucide-react';
 import { Scanner, IDetectedBarcode } from '@yudiel/react-qr-scanner';
 import { APP_ROUTES } from "@/config/routes";
 import clsx from 'clsx';
@@ -16,7 +16,6 @@ import { useGetKidGroupsQuery, useCreateKidRegistrationMutation } from '@/libs/s
 import { cleanScanQRSearch, IScanCodeKidRelation } from '@/libs/state/redux/slices/kid-church/scan-code-kid-registration.slice';
 import { capitalizeWords } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
-import { KidGroupType } from '@/libs/models/KidChurch';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { usePermissions } from '@/libs/hooks/usePermissions';
@@ -48,7 +47,6 @@ const ScannerView = () => {
   const [step, setStep] = useState(1);
   const [scanResult, setScanResult] = useState<string | null>(null);
   const [selectedKids, setSelectedKids] = useState<string[]>([]);
-  const [volunteerKids, setVolunteerKids] = useState<string[]>([]);
   const [observationTypes, setObservationTypes] = useState<Record<string, string>>({});
   const [customObservations, setCustomObservations] = useState<Record<string, string>>({});
   const [expandedKid, setExpandedKid] = useState<string | null>(null);
@@ -92,7 +90,6 @@ const ScannerView = () => {
     dispatch(cleanScanQRSearch());
     setStep(1);
     setSelectedKids([]);
-    setVolunteerKids([]);
     setObservationTypes({});
     setCustomObservations({});
     setScanResult(null);
@@ -141,23 +138,6 @@ const ScannerView = () => {
     );
   };
 
-  const specialGroup = useMemo(
-    () => kidGroups.find((g) => g.type === KidGroupType.SPECIAL || g.name === 'Yo Soy Iglekids') || kidGroups[0],
-    [kidGroups]
-  );
-  const specialGroupName = specialGroup?.name || 'Servidor Infantil';
-
-  const toggleVolunteer = (kid: any) => {
-    const isVol = volunteerKids.includes(kid.id);
-    if (isVol) {
-      setVolunteerKids(prev => prev.filter(id => id !== kid.id));
-      toast.info(t('kidRegistration:scanner.toast_switched_habitual', { group: kid.kidGroup?.name || 'Salón habitual' }), { id: `volunteer-toggle-${kid.id}` });
-    } else {
-      setVolunteerKids(prev => [...prev, kid.id]);
-      toast.success(t('kidRegistration:scanner.toast_switched_server', { group: specialGroupName }), { id: `volunteer-toggle-${kid.id}` });
-    }
-  };
-
   const handleConfirmKids = () => {
     if (selectedKids.length === 0) {
       toast.error(t('kidRegistration:scanner.error_select_at_least_one'));
@@ -183,8 +163,7 @@ const ScannerView = () => {
       const promises = selectedKids.map(kidId => {
         const relation = relations.find((r: any) => (r.kid?.id || r.id) === kidId);
         const kid = relation?.kid || relation;
-        const isVol = volunteerKids.includes(kidId);
-        const kidGroupId = isVol && specialGroup?.id ? specialGroup.id : (kid?.kidGroup?.id || '');
+        const kidGroupId = kid?.kidGroup?.id || '';
         
         const obsType = observationTypes[kidId] || 'NONE';
         let finalObs: string | undefined = undefined;
@@ -212,8 +191,7 @@ const ScannerView = () => {
           const kidId = selectedKids[i];
           const relation = relations.find((r: IScanCodeKidRelation) => (r.kid?.id || r.id) === kidId);
           const kid = relation?.kid || relation;
-          const isVol = volunteerKids.includes(kidId);
-          const kidGroupId = isVol && specialGroup?.id ? specialGroup.id : (kid?.kidGroup?.id || '');
+          const kidGroupId = kid?.kidGroup?.id || '';
           const group = kidGroups.find((g) => g.id === kidGroupId);
           const obsType = observationTypes[kidId] || 'NONE';
           const finalObs = obsType === 'OTHER' ? customObservations[kidId]?.trim() : (obsType !== 'NONE' ? obsType : undefined);
@@ -230,7 +208,6 @@ const ScannerView = () => {
             observation: finalObs,
             campusName: currentCampus?.name,
             meetingName: currentMeeting?.name,
-            isVolunteer: isVol,
             gender: kid?.gender || (kid as any)?.sex,
           });
           await new Promise((resolve) => setTimeout(resolve, 300));
@@ -351,11 +328,10 @@ const ScannerView = () => {
                 const kidId = kid.id;
                 const isRegistered = !!kid.currentKidRegistration;
                 const isSelected = selectedKids.includes(kidId);
-                const isKidVolunteer = volunteerKids.includes(kidId);
-                const displayedGroupName = isKidVolunteer ? specialGroupName : (kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom'));
-                const isStatic = isKidVolunteer ? false : !!kid.staticGroup;
+                const displayedGroupName = kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom');
+                const isStatic = !!kid.staticGroup;
                 const hasMaxAge = isKidOverage(kid);
-                const isBlockedByAge = hasMaxAge && !isKidVolunteer && !can('checkin:bypass-age-limit');
+                const isBlockedByAge = hasMaxAge && !can('checkin:bypass-age-limit');
                 const isBday = isDateToday(kid.birthday);
 
                 return (
@@ -396,24 +372,6 @@ const ScannerView = () => {
                         <span className="text-gray-300">•</span>
                         <div className="flex items-center gap-1.5">
                           <TagKidGroup kidGroup={displayedGroupName} staticGroup={isStatic} className="text-[10px] py-0.5 px-2" />
-                          {!isRegistered && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                toggleVolunteer(kid);
-                              }}
-                              className={clsx(
-                                "w-6 h-6 rounded-full flex items-center justify-center transition-all border shrink-0",
-                                isKidVolunteer 
-                                   ? "bg-primary text-white border-primary shadow-xs scale-105" 
-                                   : "bg-gray-100 hover:bg-gray-200 text-gray-600 border-gray-200 hover:scale-105 active:scale-95"
-                              )}
-                              title={isKidVolunteer ? "Cambiar a recibir en su salón habitual" : `Cambiar a ${specialGroupName} (Servidor)`}
-                            >
-                              <ArrowLeftRight size={11} />
-                            </button>
-                          )}
                         </div>
                       </div>
                     </div>
@@ -457,10 +415,7 @@ const ScannerView = () => {
                 .filter((k: any) => k && k.id && selectedKids.includes(k.id))
                 .map((kid: any) => {
                   const isExpanded = expandedKid === kid.id;
-                  const isKidVolunteer = volunteerKids.includes(kid.id);
-                  const displayedGroupName = isKidVolunteer 
-                    ? specialGroupName 
-                    : `${kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom')}${kid.staticGroup ? ' (Estático)' : ''}`;
+                  const displayedGroupName = `${kid.kidGroup?.name || t('kidRegistration:scanner.no_classroom')}${kid.staticGroup ? ' (Estático)' : ''}`;
                   
                   return (
                     <div key={kid.id} className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">

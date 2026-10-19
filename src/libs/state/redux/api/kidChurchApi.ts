@@ -16,7 +16,6 @@ import {
   IUpdateKid,
   KidAttendanceFlowModeEnum,
   KidAttendanceStatusEnum,
-  KidGroupType,
   KidGuardianRelationCodeEnum,
 } from '@/libs/models';
 
@@ -36,9 +35,7 @@ export interface IDeleteKidGuardianRelation {
   guardianId: string;
 }
 
-export interface GetKidGroupsArgs {
-  type?: KidGroupType;
-}
+export interface GetKidGroupsArgs {}
 
 export interface GetKidGroupAttendanceArgs {
   kidGroupId?: string;
@@ -128,11 +125,10 @@ export interface IRawLiveTrackingResponse {
 export const kidChurchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getKidGroups: builder.query<IKidGroup[], GetKidGroupsArgs | void>({
-      query: (args) => ({
+      query: () => ({
         microservice: MicroserviceEnum.KidChurch,
         url: '/kid-groups',
         method: HttpRequestMethod.GET,
-        params: args?.type ? { type: args.type } : {},
       }),
       providesTags: (result) =>
         result

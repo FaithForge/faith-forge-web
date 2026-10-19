@@ -10,6 +10,7 @@ import {
   Bell,
   Menu,
   ChevronRight,
+  ChevronDown,
   ShieldCheck,
   Building2,
 } from 'lucide-react';
@@ -246,10 +247,10 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
             {/* Desktop Page Context */}
             <div className="hidden lg:flex items-center gap-2 text-sm text-slate-500 min-w-0">
               <span className="font-semibold text-slate-900 truncate">
-                {activeChurch?.name || 'Administración de Iglesia'}
+                {activeChurch?.name || 'Iglesia Cristiana Familiar Rios de Vida'}
               </span>
-              <ChevronRight size={14} className="text-slate-300 shrink-0" />
-              <span className="text-slate-500 font-medium truncate">
+              <ChevronRight size={14} className="text-slate-400 shrink-0" />
+              <span className="bg-slate-100 border border-slate-200/80 px-2.5 py-1 rounded-lg text-xs font-semibold text-slate-700 truncate">
                 {isSuperAdmin
                   ? 'Panel de Plataforma'
                   : isAdmin
@@ -296,31 +297,29 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
               className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 outline-none active:scale-95 text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer relative"
             >
               <Bell size={19} />
-              {unreadNotifCount > 0 && (
-                <span className="absolute 1.5 top-1.5 right-1.5 min-w-[16px] h-4 px-1 bg-rose-500 text-white rounded-full text-[10px] font-black flex items-center justify-center animate-pulse shadow-xs">
-                  {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
-                </span>
-              )}
+              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
             </button>
 
             {/* User Dropdown */}
             <DropdownMenu.Root>
               <DropdownMenu.Trigger className="outline-none flex items-center gap-2.5 p-1 rounded-xl hover:bg-slate-100 transition-colors cursor-pointer group">
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold overflow-hidden border border-primary/20 shrink-0 group-hover:ring-2 group-hover:ring-primary/20 transition-all">
+                <div className="relative w-8 h-8 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold overflow-hidden border border-primary/20 shrink-0 group-hover:ring-2 group-hover:ring-primary/20 transition-all">
                   {user?.photoUrl ? (
                     <img src={user.photoUrl} alt={shortName} className="w-full h-full object-cover" />
                   ) : (
                     userInitials
                   )}
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white absolute bottom-0 right-0" />
                 </div>
                 <div className="hidden sm:flex flex-col text-left pr-1 min-w-0">
-                  <span className="font-semibold text-xs text-slate-800 truncate max-w-[120px]">
+                  <span className="font-semibold text-xs text-slate-800 truncate max-w-[130px]">
                     {shortName}
                   </span>
                   <span className="text-[10px] text-slate-400 font-medium truncate leading-tight">
                     {isSuperAdmin ? 'Super Admin' : isAdmin ? 'Administrador' : 'Staff'}
                   </span>
                 </div>
+                <ChevronDown size={14} className="text-slate-400 group-hover:text-slate-600 transition-colors shrink-0" />
               </DropdownMenu.Trigger>
 
               <DropdownMenu.Portal>

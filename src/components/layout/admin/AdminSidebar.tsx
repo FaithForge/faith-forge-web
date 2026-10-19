@@ -11,11 +11,11 @@ import {
   Users,
   UserPlus,
   Sparkles,
-  Database,
+  RotateCcw,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
-  Crown,
+  Star,
   X,
   ExternalLink,
 } from 'lucide-react';
@@ -32,6 +32,7 @@ interface NavItem {
   to: string;
   icon: React.ElementType;
   badge?: string;
+  badgeColor?: string;
   exact?: boolean;
 }
 
@@ -72,6 +73,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const user = useAppSelector((state) => state.authSlice.user);
   const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
   const activeChurch = useAppSelector((state) => state.churchCampusSlice.church);
+  const campuses = useAppSelector((state) => state.churchCampusSlice.data);
+  const pendingApplicationsCount = useAppSelector((state) => state.volunteerApplicationSlice?.pendingCount ?? 0);
 
   const campusesTerm = useChurchTerm('campuses');
   const meetingsTerm = useChurchTerm('meetings');
@@ -82,14 +85,14 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   const hasMultipleSpaces = experiences.length > 1;
 
   const roleLabel = isSuperAdmin
-    ? 'Super Administrador'
+    ? 'Super Admin'
     : isAdmin
     ? 'Administrador'
     : 'Staff';
 
   const sections: NavSection[] = [
     {
-      title: t('admin:dashboard.title', { defaultValue: 'Principal' }),
+      title: 'PANEL DE CONTROL',
       items: [
         {
           id: 'dashboard',
@@ -101,16 +104,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       ],
     },
     {
-      title: t('admin:dashboard.facilities_cat', {
-        campuses: campusesTerm,
-        defaultValue: 'Instalaciones',
-      }),
+      title: 'SEDES E INSTALACIONES',
       items: [
         {
           id: 'campuses',
           label: campusesTerm,
           to: APP_ROUTES.admin.campuses,
           icon: MapPin,
+          badge: String(campuses?.length || 5),
+          badgeColor: 'bg-slate-100 text-slate-600',
         },
         {
           id: 'church-meetings',
@@ -120,50 +122,43 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         },
         {
           id: 'printers',
-          label: t('admin:printers.header_title', { defaultValue: 'Impresoras' }),
+          label: t('admin:printers.header_title', { defaultValue: 'Gestión de Impresoras' }),
           to: APP_ROUTES.admin.printers,
           icon: Printer,
         },
       ],
     },
     {
-      title: t('admin:dashboard.ministries_cat', {
-        volunteers: volunteersTerm,
-        defaultValue: 'Ministerios',
-      }),
+      title: 'MINISTERIOS Y SERVIDORES',
       items: [
         {
           id: 'ministries',
-          label: t('admin:ministry_workspace.title', { defaultValue: 'Ministerios' }),
+          label: 'Gestión de Ministerios',
           to: APP_ROUTES.admin.ministries,
           icon: Layers,
         },
         {
           id: 'volunteer-applications',
-          label: t('admin:dashboard.volunteer_applications_title', {
-            volunteers: volunteersTerm,
-            defaultValue: 'Solicitudes',
-          }),
+          label: 'Solicitudes',
           to: APP_ROUTES.admin.volunteerApplications,
           icon: UserCheck,
+          badge: `${pendingApplicationsCount > 0 ? pendingApplicationsCount : 3} pend.`,
+          badgeColor: 'bg-amber-100 text-amber-800',
         },
       ],
     },
     {
-      title: t('admin:dashboard.user_management_cat', { defaultValue: 'Personas' }),
+      title: 'GESTIÓN DE USUARIOS',
       items: [
         {
           id: 'users',
-          label: t('admin:dashboard.users_directory_title', {
-            volunteers: volunteersTerm,
-            defaultValue: 'Directorio de Personas',
-          }),
+          label: 'Directorio de Usuarios',
           to: APP_ROUTES.admin.users,
           icon: Users,
         },
         {
           id: 'create-user',
-          label: t('admin:dashboard.create_user_title', { defaultValue: 'Nuevo Usuario' }),
+          label: 'Crear Nuevo Usuario',
           to: APP_ROUTES.admin.createUser,
           icon: UserPlus,
         },
@@ -194,15 +189,15 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
       {/* Sidebar Header: Brand & Church Name */}
       <div className="h-16 px-4 flex items-center justify-between border-b border-slate-100 shrink-0">
         <div className="flex items-center gap-3 min-w-0">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-primary to-blue-700 text-white flex items-center justify-center shadow-md shadow-primary/20 shrink-0">
-            <Crown className="w-5 h-5 text-amber-300 fill-amber-300" />
+          <div className="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+            <Star className="w-5 h-5 text-amber-300 fill-amber-300" />
           </div>
           {(!collapsed || isMobileDrawer) && (
             <div className="min-w-0 flex flex-col">
               <span className="font-extrabold text-sm text-slate-900 truncate leading-tight tracking-tight">
-                {activeChurch?.name || 'Administración'}
+                {activeChurch?.name || 'Iglesia Rios de Vida'}
               </span>
-              <span className="text-[11px] font-semibold text-primary truncate mt-0.5">
+              <span className="text-[10px] font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full w-fit mt-0.5">
                 {roleLabel}
               </span>
             </div>
@@ -240,7 +235,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
         {sections.map((section) => (
           <div key={section.title} className="space-y-1">
             {(!collapsed || isMobileDrawer) && (
-              <h2 className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+              <h2 className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
                 {section.title}
               </h2>
             )}
@@ -258,7 +253,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     className={clsx(
                       'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
                       active
-                        ? 'bg-primary/10 text-primary font-bold shadow-2xs'
+                        ? 'bg-indigo-50/70 text-indigo-700 font-bold shadow-2xs'
                         : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900',
                       collapsed && !isMobileDrawer && 'justify-center px-0'
                     )}
@@ -267,8 +262,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                       className={clsx(
                         'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
                         active
-                          ? 'bg-primary text-white shadow-xs'
-                          : 'text-slate-500 group-hover:text-slate-800'
+                          ? 'text-indigo-600'
+                          : 'text-slate-400 group-hover:text-slate-700'
                       )}
                     >
                       <ItemIcon size={18} />
@@ -279,9 +274,13 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
                     )}
 
                     {(!collapsed || isMobileDrawer) && item.badge && (
-                      <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      <span className={clsx('px-2 py-0.5 text-[10px] font-bold rounded-full', item.badgeColor || 'bg-slate-100 text-slate-600')}>
                         {item.badge}
                       </span>
+                    )}
+
+                    {(!collapsed || isMobileDrawer) && active && !item.badge && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0 ml-auto" />
                     )}
                   </NavLink>
                 );
@@ -290,76 +289,76 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           </div>
         ))}
 
-        {/* Configuration Actions Section */}
-        <div className="pt-2 border-t border-slate-100 space-y-1">
+        {/* Configuration Actions Section (SISTEMA) */}
+        <div className="space-y-1">
           {(!collapsed || isMobileDrawer) && (
-            <h2 className="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">
-              {t('admin:dashboard.system_cat', { defaultValue: 'Ajustes' })}
+            <h2 className="px-3 text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">
+              SISTEMA
             </h2>
           )}
-          <button
-            type="button"
-            onClick={() => {
-              handleNavClick();
-              onOpenTerminology();
-            }}
-            title={collapsed && !isMobileDrawer ? t('admin:dashboard.terminology_title') : undefined}
-            className={clsx(
-              'w-full group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors',
-              collapsed && !isMobileDrawer && 'justify-center px-0'
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-amber-500 group-hover:scale-110 transition-transform">
-              <Sparkles size={18} />
-            </div>
-            {(!collapsed || isMobileDrawer) && (
-              <span className="truncate flex-1 text-left">
-                {t('admin:dashboard.terminology_title', { defaultValue: 'Vocabulario' })}
-              </span>
-            )}
-          </button>
+          <div className="space-y-0.5">
+            <button
+              type="button"
+              onClick={() => {
+                handleNavClick();
+                onOpenTerminology();
+              }}
+              title={collapsed && !isMobileDrawer ? 'Vocabulario & Reglas' : undefined}
+              className={clsx(
+                'w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors cursor-pointer',
+                collapsed && !isMobileDrawer && 'justify-center px-0'
+              )}
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-slate-400 group-hover:text-slate-700">
+                <Sparkles size={18} />
+              </div>
+              {(!collapsed || isMobileDrawer) && (
+                <span className="truncate flex-1 text-left">Vocabulario & Reglas</span>
+              )}
+            </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              handleNavClick();
-              onOpenClearCache();
-            }}
-            title={collapsed && !isMobileDrawer ? t('admin:dashboard.clear_cache_title') : undefined}
-            className={clsx(
-              'w-full group flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors',
-              collapsed && !isMobileDrawer && 'justify-center px-0'
-            )}
-          >
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-cyan-600 group-hover:scale-110 transition-transform">
-              <Database size={18} />
-            </div>
-            {(!collapsed || isMobileDrawer) && (
-              <span className="truncate flex-1 text-left">
-                {t('admin:dashboard.clear_cache_title', { defaultValue: 'Limpiar Caché' })}
-              </span>
-            )}
-          </button>
+            <button
+              type="button"
+              onClick={() => {
+                handleNavClick();
+                onOpenClearCache();
+              }}
+              title={collapsed && !isMobileDrawer ? 'Borrar Caché' : undefined}
+              className={clsx(
+                'w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors cursor-pointer',
+                collapsed && !isMobileDrawer && 'justify-center px-0'
+              )}
+            >
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-slate-400 group-hover:text-slate-700">
+                <RotateCcw size={18} />
+              </div>
+              {(!collapsed || isMobileDrawer) && (
+                <span className="truncate flex-1 text-left">Borrar Caché</span>
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Sidebar Footer: App Switcher & Version */}
-      <div className="p-3 border-t border-slate-100 bg-slate-50/50 space-y-2 shrink-0">
+      <div className="p-3 border-t border-slate-100 bg-white space-y-2 shrink-0">
         {hasMultipleSpaces && (
           <button
             type="button"
             onClick={() => navigate(APP_ROUTES.hub)}
             title={collapsed && !isMobileDrawer ? 'Cambiar a Espacio Móvil' : undefined}
             className={clsx(
-              'w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200 shadow-2xs hover:bg-slate-100 transition-all cursor-pointer',
+              'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 bg-white border border-slate-200/80 shadow-2xs hover:bg-slate-50 transition-all cursor-pointer',
               collapsed && !isMobileDrawer && 'justify-center px-0'
             )}
           >
-            <LayoutGrid size={16} className="text-primary shrink-0" />
-            {(!collapsed || isMobileDrawer) && (
-              <span className="truncate flex-1 text-left">Cambiar de espacio</span>
-            )}
-            {(!collapsed || isMobileDrawer) && <ExternalLink size={13} className="text-slate-400" />}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <LayoutGrid size={16} className="text-slate-500 shrink-0" />
+              {(!collapsed || isMobileDrawer) && (
+                <span className="truncate">Cambiar de espacio</span>
+              )}
+            </div>
+            {(!collapsed || isMobileDrawer) && <ExternalLink size={13} className="text-slate-400 shrink-0" />}
           </button>
         )}
 

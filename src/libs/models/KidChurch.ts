@@ -164,11 +164,6 @@ export const kidRelationSelect = [
   },
 ];
 
-/** Kid Group Type Enum */
-export enum KidGroupType {
-  NORMAL = 'NORMAL',
-  SPECIAL = 'SPECIAL',
-}
 
 export interface IVolunteerInfo {
   id: string;
@@ -281,7 +276,6 @@ export interface IKidGroup {
   description?: string;
   initialMonth?: string;
   finalMonth?: string;
-  type?: KidGroupType;
   state?: KidGroupStateEnum;
 }
 
@@ -386,7 +380,6 @@ export interface IAssignedKidItem {
   kidGroup?: {
     id: string;
     name: string;
-    type?: KidGroupType;
   } | null;
   medicalCondition?: IKidMedicalCondition | null;
   todayRegistration?: {
