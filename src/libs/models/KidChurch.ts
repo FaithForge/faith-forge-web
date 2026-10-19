@@ -18,14 +18,12 @@ export type KidStateEnum = (typeof KidStateEnum)[keyof typeof KidStateEnum];
 export const KidGroupStateEnum = {
   ...EntityState,
 } as const;
-export type KidGroupStateEnum =
-  (typeof KidGroupStateEnum)[keyof typeof KidGroupStateEnum];
+export type KidGroupStateEnum = (typeof KidGroupStateEnum)[keyof typeof KidGroupStateEnum];
 
 export const KidGuardianStateEnum = {
   ...EntityState,
 } as const;
-export type KidGuardianStateEnum =
-  (typeof KidGuardianStateEnum)[keyof typeof KidGuardianStateEnum];
+export type KidGuardianStateEnum = (typeof KidGuardianStateEnum)[keyof typeof KidGuardianStateEnum];
 
 export const KidMedicalConditionStateEnum = {
   ...EntityState,
@@ -164,7 +162,6 @@ export const kidRelationSelect = [
   },
 ];
 
-
 export interface IVolunteerInfo {
   id: string;
   firstName: string;
@@ -297,8 +294,6 @@ export interface IAuth extends ReduxDefaultStateWithoutData {
   experiences?: UserExperienceEnum[];
 }
 
-
-
 export interface IAccount extends ReduxDefaultStateWithoutData {
   churchGroup?: string;
 }
@@ -350,7 +345,7 @@ export interface IUpdateKid {
   staticKidGroupId?: string;
   observations?: string;
   medicalConditionId?: string;
-  photoUrl?: string;
+  photoUrl?: string | null;
 }
 
 // SLIDES
@@ -446,7 +441,3 @@ export interface IKidLiveTrackingResponse {
   };
   data: IKidLiveTrackingItem[];
 }
-
-
-
-

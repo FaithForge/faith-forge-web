@@ -1,20 +1,20 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Camera, AlertTriangle } from 'lucide-react';
+import { Camera, AlertTriangle, Trash2 } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import clsx from 'clsx';
 import { useForm, Controller } from 'react-hook-form';
 import { toast } from 'sonner';
 import dayjs from 'dayjs';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
 import {
   useGetKidQuery,
   useUpdateKidMutation,
   useGetKidGroupsQuery,
   useGetKidMedicalConditionsQuery,
+  useGetKidPresignedUploadUrlMutation,
+  useUploadKidPhotoFallbackMutation,
 } from '@/libs/state/redux/api/kidChurchApi';
-import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
-import { userGenderSelect, healthSecurityEntitySelect } from '@/libs/models';
+import { userGenderSelect, healthSecurityEntitySelect, IUpdateKid } from '@/libs/models';
 import { 
   KID_AGE_COPY, 
   isKidUnderMinAge 
@@ -37,15 +37,16 @@ const UpdateKidView: React.FC = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const dispatch = useAppDispatch();
-
   const { data: kid, isLoading: kidLoading } = useGetKidQuery({ id: id || '' }, { skip: !id });
   const [updateKid] = useUpdateKidMutation();
+  const [getKidPresignedUploadUrl] = useGetKidPresignedUploadUrlMutation();
+  const [uploadKidPhotoFallback] = useUploadKidPhotoFallbackMutation();
   const { data: kidGroups = [] } = useGetKidGroupsQuery();
   const { data: medicalConditions = [] } = useGetKidMedicalConditionsQuery();
 
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [photoBlob, setPhotoBlob] = useState<Blob | null>(null);
+  const [isPhotoRemoved, setIsPhotoRemoved] = useState<boolean>(false);
   const [staticGroup, setStaticGroup] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -75,6 +76,7 @@ const UpdateKidView: React.FC = () => {
       setValue('observations', kid.observations || '');
       if (kid.photoUrl) {
         setPhotoPreview(kid.photoUrl);
+        setIsPhotoRemoved(false);
       }
     }
   }, [kid, setValue]);
@@ -86,10 +88,17 @@ const UpdateKidView: React.FC = () => {
         const resized = await resizeAndCropImageToSquare(file, 500, 500 * 1024);
         setPhotoBlob(resized);
         setPhotoPreview(URL.createObjectURL(resized));
+        setIsPhotoRemoved(false);
       } catch {
         toast.error('Error al procesar la imagen seleccionada');
       }
     }
+  };
+
+  const removePhoto = () => {
+    setPhotoPreview('');
+    setPhotoBlob(null);
+    setIsPhotoRemoved(true);
   };
 
   const birthdayValue = watch('birthday');
@@ -128,23 +137,51 @@ const UpdateKidView: React.FC = () => {
 
     setIsSubmitting(true);
     try {
-      let uploadedPhotoUrl: string | undefined = undefined;
+      let uploadedPhotoUrl: string | null | undefined = undefined;
 
-      // Upload new photo ONLY if the user selected a new one
-      if (photoBlob) {
-        const formData = new FormData();
-        formData.append('file', photoBlob);
-        const uploadAction = await dispatch(UploadUserImage({ formData }));
-        if (UploadUserImage.fulfilled.match(uploadAction)) {
-          uploadedPhotoUrl = uploadAction.payload as string;
-        } else {
-          toast.error('Error al subir la nueva imagen');
+      if (isPhotoRemoved) {
+        uploadedPhotoUrl = null;
+      } else if (photoBlob) {
+        try {
+          const fileName = `kid-${id}.jpg`;
+          const presigned = await getKidPresignedUploadUrl({
+            fileName,
+            contentType: 'image/jpeg',
+            kidId: id,
+          }).unwrap();
+
+          let uploadSucceeded = false;
+          try {
+            const directResponse = await fetch(presigned.uploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'image/jpeg',
+              },
+              body: photoBlob,
+            });
+            if (directResponse.ok) {
+              uploadedPhotoUrl = presigned.publicUrl;
+              uploadSucceeded = true;
+            }
+          } catch (directUploadErr) {
+            console.warn('Direct S3 upload failed, using multipart fallback:', directUploadErr);
+          }
+
+          if (!uploadSucceeded) {
+            const formData = new FormData();
+            formData.append('file', photoBlob, fileName);
+            formData.append('kidId', id);
+            const fallbackRes = await uploadKidPhotoFallback(formData).unwrap();
+            uploadedPhotoUrl = fallbackRes.photoUrl;
+          }
+        } catch {
+          toast.error(t('kidRegistration:form.error_uploading_photo', 'Error al subir la nueva imagen'));
           setIsSubmitting(false);
           return;
         }
       }
 
-      const updatePayload: any = {
+      const updatePayload: IUpdateKid = {
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
         birthday: values.birthday,
@@ -154,11 +191,8 @@ const UpdateKidView: React.FC = () => {
         observations: values.observations !== undefined && values.observations !== null ? values.observations.trim() : '',
         healthSecurityEntity: values.healthSecurityEntity || undefined,
         medicalConditionId: values.medicalCondition || undefined,
+        ...(uploadedPhotoUrl !== undefined ? { photoUrl: uploadedPhotoUrl } : {}),
       };
-
-      if (uploadedPhotoUrl) {
-        updatePayload.photoUrl = uploadedPhotoUrl;
-      }
 
       await updateKid({
         id,
@@ -243,6 +277,16 @@ const UpdateKidView: React.FC = () => {
             <span className="text-xs text-gray-500 font-medium mt-2.5">
               Toca la imagen o la cámara para cambiar la foto
             </span>
+            {photoPreview && (
+              <button
+                type="button"
+                onClick={removePhoto}
+                className="mt-2 text-xs text-red-500 hover:text-red-700 font-medium flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <Trash2 size={13} />
+                {t('kidRegistration:form.remove_photo', 'Eliminar foto')}
+              </button>
+            )}
           </div>
 
           {/* Formulario de Datos */}

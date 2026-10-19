@@ -22,9 +22,10 @@ import {
   useLazyGetKidGuardianQuery,
   useCreateKidGuardianMutation,
   useCreateKidMutation,
+  useGetKidPresignedUploadUrlMutation,
+  useUploadKidPhotoFallbackMutation,
 } from '@/libs/state/redux/api/kidChurchApi';
 import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice';
-import { UploadUserImage } from '@/libs/state/redux/thunks/user/user.thunk';
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 
@@ -84,6 +85,8 @@ const NewKidView = () => {
   const [triggerGetGuardian] = useLazyGetKidGuardianQuery();
   const [createKidGuardian] = useCreateKidGuardianMutation();
   const [createKid] = useCreateKidMutation();
+  const [getKidPresignedUploadUrl] = useGetKidPresignedUploadUrlMutation();
+  const [uploadKidPhotoFallback] = useUploadKidPhotoFallbackMutation();
   const [existingGuardian, setExistingGuardian] = useState<IKidGuardian | null>(null);
   const kidSlice = useAppSelector((state) => state.kidSlice);
   const churchCampusSlice = useAppSelector((state) => state.churchCampusSlice);
@@ -261,13 +264,38 @@ const NewKidView = () => {
 
     try {
       if (photoFile) {
-        const formData = new FormData();
-        formData.append('file', photoFile);
-        const resultAction = await dispatch(UploadUserImage({ formData }));
-        if (UploadUserImage.fulfilled.match(resultAction)) {
-          uploadedPhotoUrl = resultAction.payload as string;
-        } else {
-          toast.error("Error al subir la imagen");
+        try {
+          const fileName = `kid-new-${Date.now()}.jpg`;
+          const presigned = await getKidPresignedUploadUrl({
+            fileName,
+            contentType: 'image/jpeg',
+          }).unwrap();
+
+          let uploadSucceeded = false;
+          try {
+            const directResponse = await fetch(presigned.uploadUrl, {
+              method: 'PUT',
+              headers: {
+                'Content-Type': 'image/jpeg',
+              },
+              body: photoFile,
+            });
+            if (directResponse.ok) {
+              uploadedPhotoUrl = presigned.publicUrl;
+              uploadSucceeded = true;
+            }
+          } catch (directUploadErr) {
+            console.warn('Direct S3 upload failed, using multipart fallback:', directUploadErr);
+          }
+
+          if (!uploadSucceeded) {
+            const formData = new FormData();
+            formData.append('file', photoFile, fileName);
+            const fallbackRes = await uploadKidPhotoFallback(formData).unwrap();
+            uploadedPhotoUrl = fallbackRes.photoUrl;
+          }
+        } catch {
+          toast.error('Error al subir la imagen');
           setIsUploading(false);
           return;
         }

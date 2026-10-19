@@ -3,7 +3,6 @@ import {
   IActivationTokenResponse,
   ICreateKid,
   ICreateKidGuardian,
-
   ICreateKidRegistration,
   IKid,
   IKidGroup,
@@ -17,6 +16,7 @@ import {
   KidAttendanceFlowModeEnum,
   KidAttendanceStatusEnum,
   KidGuardianRelationCodeEnum,
+  PresignedUploadUrlResponse,
 } from '@/libs/models';
 
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
@@ -256,7 +256,9 @@ export const kidChurchApi = baseApi.injectEndpoints({
         method: HttpRequestMethod.GET,
       }),
       providesTags: (result) =>
-        result?.id ? [{ type: 'KidGuardian', id: result.id }] : [{ type: 'KidGuardian', id: 'CURRENT' }],
+        result?.id
+          ? [{ type: 'KidGuardian', id: result.id }]
+          : [{ type: 'KidGuardian', id: 'CURRENT' }],
     }),
 
     generateGuardianActivationToken: builder.mutation<
@@ -272,7 +274,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
     }),
 
     createKidGuardian: builder.mutation<IKidGuardian, ICreateKidGuardian>({
-
       query: (payload) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: '/kid-guardian',
@@ -332,7 +333,10 @@ export const kidChurchApi = baseApi.injectEndpoints({
       }),
     }),
 
-    createKidRegistration: builder.mutation<CreateKidRegistrationResponse, CreateKidRegistrationApiPayload>({
+    createKidRegistration: builder.mutation<
+      CreateKidRegistrationResponse,
+      CreateKidRegistrationApiPayload
+    >({
       query: (payload) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: '/kid-registration',
@@ -409,7 +413,10 @@ export const kidChurchApi = baseApi.injectEndpoints({
               { type: 'KidGuardian', id: 'LIST' },
               { type: 'KidRegistered', id: 'LIST' },
             ]
-          : [{ type: 'KidGuardian', id: 'ME' }, { type: 'KidGuardian', id: 'LIST' }],
+          : [
+              { type: 'KidGuardian', id: 'ME' },
+              { type: 'KidGuardian', id: 'LIST' },
+            ],
     }),
 
     sendUrgentGuardianNotice: builder.mutation<
@@ -435,7 +442,9 @@ export const kidChurchApi = baseApi.injectEndpoints({
           ...(args.groupId ? { kidGroupId: args.groupId } : {}),
         },
       }),
-      transformResponse: (raw: IRawLiveTrackingResponse | null | undefined): IKidLiveTrackingResponse => {
+      transformResponse: (
+        raw: IRawLiveTrackingResponse | null | undefined,
+      ): IKidLiveTrackingResponse => {
         if (!raw) {
           return {
             flowMode: KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
@@ -444,7 +453,10 @@ export const kidChurchApi = baseApi.injectEndpoints({
           };
         }
 
-        const mapKidToItem = (k: IRawLiveTrackingKid, defaultStatus: KidAttendanceStatusEnum): IKidLiveTrackingItem => {
+        const mapKidToItem = (
+          k: IRawLiveTrackingKid,
+          defaultStatus: KidAttendanceStatusEnum,
+        ): IKidLiveTrackingItem => {
           const reg = k.currentKidRegistration;
           const stages = reg?.attendanceStages || {};
           const checkIn = stages[KidAttendanceStatusEnum.CHECKED_IN];
@@ -454,7 +466,9 @@ export const kidChurchApi = baseApi.injectEndpoints({
           const primaryGuardian = k.relations?.[0] || k.guardians?.[0];
           const guardianFullName =
             reg?.additionalInfo?.guardianFullName ||
-            (primaryGuardian ? `${primaryGuardian.firstName || ''} ${primaryGuardian.lastName || ''}`.trim() : '');
+            (primaryGuardian
+              ? `${primaryGuardian.firstName || ''} ${primaryGuardian.lastName || ''}`.trim()
+              : '');
           const guardianPhone = primaryGuardian
             ? `${primaryGuardian.dialCodePhone || ''}${primaryGuardian.phone || ''}`
             : undefined;
@@ -487,9 +501,15 @@ export const kidChurchApi = baseApi.injectEndpoints({
           };
         };
 
-        const pendingItems = (raw.pendingEntry || []).map((k: IRawLiveTrackingKid) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_IN));
-        const inAreaItems = (raw.inArea || []).map((k: IRawLiveTrackingKid) => mapKidToItem(k, KidAttendanceStatusEnum.IN_AREA));
-        const checkedOutItems = (raw.checkedOut || []).map((k: IRawLiveTrackingKid) => mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_OUT));
+        const pendingItems = (raw.pendingEntry || []).map((k: IRawLiveTrackingKid) =>
+          mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_IN),
+        );
+        const inAreaItems = (raw.inArea || []).map((k: IRawLiveTrackingKid) =>
+          mapKidToItem(k, KidAttendanceStatusEnum.IN_AREA),
+        );
+        const checkedOutItems = (raw.checkedOut || []).map((k: IRawLiveTrackingKid) =>
+          mapKidToItem(k, KidAttendanceStatusEnum.CHECKED_OUT),
+        );
         const allItems = [...pendingItems, ...inAreaItems, ...checkedOutItems];
 
         return {
@@ -532,6 +552,30 @@ export const kidChurchApi = baseApi.injectEndpoints({
         { type: 'KidGroup', id: 'LIST' },
       ],
     }),
+
+    getKidPresignedUploadUrl: builder.mutation<
+      PresignedUploadUrlResponse,
+      { fileName: string; contentType: string; kidId?: string }
+    >({
+      query: (payload) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid/presigned-upload-url',
+        method: HttpRequestMethod.POST,
+        data: payload,
+      }),
+    }),
+
+    uploadKidPhotoFallback: builder.mutation<{ key: string; photoUrl: string }, FormData>({
+      query: (formData) => ({
+        microservice: MicroserviceEnum.KidChurch,
+        url: '/kid/upload-photo',
+        method: HttpRequestMethod.POST,
+        data: formData,
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }),
+    }),
   }),
   overrideExisting: false,
 });
@@ -570,5 +614,6 @@ export const {
   useLazyGetKidLiveTrackingQuery,
   useConfirmKidEntryMutation,
   useConfirmKidCheckoutMutation,
+  useGetKidPresignedUploadUrlMutation,
+  useUploadKidPhotoFallbackMutation,
 } = kidChurchApi;
-
