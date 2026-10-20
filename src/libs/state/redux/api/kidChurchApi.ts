@@ -230,7 +230,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         url: '/kid',
         method: HttpRequestMethod.POST,
         data: payload,
-        queueIfOffline: true,
       }),
       invalidatesTags: [{ type: 'Kid', id: 'LIST' }],
     }),
@@ -241,7 +240,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         url: `/kid/${id}`,
         method: HttpRequestMethod.PUT,
         data,
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'Kid', id: arg.id },
@@ -279,7 +277,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         url: '/kid-guardian',
         method: HttpRequestMethod.POST,
         data: payload,
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'KidGuardian', id: 'CURRENT' },
@@ -299,7 +296,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
           relation,
           kidId,
         },
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'KidGuardian', id: arg.id },
@@ -313,7 +309,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         microservice: MicroserviceEnum.KidChurch,
         url: `/kid/${kidId}/guardian/${guardianId}`,
         method: HttpRequestMethod.DELETE,
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'Kid', id: arg.kidId },
@@ -342,7 +337,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         url: '/kid-registration',
         method: HttpRequestMethod.POST,
         data: payload,
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'KidRegistered', id: 'LIST' },
@@ -359,7 +353,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         url: `/kid/${id}`,
         method: HttpRequestMethod.DELETE,
         params: targetKidId ? { targetKidId } : undefined,
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'Kid', id: arg.id },
@@ -373,7 +366,6 @@ export const kidChurchApi = baseApi.injectEndpoints({
         microservice: MicroserviceEnum.KidChurch,
         url: `/kid-registration/${id}`,
         method: HttpRequestMethod.DELETE,
-        queueIfOffline: true,
       }),
       invalidatesTags: (_result, _error, arg) => [
         { type: 'KidRegistered', id: 'LIST' },

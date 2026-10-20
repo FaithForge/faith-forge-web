@@ -1,7 +1,6 @@
 import { BaseQueryFn, createApi } from '@reduxjs/toolkit/query/react';
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
 import { microserviceApiRequest } from '@/libs/utils/http';
-import { enqueueOfflineMutation } from '@/libs/utils/offlineQueue';
 import { RootState } from '../store';
 
 export interface MicroserviceBaseQueryArgs {
@@ -12,7 +11,6 @@ export interface MicroserviceBaseQueryArgs {
   params?: Record<string, unknown>;
   headers?: Record<string, string>;
   idempotencyKey?: string;
-  queueIfOffline?: boolean;
 }
 
 import { ProblemDetails } from '@/libs/models/problemDetails';
@@ -57,7 +55,6 @@ export const microserviceBaseQuery: BaseQueryFn<
     params,
     headers = {},
     idempotencyKey,
-    queueIfOffline = false,
   } = args;
 
   const state = api.getState() as RootState;
@@ -86,23 +83,6 @@ export const microserviceBaseQuery: BaseQueryFn<
     return { data: response.data };
   } catch (err: unknown) {
     const errorObj = err as HttpErrorResponse;
-
-    const isOffline =
-      (typeof navigator !== 'undefined' && !navigator.onLine) ||
-      errorObj?.code === 'ERR_NETWORK' ||
-      errorObj?.message?.includes('Network Error');
-
-    // Automatic offline queueing for mutations if requested or offline
-    if (isOffline && method !== HttpRequestMethod.GET && queueIfOffline) {
-      enqueueOfflineMutation({
-        microservice,
-        method,
-        url,
-        data,
-        params,
-        idempotencyKey,
-      });
-    }
 
     const problemDetails: ProblemDetails | undefined =
       errorObj?.problemDetails || errorObj?.response?.data?.error;
