@@ -10,7 +10,7 @@ const KidChurchDashboardView = lazy(() => import('./KidChurchDashboardView'));
 /**
  * Route dispatcher for the kids church operational dashboard (`/kid-church`).
  * Delegates cleanly to the role-specific view:
- * - Group Coordinators and General Admins (`dashboard:view-group-coordinator`) -> CoordinatorKidChurchDashboardView (Recharts metrics, KPI boxes, roster)
+ * - Group Coordinators (`dashboard:view-group-coordinator`) -> CoordinatorKidChurchDashboardView (Recharts metrics, KPI boxes, classroom roster)
  * - Supervisors and Team Members -> KidChurchDashboardView (Classroom supervision roster)
  *
  * @returns {JSX.Element} Rendered role-specific dashboard.

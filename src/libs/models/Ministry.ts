@@ -175,3 +175,85 @@ export interface GetMinistryWorkspaceArgs {
   churchCampusId?: string;
   ministryId?: string;
 }
+
+export interface GetMinistryAnalyticsArgs {
+  id: string;
+  churchCampusId?: string;
+  from?: string;
+  to?: string;
+  date?: string;
+  churchMeetingIds?: string[];
+}
+
+export interface IVolunteerMeetingStatAreaBreakdown {
+  areaId: string;
+  areaName: string;
+  scope?: string;
+  totalAssigned: number;
+  attended: number;
+  excused: number;
+  unexcused: number;
+}
+
+export interface IVolunteerMeetingStatGroupBreakdown {
+  groupId: string;
+  groupName: string;
+  areaId?: string;
+  areaName?: string;
+  totalAssigned: number;
+  attended: number;
+  excused: number;
+  unexcused: number;
+}
+
+export interface IVolunteerMeetingStatHistory {
+  totalAssigned: number;
+  attended: number;
+  excused: number;
+  unexcused: number;
+  attendancePercent: number;
+  byArea: IVolunteerMeetingStatAreaBreakdown[];
+  byGroup: IVolunteerMeetingStatGroupBreakdown[];
+}
+
+export interface IKidsMeetingStatClassroomBreakdown {
+  classroomId: string;
+  classroomName: string;
+  ageRange?: string;
+  totalKids: number;
+  newKids: number;
+  boys: number;
+  girls: number;
+}
+
+export interface IKidsMeetingStatHistory {
+  totalKids: number;
+  newKids: number;
+  boys: number;
+  girls: number;
+  byClassroom: IKidsMeetingStatClassroomBreakdown[];
+}
+
+export interface IMinistryAnalyticsResponse {
+  ministry: IMinistry;
+  temporalRange: {
+    from: string;
+    to: string;
+  };
+  volunteers: IVolunteerMeetingStatHistory;
+  kids?: IKidsMeetingStatHistory | null;
+  structure: {
+    areas: IMinistryArea[];
+    groups: IMinistryGroupConfig[];
+    teams: IMinistryWorkspaceTeam[];
+    leadership: IMinistryWorkspaceLeadership;
+    assignmentsCount: number;
+  };
+}
+
+export type IMinistryVolunteerAnalytics = IVolunteerMeetingStatHistory;
+export type IMinistryKidsAnalytics = NonNullable<IMinistryAnalyticsResponse['kids']>;
+export type IMinistryStructureAnalytics = IMinistryAnalyticsResponse['structure'];
+
+
+

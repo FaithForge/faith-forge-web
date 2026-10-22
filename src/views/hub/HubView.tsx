@@ -1,15 +1,16 @@
 import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Crown, Shield, ChevronRight, LogOut, Sparkles } from 'lucide-react';
+import { Crown, Shield, ChevronRight, LogOut, Sparkles, Building2 } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
 import { useTranslation } from 'react-i18next';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { setActiveExperience, changeCurrentRole } from '@/libs/state/redux/slices/user/auth.slice';
 import { UserLogout } from '@/libs/state/redux/thunks/user/auth.thunk';
-import { UserExperienceEnum, UserRole, ChurchRole } from '@/libs/utils/auth';
+import { UserExperienceEnum, UserRole, ChurchRole, AppRole, isOperationalStaffRole } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
+import { userRolesNavBarConfig } from '@/components/layout/TopBar';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { useChurchModules } from '@/libs/hooks/useChurchModules';
 import { ChurchModule } from '@/libs/models/Church';
@@ -27,6 +28,7 @@ const HubView: React.FC = () => {
   const dispatch = useAppDispatch();
   const user = useAppSelector((state) => state.authSlice.user);
   const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
+  const volunteerCampuses = useAppSelector((state) => state.volunteerContextSlice.campuses || []);
 
   const kidsModuleName = useKidsTerm('module_alias');
   const volunteerTerm = useChurchTerm('volunteer');
@@ -50,12 +52,57 @@ const HubView: React.FC = () => {
         : 'theme-ADMIN';
       document.body.className = `${adminTheme} antialiased bg-slate-50`;
       navigate(APP_ROUTES.admin.root, { replace });
+    } else if (exp === UserExperienceEnum.MINISTRY_COORDINATOR) {
+      dispatch(changeCurrentRole(ChurchRole.MINISTRY_ADMIN as any));
+      document.body.className = 'theme-MINISTRY_ADMIN antialiased bg-slate-50';
+      navigate(APP_ROUTES.ministryCoordinator.root, { replace });
     } else if (exp === UserExperienceEnum.KID_CHURCH_STAFF) {
-      const operationalRole = (user?.roles || []).find((r: any) =>
-        ![UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.STAFF].includes(r) && isRoleEnabled(r)
-      ) || ChurchRole.KID_REGISTER_USER;
+      // 1. Search for an explicitly assigned and enabled operational role in account roles
+      const userOperationalRole = (user?.roles || []).find((r: any) =>
+        isOperationalStaffRole(r) && isRoleEnabled(r)
+      );
+
+      // 2. Or resolve from assigned volunteer campus groups/areas
+      let volunteerAssignedRole: AppRole | undefined;
+      for (const campus of volunteerCampuses) {
+        for (const group of campus.groups || []) {
+          const primaryArea = group.areas?.[0];
+          const primaryRole = primaryArea?.role || group.groupRole;
+          const isGroupRegistration = primaryArea?.scope === 'KID_REGISTRATION';
+          let targetRole: AppRole;
+          if (primaryRole === 'GROUP_COORDINATOR') {
+            targetRole = ChurchRole.KID_CHURCH_GROUP_COORDINATOR;
+          } else if (primaryRole === 'SUPERVISOR') {
+            targetRole = isGroupRegistration
+              ? ChurchRole.KID_REGISTER_SUPERVISOR
+              : ChurchRole.KID_CHURCH_SUPERVISOR;
+          } else {
+            targetRole = isGroupRegistration
+              ? ChurchRole.KID_REGISTER_USER
+              : ChurchRole.KID_CHURCH_USER;
+          }
+          if (targetRole && isRoleEnabled(targetRole)) {
+            volunteerAssignedRole = targetRole;
+            break;
+          }
+        }
+        if (volunteerAssignedRole) break;
+      }
+
+      const operationalRole =
+        userOperationalRole || volunteerAssignedRole || ChurchRole.KID_REGISTER_USER;
+
       dispatch(changeCurrentRole(operationalRole as any));
-      navigate(APP_ROUTES.kidRegistration.root, { replace });
+      const themeClass =
+        userRolesNavBarConfig[operationalRole]?.themeClass || 'theme-KID_REGISTER_USER';
+      document.body.className = `${themeClass} antialiased bg-slate-50`;
+      const targetUrl =
+        userRolesNavBarConfig[operationalRole]?.dashboardUrl || APP_ROUTES.kidRegistration.root;
+      const safeTargetUrl =
+        targetUrl === APP_ROUTES.kidRegistration.root || targetUrl === APP_ROUTES.kidChurch.root
+          ? targetUrl
+          : APP_ROUTES.kidRegistration.root;
+      navigate(safeTargetUrl, { replace });
     } else if (exp === UserExperienceEnum.KID_GUARDIAN) {
       navigate(APP_ROUTES.kidGuardian.root, { replace });
     }
@@ -66,7 +113,7 @@ const HubView: React.FC = () => {
     document.body.className = 'theme-USER antialiased bg-slate-50';
   }, []);
 
-  // Card definitions ordered: 1. Admin, 2. Staff, 3. Kid Guardian
+  // Card definitions ordered: 1. Admin, 2. Ministry Coordinator, 3. Staff, 4. Kid Guardian
   const cardsConfig = [
     {
       id: UserExperienceEnum.ADMIN,
@@ -81,6 +128,20 @@ const HubView: React.FC = () => {
       borderColor: 'border-slate-200 hover:border-slate-400',
       iconColor: 'text-amber-400',
       iconBg: 'bg-slate-800 text-white',
+    },
+    {
+      id: UserExperienceEnum.MINISTRY_COORDINATOR,
+      title: t('hub:cards.ministry_coordinator_title', 'Coordinador de Ministerio'),
+      subtitle: t(
+        'hub:cards.ministry_coordinator_subtitle',
+        'Gestión estratégica, estructura y estadísticas de servicio y asistencia',
+      ),
+      icon: Building2,
+      gradient: 'from-sky-600 to-cyan-700',
+      badgeBg: 'bg-sky-50 text-sky-700',
+      borderColor: 'border-sky-200 hover:border-sky-400',
+      iconColor: 'text-sky-500',
+      iconBg: 'bg-gradient-to-br from-[#73c2fb] to-[#0284c7] text-white',
     },
     {
       id: UserExperienceEnum.KID_CHURCH_STAFF,
@@ -120,13 +181,19 @@ const HubView: React.FC = () => {
     },
   ];
 
-  // Filter cards so KID_CHURCH_STAFF is ONLY shown if user has at least one active, enabled operational role
-  const hasActiveStaffRole = (user?.roles || []).some(
-    (r: any) =>
-      r !== UserRole.USER &&
-      (r as string) !== 'USER' &&
-      isRoleEnabled(r)
-  );
+  const isSuperAdmin = (user?.roles || []).includes(UserRole.SUPER_ADMIN);
+  const isAdmin = isSuperAdmin || (user?.roles || []).includes(UserRole.ADMIN);
+
+  // Filter cards so KID_CHURCH_STAFF is ONLY shown if user has at least one active, enabled operational role,
+  // volunteer assignment, or administrative access.
+  const hasActiveStaffRole =
+    isSuperAdmin ||
+    isAdmin ||
+    volunteerCampuses.some((c) => (c.groups || []).length > 0) ||
+    (user?.roles || []).some(
+      (r: any) => isOperationalStaffRole(r) && isRoleEnabled(r)
+    ) ||
+    experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF);
 
   const availableCards = cardsConfig.filter((card) => {
     if (!experiences.includes(card.id)) return false;

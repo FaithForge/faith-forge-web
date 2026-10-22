@@ -29,11 +29,11 @@ export type RoleThemePalette = Record<VolunteerRole, RoleThemeStyle>;
  */
 export const REGISTRATION_ROLE_THEME: RoleThemePalette = {
   [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: {
-    badge: 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold',
-    avatar: 'bg-amber-100 text-amber-900 border-2 border-amber-300',
-    photoRing: 'ring-2 ring-amber-600 ring-offset-1',
-    highlightBg: 'bg-amber-50/40 hover:bg-amber-100/50',
-    tagBg: 'bg-amber-100 text-amber-900 border-amber-300',
+    badge: 'bg-sky-100 text-sky-950 border border-sky-300 font-semibold',
+    avatar: 'bg-sky-100 text-sky-950 border-2 border-sky-400',
+    photoRing: 'ring-2 ring-sky-600 ring-offset-1',
+    highlightBg: 'bg-sky-50/40 hover:bg-sky-100/50',
+    tagBg: 'bg-sky-100 text-sky-950 border-sky-300',
   },
   [VolunteerRole.AREA_GENERAL_COORDINATOR]: {
     badge: 'bg-emerald-100 text-emerald-950 border border-emerald-300 font-semibold',
@@ -70,11 +70,11 @@ export const REGISTRATION_ROLE_THEME: RoleThemePalette = {
  */
 export const KIDS_CHURCH_ROLE_THEME: RoleThemePalette = {
   [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: {
-    badge: 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold',
-    avatar: 'bg-amber-100 text-amber-900 border-2 border-amber-300',
-    photoRing: 'ring-2 ring-amber-600 ring-offset-1',
-    highlightBg: 'bg-amber-50/40 hover:bg-amber-100/50',
-    tagBg: 'bg-amber-100 text-amber-900 border-amber-300',
+    badge: 'bg-sky-100 text-sky-950 border border-sky-300 font-semibold',
+    avatar: 'bg-sky-100 text-sky-950 border-2 border-sky-400',
+    photoRing: 'ring-2 ring-sky-600 ring-offset-1',
+    highlightBg: 'bg-sky-50/40 hover:bg-sky-100/50',
+    tagBg: 'bg-sky-100 text-sky-950 border-sky-300',
   },
   [VolunteerRole.AREA_GENERAL_COORDINATOR]: {
     badge: 'bg-blue-100 text-blue-900 border border-blue-200 font-semibold',
@@ -111,11 +111,11 @@ export const KIDS_CHURCH_ROLE_THEME: RoleThemePalette = {
  */
 export const GENERAL_ROLE_THEME: RoleThemePalette = {
   [VolunteerRole.MINISTRY_GENERAL_COORDINATOR]: {
-    badge: 'bg-amber-100 text-amber-900 border border-amber-300 font-semibold',
-    avatar: 'bg-amber-100 text-amber-900 border-2 border-amber-300',
-    photoRing: 'ring-2 ring-amber-600 ring-offset-1',
-    highlightBg: 'bg-amber-50/40 hover:bg-amber-100/50',
-    tagBg: 'bg-amber-100 text-amber-900 border-amber-300',
+    badge: 'bg-sky-100 text-sky-950 border border-sky-300 font-semibold',
+    avatar: 'bg-sky-100 text-sky-950 border-2 border-sky-400',
+    photoRing: 'ring-2 ring-sky-600 ring-offset-1',
+    highlightBg: 'bg-sky-50/40 hover:bg-sky-100/50',
+    tagBg: 'bg-sky-100 text-sky-950 border-sky-300',
   },
   [VolunteerRole.AREA_GENERAL_COORDINATOR]: {
     badge: 'bg-blue-100 text-blue-900 border border-blue-200 font-semibold',

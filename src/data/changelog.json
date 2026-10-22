@@ -1,5 +1,19 @@
 [
   {
+    "version": "3.16.0",
+    "type": "minor",
+    "timestamp": "2026-10-21T02:46:52.909Z",
+    "dateFormatted": "20/10/2026 09:46 PM",
+    "title": "Nuevo panel gerencial para la coordinación de ministerio",
+    "changes": [
+      "Espacio de trabajo independiente para la coordinación de ministerio en el menú principal",
+      "Filtros de tiempo avanzados: día específico, 7 días, semana, mes, año actual y rangos personalizados",
+      "Selector múltiple para consultar un servicio específico, varios o el panorama completo",
+      "Visualización adaptable: métricas de niños, salones y demografía para ministerios infantiles, y gestión de equipo para ministerios generales",
+      "Selector rápido de sede y ministerio para usuarios con múltiples responsabilidades"
+    ]
+  },
+  {
     "version": "3.15.2",
     "type": "patch",
     "timestamp": "2026-10-19T21:32:16.014Z",

@@ -75,12 +75,14 @@ export const KidChurchBottomNav: React.FC = () => {
 
   const { isConfigured } = useChurchMeetingStatus();
 
-  // Auto-open configuration modal on first visit if meeting is not configured
+  // Auto-open configuration modal on first visit if meeting is not configured.
+  // Note: Ministry coordinators do not bind to an individual service and must never be blocked.
   useEffect(() => {
+    if (can('dashboard:view-ministry-coordinator')) return;
     if (!isConfigured && !openSettings) {
       handleOpenSettings(true);
     }
-  }, [isConfigured]);
+  }, [isConfigured, can]);
 
   const navItems: BottomNavItem[] = [
     {

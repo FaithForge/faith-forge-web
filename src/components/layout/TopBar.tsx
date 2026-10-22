@@ -94,11 +94,11 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
   [ChurchRole.MINISTRY_ADMIN]: {
     id: ChurchRole.MINISTRY_ADMIN,
-    appTitle: 'KidChurch',
-    label: 'Admin General',
+    appTitle: 'Ministerio',
+    label: 'Coordinador de Ministerio',
     themeClass: 'theme-MINISTRY_ADMIN',
-    color: '#B45309',
-    dashboardUrl: APP_ROUTES.kidChurch.root,
+    color: '#0284C7',
+    dashboardUrl: APP_ROUTES.ministryCoordinator.root,
   },
   [ChurchRole.KID_CHURCH_GROUP_COORDINATOR]: {
     id: ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
@@ -208,13 +208,16 @@ const isAreaRegistration = (area?: { scope?: string; name?: string }) => {
   return area.scope === 'KID_REGISTRATION';
 };
 
-/** Checks if a role is a system-level admin role (which never belongs to a group) */
+/** Checks if a role is a system-level or decoupled non-operational role (never selectable in operational TopBar) */
 const isSystemAdminRole = (roleId?: string, appTitle?: string) => {
   return (
     appTitle === 'Admin' ||
     roleId === UserRole.SUPER_ADMIN ||
     roleId === UserRole.ADMIN ||
-    roleId === UserRole.STAFF
+    roleId === UserRole.STAFF ||
+    roleId === ChurchStaffRole.CHURCH_ADMIN ||
+    roleId === ChurchStaffRole.CHURCH_STAFF ||
+    roleId === ChurchRole.MINISTRY_ADMIN
   );
 };
 
@@ -318,6 +321,18 @@ const TopBar = () => {
     setSettingsModalOpen(open);
   };
 
+  const {
+    isChurchVolunteer,
+    campuses,
+    activeCampusId,
+    activeCampusName,
+    activeGroupConfigId,
+    activeGroupConfigName,
+    activeVolunteerRole,
+    isOnboardingCompleted,
+    userMsRoles,
+  } = useAppSelector((state) => state.volunteerContextSlice);
+
   const { isConfigured } = useChurchMeetingStatus();
 
   // Open settings drawer on external request when BottomNav is not mounted (admin roles)
@@ -334,6 +349,12 @@ const TopBar = () => {
 
   // Auto-open configuration modal on first visit for admin roles in operational workspaces
   useEffect(() => {
+    if (
+      currentRole === ChurchRole.MINISTRY_ADMIN ||
+      activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR
+    ) {
+      return;
+    }
     const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
     const isOperationalWorkspace =
       location.pathname.startsWith(APP_ROUTES.kidRegistration.root) ||
@@ -342,19 +363,7 @@ const TopBar = () => {
     if (isAdminRole && isOperationalWorkspace && !isConfigured && !settingsDrawerOpen) {
       handleOpenSettings(true);
     }
-  }, [currentRole, location.pathname, isConfigured, settingsDrawerOpen]);
-
-  const {
-    isChurchVolunteer,
-    campuses,
-    activeCampusId,
-    activeCampusName,
-    activeGroupConfigId,
-    activeGroupConfigName,
-    activeVolunteerRole,
-    isOnboardingCompleted,
-    userMsRoles,
-  } = useAppSelector((state) => state.volunteerContextSlice);
+  }, [currentRole, activeVolunteerRole, location.pathname, isConfigured, settingsDrawerOpen]);
 
   const currentMasterCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const currentVolunteerCampus = campuses.find((c) => c.id === activeCampusId) || campuses[0];

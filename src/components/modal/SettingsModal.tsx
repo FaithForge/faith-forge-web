@@ -55,6 +55,7 @@ import { isRoleEnabled } from '@/config/roles';
 import { APP_ROUTES } from '@/config/routes';
 import { formatPersonShortName } from '@/libs/utils/text';
 import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import { usePermissions } from '@/libs/hooks/usePermissions';
 
 interface SettingsModalProps {
   open: boolean;
@@ -637,24 +638,29 @@ const SettingsModal = ({
   const userName =
     formatPersonShortName(user?.firstName, user?.lastName) || 'Servidor(a)';
 
+  const { can } = usePermissions();
+  const canBypassRequiredMeeting =
+    can('dashboard:view-ministry-coordinator') || can('checkin:bypass-schedule');
+  const isDismissible = isConfigured || canBypassRequiredMeeting;
+
   return (
     <AppDrawer
       open={open}
       onOpenChange={onOpenChange}
-      dismissible={isConfigured}
-      showCloseButton={isConfigured}
+      dismissible={isDismissible}
+      showCloseButton={isDismissible}
       icon={<Settings size={18} className="text-primary shrink-0" />}
       title={t('settings.title')}
       bodyClassName="p-4 flex flex-col gap-4 pb-8"
       onPointerDownOutside={(e) => {
-        if (!isConfigured) {
+        if (!isDismissible) {
           e.preventDefault();
         } else {
           onOpenChange(false);
         }
       }}
       onInteractOutside={(e) => {
-        if (!isConfigured) {
+        if (!isDismissible) {
           const target = e.target as HTMLElement | null;
           if (!target?.closest('header') && !target?.closest('[role="menu"]')) {
             e.preventDefault();

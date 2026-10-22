@@ -1,6 +1,6 @@
 ---
 name: ui-consistency
-description: Use when building or editing UI in this app: forms and inputs, icons, layouts, the TopBar/AdminLayout, bottom sheets, or mobile behavior. Enforces the shared placeholder color, icon-per-context rules, and the exact TopBar shape.
+description: "Use when building or editing UI in this app: forms and inputs, icons, layouts, the TopBar/AdminLayout, bottom sheets, or mobile behavior. Enforces the shared placeholder color, icon-per-context rules, and the exact TopBar shape."
 ---
 
 # UI/UX Consistency

@@ -88,7 +88,13 @@ export const usePermissions = () => {
     activeRoles.has(ChurchStaffRole.CHURCH_STAFF) ||
     (!isExplicitScopedRole &&
       (userRoles.includes(UserRole.STAFF) || userRoles.includes(ChurchStaffRole.CHURCH_STAFF)));
-  const isMinistryAdmin = isAdmin || activeRoles.has(ChurchRole.MINISTRY_ADMIN) || (!isExplicitScopedRole && userRoles.includes(ChurchRole.MINISTRY_ADMIN));
+  const isMinistryAdmin =
+    isAdmin ||
+    activeRoles.has(ChurchRole.MINISTRY_ADMIN) ||
+    activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR ||
+    (!isExplicitScopedRole &&
+      (userRoles.includes(ChurchRole.MINISTRY_ADMIN) ||
+        hasVolunteerRole(VolunteerRole.MINISTRY_GENERAL_COORDINATOR)));
 
   const isAreaCoordinator =
     !isExplicitScopedRole &&
@@ -135,7 +141,6 @@ export const usePermissions = () => {
   const isKidChurchRole = useMemo(() => {
     if (currentRole) {
       return (
-        currentRole === ChurchRole.MINISTRY_ADMIN ||
         currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
         currentRole === ChurchRole.KID_CHURCH_SUPERVISOR ||
         currentRole === ChurchRole.KID_CHURCH_USER
@@ -147,15 +152,12 @@ export const usePermissions = () => {
         activeVolunteerRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR
       );
     }
-    return (
-      activeRoles.has(ChurchRole.MINISTRY_ADMIN) ||
-      hasRole(
-        ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
-        ChurchRole.KID_CHURCH_SUPERVISOR,
-        ChurchRole.KID_CHURCH_USER,
-      )
+    return hasRole(
+      ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
+      ChurchRole.KID_CHURCH_SUPERVISOR,
+      ChurchRole.KID_CHURCH_USER,
     );
-  }, [currentRole, activeVolunteerRole, activeRoles, hasRole]);
+  }, [currentRole, activeVolunteerRole, hasRole]);
 
   const isKidRegistrationRole = useMemo(() => {
     if (currentRole) {
@@ -301,6 +303,7 @@ export const usePermissions = () => {
       return hasCapability(capability, {
         isAdmin,
         isSuperAdmin,
+        isMinistryAdmin,
         isAreaCoordinator,
         isGroupCoordinator,
         isSupervisor,
@@ -315,6 +318,7 @@ export const usePermissions = () => {
     [
       isAdmin,
       isSuperAdmin,
+      isMinistryAdmin,
       isAreaCoordinator,
       isGroupCoordinator,
       isSupervisor,

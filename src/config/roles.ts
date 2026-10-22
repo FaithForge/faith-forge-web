@@ -19,7 +19,7 @@ export const ROLE_VISIBILITY_CONFIG: Record<AppRole, boolean> = {
   [ChurchStaffRole.CHURCH_STAFF]: false,
 
   // Ministerio de Niños (Salones y clases)
-  [ChurchRole.MINISTRY_ADMIN]: false,                  // Niños - Admin General
+  [ChurchRole.MINISTRY_ADMIN]: true,                   // Niños - Coordinador de Ministerio
   [ChurchRole.KID_CHURCH_GROUP_COORDINATOR]: true,     // Niños - Coordinador de Grupo
   [ChurchRole.KID_CHURCH_SUPERVISOR]: true,            // Niños - Supervisor
   [ChurchRole.KID_CHURCH_USER]: false,                 // Niños - Servidor

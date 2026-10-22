@@ -83,21 +83,21 @@
     --role-avatar-to: #1d4ed8;
   }
   .theme-MINISTRY_ADMIN {
-    /* Director General: Ámbar profundo */
-    --color-primary: #b45309;
-    --color-primary-rgb: 180, 83, 9;
-    --color-primary-hover: #92400e;
-    --color-badge-bg: #fef3c7;
-    --color-badge-text: #78350f;
-    --color-border-subtle: #fde68a;
-    --color-header-accent: #fde68a;
-    --role-primary: #b45309;
-    --role-badge-bg: #fef3c7;
-    --role-badge-text: #78350f;
-    --role-border-subtle: #fde68a;
-    --role-header-accent: #fde68a;
-    --role-avatar-from: #d97706;
-    --role-avatar-to: #b45309;
+    /* Coordinador de Ministerio: Azul Maya */
+    --color-primary: #0284c7;
+    --color-primary-rgb: 2, 132, 199;
+    --color-primary-hover: #0369a1;
+    --color-badge-bg: #e0f2fe;
+    --color-badge-text: #0369a1;
+    --color-border-subtle: #73c2fb;
+    --color-header-accent: #73c2fb;
+    --role-primary: #0284c7;
+    --role-badge-bg: #e0f2fe;
+    --role-badge-text: #0369a1;
+    --role-border-subtle: #bae6fd;
+    --role-header-accent: #73c2fb;
+    --role-avatar-from: #73c2fb;
+    --role-avatar-to: #0284c7;
   }
   .theme-KID_REGISTER_COORDINATOR {
     /* Coordinador (Nivel 1): Verde Esmeralda Profundo */

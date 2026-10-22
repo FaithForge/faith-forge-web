@@ -164,8 +164,9 @@ export function useKidsTerm(key: KidsTermKey): string {
     const currentVolunteerCampus =
       volunteerCampuses.find((c) => c.id === activeCampusId) ||
       volunteerCampuses[0];
-    if (currentVolunteerCampus?.ministryCoordinator?.ministryName) {
-      return currentVolunteerCampus.ministryCoordinator.ministryName;
+    const coordMinistry = currentVolunteerCampus?.ministryCoordinators?.[0];
+    if (coordMinistry?.ministryName) {
+      return coordMinistry.ministryName;
     }
     return undefined;
   });

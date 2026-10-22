@@ -16,6 +16,9 @@ export interface VolunteerContextState {
   activeGroupConfigId: string | null;
   activeGroupConfigName: string | null;
   activeVolunteerRole: VolunteerRole | null;
+  activeMinistryId: string | null;
+  activeMinistryName: string | null;
+  activeMinistryType: string | null;
   isOnboardingCompleted: boolean;
 }
 
@@ -29,6 +32,9 @@ const initialState: VolunteerContextState = {
   activeGroupConfigId: null,
   activeGroupConfigName: null,
   activeVolunteerRole: null,
+  activeMinistryId: null,
+  activeMinistryName: null,
+  activeMinistryType: null,
   isOnboardingCompleted: false,
 };
 
@@ -109,6 +115,18 @@ export const volunteerContextSlice = createSlice({
     ) => {
       state.activeVolunteerRole = action.payload;
     },
+    setActiveMinistry: (
+      state,
+      action: PayloadAction<{
+        ministryId: string;
+        ministryName: string;
+        ministryType?: string | null;
+      }>,
+    ) => {
+      state.activeMinistryId = action.payload.ministryId;
+      state.activeMinistryName = action.payload.ministryName;
+      state.activeMinistryType = action.payload.ministryType || null;
+    },
     setOnboardingCompleted: (state, action: PayloadAction<boolean>) => {
       state.isOnboardingCompleted = action.payload;
     },
@@ -125,6 +143,7 @@ export const {
   setActiveCampus,
   setActiveGroupConfig,
   setActiveVolunteerRole,
+  setActiveMinistry,
   setOnboardingCompleted,
   resetVolunteerContext,
 } = volunteerContextSlice.actions;

@@ -9,5 +9,9 @@
     "staff_subtitle": "Estación de registro de niños, escaneo y atención en salones",
     "guardian_title": "{{guardian}} - {{module}}",
     "guardian_subtitle": "Carnet digital con código QR para ingreso y consulta de mis niños"
-  }
+  },
+  "no_meetings_title": "No hay reuniones para este día",
+  "no_meetings_desc": "No se encontraron reuniones ni servicios programados para la fecha seleccionada en esta sede.",
+  "no_records_title": "No hay registros para este día",
+  "no_records_desc": "No se encontraron registros de asistencia ni estadísticas consolidadas para la fecha o reunión seleccionada."
 }

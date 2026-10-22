@@ -294,18 +294,21 @@ export interface IVolunteerGroupConfigContext {
   groupPermissions?: string[];
 }
 
+export interface IVolunteerMinistryCoordinatorContext {
+  ministryId: string;
+  ministryName: string;
+  ministryType?: string;
+  role: VolunteerRole;
+  permissions: string[];
+}
+
 export interface IVolunteerCampusContext {
   id: string;
   name: string;
   position?: number;
   groups: IVolunteerGroupConfigContext[];
   areaCoordinates: IVolunteerAreaAssignmentContext[];
-  ministryCoordinator?: {
-    ministryId: string;
-    ministryName: string;
-    role: VolunteerRole;
-    permissions: string[];
-  } | null;
+  ministryCoordinators?: IVolunteerMinistryCoordinatorContext[];
 }
 
 export interface IVolunteerContextResponse {

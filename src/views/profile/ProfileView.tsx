@@ -295,12 +295,12 @@ const ProfileView: React.FC = () => {
     }> = [];
 
     for (const camp of volunteerCampuses) {
-      if (camp.ministryCoordinator) {
+      for (const coord of camp.ministryCoordinators || []) {
         list.push({
-          id: `coord-${camp.id}-${camp.ministryCoordinator.ministryId}`,
-          ministryName: camp.ministryCoordinator.ministryName,
-          roleLabel: getVolunteerRoleLabel(camp.ministryCoordinator.role),
-          role: camp.ministryCoordinator.role,
+          id: `coord-${camp.id}-${coord.ministryId}`,
+          ministryName: coord.ministryName,
+          roleLabel: getVolunteerRoleLabel(coord.role),
+          role: coord.role,
           areaName: t('profile:ministry.all_areas'),
           groupName: t('profile:ministry.all_groups'),
           campusName: camp.name,

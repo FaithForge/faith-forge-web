@@ -83,10 +83,14 @@ const KidGuardianDashboardView = lazy(
 const ChurchesManagementView = lazy(
   () => import('@/views/super-admin/ChurchesManagementView')
 );
+const MinistryCoordinatorDashboardView = lazy(
+  () => import('@/views/ministry-coordinator/views/MinistryCoordinatorDashboardView')
+);
 import { isFeatureEnabled } from '@/config/features';
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
 import AdminLayout from '@/components/layout/AdminLayout';
 import SuperAdminLayout from '@/components/layout/SuperAdminLayout';
+import MinistryCoordinatorLayout from '@/components/layout/MinistryCoordinatorLayout';
 import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
 import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
 import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
@@ -151,6 +155,9 @@ const IndexRedirect = () => {
   }
 
   // 2. Active experience explicitly selected
+  if (activeExperience === UserExperienceEnum.MINISTRY_COORDINATOR) {
+    return <Navigate to={APP_ROUTES.ministryCoordinator.root} replace />;
+  }
   if (activeExperience === UserExperienceEnum.KID_GUARDIAN && hasKidChurch) {
     return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
   }
@@ -159,10 +166,12 @@ const IndexRedirect = () => {
   }
   if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF && hasKidChurch) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
-    const dashboardUrl =
-      isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
-        ? userRolesNavBarConfig[currentRole]!.dashboardUrl
-        : APP_ROUTES.kidRegistration.root;
+    const roleDashboardUrl =
+      isEnabled && currentRole ? userRolesNavBarConfig[currentRole]?.dashboardUrl : null;
+    const isOperationalUrl =
+      roleDashboardUrl === APP_ROUTES.kidRegistration.root ||
+      roleDashboardUrl === APP_ROUTES.kidChurch.root;
+    const dashboardUrl = isOperationalUrl ? roleDashboardUrl! : APP_ROUTES.kidRegistration.root;
     return <Navigate to={dashboardUrl} replace />;
   }
 
@@ -172,6 +181,9 @@ const IndexRedirect = () => {
   }
 
   // 4. Single experience routing
+  if (experiences.includes(UserExperienceEnum.MINISTRY_COORDINATOR) && experiences.length === 1) {
+    return <Navigate to={APP_ROUTES.ministryCoordinator.root} replace />;
+  }
   if (experiences.includes(UserExperienceEnum.KID_GUARDIAN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.ADMIN)) {
     return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
   }
@@ -180,10 +192,12 @@ const IndexRedirect = () => {
   }
   if (hasKidChurch && enabledRoles.length > 0) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
-    const dashboardUrl =
-      isEnabled && currentRole && userRolesNavBarConfig[currentRole]?.dashboardUrl
-        ? userRolesNavBarConfig[currentRole]!.dashboardUrl
-        : APP_ROUTES.kidRegistration.root;
+    const roleDashboardUrl =
+      isEnabled && currentRole ? userRolesNavBarConfig[currentRole]?.dashboardUrl : null;
+    const isOperationalUrl =
+      roleDashboardUrl === APP_ROUTES.kidRegistration.root ||
+      roleDashboardUrl === APP_ROUTES.kidChurch.root;
+    const dashboardUrl = isOperationalUrl ? roleDashboardUrl! : APP_ROUTES.kidRegistration.root;
     return <Navigate to={dashboardUrl} replace />;
   }
 
@@ -411,6 +425,18 @@ function App() {
                 <Route
                   path={APP_ROUTES.admin.volunteerApplications}
                   element={<VolunteerApplicationsView />}
+                />
+              </Route>
+
+              {/* Ministry Coordinator Experience Layout (Decoupled from Kids Ministry) */}
+              <Route element={<MinistryCoordinatorLayout />}>
+                <Route
+                  path={APP_ROUTES.ministryCoordinator.root}
+                  element={<MinistryCoordinatorDashboardView />}
+                />
+                <Route
+                  path={APP_ROUTES.ministryCoordinator.myTeam}
+                  element={<MyTeamView />}
                 />
               </Route>
 

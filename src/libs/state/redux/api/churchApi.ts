@@ -1,6 +1,9 @@
 import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
 import {
+  IMinistry,
   GetMinistryWorkspaceArgs,
+  GetMinistryAnalyticsArgs,
+  IMinistryAnalyticsResponse,
   IChurch,
   CreateChurchPayload,
   UpdateChurchPayload,
@@ -281,6 +284,45 @@ export const churchApi = baseApi.injectEndpoints({
         ...(result?.ministry ? [{ type: 'Ministry' as const, id: result.ministry.id }] : []),
         { type: 'VolunteerAssignment', id: 'LIST' },
       ],
+    }),
+
+    getMinistryAnalytics: builder.query<IMinistryAnalyticsResponse, GetMinistryAnalyticsArgs>({
+      query: ({ id, churchCampusId, from, to, date, churchMeetingIds }) => {
+        const params: Record<string, string> = {};
+        if (churchCampusId) params.churchCampusId = churchCampusId;
+        if (from) params.from = from;
+        if (to) params.to = to;
+        if (date) params.date = date;
+        if (churchMeetingIds && churchMeetingIds.length > 0) {
+          params.churchMeetingIds = churchMeetingIds.join(',');
+        }
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: `/ministry/${id}/analytics`,
+          method: HttpRequestMethod.GET,
+          params,
+        };
+      },
+      providesTags: (_result, _error, arg) => [
+        { type: 'Ministry', id: `ANALYTICS_${arg.id}` },
+        { type: 'VolunteerAttendance', id: 'LIST' },
+      ],
+    }),
+
+    getMinistries: builder.query<IMinistry[], { churchCampusId?: string } | void>({
+      query: (args) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/ministry',
+        method: HttpRequestMethod.GET,
+        params: args?.churchCampusId ? { churchCampusId: args.churchCampusId } : {},
+      }),
+      providesTags: (result) =>
+        result
+          ? [
+              ...result.map(({ id }) => ({ type: 'Ministry' as const, id })),
+              { type: 'Ministry', id: 'LIST' },
+            ]
+          : [{ type: 'Ministry', id: 'LIST' }],
     }),
 
     getChurchMeetings: builder.query<IChurchMeeting[], GetChurchMeetingsArgs | void>({
@@ -676,6 +718,10 @@ export const {
   useAddChurchReportNoteMutation,
   useGetPresignedReportUploadUrlMutation,
   useUploadReportPhotoMutation,
+  useGetMinistriesQuery,
+  useLazyGetMinistriesQuery,
+  useGetMinistryAnalyticsQuery,
+  useLazyGetMinistryAnalyticsQuery,
 } = churchApi;
 
 

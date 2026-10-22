@@ -57,6 +57,10 @@ export const APP_ROUTES = {
     attendanceTracking: '/kid-registration/attendance-tracking',
     myTeam: '/kid-registration/my-team',
   },
+  ministryCoordinator: {
+    root: '/ministry-coordinator',
+    myTeam: '/ministry-coordinator/my-team',
+  },
   hub: '/hub',
   profile: '/profile',
   kidGuardian: {

@@ -12,7 +12,7 @@ import { logout, setActiveExperience } from '@/libs/state/redux/slices/user/auth
 import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { isTokenExpired, isTokenExpiringSoon } from '@/libs/utils/jwt';
 import { triggerSilentRefresh } from '@/libs/utils/http';
-import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
+import { AppRole, UserExperienceEnum, UserRole, isOperationalStaffRole } from '@/libs/utils/auth';
 import { GetChurchCampuses, GetChurchMeetings } from '@/libs/state/redux/thunks/church/church.thunk';
 import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
@@ -56,7 +56,7 @@ const MainLayoutContent: React.FC<MainLayoutProps> = ({ children }) => {
   const userRoles = (user?.roles || []) as AppRole[];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
   const hasOperationalRole = userRoles.some(
-    (role) => role !== UserRole.USER && (role as string) !== 'USER' && isRoleEnabled(role)
+    (role) => isOperationalStaffRole(role) && isRoleEnabled(role)
   );
   const isKidChurchStaff =
     isSuperAdmin ||
@@ -66,6 +66,9 @@ const MainLayoutContent: React.FC<MainLayoutProps> = ({ children }) => {
   // Security guard: If user does not have permission for Kids Ministry operational workspace,
   // immediately block access and redirect them to their rightful experience or hub.
   if (!isKidChurchStaff) {
+    if ((experiences || []).includes(UserExperienceEnum.MINISTRY_COORDINATOR)) {
+      return <Navigate to={APP_ROUTES.ministryCoordinator.root} replace />;
+    }
     if ((experiences || []).includes(UserExperienceEnum.KID_GUARDIAN)) {
       return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
     }
@@ -181,7 +184,13 @@ const MainLayoutContent: React.FC<MainLayoutProps> = ({ children }) => {
       isMismatch = true;
     }
 
-    if (isMismatch) navigate(config.dashboardUrl, { replace: true });
+    if (isMismatch) {
+      const isOperationalUrl =
+        config.dashboardUrl === APP_ROUTES.kidRegistration.root ||
+        config.dashboardUrl === APP_ROUTES.kidChurch.root;
+      const targetUrl = isOperationalUrl ? config.dashboardUrl : APP_ROUTES.kidRegistration.root;
+      navigate(targetUrl, { replace: true });
+    }
   }, [pathname, currentRole, isKidChurchRole, isKidRegistrationRole, navigate, isAdminRole]);
 
   // Restore scroll position when returning to a previous route, or scroll to top for singular views

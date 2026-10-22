@@ -42,6 +42,7 @@ export enum UserExperienceEnum {
   ADMIN = 'ADMIN',
   KID_CHURCH_STAFF = 'KID_CHURCH_STAFF',
   KID_GUARDIAN = 'KID_GUARDIAN',
+  MINISTRY_COORDINATOR = 'MINISTRY_COORDINATOR',
 }
 
 // ADMIN ROLES
@@ -92,6 +93,31 @@ export const KidChurchSecurityRoles: AppRole[] = [
   ChurchRole.KID_SECURITY_SUPERVISOR,
   ChurchRole.KID_SECURITY_USER,
 ];
+
+/** Operational server and coordinator roles for Kid Church / Registration */
+export const KID_CHURCH_OPERATIONAL_ROLES: AppRole[] = [
+  ChurchRole.KID_REGISTER_COORDINATOR,
+  ChurchRole.KID_REGISTER_SUPERVISOR,
+  ChurchRole.KID_REGISTER_USER,
+  ChurchRole.KID_CHURCH_GROUP_COORDINATOR,
+  ChurchRole.KID_CHURCH_SUPERVISOR,
+  ChurchRole.KID_CHURCH_USER,
+  ChurchRole.KID_SECURITY_COORDINATOR,
+  ChurchRole.KID_SECURITY_SUPERVISOR,
+  ChurchRole.KID_SECURITY_USER,
+];
+
+/**
+ * Checks whether the given role is an operational volunteer/server role within Kid Church.
+ * Excludes system admins, church admins, ministry coordinator, and base user.
+ *
+ * @param {AppRole | string} [role] - Role to check.
+ * @returns {boolean} True if the role is an operational staff role.
+ */
+export const isOperationalStaffRole = (role?: AppRole | string): boolean => {
+  if (!role) return false;
+  return KID_CHURCH_OPERATIONAL_ROLES.includes(role as AppRole);
+};
 
 /**
  * Returns the roles for the current authenticated user.
@@ -310,10 +336,10 @@ export const ALL_SYSTEM_ROLES_METADATA: Record<AppRole, RoleMetadata> = {
   },
   [ChurchRole.MINISTRY_ADMIN]: {
     id: ChurchRole.MINISTRY_ADMIN,
-    name: 'Niños - Admin General',
+    name: 'Coordinador de Ministerio',
     category: 'Ministerio de Niños',
-    description: 'Administrador general del ministerio infantil',
-    badgeColor: 'bg-amber-100 text-amber-700 border-amber-200',
+    description: 'Coordinador general del ministerio, analítica y gestión de liderazgo',
+    badgeColor: 'bg-sky-100 text-sky-700 border-sky-200',
   },
   [ChurchRole.KID_REGISTER_COORDINATOR]: {
     id: ChurchRole.KID_REGISTER_COORDINATOR,
