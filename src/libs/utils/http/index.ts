@@ -56,7 +56,10 @@ export const invalidateHttpCachePattern = (pattern: string): void => {
  * @returns {boolean} True if cacheable.
  */
 const isCatalogEndpoint = (url: string): boolean => {
-  if (url.startsWith('/kid-guardian/assigned-kids')) {
+  if (
+    url.startsWith('/kid-guardian/assigned-kids') ||
+    url.startsWith('/church-meeting/calendar')
+  ) {
     return false;
   }
   return CATALOG_ENDPOINTS.some((ep) => url.startsWith(ep));
@@ -196,7 +199,9 @@ const executeApiRequest = async (
 
   // 2. Cache invalidation on mutation requests
   if (method !== HttpRequestMethod.GET) {
-    if (url.includes('church-meeting')) invalidateHttpCachePattern('church-meeting');
+    if (url.includes('church-meeting') || url.includes('group-assignment')) {
+      invalidateHttpCachePattern('church-meeting');
+    }
     if (url.includes('church-campus')) invalidateHttpCachePattern('church-campus');
     if (url.includes('church-printer')) invalidateHttpCachePattern('church-printer');
     if (url.includes('kid-group')) invalidateHttpCachePattern('kid-group');

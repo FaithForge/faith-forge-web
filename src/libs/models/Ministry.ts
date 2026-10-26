@@ -1,5 +1,20 @@
-import { EntityState, IChurchCampus } from './Church';
+import {
+  EntityState,
+  IChurchCampus,
+  IChurchMeeting,
+} from './Church';
 import { ReduxDefaultState } from './Redux';
+
+export enum MinistryMeetingGroupAssignmentKind {
+  ROTATION = 'ROTATION',
+  SINGLE_DATE = 'SINGLE_DATE',
+}
+
+export const MinistryMeetingGroupAssignmentStateEnum = {
+  ...EntityState,
+} as const;
+export type MinistryMeetingGroupAssignmentStateEnum =
+  (typeof MinistryMeetingGroupAssignmentStateEnum)[keyof typeof MinistryMeetingGroupAssignmentStateEnum];
 
 export const MinistryStateEnum = {
   ...EntityState,
@@ -183,6 +198,67 @@ export interface GetMinistryAnalyticsArgs {
   to?: string;
   date?: string;
   churchMeetingIds?: string[];
+  tagId?: string;
+}
+
+export interface IMinistryMeetingGroupAssignment {
+  id: string;
+  ministryId: string;
+  churchMeetingId: string;
+  kind: MinistryMeetingGroupAssignmentKind;
+  intervalWeeks: number;
+  startDate: string;
+  endDate?: string | null;
+  groupSequence: string[][];
+  notes?: string | null;
+  state: MinistryMeetingGroupAssignmentStateEnum;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface ICalendarMeetingInstance {
+  instanceId: string;
+  serviceDate: string;
+  meeting: IChurchMeeting;
+  isCancelled: boolean;
+  exceptionId?: string;
+  exceptionReason?: string | null;
+  scheduledGroupIds: string[];
+  scheduledGroups: IMinistryGroupConfig[];
+  isSingleDateAssignment: boolean;
+  singleDateAssignmentId?: string;
+  assignmentNotes?: string | null;
+  rotationAssignmentId?: string;
+  rotationIntervalWeeks?: number;
+  rotationStartDate?: string;
+}
+
+export interface GetCalendarMeetingsArgs {
+  churchCampusId: string;
+  ministryId?: string;
+  from: string;
+  to: string;
+  tagId?: string;
+}
+
+export interface UpsertMinistryMeetingGroupAssignmentPayload {
+  id?: string;
+  ministryId: string;
+  churchMeetingId: string;
+  kind?: MinistryMeetingGroupAssignmentKind;
+  intervalWeeks?: number;
+  startDate: string;
+  endDate?: string | null;
+  groupSequence: string[][];
+  notes?: string | null;
+  state?: MinistryMeetingGroupAssignmentStateEnum;
+}
+
+export interface UpsertChurchMeetingExceptionPayload {
+  churchMeetingId: string;
+  churchCampusId: string;
+  exceptionDate: string;
+  reason?: string;
 }
 
 export interface IVolunteerMeetingStatAreaBreakdown {
@@ -212,6 +288,7 @@ export interface IVolunteerMeetingStatHistory {
   excused: number;
   unexcused: number;
   attendancePercent: number;
+  scheduledGroupIds?: string[];
   byArea: IVolunteerMeetingStatAreaBreakdown[];
   byGroup: IVolunteerMeetingStatGroupBreakdown[];
 }

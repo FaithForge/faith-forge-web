@@ -1,6 +1,6 @@
 const defaultApiBaseUrl =
   import.meta.env.MODE !== 'production'
-    ? 'http://faith-forge.com/api'
+    ? 'http://localhost/api'
     : 'https://faith-forge.jucarlospm.com/api';
 
 export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? defaultApiBaseUrl;

@@ -23,11 +23,29 @@ export type ChurchPrinterStateEnum =
 
 export const ChurchMeetingStateEnum = {
   ...EntityState,
+  ARCHIVED: 'ARCHIVED',
   ACTIVE_WITHOUT_DISPLAY: 'ACTIVE_WITHOUT_DISPLAY',
   DISABLE: 'DISABLE',
 } as const;
 export type ChurchMeetingStateEnum =
   (typeof ChurchMeetingStateEnum)[keyof typeof ChurchMeetingStateEnum];
+
+export enum ChurchMeetingKind {
+  RECURRENT = 'RECURRENT',
+  ONE_TIME = 'ONE_TIME',
+}
+
+export const ChurchMeetingTagStateEnum = {
+  ...EntityState,
+} as const;
+export type ChurchMeetingTagStateEnum =
+  (typeof ChurchMeetingTagStateEnum)[keyof typeof ChurchMeetingTagStateEnum];
+
+export const ChurchMeetingExceptionStateEnum = {
+  ...EntityState,
+} as const;
+export type ChurchMeetingExceptionStateEnum =
+  (typeof ChurchMeetingExceptionStateEnum)[keyof typeof ChurchMeetingExceptionStateEnum];
 
 export enum KidAttendanceFlowModeEnum {
   ONLY_CHECK_IN = 'ONLY_CHECK_IN',
@@ -128,19 +146,44 @@ export interface DeleteChurchStaffPayload {
   churchId: string;
 }
 
+export interface IChurchMeetingTag {
+  id: string;
+  churchCampusId: string;
+  name: string;
+  state: ChurchMeetingTagStateEnum;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export interface IChurchMeeting {
   id: string;
   churchId?: string;
   churchCampusId?: string;
   name: string;
   description?: string;
+  kind?: ChurchMeetingKind;
   day: Days;
+  specificDate?: string | null;
+  endDate?: string | null;
+  tagId?: string | null;
+  tag?: IChurchMeetingTag | null;
   initialHour: string;
   finalHour: string;
   initialRegistrationHour: string;
   finalRegistrationHour: string;
   position?: number;
   state?: ChurchMeetingStateEnum;
+}
+
+export interface IChurchMeetingException {
+  id: string;
+  churchMeetingId: string;
+  churchCampusId: string;
+  exceptionDate: string;
+  reason?: string | null;
+  state: ChurchMeetingExceptionStateEnum;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface IChurchPrinter {

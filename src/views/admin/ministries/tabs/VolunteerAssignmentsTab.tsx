@@ -16,7 +16,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -642,15 +642,20 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                   Sede de los Equipos
                 </h3>
               </div>
-              <SelectSearch
-                label=""
-                placeholder="Seleccionar sede..."
-                options={campusOptions}
+              <Select
                 value={selectedCampusId}
-                onChange={(val) => setSelectedCampusId(val)}
-                searchable={campusOptions.length > 4}
+                onChange={(e) => setSelectedCampusId(e.target.value)}
                 disabled={campusesState.loading}
-              />
+              >
+                <option value="" disabled>
+                  Seleccionar sede...
+                </option>
+                {campusOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </Select>
             </div>
           )}
 

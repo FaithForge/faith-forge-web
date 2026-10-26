@@ -125,7 +125,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
 
         <div>
           <label className="text-xs font-semibold text-gray-700 block mb-1">
-            Posición / Orden de visualización
+            Posición / Turno en la rotación
           </label>
           <Input
             type="number"
@@ -135,7 +135,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
             placeholder="1"
           />
           <p className="text-[11px] text-gray-400 mt-1">
-            Los grupos se ordenarán numéricamente según este valor.
+            Define el orden de turno en el ciclo del calendario (Turno 1 ➔ Turno 2 ➔ Turno 3...).
           </p>
         </div>
 

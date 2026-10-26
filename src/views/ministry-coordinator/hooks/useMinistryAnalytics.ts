@@ -3,6 +3,7 @@ import dayjs from 'dayjs';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   useGetChurchMeetingsQuery,
+  useGetChurchMeetingTagsQuery,
   useGetMinistriesQuery,
   useGetMinistryAnalyticsQuery,
 } from '@/libs/state/redux/api/churchApi';
@@ -158,6 +159,8 @@ export const useMinistryAnalytics = () => {
 
   // Selected meeting IDs filter (empty array means all meetings / panoramic)
   const [selectedMeetingIds, setSelectedMeetingIds] = useState<string[]>([]);
+  // Selected event tag ID filter (empty string means all tags)
+  const [selectedTagId, setSelectedTagId] = useState<string>('');
 
   // Fetch church meetings for active campus
   const { data: rawMeetings = [] } = useGetChurchMeetingsQuery(
@@ -165,21 +168,30 @@ export const useMinistryAnalytics = () => {
     { skip: !effectiveCampusId }
   );
 
-  // Filter meetings strictly by the selected day or date range
+  // Fetch active tags for active campus
+  const { data: availableTags = [] } = useGetChurchMeetingTagsQuery(
+    effectiveCampusId ? { churchCampusId: effectiveCampusId, suggestionsOnly: false } : { churchCampusId: '' },
+    { skip: !effectiveCampusId }
+  );
+
+  // Filter meetings strictly by the selected day, date range, or event tag
   const filteredMeetings = useMemo(() => {
     if (!rawMeetings || rawMeetings.length === 0) return [];
 
     const daysInRange = getDaysInRange(temporalFilter.from, temporalFilter.to);
-    if (daysInRange.size === 0) return rawMeetings;
 
     return rawMeetings.filter((meeting) => {
       // Exclude soft-deleted meetings
       if (meeting.state && meeting.state !== ChurchMeetingStateEnum.ACTIVE) {
         return false;
       }
+      if (selectedTagId && meeting.tagId !== selectedTagId) {
+        return false;
+      }
+      if (daysInRange.size === 0) return true;
       return meeting.day ? daysInRange.has(meeting.day) : true;
     });
-  }, [rawMeetings, temporalFilter.from, temporalFilter.to]);
+  }, [rawMeetings, temporalFilter.from, temporalFilter.to, selectedTagId]);
 
   // Clean up selectedMeetingIds if they are no longer in the filtered meetings list
   useEffect(() => {
@@ -233,6 +245,7 @@ export const useMinistryAnalytics = () => {
       from: temporalFilter.from,
       to: temporalFilter.to,
       churchMeetingIds: selectedMeetingIds.length > 0 ? selectedMeetingIds : undefined,
+      tagId: selectedTagId || undefined,
     },
     {
       skip: !effectiveMinistryId || !effectiveCampusId || !hasMeetingsForSelection,
@@ -263,6 +276,9 @@ export const useMinistryAnalytics = () => {
     setTemporalFilter,
     selectedMeetingIds,
     setSelectedMeetingIds,
+    selectedTagId,
+    setSelectedTagId,
+    availableTags,
     meetings: filteredMeetings,
     rawMeetings,
     hasMeetingsForSelection,

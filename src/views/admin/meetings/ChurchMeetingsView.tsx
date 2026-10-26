@@ -1,281 +1,21 @@
-import React, { useEffect, useMemo, useState, useCallback } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { 
-  CalendarClock, 
-  MapPin, 
-  Clock, 
-  CheckCircle2, 
-  EyeOff, 
-  XCircle, 
-  Loader2, 
-  Save, 
-  RotateCcw,
-  Sparkles,
-  CalendarDays,
-  ChevronDown,
-  Plus,
-  Edit2,
-  Trash2,
-} from 'lucide-react';
-import { toast } from 'sonner';
-import clsx from 'clsx';
+import { CalendarClock, Sparkles, Plus } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { 
-  GetChurchCampuses, 
-  GetAllChurchMeetingsAdmin, 
-  BulkUpdateChurchMeetingStates,
-  DeleteChurchMeeting,
-} from '@/libs/state/redux/thunks/church/church.thunk';
-import { resetAdminChurchMeetingStatus } from '@/libs/state/redux/slices/church/adminChurchMeeting.slice';
-import { ChurchMeetingStateEnum, IChurchMeeting } from '@/libs/models';
-import { Days } from '@/libs/common-types/constants';
+import { useGetChurchCampusesQuery } from '@/libs/state/redux/api/churchApi';
+import { IChurchMeeting } from '@/libs/models';
 import { APP_ROUTES } from '@/config/routes';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import ChurchMeetingModal from './components/ChurchMeetingModal';
+import ChurchScheduleCalendar from '@/components/calendar/ChurchScheduleCalendar';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
-
-// ---------------------------------------------------------------------------
-// Helper Constants and Dictionaries
-// ---------------------------------------------------------------------------
-
-const DAY_ORDER: Record<Days, number> = {
-  [Days.SUNDAY]: 0,
-  [Days.MONDAY]: 1,
-  [Days.TUESDAY]: 2,
-  [Days.WEDNESDAY]: 3,
-  [Days.THURSDAY]: 4,
-  [Days.FRIDAY]: 5,
-  [Days.SATURDAY]: 6,
-};
-
-/**
- * Normalizes and formats any time string (ISO, HH:mm:ss or HH:mm) to "HH:mm".
- *
- * @param {unknown} val - Original value from the backend service.
- * @returns {string} Formatted time in "HH:mm" or empty string.
- */
-const formatTime = (val: unknown): string => {
-  if (!val) return '';
-  const str = String(val);
-  if (str.includes('T')) {
-    const part = str.split('T')[1]?.split('.')[0]?.split('Z')[0] ?? '';
-    const [h, m] = part.split(':');
-    return h && m ? `${h}:${m}` : '';
-  }
-  if (str.includes(':')) {
-    const [h, m] = str.split(':');
-    return h && m ? `${h}:${m}` : '';
-  }
-  return '';
-};
-
-// ---------------------------------------------------------------------------
-// Componente de Tarjeta de Servicio (Meeting Card)
-// ---------------------------------------------------------------------------
-
-interface MeetingCardProps {
-  meeting: IChurchMeeting;
-  currentState: ChurchMeetingStateEnum;
-  isModified: boolean;
-  onStateChange: (state: ChurchMeetingStateEnum) => void;
-  onEdit?: () => void;
-  onDelete?: () => void;
-}
-
-/**
- * Individual card to view and update the state of a church meeting.
- *
- * @param {MeetingCardProps} props - Component props.
- * @returns {JSX.Element} Interactive church meeting card.
- */
-const MeetingCard: React.FC<MeetingCardProps> = ({
-  meeting,
-  currentState,
-  isModified,
-  onStateChange,
-  onEdit,
-  onDelete,
-}) => {
-  const { t } = useTranslation(['admin', 'common']);
-  const meetingTerm = useChurchTerm('meeting');
-
-  const stateConfig: Record<
-    ChurchMeetingStateEnum,
-    {
-      label: string;
-      shortLabel: string;
-      icon: React.ElementType;
-      activeClass: string;
-      badgeClass: string;
-      textClass: string;
-    }
-  > = {
-    [ChurchMeetingStateEnum.ACTIVE]: {
-      label: t('admin:meetings.status_active'),
-      shortLabel: t('admin:meetings.status_active'),
-      icon: CheckCircle2,
-      activeClass: 'bg-emerald-600 text-white border-emerald-600 shadow-xs',
-      badgeClass: 'bg-emerald-50 text-emerald-700 border border-emerald-200/80',
-      textClass: 'text-emerald-600',
-    },
-    [ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY]: {
-      label: t('admin:meetings.status_no_visible'),
-      shortLabel: t('admin:meetings.status_no_visible'),
-      icon: EyeOff,
-      activeClass: 'bg-amber-500 text-white border-amber-500 shadow-xs',
-      badgeClass: 'bg-amber-50 text-amber-700 border border-amber-200/80',
-      textClass: 'text-amber-600',
-    },
-    [ChurchMeetingStateEnum.DISABLE]: {
-      label: t('admin:meetings.status_inactive'),
-      shortLabel: t('admin:meetings.status_inactive'),
-      icon: XCircle,
-      activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
-      badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
-      textClass: 'text-rose-600',
-    },
-    [ChurchMeetingStateEnum.INACTIVE]: {
-      label: t('admin:meetings.status_inactive'),
-      shortLabel: t('admin:meetings.status_inactive'),
-      icon: XCircle,
-      activeClass: 'bg-rose-600 text-white border-rose-600 shadow-xs',
-      badgeClass: 'bg-rose-50 text-rose-700 border border-rose-200/80',
-      textClass: 'text-rose-600',
-    },
-    [ChurchMeetingStateEnum.DELETED]: {
-      label: t('admin:meetings.status_deleted'),
-      shortLabel: t('admin:meetings.status_deleted'),
-      icon: XCircle,
-      activeClass: 'bg-slate-400 text-white border-slate-400',
-      badgeClass: 'bg-slate-50 text-slate-700 border border-slate-200/80',
-      textClass: 'text-slate-500',
-    },
-  };
-
-  const config = stateConfig[currentState] || stateConfig[ChurchMeetingStateEnum.ACTIVE];
-  const CurrentIcon = config.icon;
-
-  const initTime = formatTime(meeting.initialRegistrationHour);
-  const finalTime = formatTime(meeting.finalRegistrationHour);
-
-  return (
-    <div
-      className={clsx(
-        'p-4 sm:p-5 transition-colors flex flex-col gap-3.5 hover:bg-slate-50/60',
-        isModified && 'bg-primary/5'
-      )}
-    >
-      {/* Meeting Header */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-extrabold text-sm sm:text-base text-slate-900 leading-tight">
-              {meeting.name}
-            </h3>
-            {isModified && (
-              <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                {t('admin:meetings.modified_badge')}
-              </span>
-            )}
-          </div>
-          {meeting.description && (
-            <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">
-              {meeting.description}
-            </p>
-          )}
-        </div>
-
-        {/* Current Status Badge and Actions */}
-        <div className="flex items-center gap-1.5 shrink-0">
-          <div
-            className={clsx(
-              'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold shrink-0',
-              config.badgeClass
-            )}
-          >
-            <CurrentIcon size={13} className="shrink-0" />
-            <span>{config.label}</span>
-          </div>
-
-          {onEdit && (
-            <button
-              type="button"
-              onClick={onEdit}
-              className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 transition-all shadow-2xs cursor-pointer"
-              title={t('admin:meetings.edit_tooltip', { meeting: meetingTerm })}
-            >
-              <Edit2 size={13} />
-            </button>
-          )}
-
-          {onDelete && (
-            <button
-              type="button"
-              onClick={onDelete}
-              className="p-1.5 rounded-lg border border-rose-200 bg-rose-50 text-rose-600 hover:bg-rose-100 transition-all shadow-2xs cursor-pointer"
-              title={t('admin:meetings.delete_tooltip', { meeting: meetingTerm })}
-            >
-              <Trash2 size={13} />
-            </button>
-          )}
-        </div>
-      </div>
-
-      {/* Horario y Detalles */}
-      {(initTime || finalTime) && (
-        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-          <Clock size={13} className="text-slate-400" />
-          <span>
-            {t('admin:meetings.registration_schedule')} <strong className="text-slate-700">{initTime} – {finalTime}</strong>
-          </span>
-        </div>
-      )}
-
-      {/* Segmented State Selector (Pills) */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100/90 rounded-xl border border-slate-200/70">
-        {[
-          ChurchMeetingStateEnum.ACTIVE,
-          ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
-          ChurchMeetingStateEnum.DISABLE,
-        ].map((stateKey) => {
-          const itemConfig = stateConfig[stateKey];
-          const ItemIcon = itemConfig.icon;
-          const isSelected = currentState === stateKey;
-
-          return (
-            <button
-              key={stateKey}
-              type="button"
-              onClick={() => onStateChange(stateKey)}
-              className={clsx(
-                'flex items-center justify-center gap-1.5 py-1.5 px-2 rounded-lg text-xs font-bold transition-all cursor-pointer truncate',
-                isSelected
-                  ? itemConfig.activeClass
-                  : 'text-slate-500 hover:text-slate-800 hover:bg-white/60'
-              )}
-            >
-              <ItemIcon size={12} className={clsx('shrink-0', !isSelected && itemConfig.textClass)} />
-              <span className="truncate">{itemConfig.shortLabel}</span>
-            </button>
-          );
-        })}
-      </div>
-    </div>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// Main Church Meetings Management View
-// ---------------------------------------------------------------------------
 
 /**
  * Main view for managing church meetings across campuses at /admin/church-meetings.
- * Upgraded with Desktop-First multi-column layout, responsive days grid, and query param campus sync.
+ * Desktop-First calendar management with direct scheduling, instance operations, and campus filtering.
  *
  * @returns {JSX.Element} Rendered view.
  */
@@ -283,259 +23,48 @@ const ChurchMeetingsView: React.FC = () => {
   const { t } = useTranslation(['admin', 'common']);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const dispatch = useAppDispatch();
 
   const campusTerm = useChurchTerm('campus');
-  const campusesTerm = useChurchTerm('campuses');
   const meetingTerm = useChurchTerm('meeting');
   const meetingsTerm = useChurchTerm('meetings');
 
-  const campuses = useAppSelector((state) => state.churchCampusSlice);
-  const { meetings, loadingMeetings, loadingUpdate, success, error } = useAppSelector(
-    (state) => state.adminChurchMeetingSlice
-  );
-
   const queryCampusId = searchParams.get('campusId');
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
-  const [selectedStateFilter, setSelectedStateFilter] = useState<'ALL' | ChurchMeetingStateEnum>('ALL');
-  /** Local registry of pending changes: meetingId -> new state */
-  const [pendingChanges, setPendingChanges] = useState<Record<string, ChurchMeetingStateEnum>>({});
-  /** Tracks which days are expanded. Default is all expanded on desktop for visibility */
-  const [expandedDays, setExpandedDays] = useState<Set<string>>(new Set());
 
   const [modalOpen, setModalOpen] = useState(false);
   const [meetingToEdit, setMeetingToEdit] = useState<IChurchMeeting | null>(null);
-  const [meetingToDelete, setMeetingToDelete] = useState<IChurchMeeting | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
-  // Load campuses on view mount
-  useEffect(() => {
-    if (campuses.data.length === 0) {
-      dispatch(GetChurchCampuses());
-    }
-  }, [dispatch, campuses.data.length]);
+  // RTK Query: fetch campuses
+  const { data: campusesData = [], isLoading: loadingCampuses } = useGetChurchCampusesQuery();
 
   // Sync selected campus with query params or first available campus
   useEffect(() => {
-    if (campuses.data.length === 0) return;
+    if (campusesData.length === 0) return;
 
-    if (queryCampusId && campuses.data.some((c) => c.id === queryCampusId)) {
+    if (queryCampusId && campusesData.some((c) => c.id === queryCampusId)) {
       setSelectedCampusId(queryCampusId);
     } else if (!selectedCampusId) {
-      setSelectedCampusId(campuses.data[0].id);
-      setSearchParams({ campusId: campuses.data[0].id }, { replace: true });
+      setSelectedCampusId(campusesData[0].id);
+      setSearchParams({ campusId: campusesData[0].id }, { replace: true });
     }
-  }, [campuses.data, queryCampusId, selectedCampusId, setSearchParams]);
+  }, [campusesData, queryCampusId, selectedCampusId, setSearchParams]);
 
-  // Load meetings for the selected campus
-  useEffect(() => {
-    if (selectedCampusId) {
-      dispatch(resetAdminChurchMeetingStatus());
-      dispatch(GetAllChurchMeetingsAdmin(selectedCampusId));
-      setPendingChanges({});
-    }
-  }, [selectedCampusId, dispatch]);
-
+  /**
+   * Handles campus selection update and query param synchronization.
+   *
+   * @param {string} newId - Target campus ID.
+   */
   const handleSelectCampus = (newId: string) => {
     setSelectedCampusId(newId);
     setSearchParams({ campusId: newId });
   };
 
-  // Toast feedback
-  useEffect(() => {
-    if (success) {
-      toast.success(t('admin:meetings.updated_success', { meetings: meetingsTerm.toLowerCase() }));
-      dispatch(resetAdminChurchMeetingStatus());
-      setPendingChanges({});
-      if (selectedCampusId) {
-        dispatch(GetAllChurchMeetingsAdmin(selectedCampusId));
-      }
-    }
-    if (error) {
-      toast.error(error);
-      dispatch(resetAdminChurchMeetingStatus());
-    }
-  }, [success, error, selectedCampusId, dispatch, t, meetingsTerm]);
-
-  const handleConfirmDelete = async () => {
-    if (!meetingToDelete || !selectedCampusId) return;
-    setIsDeleting(true);
-    try {
-      await dispatch(
-        DeleteChurchMeeting({
-          id: meetingToDelete.id,
-          churchCampusId: selectedCampusId,
-        }),
-      ).unwrap();
-      toast.success(t('admin:meetings.delete_success', { meeting: meetingTerm }));
-      setMeetingToDelete(null);
-    } catch (err: any) {
-      toast.error(typeof err === 'string' ? err : t('admin:meetings.delete_error', { meeting: meetingTerm.toLowerCase() }));
-    } finally {
-      setIsDeleting(false);
-    }
-  };
-
-  /**
-   * Handles meeting state toggle, reverting if it matches the original value.
-   *
-   * @param {string} meetingId - Church meeting ID.
-   * @param {ChurchMeetingStateEnum | undefined} originalState - Original state from the server.
-   * @param {ChurchMeetingStateEnum} newState - New selected state.
-   */
-  const handleStateChange = useCallback(
-    (
-      meetingId: string,
-      originalState: ChurchMeetingStateEnum | undefined,
-      newState: ChurchMeetingStateEnum
-    ) => {
-      setPendingChanges((prev) => {
-        const updated = { ...prev };
-        if (newState === originalState) {
-          delete updated[meetingId];
-        } else {
-          updated[meetingId] = newState;
-        }
-        return updated;
-      });
-    },
-    []
-  );
-
-  /**
-   * Discards all pending local changes.
-   */
-  const handleDiscardChanges = () => {
-    setPendingChanges({});
-    toast.info(t('admin:meetings.discard_toast'));
-  };
-
-  /**
-   * Saves all pending changes in bulk via the API.
-   */
-  const handleSave = () => {
-    const items = Object.entries(pendingChanges).map(([id, state]) => ({ id, state }));
-    if (items.length === 0) return;
-    dispatch(BulkUpdateChurchMeetingStates(items));
-  };
-
-  const dirtyCount = Object.keys(pendingChanges).length;
-
-  const nonDeletedMeetings = useMemo(() => {
-    return meetings.filter((m) => m.state !== ChurchMeetingStateEnum.DELETED);
-  }, [meetings]);
-
-  const stateCounts = useMemo(() => {
-    let active = 0;
-    let noVisible = 0;
-    let inactive = 0;
-
-    nonDeletedMeetings.forEach((m) => {
-      const state = pendingChanges[m.id] ?? m.state ?? ChurchMeetingStateEnum.ACTIVE;
-      if (state === ChurchMeetingStateEnum.ACTIVE) active++;
-      else if (state === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY) noVisible++;
-      else if (state === ChurchMeetingStateEnum.DISABLE) inactive++;
-    });
-
-    return { active, noVisible, inactive, total: nonDeletedMeetings.length };
-  }, [nonDeletedMeetings, pendingChanges]);
-
-  // Group meetings by day of the week, ordered Sunday to Saturday
-  const meetingsByDay = useMemo(() => {
-    const grouped: Record<string, IChurchMeeting[]> = {};
-    [...nonDeletedMeetings]
-      .sort((a, b) => {
-        const dA = DAY_ORDER[a.day as Days] ?? 99;
-        const dB = DAY_ORDER[b.day as Days] ?? 99;
-        return dA - dB;
-      })
-      .forEach((m) => {
-        const key = m.day || Days.SUNDAY;
-        if (!grouped[key]) grouped[key] = [];
-        grouped[key].push(m);
-      });
-    return grouped;
-  }, [nonDeletedMeetings]);
-
-  const allDayKeys = useMemo(() => Object.keys(meetingsByDay), [meetingsByDay]);
-
-  // Auto-expand all days by default for comfortable desktop browsing
-  useEffect(() => {
-    if (allDayKeys.length > 0 && expandedDays.size === 0) {
-      setExpandedDays(new Set(allDayKeys));
-    }
-  }, [allDayKeys, expandedDays.size]);
-
-  const toggleDay = useCallback((day: string) => {
-    setExpandedDays((prev) => {
-      const next = new Set(prev);
-      if (next.has(day)) {
-        next.delete(day);
-      } else {
-        next.add(day);
-      }
-      return next;
-    });
-  }, []);
-
-  const allDaysExpanded = useMemo(() => {
-    if (allDayKeys.length === 0) return false;
-    return allDayKeys.every((d) => expandedDays.has(d));
-  }, [allDayKeys, expandedDays]);
-
-  const toggleAllDays = useCallback(() => {
-    if (allDaysExpanded) {
-      setExpandedDays(new Set());
-    } else {
-      setExpandedDays(new Set(allDayKeys));
-    }
-  }, [allDaysExpanded, allDayKeys]);
-
-  const getDayLabel = useCallback((day: Days | string): string => {
-    switch (day) {
-      case Days.MONDAY: return t('admin:meetings.days.monday');
-      case Days.TUESDAY: return t('admin:meetings.days.tuesday');
-      case Days.WEDNESDAY: return t('admin:meetings.days.wednesday');
-      case Days.THURSDAY: return t('admin:meetings.days.thursday');
-      case Days.FRIDAY: return t('admin:meetings.days.friday');
-      case Days.SATURDAY: return t('admin:meetings.days.saturday');
-      case Days.SUNDAY: return t('admin:meetings.days.sunday');
-      default: return String(day);
-    }
-  }, [t]);
-
-  const stateCategories = useMemo(() => [
-    {
-      state: ChurchMeetingStateEnum.ACTIVE,
-      label: t('admin:meetings.status_active_plural'),
-      icon: CheckCircle2,
-      iconBg: 'bg-emerald-100 text-emerald-700',
-      badgeClass: 'bg-emerald-50 text-emerald-700 border-emerald-200/80',
-    },
-    {
-      state: ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY,
-      label: t('admin:meetings.status_no_visible_plural'),
-      icon: EyeOff,
-      iconBg: 'bg-amber-100 text-amber-700',
-      badgeClass: 'bg-amber-50 text-amber-700 border-amber-200/80',
-    },
-    {
-      state: ChurchMeetingStateEnum.DISABLE,
-      label: t('admin:meetings.status_inactive_plural'),
-      icon: XCircle,
-      iconBg: 'bg-rose-100 text-rose-700',
-      badgeClass: 'bg-rose-50 text-rose-700 border-rose-200/80',
-    },
-  ], [t]);
-
   const campusOptions = useMemo(() => {
-    return campuses.data.map((campus) => ({
+    return campusesData.map((campus) => ({
       id: campus.id,
       name: campus.name,
     }));
-  }, [campuses.data]);
-
-  const selectedCampusName = campuses.data.find((c) => c.id === selectedCampusId)?.name ?? '';
+  }, [campusesData]);
 
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50/60 pb-28">
@@ -561,7 +90,7 @@ const ChurchMeetingsView: React.FC = () => {
         }
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-20 sm:pb-32 flex flex-col gap-6">
         {/* Header Summary Banner (Desktop-First) */}
         <div className="bg-white rounded-3xl p-5 sm:p-6 lg:p-7 border border-slate-200/80 shadow-xs flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="flex items-start sm:items-center gap-4 min-w-0">
@@ -585,15 +114,20 @@ const ChurchMeetingsView: React.FC = () => {
           {/* Integrated Campus Selector & Desktop Action */}
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0 pt-3 lg:pt-0 border-t lg:border-t-0 border-slate-100">
             <div className="w-full sm:w-64">
-              <SelectSearch
-                label=""
-                placeholder={t('admin:meetings.select_campus_placeholder', { campus: campusTerm.toLowerCase() })}
-                options={campusOptions}
+              <Select
                 value={selectedCampusId}
-                onChange={handleSelectCampus}
-                searchable={campusOptions.length > 4}
-                disabled={campuses.loading}
-              />
+                onChange={(e) => handleSelectCampus(e.target.value)}
+                disabled={loadingCampuses}
+              >
+                <option value="" disabled>
+                  {t('admin:meetings.select_campus_placeholder', { campus: campusTerm.toLowerCase() })}
+                </option>
+                {campusOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </Select>
             </div>
 
             {selectedCampusId && (
@@ -614,326 +148,31 @@ const ChurchMeetingsView: React.FC = () => {
         </div>
 
         {/* Content Area */}
-        {selectedCampusId && (
-          <div className="flex flex-col gap-5">
-            {loadingMeetings ? (
-              <CellListSkeleton count={3} />
-            ) : meetings.length === 0 ? (
-              <div className="bg-white rounded-3xl p-12 border border-slate-200/80 shadow-xs text-center flex flex-col items-center justify-center gap-3">
-                <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-                  <CalendarClock size={28} />
-                </div>
-                <h3 className="font-bold text-slate-800 text-base sm:text-lg mt-1">
-                  {t('admin:meetings.no_meetings_title', { meetings: meetingsTerm.toLowerCase() })}
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-500 max-w-md">
-                  {t('admin:meetings.no_meetings_desc', { campus: campusTerm.toLowerCase(), meetings: meetingsTerm.toLowerCase() })}
-                </p>
-                <Button
-                  variant="primary"
-                  size="sm"
-                  onClick={() => {
-                    setMeetingToEdit(null);
-                    setModalOpen(true);
-                  }}
-                  className="mt-3 flex items-center gap-2 text-xs"
-                >
-                  <Plus size={14} />
-                  <span>{t('admin:meetings.new_meeting_btn', { meeting: meetingTerm })}</span>
-                </Button>
-              </div>
-            ) : (
-              <>
-                {/* Status Filter Bar & Summary */}
-                <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200/80 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  {/* State Filter Pills */}
-                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 no-scrollbar">
-                    <button
-                      type="button"
-                      onClick={() => setSelectedStateFilter('ALL')}
-                      className={clsx(
-                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border cursor-pointer',
-                        selectedStateFilter === 'ALL'
-                          ? 'bg-primary text-white border-primary shadow-2xs'
-                          : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                      )}
-                    >
-                      {t('admin:meetings.filter_all', { count: stateCounts.total })}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE)}
-                      className={clsx(
-                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
-                        selectedStateFilter === ChurchMeetingStateEnum.ACTIVE
-                          ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                          : 'bg-white text-emerald-700 border-slate-200 hover:bg-emerald-50'
-                      )}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                      {t('admin:meetings.filter_active', { count: stateCounts.active })}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY)}
-                      className={clsx(
-                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
-                        selectedStateFilter === ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY
-                          ? 'bg-amber-500 text-white border-amber-500 shadow-2xs'
-                          : 'bg-white text-amber-700 border-slate-200 hover:bg-amber-50'
-                      )}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-amber-500" />
-                      {t('admin:meetings.filter_no_visible', { count: stateCounts.noVisible })}
-                    </button>
-
-                    <button
-                      type="button"
-                      onClick={() => setSelectedStateFilter(ChurchMeetingStateEnum.DISABLE)}
-                      className={clsx(
-                        'px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 border flex items-center gap-1.5 cursor-pointer',
-                        selectedStateFilter === ChurchMeetingStateEnum.DISABLE
-                          ? 'bg-rose-600 text-white border-rose-600 shadow-2xs'
-                          : 'bg-white text-rose-700 border-slate-200 hover:bg-rose-50'
-                      )}
-                    >
-                      <span className="w-2 h-2 rounded-full bg-rose-500" />
-                      {t('admin:meetings.filter_inactive', { count: stateCounts.inactive })}
-                    </button>
-                  </div>
-
-                  {/* Right: Expand/Collapse All and Dirty indicator */}
-                  <div className="flex items-center gap-3 justify-between sm:justify-end">
-                    {dirtyCount > 0 && (
-                      <span className="text-xs font-extrabold px-2.5 py-1 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                        {dirtyCount === 1
-                          ? t('admin:meetings.pending_changes_count', { count: dirtyCount })
-                          : t('admin:meetings.pending_changes_count_plural', { count: dirtyCount })}
-                      </span>
-                    )}
-
-                    {allDayKeys.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={toggleAllDays}
-                        className="text-xs font-bold text-primary hover:text-primary/80 transition-colors cursor-pointer"
-                      >
-                        {allDaysExpanded ? t('admin:meetings.collapse_all') : t('admin:meetings.expand_all')}
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                {/* Grouped by Days & Categorized by State */}
-                <div className="flex flex-col gap-4">
-                  {Object.entries(meetingsByDay).map(([day, dayMeetings]) => {
-                    const filteredDayMeetings = dayMeetings.filter((meeting) => {
-                      if (selectedStateFilter === 'ALL') return true;
-                      const effectiveState =
-                        pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                      return effectiveState === selectedStateFilter;
-                    });
-
-                    if (filteredDayMeetings.length === 0) return null;
-
-                    const isExpanded = expandedDays.has(day);
-                    const hasModifiedInDay = dayMeetings.some(
-                      (meeting) => pendingChanges[meeting.id] !== undefined
-                    );
-
-                    return (
-                      <div
-                        key={day}
-                        className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden transition-all"
-                      >
-                        {/* Day Header Dropdown Button */}
-                        <button
-                          type="button"
-                          onClick={() => toggleDay(day)}
-                          aria-expanded={isExpanded}
-                          className={clsx(
-                            'w-full flex items-center justify-between p-4 sm:p-5 text-left cursor-pointer transition-colors',
-                            isExpanded
-                              ? 'bg-slate-50/70 border-b border-slate-200/70'
-                              : 'hover:bg-slate-50/60'
-                          )}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className={clsx(
-                                'w-9 h-9 rounded-2xl flex items-center justify-center transition-colors shadow-2xs',
-                                isExpanded
-                                  ? 'bg-primary text-white shadow-primary/20'
-                                  : 'bg-indigo-50 text-indigo-600'
-                              )}
-                            >
-                              <CalendarDays size={18} />
-                            </div>
-                            <div className="flex items-center gap-2.5">
-                              <h3 className="text-sm sm:text-base font-extrabold text-slate-900 uppercase tracking-wider">
-                                {getDayLabel(day)}
-                              </h3>
-                              <span className="px-2.5 py-0.5 text-xs font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200/80">
-                                {filteredDayMeetings.length}
-                              </span>
-                              {hasModifiedInDay && (
-                                <span className="text-[10px] font-extrabold uppercase tracking-wider px-2 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 animate-in fade-in">
-                                  {t('admin:meetings.modified_badge')}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-
-                          <div
-                            className={clsx(
-                              'w-8 h-8 rounded-xl flex items-center justify-center text-slate-400 hover:bg-slate-100 transition-transform duration-200',
-                              isExpanded && 'rotate-180 text-slate-700'
-                            )}
-                          >
-                            <ChevronDown size={20} />
-                          </div>
-                        </button>
-
-                        {/* Categorized Subsections strictly inside the Day Card */}
-                        {isExpanded && (
-                          <div className="p-4 sm:p-6 bg-slate-50/40 flex flex-col gap-6 animate-in fade-in duration-200">
-                            {stateCategories.map((cat) => {
-                              if (selectedStateFilter !== 'ALL' && selectedStateFilter !== cat.state) {
-                                return null;
-                              }
-
-                              const catMeetings = dayMeetings.filter((meeting) => {
-                                const effectiveState =
-                                  pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                                return effectiveState === cat.state;
-                              });
-
-                              if (catMeetings.length === 0) return null;
-
-                              const CatIcon = cat.icon;
-
-                              return (
-                                <div key={cat.state} className="flex flex-col gap-3">
-                                  {/* Category Header */}
-                                  <div className="flex items-center justify-between px-1">
-                                    <div className="flex items-center gap-2">
-                                      <div className={clsx('w-6 h-6 rounded-lg flex items-center justify-center', cat.iconBg)}>
-                                        <CatIcon size={14} />
-                                      </div>
-                                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                                        {cat.label}
-                                      </h4>
-                                    </div>
-                                    <span className={clsx('px-2.5 py-0.5 text-xs font-bold rounded-full border', cat.badgeClass)}>
-                                      {catMeetings.length}
-                                    </span>
-                                  </div>
-
-                                  {/* Cards Grid on Desktop */}
-                                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-                                    {catMeetings.map((meeting) => {
-                                      const effectiveState =
-                                        pendingChanges[meeting.id] ?? meeting.state ?? ChurchMeetingStateEnum.ACTIVE;
-                                      const isModified = pendingChanges[meeting.id] !== undefined;
-
-                                      return (
-                                        <div
-                                          key={meeting.id}
-                                          className="bg-white rounded-2xl border border-slate-200/80 shadow-2xs hover:shadow-xs transition-shadow overflow-hidden"
-                                        >
-                                          <MeetingCard
-                                            meeting={meeting}
-                                            currentState={effectiveState}
-                                            isModified={isModified}
-                                            onStateChange={(newState) =>
-                                              handleStateChange(meeting.id, meeting.state, newState)
-                                            }
-                                            onEdit={() => {
-                                              setMeetingToEdit(meeting);
-                                              setModalOpen(true);
-                                            }}
-                                            onDelete={() => setMeetingToDelete(meeting)}
-                                          />
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
+        {loadingCampuses ? (
+          <CellListSkeleton count={3} />
+        ) : selectedCampusId ? (
+          <ChurchScheduleCalendar churchCampusId={selectedCampusId} />
+        ) : (
+          <div className="bg-white rounded-3xl p-12 border border-slate-200/80 shadow-xs text-center flex flex-col items-center justify-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+              <CalendarClock size={28} />
+            </div>
+            <h3 className="font-bold text-slate-800 text-base sm:text-lg mt-1">
+              {t('admin:meetings.no_meetings_title', { meetings: meetingsTerm.toLowerCase() })}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md">
+              {t('admin:meetings.select_campus_placeholder', { campus: campusTerm.toLowerCase() })}
+            </p>
           </div>
         )}
       </div>
 
-      {/* Floating Save/Discard Action Bar (Centered Desktop Pill) */}
-      {dirtyCount > 0 && (
-        <div className="fixed bottom-6 left-0 right-0 z-40 px-4 pointer-events-none flex justify-center animate-in slide-in-from-bottom duration-300">
-          <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-slate-200/90 shadow-2xl rounded-2xl p-3 sm:p-4 flex items-center gap-3 w-full max-w-lg">
-            <button
-              type="button"
-              onClick={handleDiscardChanges}
-              disabled={loadingUpdate}
-              className="flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border border-slate-300 bg-white text-slate-700 font-bold text-xs hover:bg-slate-50 active:bg-slate-100 transition-colors disabled:opacity-50 cursor-pointer shrink-0"
-            >
-              <RotateCcw size={15} />
-              <span>{t('admin:meetings.discard_btn')}</span>
-            </button>
-
-            <Button
-              type="button"
-              variant="primary"
-              block
-              disabled={loadingUpdate}
-              onClick={handleSave}
-              className="py-2.5 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-sm cursor-pointer"
-            >
-              {loadingUpdate ? (
-                <>
-                  <Loader2 size={16} className="animate-spin" /> {t('admin:meetings.saving')}
-                </>
-              ) : (
-                <>
-                  <Save size={16} /> {dirtyCount === 1 ? t('admin:meetings.save_btn', { count: dirtyCount }) : t('admin:meetings.save_btn_plural', { count: dirtyCount })}
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      )}
-
-      {/* Meeting Modal for Create and Edit */}
+      {/* Meeting Modal for Create and Edit from Header Button */}
       <ChurchMeetingModal
         open={modalOpen}
         onOpenChange={setModalOpen}
         meetingToEdit={meetingToEdit}
         churchCampusId={selectedCampusId}
-        onSuccess={() => {
-          if (selectedCampusId) {
-            dispatch(GetAllChurchMeetingsAdmin(selectedCampusId));
-          }
-        }}
-      />
-
-      {/* Delete Confirmation Modal */}
-      <ConfirmModal
-        open={Boolean(meetingToDelete)}
-        onOpenChange={(open) => !open && setMeetingToDelete(null)}
-        title={t('admin:meetings.delete_confirm_title', { meeting: meetingTerm })}
-        description={t('admin:meetings.delete_confirm_desc', { meeting: meetingTerm.toLowerCase(), name: meetingToDelete?.name })}
-        confirmText={t('admin:meetings.delete_confirm_btn', { meeting: meetingTerm.toLowerCase() })}
-        cancelText={t('common:actions.cancel')}
-        type="danger"
-        onConfirm={handleConfirmDelete}
       />
     </div>
   );

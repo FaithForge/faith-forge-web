@@ -12,7 +12,7 @@ import {
   ALL_SYSTEM_ROLES_METADATA,
   MINISTRY_ROLE_GROUPS,
 } from '@/libs/utils/auth';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
@@ -251,13 +251,19 @@ export const GrantTemporaryPermissionModal: React.FC<GrantTemporaryPermissionMod
             <label className="text-xs font-bold text-gray-700">
               Rol / Permiso a Otorgar <span className="text-rose-500">*</span>
             </label>
-            <SelectSearch
-              label="Rol / Permiso Temporal"
-              options={roleOptions}
+            <Select
               value={selectedRole}
-              onChange={setSelectedRole}
-              placeholder="Selecciona el rol o permiso temporal..."
-            />
+              onChange={(e) => setSelectedRole(e.target.value)}
+            >
+              <option value="" disabled>
+                Selecciona el rol o permiso temporal...
+              </option>
+              {roleOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </Select>
             {selectedRoleMeta && (
               <p className="text-[11px] text-gray-500 mt-1 leading-snug">
                 {selectedRoleMeta.description}

@@ -147,7 +147,7 @@ const KidChurchReportModal: React.FC<KidChurchReportModalProps> = ({ open, onOpe
         dispatch(
           GetChurchMeetings({
             churchCampusId: activeCampusId,
-            states: [ChurchMeetingStateEnum.ACTIVE, ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY],
+            states: [ChurchMeetingStateEnum.ACTIVE, ChurchMeetingStateEnum.ARCHIVED, ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY],
           })
         );
       }
@@ -191,7 +191,7 @@ const KidChurchReportModal: React.FC<KidChurchReportModalProps> = ({ open, onOpe
       dispatch(
         GetChurchMeetings({
           churchCampusId: selectedCampusId,
-          states: [ChurchMeetingStateEnum.ACTIVE, ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY],
+          states: [ChurchMeetingStateEnum.ACTIVE, ChurchMeetingStateEnum.ARCHIVED, ChurchMeetingStateEnum.ACTIVE_WITHOUT_DISPLAY],
         })
       );
     }

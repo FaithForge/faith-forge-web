@@ -19,7 +19,7 @@ import { IUser } from '@/libs/models/User';
 import { ALL_ASSIGNABLE_ROLES, ALL_SYSTEM_ROLES_METADATA, AppRole } from '@/libs/utils/auth';
 import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/ui/PageHeader';
 
@@ -300,14 +300,20 @@ const AssignUserRolesView: React.FC = () => {
               ) : (
                 <div className="flex flex-col sm:flex-row gap-3 items-end">
                   <div className="flex-1 w-full">
-                    <SelectSearch
+                    <Select
                       label="Seleccionar Rol"
-                      placeholder="Seleccionar rol para asignar..."
-                      options={availableRolesToAssign}
                       value={selectedRoleToAssign}
-                      onChange={setSelectedRoleToAssign}
-                      searchable={true}
-                    />
+                      onChange={(e) => setSelectedRoleToAssign(e.target.value)}
+                    >
+                      <option value="" disabled>
+                        Seleccionar rol para asignar...
+                      </option>
+                      {availableRolesToAssign.map((opt) => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.name}
+                        </option>
+                      ))}
+                    </Select>
                   </div>
 
                   <Button

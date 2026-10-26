@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   Plus,
   Wand2,
@@ -12,9 +13,13 @@ import {
   ChevronsUpDown,
   Layers,
   Users,
+  Network,
+  Sparkles,
+  ArrowRight,
+  Calculator,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
@@ -71,6 +76,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
   workspaceGroups,
   onNavigateToTab,
 }) => {
+  const { t } = useTranslation('admin');
   const dispatch = useAppDispatch();
 
   const campusesState = useAppSelector((state) => state.churchCampusSlice);
@@ -171,6 +177,34 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       });
   }, [serviceAreaGroups, selectedCampusId, areas]);
 
+  // Active items for matrix calculation
+  const activeAreas = useMemo(
+    () => areas.filter((a) => a.state === MinistryAreaStateEnum.ACTIVE),
+    [areas],
+  );
+  const activeGroups = useMemo(
+    () => groups.filter((g) => g.state === MinistryGroupConfigStateEnum.ACTIVE),
+    [groups],
+  );
+
+  const expectedTeamsCount = activeAreas.length * activeGroups.length;
+
+  // Missing combinations count
+  const missingCombinationsCount = useMemo(() => {
+    const existingKeys = new Set(
+      currentTeams.map((t) => `${t.ministryAreaId}-${t.ministryGroupConfigId}`),
+    );
+    let count = 0;
+    activeAreas.forEach((a) => {
+      activeGroups.forEach((g) => {
+        if (!existingKeys.has(`${a.id}-${g.id}`)) {
+          count++;
+        }
+      });
+    });
+    return count;
+  }, [activeAreas, activeGroups, currentTeams]);
+
   // Structure Area x Groups
   const areasWithTeams = useMemo<AreaGroupSection[]>(() => {
     const result: AreaGroupSection[] = [];
@@ -225,8 +259,6 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
     return result;
   }, [areas, groups, currentTeams]);
-
-  // Areas are collapsed by default to keep the view clean and compact
 
   const toggleArea = (areaId: string) => {
     setExpandedAreaIds((prev) => {
@@ -286,13 +318,6 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
    * Generates all missing Area × Group combinations for the selected campus in bulk.
    */
   const handleBulkGenerate = async () => {
-    const activeAreas = areas.filter(
-      (a) => a.state === MinistryAreaStateEnum.ACTIVE,
-    );
-    const activeGroups = groups.filter(
-      (g) => g.state === MinistryGroupConfigStateEnum.ACTIVE,
-    );
-
     if (activeAreas.length === 0 || activeGroups.length === 0) {
       toast.error('Se requieren áreas y grupos activos para generar combinaciones');
       return;
@@ -331,7 +356,6 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
           ).unwrap();
           createdCount++;
         } catch (itemErr: unknown) {
-          // 409 = already exists in another session/tab — skip silently
           const is409 =
             typeof itemErr === 'object' &&
             itemErr !== null &&
@@ -347,7 +371,6 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
         }
       }
 
-      // Always refresh from the API after bulk generation for all areas
       if (areas.length > 0) {
         await Promise.all(
           areas.map((area) => dispatch(GetServiceAreaGroups({ ministryAreaId: area.id }))),
@@ -362,7 +385,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       } else {
         toast.info('Todos los equipos posibles ya estaban creados para esta sede');
       }
-    } catch (err) {
+    } catch {
       toast.error('Ocurrió un problema durante la generación en lote');
     } finally {
       setIsBulkGenerating(false);
@@ -385,25 +408,25 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
             <p className="font-bold mb-0.5">Configuración incompleta del ministerio</p>
             <p className="text-amber-700">
               Para generar equipos de servicio (Área × Grupo), primero debes registrar al menos un
-              Área de Servicio y un Grupo en las pestañas anteriores.
+              Área de Servicio y un Grupo en los pasos anteriores.
             </p>
             <div className="mt-2 flex gap-2">
-              {areas.length === 0 && (
-                <button
-                  type="button"
-                  onClick={() => onNavigateToTab?.('areas')}
-                  className="font-bold underline text-amber-900 hover:text-amber-950"
-                >
-                  + Ir a Áreas
-                </button>
-              )}
               {groups.length === 0 && (
                 <button
                   type="button"
                   onClick={() => onNavigateToTab?.('groups')}
-                  className="font-bold underline text-amber-900 hover:text-amber-950"
+                  className="font-bold underline text-amber-900 hover:text-amber-950 cursor-pointer"
                 >
-                  + Ir a Grupos
+                  + Ir al Paso 1: Grupos
+                </button>
+              )}
+              {areas.length === 0 && (
+                <button
+                  type="button"
+                  onClick={() => onNavigateToTab?.('areas')}
+                  className="font-bold underline text-amber-900 hover:text-amber-950 cursor-pointer"
+                >
+                  + Ir al Paso 2: Áreas
                 </button>
               )}
             </div>
@@ -413,71 +436,184 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
       {/* Campus Selector Card - only if not already campus-scoped */}
       {!churchCampusId && (
-        <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs flex flex-col gap-2">
+        <div className="bg-white rounded-2xl p-4 border border-slate-200/90 shadow-xs flex flex-col gap-2">
           <div className="flex items-center gap-2 pb-1 border-b border-gray-100">
-            <div className="w-5 h-5 rounded-md bg-primary/10 text-primary flex items-center justify-center">
+            <div className="w-5 h-5 rounded-md bg-emerald-50 text-emerald-700 flex items-center justify-center">
               <MapPin size={12} />
             </div>
-            <h3 className="text-xs font-bold text-gray-800 uppercase tracking-wide">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
               Sede para Equipos
             </h3>
           </div>
 
-          <SelectSearch
-            label=""
-            placeholder="Seleccionar sede..."
-            options={campusOptions}
+          <Select
             value={selectedCampusId}
-            onChange={(val) => setSelectedCampusId(val)}
-            searchable={campusOptions.length > 4}
+            onChange={(e) => setSelectedCampusId(e.target.value)}
             disabled={campusesState.loading}
-          />
+          >
+            <option value="" disabled>
+              Seleccionar sede...
+            </option>
+            {campusOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </Select>
         </div>
       )}
 
-      {/* Action Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-2 bg-white rounded-2xl p-4 border border-gray-200/80 shadow-xs">
-        <div>
-          <h2 className="text-sm font-bold text-gray-900">Equipos de Servicio por Área</h2>
-          <p className="text-xs text-gray-500">
-            {currentTeams.length}{' '}
-            {currentTeams.length === 1 ? 'combinación configurada' : 'combinaciones configuradas'} en esta sede
+      {/* Header Action Bar */}
+      <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-200/90 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 border border-emerald-100 flex items-center justify-center shrink-0">
+              <Network size={15} />
+            </div>
+            <h2 className="text-sm sm:text-base font-extrabold text-slate-900">
+              {t('admin:ministry_structure.teams.header_title', {
+                defaultValue: '3. Equipos de Servicio por Sede (Matriz Área × Grupo)',
+              })}
+            </h2>
+          </div>
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl leading-relaxed">
+            {t('admin:ministry_structure.teams.header_desc', {
+              defaultValue:
+                'Combina cada Área con cada Grupo para formar los equipos de trabajo de la sede. Por ejemplo: Registro - Grupo 1, Cunas - Grupo 1.',
+            })}
           </p>
+
+          {/* Formula expected badge */}
+          {activeAreas.length > 0 && activeGroups.length > 0 && (
+            <div className="mt-2 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50/70 border border-emerald-100 text-[11px] text-emerald-800 font-medium">
+              <Calculator size={11} className="text-emerald-600 shrink-0" />
+              <span>
+                {t('admin:ministry_structure.teams.formula_expected', {
+                  areas: activeAreas.length,
+                  groups: activeGroups.length,
+                  teams: expectedTeamsCount,
+                  defaultValue: `${activeAreas.length} áreas × ${activeGroups.length} grupos = ${expectedTeamsCount} equipos esperados`,
+                })}
+              </span>
+            </div>
+          )}
         </div>
-        <div className="flex items-center gap-2">
-          {hasPrerequisites && (
+
+        <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+          {hasPrerequisites && missingCombinationsCount > 0 && (
             <Button
               onClick={handleBulkGenerate}
               variant="default"
               size="sm"
-              className="text-xs gap-1.5 py-1.5"
+              className="text-xs gap-1.5 py-2 px-3 bg-emerald-700 hover:bg-emerald-800 text-white"
               loading={isBulkGenerating}
               loadingText="Generando..."
             >
-              <Wand2 size={13} /> Generar Todos
+              <Wand2 size={13} />{' '}
+              {t('admin:ministry_structure.teams.btn_bulk_generate', {
+                defaultValue: 'Generar Todos los Equipos',
+              })}
             </Button>
           )}
           <Button
             onClick={() => handleOpenCreateModal()}
             size="sm"
-            className="text-xs gap-1.5 py-1.5"
+            className="text-xs gap-1.5 py-2 px-3"
             disabled={!hasPrerequisites}
           >
-            <Plus size={14} /> Crear Equipo
+            <Plus size={14} />{' '}
+            {t('admin:ministry_structure.teams.btn_create_single', {
+              defaultValue: 'Crear Uno a Uno',
+            })}
           </Button>
         </div>
       </div>
 
+      {/* State-aware Helper Banner: Complete vs Missing Combinations */}
+      {hasPrerequisites && (
+        <>
+          {missingCombinationsCount === 0 && currentTeams.length > 0 ? (
+            <div className="bg-emerald-50/80 border border-emerald-200/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-start gap-2.5">
+                <CheckCircle2 className="shrink-0 mt-0.5 text-emerald-600" size={18} />
+                <div>
+                  <h4 className="text-xs font-bold text-emerald-950">
+                    {t('admin:ministry_structure.teams.all_complete_title', {
+                      defaultValue: 'Todos los equipos están creados para esta sede',
+                    })}
+                  </h4>
+                  <p className="text-xs text-emerald-800 mt-0.5 leading-relaxed">
+                    {t('admin:ministry_structure.teams.all_complete_desc', {
+                      count: currentTeams.length,
+                      defaultValue: `La matriz de combinaciones está completa (${currentTeams.length} equipos). Ya puedes asignar a los líderes y voluntarios en cada equipo.`,
+                    })}
+                  </p>
+                </div>
+              </div>
+              {onNavigateToTab && (
+                <Button
+                  onClick={() => onNavigateToTab('teams')}
+                  variant="default"
+                  size="sm"
+                  className="text-xs gap-1.5 shrink-0 self-end sm:self-center bg-emerald-700 hover:bg-emerald-800 text-white"
+                >
+                  <span>
+                    {t('admin:ministry_structure.teams.btn_go_to_roster', {
+                      defaultValue: 'Ir a Equipos y Plantilla',
+                    })}
+                  </span>
+                  <ArrowRight size={13} />
+                </Button>
+              )}
+            </div>
+          ) : missingCombinationsCount > 0 ? (
+            <div className="bg-amber-50/90 border border-amber-200/90 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
+              <div className="flex items-start gap-2.5">
+                <Wand2 className="shrink-0 mt-0.5 text-amber-600" size={18} />
+                <div>
+                  <h4 className="text-xs font-bold text-amber-950">
+                    {t('admin:ministry_structure.teams.missing_combinations_title', {
+                      defaultValue: 'Hay combinaciones de equipos pendientes por generar',
+                    })}
+                  </h4>
+                  <p className="text-xs text-amber-800 mt-0.5 leading-relaxed">
+                    {t('admin:ministry_structure.teams.missing_combinations_desc', {
+                      defaultValue: `Detectamos áreas o grupos sin su equipo correspondiente en esta sede (${missingCombinationsCount} faltantes). Haz clic en 'Generar Todos' para crearlos en lote.`,
+                    })}
+                  </p>
+                </div>
+              </div>
+              <Button
+                onClick={handleBulkGenerate}
+                variant="default"
+                size="sm"
+                className="text-xs gap-1.5 shrink-0 self-end sm:self-center bg-amber-700 hover:bg-amber-800 text-white"
+                loading={isBulkGenerating}
+              >
+                <Wand2 size={13} />
+                <span>
+                  {t('admin:ministry_structure.teams.btn_bulk_generate', {
+                    defaultValue: 'Generar Todos los Equipos',
+                  })}
+                </span>
+              </Button>
+            </div>
+          ) : null}
+        </>
+      )}
+
       {/* Expand / Collapse All controller */}
       {areasWithTeams.length > 1 && currentTeams.length > 0 && (
         <div className="flex items-center justify-between px-1">
-          <span className="text-xs text-gray-500 font-medium">
-            {areasWithTeams.length} {areasWithTeams.length === 1 ? 'área de servicio' : 'áreas de servicio'}
+          <span className="text-xs text-slate-500 font-medium">
+            {areasWithTeams.length}{' '}
+            {areasWithTeams.length === 1 ? 'área de servicio' : 'áreas de servicio'} &bull;{' '}
+            {currentTeams.length} {currentTeams.length === 1 ? 'equipo' : 'equipos'}
           </span>
           <button
             type="button"
             onClick={toggleAll}
-            className="text-xs font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1.5 cursor-pointer"
+            className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <ChevronsUpDown size={14} />
             <span>{allExpanded ? 'Colapsar todas' : 'Expandir todas'}</span>
@@ -489,13 +625,13 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
       {(loadingServiceAreaGroups || isPrerequisitesLoading) && currentTeams.length === 0 ? (
         <CellListSkeleton count={4} />
       ) : currentTeams.length === 0 ? (
-        <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
-          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
+        <div className="bg-white rounded-2xl p-8 border border-slate-200/90 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
             <Inbox size={24} />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-gray-800">No hay equipos en esta sede</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
+            <h3 className="text-sm font-bold text-slate-800">No hay equipos en esta sede</h3>
+            <p className="text-xs text-slate-500 mt-0.5">
               Genera las combinaciones de Área × Grupo para asignar servidores.
             </p>
           </div>
@@ -505,7 +641,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                 onClick={handleBulkGenerate}
                 variant="default"
                 size="sm"
-                className="text-xs gap-1"
+                className="text-xs gap-1.5 bg-emerald-700 hover:bg-emerald-800 text-white"
                 loading={isBulkGenerating}
               >
                 <Wand2 size={13} /> Generar Todos los Equipos
@@ -523,11 +659,13 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
             const activeTeamsCount = areaItem.teams.filter(
               (t) => t.team.state === ServiceAreaGroupStateEnum.ACTIVE,
             ).length;
+            const isAreaComplete =
+              activeGroups.length > 0 && areaItem.teams.length >= activeGroups.length;
 
             return (
               <div
                 key={areaItem.areaId}
-                className="bg-white rounded-2xl border border-gray-200/80 shadow-xs overflow-hidden transition-all"
+                className="bg-white rounded-2xl border border-slate-200/90 shadow-xs overflow-hidden transition-all"
               >
                 {/* Accordion Header */}
                 <div
@@ -540,32 +678,67 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                       toggleArea(areaItem.areaId);
                     }
                   }}
-                  className="w-full p-3 sm:p-3.5 flex items-center justify-between gap-2.5 text-left hover:bg-slate-50/60 transition-colors cursor-pointer select-none"
+                  className="w-full p-3.5 sm:p-4 flex items-center justify-between gap-2.5 text-left hover:bg-slate-50/60 transition-colors cursor-pointer select-none"
                 >
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-teal-50 text-teal-600 border border-teal-100 flex items-center justify-center shrink-0">
-                      <Layers size={16} />
+                    <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-600 border border-teal-100 flex items-center justify-center shrink-0">
+                      <Layers size={17} />
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
-                        <h3 className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                        <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 truncate">
                           {areaItem.areaName}
                         </h3>
                         {!areaItem.areaActive && (
-                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-gray-100 text-gray-600 border border-gray-200 shrink-0">
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-slate-100 text-slate-600 border border-slate-200 shrink-0">
                             <XCircle size={9} /> Inactiva
                           </span>
                         )}
+
+                        {/* Progress / Completeness Badge */}
+                        {activeGroups.length > 0 && (
+                          <span
+                            className={clsx(
+                              'inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold shrink-0',
+                              isAreaComplete
+                                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                                : 'bg-amber-50 text-amber-700 border border-amber-200/80',
+                            )}
+                          >
+                            {isAreaComplete ? (
+                              <>
+                                <CheckCircle2 size={10} />{' '}
+                                {t('admin:ministry_structure.teams.complete_badge', {
+                                  defaultValue: 'Completo',
+                                })}
+                              </>
+                            ) : (
+                              <>
+                                <AlertCircle size={10} />{' '}
+                                {t('admin:ministry_structure.teams.incomplete_badge', {
+                                  count: Math.max(0, activeGroups.length - areaItem.teams.length),
+                                  defaultValue: `Faltan ${Math.max(
+                                    0,
+                                    activeGroups.length - areaItem.teams.length,
+                                  )} grupos`,
+                                })}
+                              </>
+                            )}
+                          </span>
+                        )}
                       </div>
+
                       {areaItem.areaDescription ? (
-                        <p className="text-[11px] text-gray-500 truncate mt-0.5">
+                        <p className="text-[11px] text-slate-500 truncate mt-0.5">
                           {areaItem.areaDescription}
                         </p>
                       ) : (
-                        <p className="text-[10px] text-gray-400 mt-0.5">
-                          {areaItem.teams.length === 0
-                            ? 'Sin grupos'
-                            : `${areaItem.teams.length} ${areaItem.teams.length === 1 ? 'grupo' : 'grupos'}`}
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {t('admin:ministry_structure.teams.groups_progress', {
+                            created: areaItem.teams.length,
+                            total: activeGroups.length,
+                            defaultValue: `${areaItem.teams.length} de ${activeGroups.length} grupos creados`,
+                          })}
                         </p>
                       )}
                     </div>
@@ -574,13 +747,14 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                   <div className="flex items-center gap-1.5 shrink-0">
                     <span
                       className={clsx(
-                        'inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0',
+                        'inline-flex items-center px-2 py-0.5 rounded-lg text-[11px] font-semibold shrink-0',
                         areaItem.teams.length > 0
                           ? 'bg-teal-50 text-teal-700 border border-teal-200/70'
                           : 'bg-slate-100 text-slate-500 border border-slate-200',
                       )}
                     >
-                      {areaItem.teams.length} {areaItem.teams.length === 1 ? 'grupo' : 'grupos'}
+                      {areaItem.teams.length}{' '}
+                      {areaItem.teams.length === 1 ? 'grupo' : 'grupos'}
                       {areaItem.teams.length > 0 && activeTeamsCount < areaItem.teams.length && (
                         <span className="ml-1 text-[9.5px] text-teal-600 font-normal">
                           ({activeTeamsCount} act.)
@@ -596,7 +770,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                           handleOpenCreateModal(areaItem.areaId);
                         }}
                         title={`Agregar grupo a ${areaItem.areaName}`}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 transition-colors cursor-pointer"
                       >
                         <Plus size={15} />
                       </button>
@@ -604,8 +778,8 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
                     <div
                       className={clsx(
-                        'w-6 h-6 rounded-lg flex items-center justify-center text-gray-400 transition-transform duration-200',
-                        isExpanded && 'rotate-180 text-gray-700',
+                        'w-6 h-6 rounded-lg flex items-center justify-center text-slate-400 transition-transform duration-200',
+                        isExpanded && 'rotate-180 text-slate-700',
                       )}
                     >
                       <ChevronDown size={16} />
@@ -615,13 +789,13 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
 
                 {/* Desplegable de Grupos: Lista compacta unificada */}
                 {isExpanded && (
-                  <div className="border-t border-gray-100 bg-slate-50/50 p-2.5 sm:p-3">
+                  <div className="border-t border-slate-100 bg-slate-50/50 p-2.5 sm:p-3">
                     {areaItem.teams.length === 0 ? (
-                      <p className="text-xs text-gray-400 py-2.5 text-center">
+                      <p className="text-xs text-slate-400 py-2.5 text-center">
                         No hay combinaciones de grupos configuradas para esta área en esta sede.
                       </p>
                     ) : (
-                      <div className="bg-white rounded-xl border border-gray-200/80 divide-y divide-gray-100 overflow-hidden shadow-2xs">
+                      <div className="bg-white rounded-xl border border-slate-200/80 divide-y divide-slate-100 overflow-hidden shadow-2xs">
                         {areaItem.teams.map(({ team, group }) => {
                           const isToggling = togglingId === team.id;
                           const isTeamActive = team.state === ServiceAreaGroupStateEnum.ACTIVE;
@@ -636,7 +810,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                                   <Users size={12} />
                                 </div>
                                 <div className="flex items-center gap-2 min-w-0">
-                                  <span className="text-xs sm:text-sm font-bold text-gray-900 truncate">
+                                  <span className="text-xs sm:text-sm font-bold text-slate-900 truncate">
                                     {group?.name ?? 'Grupo desconocido'}
                                   </span>
                                   <span
@@ -644,7 +818,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                                       'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-bold shrink-0',
                                       isTeamActive
                                         ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                                        : 'bg-gray-100 text-gray-600 border border-gray-200',
+                                        : 'bg-slate-100 text-slate-600 border border-slate-200',
                                     )}
                                   >
                                     {isTeamActive ? (
@@ -668,7 +842,7 @@ export const ServiceAreaGroupsTab: React.FC<ServiceAreaGroupsTabProps> = ({
                                   className={clsx(
                                     'text-[11px] font-semibold px-2.5 py-1 rounded-lg border transition-all cursor-pointer shrink-0',
                                     isTeamActive
-                                      ? 'border-gray-200 text-gray-600 hover:bg-gray-50'
+                                      ? 'border-slate-200 text-slate-600 hover:bg-slate-50'
                                       : 'border-emerald-200 text-emerald-700 bg-emerald-50 hover:bg-emerald-100',
                                   )}
                                 >

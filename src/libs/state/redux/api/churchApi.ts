@@ -30,6 +30,17 @@ import {
   QueryChurchReportsArgs,
   RequestPresignedReportUploadUrlPayload,
   PresignedUploadUrlResponse,
+  ICalendarMeetingInstance,
+  GetCalendarMeetingsArgs,
+  IChurchMeetingTag,
+  IChurchMeetingException,
+  IMinistryMeetingGroupAssignment,
+  MinistryMeetingGroupAssignmentKind,
+  UpsertMinistryMeetingGroupAssignmentPayload,
+  UpsertChurchMeetingExceptionPayload,
+  ChurchMeetingTagStateEnum,
+  ChurchMeetingKind,
+  ChurchMeetingStateEnum,
 } from '@/libs/models';
 import { getActiveTenantChurchId } from '@/libs/utils/tenant';
 
@@ -287,7 +298,7 @@ export const churchApi = baseApi.injectEndpoints({
     }),
 
     getMinistryAnalytics: builder.query<IMinistryAnalyticsResponse, GetMinistryAnalyticsArgs>({
-      query: ({ id, churchCampusId, from, to, date, churchMeetingIds }) => {
+      query: ({ id, churchCampusId, from, to, date, churchMeetingIds, tagId }) => {
         const params: Record<string, string> = {};
         if (churchCampusId) params.churchCampusId = churchCampusId;
         if (from) params.from = from;
@@ -295,6 +306,9 @@ export const churchApi = baseApi.injectEndpoints({
         if (date) params.date = date;
         if (churchMeetingIds && churchMeetingIds.length > 0) {
           params.churchMeetingIds = churchMeetingIds.join(',');
+        }
+        if (tagId) {
+          params.tagId = tagId;
         }
         return {
           microservice: MicroserviceEnum.Church,
@@ -325,13 +339,25 @@ export const churchApi = baseApi.injectEndpoints({
           : [{ type: 'Ministry', id: 'LIST' }],
     }),
 
-    getChurchMeetings: builder.query<IChurchMeeting[], GetChurchMeetingsArgs | void>({
-      query: (args) => ({
-        microservice: MicroserviceEnum.Church,
-        url: '/church-meeting',
-        method: HttpRequestMethod.GET,
-        params: args?.churchCampusId ? { churchCampusId: args.churchCampusId } : {},
-      }),
+    getChurchMeetings: builder.query<
+      IChurchMeeting[],
+      { churchCampusId?: string; states?: ChurchMeetingStateEnum[] } | void
+    >({
+      query: (args) => {
+        const searchParams = new URLSearchParams();
+        if (args?.churchCampusId) {
+          searchParams.append('churchCampusId', args.churchCampusId);
+        }
+        if (args?.states && args.states.length > 0) {
+          args.states.forEach((s) => searchParams.append('states', s));
+        }
+        const queryString = searchParams.toString();
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: queryString ? `/church-meeting?${queryString}` : '/church-meeting',
+          method: HttpRequestMethod.GET,
+        };
+      },
       providesTags: (result) =>
         result
           ? [
@@ -339,6 +365,256 @@ export const churchApi = baseApi.injectEndpoints({
               { type: 'ChurchMeeting', id: 'LIST' },
             ]
           : [{ type: 'ChurchMeeting', id: 'LIST' }],
+    }),
+
+    createChurchMeeting: builder.mutation<
+      void,
+      {
+        churchCampusId: string;
+        name: string;
+        description?: string;
+        kind?: ChurchMeetingKind;
+        day: string;
+        specificDate?: string | null;
+        endDate?: string | null;
+        tagId?: string | null;
+        tagName?: string | null;
+        initialHour: string;
+        finalHour: string;
+        initialRegistrationHour: string;
+        finalRegistrationHour: string;
+        position?: number;
+        state?: ChurchMeetingStateEnum;
+      }
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-meeting',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'LIST' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'TAGS' },
+      ],
+    }),
+
+    updateChurchMeeting: builder.mutation<
+      IChurchMeeting,
+      {
+        id: string;
+        churchCampusId?: string;
+        name?: string;
+        description?: string;
+        kind?: ChurchMeetingKind;
+        day?: string;
+        specificDate?: string | null;
+        endDate?: string | null;
+        tagId?: string | null;
+        tagName?: string | null;
+        initialHour?: string;
+        finalHour?: string;
+        initialRegistrationHour?: string;
+        finalRegistrationHour?: string;
+        position?: number;
+        state?: ChurchMeetingStateEnum;
+      }
+    >({
+      query: ({ id, churchCampusId: _ignoredCampusId, ...data }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church-meeting/${id}`,
+        method: HttpRequestMethod.PATCH,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'LIST' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'TAGS' },
+      ],
+    }),
+
+    deleteChurchMeeting: builder.mutation<void, { id: string; churchCampusId?: string }>({
+      query: ({ id }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church-meeting/${id}`,
+        method: HttpRequestMethod.DELETE,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'LIST' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+      ],
+    }),
+
+    bulkUpdateChurchMeetingStates: builder.mutation<
+      void,
+      { id: string; state: ChurchMeetingStateEnum }[]
+    >({
+      query: (items) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-meeting/bulk-state',
+        method: HttpRequestMethod.PATCH,
+        data: { items },
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'LIST' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+      ],
+    }),
+
+    getCalendarMeetings: builder.query<ICalendarMeetingInstance[], GetCalendarMeetingsArgs>({
+      query: ({ churchCampusId, ministryId, from, to, tagId }) => {
+        const params: Record<string, string> = {
+          churchCampusId,
+          from,
+          to,
+        };
+        if (ministryId) params.ministryId = ministryId;
+        if (tagId) params.tagId = tagId;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: '/church-meeting/calendar',
+          method: HttpRequestMethod.GET,
+          params,
+          cache: false,
+        };
+      },
+      providesTags: [
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'LIST' },
+      ],
+    }),
+
+    getChurchMeetingTags: builder.query<
+      IChurchMeetingTag[],
+      { churchCampusId: string; suggestionsOnly?: boolean }
+    >({
+      query: ({ churchCampusId, suggestionsOnly }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-meeting/tag',
+        method: HttpRequestMethod.GET,
+        params: {
+          churchCampusId,
+          ...(suggestionsOnly !== undefined ? { suggestionsOnly: String(suggestionsOnly) } : {}),
+        },
+      }),
+      providesTags: [{ type: 'ChurchMeeting', id: 'TAGS' }],
+    }),
+
+    createChurchMeetingTag: builder.mutation<
+      IChurchMeetingTag,
+      { churchCampusId: string; name: string }
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-meeting/tag',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+      invalidatesTags: [{ type: 'ChurchMeeting', id: 'TAGS' }],
+    }),
+
+    updateChurchMeetingTag: builder.mutation<
+      IChurchMeetingTag,
+      { id: string; name?: string; state?: ChurchMeetingTagStateEnum }
+    >({
+      query: ({ id, ...data }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church-meeting/tag/${id}`,
+        method: HttpRequestMethod.PATCH,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'TAGS' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'LIST' },
+      ],
+    }),
+
+    deleteChurchMeetingTag: builder.mutation<void, string>({
+      query: (id) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church-meeting/tag/${id}`,
+        method: HttpRequestMethod.DELETE,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'TAGS' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'LIST' },
+      ],
+    }),
+
+    upsertChurchMeetingException: builder.mutation<
+      IChurchMeetingException,
+      UpsertChurchMeetingExceptionPayload
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/church-meeting/exception',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'LIST' },
+      ],
+    }),
+
+    deleteChurchMeetingException: builder.mutation<void, string>({
+      query: (id) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church-meeting/exception/${id}`,
+        method: HttpRequestMethod.DELETE,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+        { type: 'ChurchMeeting', id: 'LIST' },
+      ],
+    }),
+
+    getMinistryGroupAssignments: builder.query<
+      IMinistryMeetingGroupAssignment[],
+      { ministryId: string; churchMeetingId?: string; kind?: MinistryMeetingGroupAssignmentKind }
+    >({
+      query: ({ ministryId, churchMeetingId, kind }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/ministry/group-assignment',
+        method: HttpRequestMethod.GET,
+        params: {
+          ministryId,
+          ...(churchMeetingId ? { churchMeetingId } : {}),
+          ...(kind ? { kind } : {}),
+        },
+      }),
+      providesTags: [{ type: 'ChurchMeeting', id: 'ASSIGNMENTS' }],
+    }),
+
+    upsertMinistryGroupAssignment: builder.mutation<
+      IMinistryMeetingGroupAssignment,
+      UpsertMinistryMeetingGroupAssignmentPayload
+    >({
+      query: (data) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/ministry/group-assignment',
+        method: HttpRequestMethod.POST,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'ASSIGNMENTS' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+      ],
+    }),
+
+    deleteMinistryGroupAssignment: builder.mutation<void, string>({
+      query: (id) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/ministry/group-assignment/${id}`,
+        method: HttpRequestMethod.DELETE,
+      }),
+      invalidatesTags: [
+        { type: 'ChurchMeeting', id: 'ASSIGNMENTS' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
+      ],
     }),
 
     getChurchCampuses: builder.query<IChurchCampus[], GetChurchCampusesArgs | void>({
@@ -695,6 +971,10 @@ export const {
   useLazyGetMinistryWorkspaceOverviewQuery,
   useGetChurchMeetingsQuery,
   useLazyGetChurchMeetingsQuery,
+  useCreateChurchMeetingMutation,
+  useUpdateChurchMeetingMutation,
+  useDeleteChurchMeetingMutation,
+  useBulkUpdateChurchMeetingStatesMutation,
   useGetChurchCampusesQuery,
   useLazyGetChurchCampusesQuery,
   useGetChurchPrintersQuery,
@@ -722,6 +1002,17 @@ export const {
   useLazyGetMinistriesQuery,
   useGetMinistryAnalyticsQuery,
   useLazyGetMinistryAnalyticsQuery,
+  useGetCalendarMeetingsQuery,
+  useLazyGetCalendarMeetingsQuery,
+  useGetChurchMeetingTagsQuery,
+  useCreateChurchMeetingTagMutation,
+  useUpdateChurchMeetingTagMutation,
+  useDeleteChurchMeetingTagMutation,
+  useUpsertChurchMeetingExceptionMutation,
+  useDeleteChurchMeetingExceptionMutation,
+  useGetMinistryGroupAssignmentsQuery,
+  useUpsertMinistryGroupAssignmentMutation,
+  useDeleteMinistryGroupAssignmentMutation,
 } = churchApi;
 
 

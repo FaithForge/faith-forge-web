@@ -25,7 +25,7 @@ import {
   MinistryType,
 } from '@/libs/models';
 import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import clsx from 'clsx';
@@ -372,19 +372,26 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
             <label className="text-xs font-bold text-gray-700">
               {campusTerm} <span className="text-rose-500">*</span>
             </label>
-            <SelectSearch
-              label="Sede / Campus"
-              options={campusOptions}
+            <Select
               value={selectedCampusId}
-              onChange={(newCampusId) => {
+              onChange={(e) => {
+                const newCampusId = e.target.value;
                 setSelectedCampusId(newCampusId);
                 const campusMins = ministries.filter((m) => m.churchCampusId === newCampusId);
                 setSelectedMinistryId(campusMins[0]?.id || '');
                 setSelectedAreaId('');
                 setSelectedGroupId('');
               }}
-              placeholder="Selecciona la sede física..."
-            />
+            >
+              <option value="" disabled>
+                Selecciona la sede física...
+              </option>
+              {campusOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </Select>
           </div>
 
           {/* Ministry Selector */}
@@ -392,17 +399,21 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
             <label className="text-xs font-bold text-gray-700">
               Ministerio <span className="text-rose-500">*</span>
             </label>
-            <SelectSearch
-              label="Ministerio"
-              options={ministryOptions}
+            <Select
               value={selectedMinistryId}
-              onChange={setSelectedMinistryId}
-              placeholder={
-                filteredMinistries.length > 0
+              onChange={(e) => setSelectedMinistryId(e.target.value)}
+            >
+              <option value="" disabled>
+                {filteredMinistries.length > 0
                   ? 'Selecciona el ministerio...'
-                  : 'No hay ministerios registrados en esta sede'
-              }
-            />
+                  : 'No hay ministerios registrados en esta sede'}
+              </option>
+              {ministryOptions.map((opt) => (
+                <option key={opt.id} value={opt.id}>
+                  {opt.name}
+                </option>
+              ))}
+            </Select>
             {filteredMinistries.length === 0 && selectedCampusId && (
               <p className="text-[11px] text-amber-600 font-medium">
                 Esta sede aún no tiene ministerios registrados.
@@ -459,17 +470,21 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
               <label className="text-xs font-bold text-gray-700">
                 Área de Servicio <span className="text-rose-500">*</span>
               </label>
-              <SelectSearch
-                label="Área de Servicio"
-                options={areaOptions}
+              <Select
                 value={selectedAreaId}
-                onChange={setSelectedAreaId}
-                placeholder={
-                  areaOptions.length > 0
+                onChange={(e) => setSelectedAreaId(e.target.value)}
+              >
+                <option value="" disabled>
+                  {areaOptions.length > 0
                     ? 'Selecciona el área de servicio...'
-                    : 'No hay áreas configuradas en este ministerio'
-                }
-              />
+                    : 'No hay áreas configuradas en este ministerio'}
+                </option>
+                {areaOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </Select>
             </div>
           )}
 
@@ -481,17 +496,21 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
               <label className="text-xs font-bold text-gray-700">
                 Grupo / Horario / Turno <span className="text-rose-500">*</span>
               </label>
-              <SelectSearch
-                label="Grupo / Horario / Turno"
-                options={groupOptions}
+              <Select
                 value={selectedGroupId}
-                onChange={setSelectedGroupId}
-                placeholder={
-                  groupOptions.length > 0
+                onChange={(e) => setSelectedGroupId(e.target.value)}
+              >
+                <option value="" disabled>
+                  {groupOptions.length > 0
                     ? 'Selecciona el grupo o turno...'
-                    : 'No hay grupos configurados en este ministerio'
-                }
-              />
+                    : 'No hay grupos configurados en este ministerio'}
+                </option>
+                {groupOptions.map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
+              </Select>
             </div>
           )}
 

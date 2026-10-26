@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import { ChurchPrinterStateEnum, IChurchPrinter } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { CreateChurchPrinter, UpdateChurchPrinter } from '@/libs/state/redux/thunks/church/church.thunk';
@@ -133,19 +133,26 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
       <form onSubmit={handleSubmit} className="flex flex-col gap-6 p-5 sm:p-6">
         {/* Campus Selection */}
         <div className="flex flex-col gap-1.5">
-          <SelectSearch
+          <Select
             label={t('admin:printers.field_campus_label', { campus: campusTerm })}
-            placeholder={t('admin:printers.field_campus_placeholder', { campus: campusTerm })}
-            options={campusOptions}
             value={selectedCampusId}
-            onChange={(val) => {
-              setSelectedCampusId(val);
+            onChange={(e) => {
+              setSelectedCampusId(e.target.value);
               if (campusError) setCampusError('');
             }}
             disabled={loading}
             required
             error={campusError}
-          />
+          >
+            <option value="" disabled>
+              {t('admin:printers.field_campus_placeholder', { campus: campusTerm })}
+            </option>
+            {campusOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </Select>
         </div>
 
         {/* Name Input */}

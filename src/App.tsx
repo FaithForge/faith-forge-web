@@ -44,6 +44,9 @@ const CampusesManagementView = lazy(
 const PrintersManagementView = lazy(
   () => import('@/views/admin/printers/PrintersManagementView'),
 );
+const MinistriesDirectoryView = lazy(
+  () => import('@/views/admin/ministries/MinistriesDirectoryView'),
+);
 const MinistryWorkspaceView = lazy(
   () => import('@/views/admin/ministries/MinistryWorkspaceView'),
 );
@@ -408,7 +411,7 @@ function App() {
                 <Route path={APP_ROUTES.admin.printers} element={<PrintersManagementView />} />
                 <Route
                   path={APP_ROUTES.admin.ministries}
-                  element={<MinistryWorkspaceView />}
+                  element={<MinistriesDirectoryView />}
                 />
                 <Route
                   path={APP_ROUTES.admin.ministryDetailDynamic}

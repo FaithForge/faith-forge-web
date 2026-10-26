@@ -3,7 +3,6 @@ import { useTranslation } from 'react-i18next';
 import { FileDown, ShieldCheck, Loader2, FileText, Smartphone } from 'lucide-react';
 import AppDrawer from '@/components/ui/AppDrawer';
 import Button from '@/components/ui/Button';
-import SelectSearch from '@/components/ui/SelectSearch';
 import Select from '@/components/ui/Select';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
@@ -1318,21 +1317,29 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
 
         {/* Filter selection fields */}
         <div className="flex flex-col gap-3">
-          <SelectSearch
+          <Select
             label={t('export_pdf_modal.area_filter_label')}
             value={filterAreaId}
-            onChange={setFilterAreaId}
-            options={areaOptions}
-            searchable={false}
-          />
+            onChange={(e) => setFilterAreaId(e.target.value)}
+          >
+            {areaOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </Select>
 
-          <SelectSearch
+          <Select
             label={t('export_pdf_modal.group_filter_label')}
             value={filterGroupId}
-            onChange={setFilterGroupId}
-            options={groupOptions}
-            searchable={false}
-          />
+            onChange={(e) => setFilterGroupId(e.target.value)}
+          >
+            {groupOptions.map((opt) => (
+              <option key={opt.id} value={opt.id}>
+                {opt.name}
+              </option>
+            ))}
+          </Select>
 
           <Select
             label={t('export_pdf_modal.coverage_filter_label')}

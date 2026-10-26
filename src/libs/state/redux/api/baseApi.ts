@@ -11,6 +11,7 @@ export interface MicroserviceBaseQueryArgs {
   params?: Record<string, unknown>;
   headers?: Record<string, string>;
   idempotencyKey?: string;
+  cache?: boolean;
 }
 
 import { ProblemDetails } from '@/libs/models/problemDetails';
@@ -77,6 +78,7 @@ export const microserviceBaseQuery: BaseQueryFn<
         data,
         params,
         headers: requestHeaders,
+        cache: args.cache,
       },
     });
 

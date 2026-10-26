@@ -324,14 +324,14 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-gray-800 flex items-center gap-1.5">
                 <Sparkles size={13} className="text-primary" />
-                Salones Infantiles Asociados (Opcional)
+                {classroomTerm}es Asociados (Opcional)
               </label>
               <span className="text-[10px] text-gray-500 font-medium">
                 {selectedKidGroupIds.length} seleccionado(s)
               </span>
             </div>
             <p className="text-[11px] text-gray-500 mb-1">
-              Asocia el o los salones correspondientes para vincular supervisores y asistencia.
+              Asocia el o los {classroomTerm.toLowerCase()}es correspondientes para vincular supervisores y asistencia.
             </p>
 
             <div className="flex flex-wrap gap-1.5 pt-1">

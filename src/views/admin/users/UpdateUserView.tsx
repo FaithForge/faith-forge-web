@@ -40,7 +40,7 @@ import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -428,13 +428,17 @@ const UpdateUserView: React.FC = () => {
                 name="nationalIdType"
                 control={control}
                 render={({ field }) => (
-                  <SelectSearch
+                  <Select
                     label="Tipo de Documento"
-                    options={idTypeSelect.map((opt) => ({ id: opt.value, name: opt.label }))}
                     value={field.value}
-                    onChange={field.onChange}
-                    searchable={false}
-                  />
+                    onChange={(e) => field.onChange(e.target.value)}
+                  >
+                    {idTypeSelect.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </Select>
                 )}
               />
 
@@ -525,14 +529,20 @@ const UpdateUserView: React.FC = () => {
                 name="healthSecurityEntity"
                 control={control}
                 render={({ field }) => (
-                  <SelectSearch
+                  <Select
                     label="EPS / Entidad Promotora de Salud"
-                    placeholder="Seleccionar EPS..."
-                    options={healthSecurityEntitySelect}
                     value={field.value}
-                    onChange={field.onChange}
-                    searchable={true}
-                  />
+                    onChange={(e) => field.onChange(e.target.value)}
+                  >
+                    <option value="">
+                      Seleccionar EPS...
+                    </option>
+                    {healthSecurityEntitySelect.map((opt) => (
+                      <option key={opt.id} value={opt.name}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </Select>
                 )}
               />
             </div>
@@ -598,13 +608,17 @@ const UpdateUserView: React.FC = () => {
               name="state"
               control={control}
               render={({ field }) => (
-                <SelectSearch
+                <Select
                   label="Estado del Usuario"
-                  options={userStateSelect.map((opt) => ({ id: opt.value, name: opt.label }))}
                   value={field.value}
-                  onChange={field.onChange}
-                  searchable={false}
-                />
+                  onChange={(e) => field.onChange(e.target.value)}
+                >
+                  {userStateSelect.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </Select>
               )}
             />
           </div>

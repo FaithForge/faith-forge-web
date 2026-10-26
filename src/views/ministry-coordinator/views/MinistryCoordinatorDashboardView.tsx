@@ -23,6 +23,7 @@ import { MinistryStructureSection } from '../components/MinistryStructureSection
 import { KidsAttendanceSection } from '../components/KidsAttendanceSection';
 import { TemporalFilterSelector } from '@/components/ui/TemporalFilterSelector';
 import { MeetingsMultiSelect } from '@/components/ui/MeetingsMultiSelect';
+import Select from '@/components/ui/Select';
 import { SelectMinistryModal } from '@/components/modal/SelectMinistryModal';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 
@@ -53,12 +54,25 @@ export const MinistryCoordinatorDashboardView: React.FC = () => {
     setTemporalFilter,
     selectedMeetingIds,
     setSelectedMeetingIds,
+    selectedTagId,
+    setSelectedTagId,
+    availableTags,
     meetings,
     hasMeetingsForSelection,
     isMeetingCurrentlyInProgress,
     isMinistryModalOpen,
     setIsMinistryModalOpen,
   } = useMinistryAnalytics();
+
+  const tagFilterOptions = React.useMemo(() => {
+    return [
+      { id: 'ALL', name: t('admin:calendar.tag_filter_all') },
+      ...availableTags.map((tag) => ({
+        id: tag.id,
+        name: `🏷️ ${tag.name}`,
+      })),
+    ];
+  }, [availableTags, t]);
 
   const isKidsMinistry = activeMinistry?.type === 'KIDS';
 
@@ -139,12 +153,29 @@ export const MinistryCoordinatorDashboardView: React.FC = () => {
             className="flex-1 min-w-0"
           />
 
-          <MeetingsMultiSelect
-            meetings={meetings}
-            selectedMeetingIds={selectedMeetingIds}
-            onChange={setSelectedMeetingIds}
-            className="shrink-0"
-          />
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 shrink-0">
+            {availableTags.length > 0 && (
+              <div className="w-full sm:w-52">
+                <Select
+                  value={selectedTagId || 'ALL'}
+                  onChange={(e) => setSelectedTagId(e.target.value === 'ALL' ? '' : e.target.value)}
+                >
+                  {tagFilterOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
+
+            <MeetingsMultiSelect
+              meetings={meetings}
+              selectedMeetingIds={selectedMeetingIds}
+              onChange={setSelectedMeetingIds}
+              className="shrink-0"
+            />
+          </div>
         </div>
       </div>
 

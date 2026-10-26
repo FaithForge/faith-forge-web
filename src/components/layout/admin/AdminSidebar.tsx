@@ -111,7 +111,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: campusesTerm,
           to: APP_ROUTES.admin.campuses,
           icon: MapPin,
-          badge: String(campuses?.length || 5),
+          badge: campuses && campuses.length > 0 ? String(campuses.length) : undefined,
           badgeColor: 'bg-slate-100 text-slate-600',
         },
         {
@@ -142,7 +142,7 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
           label: 'Solicitudes',
           to: APP_ROUTES.admin.volunteerApplications,
           icon: UserCheck,
-          badge: `${pendingApplicationsCount > 0 ? pendingApplicationsCount : 3} pend.`,
+          badge: pendingApplicationsCount > 0 ? `${pendingApplicationsCount} pend.` : undefined,
           badgeColor: 'bg-amber-100 text-amber-800',
         },
       ],
@@ -173,9 +173,8 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
   };
 
   const isItemActive = (item: NavItem) => {
-    if (item.exact) {
-      return location.pathname === item.to;
-    }
+    if (item.exact) return location.pathname === item.to;
+    if (item.id === 'users' && location.pathname.startsWith(APP_ROUTES.admin.createUser)) return false;
     return location.pathname.startsWith(item.to);
   };
 

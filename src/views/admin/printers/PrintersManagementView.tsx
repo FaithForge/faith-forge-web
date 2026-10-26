@@ -16,7 +16,7 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
@@ -243,13 +243,20 @@ const PrintersManagementView: React.FC = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               {/* Campus Selector */}
               <div className="w-full sm:w-72 shrink-0">
-                <SelectSearch
+                <Select
                   label={t('admin:printers.filter_campus_label', { campus: campusTerm })}
-                  placeholder={t('admin:printers.select_campus_placeholder', { campus: campusTerm })}
-                  options={campusOptions}
                   value={selectedCampusId}
-                  onChange={handleCampusChange}
-                />
+                  onChange={(e) => handleCampusChange(e.target.value)}
+                >
+                  <option value="" disabled>
+                    {t('admin:printers.select_campus_placeholder', { campus: campusTerm })}
+                  </option>
+                  {campusOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
 
               {/* Status Filter Tabs */}

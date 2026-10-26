@@ -39,7 +39,7 @@ import dayjs from 'dayjs';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
 import DatePickerWheel from '@/components/ui/DatePickerWheel';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -578,14 +578,20 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
                 name="nationalIdType"
                 control={control}
                 render={({ field }) => (
-                  <SelectSearch
+                  <Select
                     label="Tipo Doc."
-                    options={idTypeSelect.map((opt) => ({ id: opt.value, name: `${opt.value} - ${opt.label}` }))}
                     value={field.value}
-                    onChange={(val) => field.onChange(val as UserIdType)}
-                    placeholder="Tipo de documento..."
-                    searchable={false}
-                  />
+                    onChange={(e) => field.onChange(e.target.value as UserIdType)}
+                  >
+                    <option value="" disabled>
+                      Tipo de documento...
+                    </option>
+                    {idTypeSelect.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.value} - {opt.label}
+                      </option>
+                    ))}
+                  </Select>
                 )}
               />
 
@@ -605,19 +611,19 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
                 control={control}
                 rules={{ required: 'El g√©nero es obligatorio' }}
                 render={({ field }) => (
-                  <SelectSearch
+                  <Select
                     label="G√©nero"
                     required
-                    options={[
-                      { id: 'M', name: 'Masculino' },
-                      { id: 'F', name: 'Femenino' },
-                    ]}
                     value={field.value}
-                    onChange={field.onChange}
+                    onChange={(e) => field.onChange(e.target.value)}
                     error={errors.gender?.message}
-                    placeholder="Seleccionar g√©nero..."
-                    searchable={false}
-                  />
+                  >
+                    <option value="" disabled>
+                      Seleccionar g√©nero...
+                    </option>
+                    <option value="M">Masculino</option>
+                    <option value="F">Femenino</option>
+                  </Select>
                 )}
               />
 
@@ -716,15 +722,20 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
                 name="healthSecurityEntity"
                 control={control}
                 render={({ field }) => (
-                  <SelectSearch
+                  <Select
                     label="Entidad de Salud (EPS)"
-                    options={healthSecurityEntitySelect}
                     value={field.value}
-                    onChange={field.onChange}
-                    placeholder="Buscar EPS..."
-                    valueKey="name"
-                    searchable={true}
-                  />
+                    onChange={(e) => field.onChange(e.target.value)}
+                  >
+                    <option value="">
+                      Buscar EPS...
+                    </option>
+                    {healthSecurityEntitySelect.map((opt) => (
+                      <option key={opt.id} value={opt.name}>
+                        {opt.name}
+                      </option>
+                    ))}
+                  </Select>
                 )}
               />
 
@@ -733,15 +744,18 @@ Te damos la bienvenida a la plataforma. Tu cuenta de acceso ha sido creada con √
                 control={control}
                 rules={{ required: 'El estado es obligatorio' }}
                 render={({ field }) => (
-                  <SelectSearch
+                  <Select
                     label="Estado Inicial"
                     required
-                    options={userStateSelect.map((st) => ({ id: st.value, name: st.label }))}
                     value={field.value}
-                    onChange={(val) => field.onChange(val as UserState)}
-                    placeholder="Seleccionar estado..."
-                    searchable={false}
-                  />
+                    onChange={(e) => field.onChange(e.target.value as UserState)}
+                  >
+                    {userStateSelect.map((st) => (
+                      <option key={st.value} value={st.value}>
+                        {st.label}
+                      </option>
+                    ))}
+                  </Select>
                 )}
               />
             </div>

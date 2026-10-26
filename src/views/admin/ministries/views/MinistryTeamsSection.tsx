@@ -15,7 +15,7 @@ import {
   CheckCircle2,
   Filter,
 } from 'lucide-react';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -541,15 +541,20 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                 <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
                   Sede (Campus)
                 </label>
-                <SelectSearch
-                  label=""
-                  placeholder="Seleccionar sede..."
-                  options={campusOptions}
+                <Select
                   value={selectedCampusId}
-                  onChange={(val) => setSelectedCampusId(val)}
-                  searchable={campusOptions.length > 4}
+                  onChange={(e) => setSelectedCampusId(e.target.value)}
                   disabled={campusesState.loading}
-                />
+                >
+                  <option value="" disabled>
+                    Seleccionar sede...
+                  </option>
+                  {campusOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
             )}
 
@@ -558,28 +563,32 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                 <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
                   1. Filtrar por Área
                 </label>
-                <SelectSearch
-                  label=""
-                  placeholder="Todas las áreas..."
-                  options={areaFilterOptions}
+                <Select
                   value={selectedAreaId}
-                  onChange={(val) => setSelectedAreaId(val)}
-                  searchable={areaFilterOptions.length > 5}
-                />
+                  onChange={(e) => setSelectedAreaId(e.target.value)}
+                >
+                  {areaFilterOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
 
               <div>
                 <label className="text-[10.5px] font-bold text-gray-600 block mb-1">
                   2. Filtrar por Grupo
                 </label>
-                <SelectSearch
-                  label=""
-                  placeholder="Todos los grupos..."
-                  options={groupFilterOptions}
+                <Select
                   value={selectedGroupId}
-                  onChange={(val) => setSelectedGroupId(val)}
-                  searchable={groupFilterOptions.length > 5}
-                />
+                  onChange={(e) => setSelectedGroupId(e.target.value)}
+                >
+                  {groupFilterOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
               </div>
             </div>
           </div>

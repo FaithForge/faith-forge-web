@@ -11,7 +11,7 @@ import {
   ALL_SYSTEM_ROLES_METADATA,
   MINISTRY_ROLE_GROUPS,
 } from '@/libs/utils/auth';
-import SelectSearch from '@/components/ui/SelectSearch';
+import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import clsx from 'clsx';
@@ -193,15 +193,21 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
             ) : (
               <>
                 {/* Role Selector */}
-                <SelectSearch
+                <Select
                   label="Seleccionar Rol a Asignar"
                   required
                   value={selectedRole}
-                  onChange={(val) => setSelectedRole(val)}
-                  options={availableRoles}
-                  placeholder="Selecciona el rol..."
-                  searchable={true}
-                />
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                >
+                  <option value="" disabled>
+                    Selecciona el rol...
+                  </option>
+                  {availableRoles.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
 
                 {/* Selected Role Preview Info */}
                 {selectedRoleMeta && (

@@ -48,4 +48,5 @@ dev-dist
 tsconfig.tsbuildinfo
 
 .env
-.env*.local
+.env.*
+!.env.example

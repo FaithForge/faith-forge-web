@@ -30,6 +30,7 @@ export const APP_ROUTES = {
     ministryDetail: (id: string | number) => `/admin/ministries/${id}`,
     ministrySectionDynamic: '/admin/ministries/:id/:section',
     ministryTeams: (id: string | number) => `/admin/ministries/${id}/teams`,
+    ministrySchedule: (id: string | number) => `/admin/ministries/${id}/schedule`,
     ministryLeadership: (id: string | number) => `/admin/ministries/${id}/leadership`,
     ministryOrganigram: (id: string | number) => `/admin/ministries/${id}/organigram`,
     ministryStructure: (id: string | number) => `/admin/ministries/${id}/structure`,

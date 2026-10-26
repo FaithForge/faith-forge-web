@@ -2,21 +2,21 @@ import React, { useMemo, useState, useEffect } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
-  ShieldCheck,
-  Crown,
-  Settings,
+  Users,
+  Star,
+  Landmark,
   Plus,
   Edit2,
-  MapPin,
   CheckCircle2,
   XCircle,
   FolderKanban,
   Layers,
   FileDown,
+  CalendarDays,
+  ArrowLeft,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
-import SelectSearch from '@/components/ui/SelectSearch';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import {
   useGetChurchCampusesQuery,
@@ -33,12 +33,13 @@ import MinistryLeadershipSection from './views/MinistryLeadershipSection';
 import MinistryStructureSection from './views/MinistryStructureSection';
 import MinistryModal from './components/MinistryModal';
 import ExportOrganizationPdfModal from './components/ExportOrganizationPdfModal';
+import MinistrySchedulingSection from './views/MinistrySchedulingSection';
 import clsx from 'clsx';
 
 /**
- * Key identifiers for the ministry workspace operational tabs.
+ * Key identifiers for the ministry workspace operational subpages.
  */
-type WorkspaceTabKey = 'teams' | 'leadership' | 'structure';
+type WorkspaceTabKey = 'schedule' | 'teams' | 'leadership' | 'structure';
 
 /**
  * Configuration item for workspace tab navigation items.
@@ -48,46 +49,59 @@ interface TabItem {
   key: WorkspaceTabKey;
   /** Full i18n translation key for tab label */
   labelKey:
+    | 'ministry_workspace.tabs.schedule'
     | 'ministry_workspace.tabs.teams'
     | 'ministry_workspace.tabs.leadership'
     | 'ministry_workspace.tabs.structure';
   /** Short i18n translation key for mobile tab label */
   shortLabelKey:
+    | 'ministry_workspace.tabs.schedule_short'
     | 'ministry_workspace.tabs.teams_short'
     | 'ministry_workspace.tabs.leadership'
     | 'ministry_workspace.tabs.structure';
   /** Icon component */
   icon: React.ElementType;
+  /** Accent color class for icon */
+  iconColor: string;
 }
 
 /**
- * Static configuration list of workspace tabs (3 streamlined tabs without organigram).
+ * Static configuration list of workspace tabs matching modern SaaS underline layout.
  */
 const WORKSPACE_TABS: TabItem[] = [
   {
     key: 'teams',
     labelKey: 'ministry_workspace.tabs.teams',
     shortLabelKey: 'ministry_workspace.tabs.teams_short',
-    icon: ShieldCheck,
+    icon: Users,
+    iconColor: 'text-blue-600',
+  },
+  {
+    key: 'schedule',
+    labelKey: 'ministry_workspace.tabs.schedule',
+    shortLabelKey: 'ministry_workspace.tabs.schedule_short',
+    icon: CalendarDays,
+    iconColor: 'text-rose-500',
   },
   {
     key: 'leadership',
     labelKey: 'ministry_workspace.tabs.leadership',
     shortLabelKey: 'ministry_workspace.tabs.leadership',
-    icon: Crown,
+    icon: Star,
+    iconColor: 'text-amber-500',
   },
   {
     key: 'structure',
     labelKey: 'ministry_workspace.tabs.structure',
     shortLabelKey: 'ministry_workspace.tabs.structure',
-    icon: Settings,
+    icon: Landmark,
+    iconColor: 'text-slate-600',
   },
 ];
 
 /**
- * Consolidated Ministry Workspace View.
- * Unifies ministry administration, team planning, leadership oversight,
- * structure management, and executive PDF export into a single high-performance screen.
+ * Dedicated Ministry Workspace View at /admin/ministries/:id and /admin/ministries/:id/:section.
+ * Modern, clean header and underline tabs inspired by modern SaaS dashboards.
  *
  * @returns {JSX.Element} Rendered ministry workspace view.
  */
@@ -120,7 +134,7 @@ export const MinistryWorkspaceView: React.FC = () => {
     return currentReduxCampus?.id || '';
   });
 
-  // 4. Fetch Consolidated Ministry Workspace Data (Single HTTP Call)
+  // 4. Fetch Consolidated Ministry Workspace Data
   const {
     data: workspace,
     isLoading: loadingWorkspace,
@@ -191,77 +205,37 @@ export const MinistryWorkspaceView: React.FC = () => {
     setSelectedCampusId(newCampusId);
     sessionStorage.setItem('ministries_selected_campus_id', newCampusId);
     dispatch(updateCurrentChurchCampus(newCampusId));
-
-    if (urlMinistryId) {
-      navigate(`${APP_ROUTES.admin.ministries}?campusId=${newCampusId}`, { replace: true });
-    } else {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('campusId', newCampusId);
-          next.delete('ministryId');
-          return next;
-        },
-        { replace: true },
-      );
-    }
+    navigate(`${APP_ROUTES.admin.ministries}?campusId=${newCampusId}`);
   };
 
-  // Update URL ministryId only when activeMinistry actually belongs to the selected campus
-  useEffect(() => {
-    if (
-      !isWorkspaceStale &&
-      activeMinistry?.id &&
-      (!selectedCampusId || activeMinistry.churchCampusId === selectedCampusId) &&
-      !urlMinistryId &&
-      searchParams.get('ministryId') !== activeMinistry.id
-    ) {
-      setSearchParams(
-        (prev) => {
-          const next = new URLSearchParams(prev);
-          next.set('ministryId', activeMinistry.id);
-          if (selectedCampusId) next.set('campusId', selectedCampusId);
-          return next;
-        },
-        { replace: true },
-      );
-    }
-  }, [
-    activeMinistry?.id,
-    activeMinistry?.churchCampusId,
-    isWorkspaceStale,
-    urlMinistryId,
-    searchParams,
-    setSearchParams,
-    selectedCampusId,
-  ]);
-
-  // 5. Active Tab Management (3 streamlined tabs)
+  // 5. Active Tab Management (Route-first)
   const activeTab: WorkspaceTabKey = useMemo(() => {
     const raw = urlSection || searchParams.get('tab');
+    if (raw === 'schedule') return 'schedule';
     if (raw === 'leadership') return 'leadership';
     if (raw === 'structure' || raw === 'config') return 'structure';
     return 'teams';
   }, [urlSection, searchParams]);
 
   /**
-   * Switches the active workspace operational tab.
+   * Switches the active workspace operational subpage.
    *
    * @param {WorkspaceTabKey} key - The target tab key.
    */
   const handleTabChange = (key: WorkspaceTabKey) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        if (key === 'teams') {
-          next.delete('tab');
-        } else {
+    const targetMinId = activeMinistry?.id || urlMinistryId;
+    if (targetMinId) {
+      navigate(`/admin/ministries/${targetMinId}/${key}`);
+    } else {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
           next.set('tab', key);
-        }
-        return next;
-      },
-      { replace: true },
-    );
+          return next;
+        },
+        { replace: true },
+      );
+    }
   };
 
   /**
@@ -270,15 +244,7 @@ export const MinistryWorkspaceView: React.FC = () => {
    * @param {string} minId - Identifier of the ministry to switch to.
    */
   const handleSelectMinistry = (minId: string) => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('ministryId', minId);
-        if (selectedCampusId) next.set('campusId', selectedCampusId);
-        return next;
-      },
-      { replace: true },
-    );
+    navigate(`/admin/ministries/${minId}/${activeTab}`);
   };
 
   // Modals state
@@ -310,12 +276,6 @@ export const MinistryWorkspaceView: React.FC = () => {
     refetchWorkspace();
   };
 
-  // Campus Select Options
-  const campusOptions = useMemo(
-    () => campuses.map((c) => ({ id: c.id, name: c.name })),
-    [campuses],
-  );
-
   const selectedCampusName = useMemo(() => {
     const found = campuses.find((c) => c.id === selectedCampusId);
     if (found) return found.name;
@@ -325,11 +285,17 @@ export const MinistryWorkspaceView: React.FC = () => {
   }, [campuses, selectedCampusId, currentReduxCampus?.name]);
 
   return (
-    <div className="min-h-full flex-1 w-full bg-slate-50 pb-24">
-      {/* Top Header */}
+    <div className="min-h-full flex-1 w-full bg-slate-50/70 pb-28">
+      {/* Mobile-only Header */}
       <PageHeader
-        title={t('ministry_workspace.title')}
-        onBack={() => navigate(APP_ROUTES.admin.root)}
+        title={activeMinistry?.name || t('ministry_workspace.title')}
+        onBack={() =>
+          navigate(
+            selectedCampusId
+              ? `${APP_ROUTES.admin.ministries}?campusId=${selectedCampusId}`
+              : APP_ROUTES.admin.ministries,
+          )
+        }
         className="lg:hidden"
         rightAction={
           <div className="flex items-center gap-1.5">
@@ -337,7 +303,7 @@ export const MinistryWorkspaceView: React.FC = () => {
               variant="ghost"
               size="sm"
               onClick={handleOpenCreateModal}
-              className="w-8 h-8 rounded-full p-0 flex items-center justify-center bg-white/20 hover:bg-white/30 active:scale-95 text-white transition-all cursor-pointer"
+              className="w-8 h-8 rounded-full p-0 flex items-center justify-center bg-white/20 hover:bg-white/30 text-white transition-all cursor-pointer"
               title={t('ministry_workspace.create_ministry_tooltip')}
             >
               <Plus size={16} />
@@ -346,230 +312,219 @@ export const MinistryWorkspaceView: React.FC = () => {
         }
       />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 flex flex-col gap-5">
-        {/* Campus & Ministry Selector Strip */}
-        <div className="bg-white rounded-2xl p-3.5 sm:p-4 border border-gray-200/80 shadow-2xs flex flex-col gap-3">
-          {/* Top Row: Full Width Campus Dropdown */}
-          <div className="flex items-center gap-2.5 w-full">
-            <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center shrink-0">
-              <MapPin size={15} />
-            </div>
-            <div className="flex-1 min-w-0">
-              <SelectSearch
-                label={campusTerm}
-                value={selectedCampusId}
-                onChange={handleCampusChange}
-                options={campusOptions}
-                placeholder={t('ministry_workspace.select_campus_placeholder', {
-                  campus: campusTerm.toLowerCase(),
-                })}
-                className="w-full text-xs font-semibold"
-              />
-            </div>
-          </div>
-
-          {/* Ministry Switcher Section with Explicit Label */}
-          <div className="flex flex-col gap-1.5 pt-2.5 border-t border-gray-100">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider flex items-center gap-1.5">
-                <FolderKanban size={13} className="text-primary" />
-                {t('ministry_workspace.ministries_section_title', {
-                  count: campusMinistries.length,
-                  campus: campusTerm.toLowerCase(),
-                })}
-              </span>
-              <span className="text-[10.5px] text-gray-400 font-medium hidden sm:inline">
-                {t('ministry_workspace.ministries_section_subtitle')}
-              </span>
-            </div>
-
-            <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
-              {campusMinistries.map((min) => {
-                const isSelected = activeMinistry?.id === min.id;
-                const isKids = min.type === MinistryType.KIDS;
-                return (
-                  <button
-                    key={min.id}
-                    type="button"
-                    onClick={() => handleSelectMinistry(min.id)}
-                    className={clsx(
-                      'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs select-none',
-                      isSelected
-                        ? 'bg-primary text-white shadow-xs scale-[1.02]'
-                        : 'bg-slate-100 hover:bg-slate-200/70 text-gray-700',
-                    )}
-                  >
-                    {isKids ? (
-                      <FaChild className={clsx('w-3 h-3', isSelected ? 'text-teal-200' : 'text-teal-600')} />
-                    ) : (
-                      <Layers size={13} className={clsx(isSelected ? 'text-white/80' : 'text-primary')} />
-                    )}
-                    <span>{min.name}</span>
-                    {min.state === MinistryStateEnum.ACTIVE ? (
-                      <span className={clsx('w-1.5 h-1.5 rounded-full', isSelected ? 'bg-emerald-300' : 'bg-emerald-500')} />
-                    ) : (
-                      <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
-                    )}
-                  </button>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={handleOpenCreateModal}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-bold text-primary hover:bg-primary/10 border border-dashed border-primary/40 transition-all shrink-0 cursor-pointer"
-              >
-                <Plus size={13} />
-                <span>{t('ministry_workspace.new_ministry_btn')}</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 sm:pt-6 pb-20 sm:pb-32 flex flex-col gap-6">
         {/* Loading Skeleton */}
         {isBusy && !currentWorkspace && (
-          <div className="p-4 bg-white rounded-2xl border border-gray-200/80 shadow-2xs">
+          <div className="p-6 bg-white rounded-3xl border border-slate-200/80 shadow-xs">
             <CellListSkeleton count={4} />
           </div>
         )}
 
-        {/* Active Ministry Details & KPI Bar */}
+        {/* Active Ministry Details & Modern Underline Tabs Header */}
         {!isBusy && activeMinistry && currentWorkspace && (
           <>
-            {/* Ministry Summary & KPIs Card */}
-            <div className="bg-white rounded-2xl p-4 border border-gray-200/80 shadow-2xs flex flex-col gap-3">
-              <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 border border-teal-200/80 flex items-center justify-center font-bold text-sm shadow-2xs">
-                    {activeMinistry.type === MinistryType.KIDS ? <FaChild className="w-4 h-4" /> : <FolderKanban size={16} />}
+            {/* Clean Header & Navigation Card */}
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs flex flex-col gap-5">
+              {/* Row 1: Back Navigation & Quick Actions / Switcher */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      navigate(
+                        selectedCampusId
+                          ? `${APP_ROUTES.admin.ministries}?campusId=${selectedCampusId}`
+                          : APP_ROUTES.admin.ministries,
+                      )
+                    }
+                    className="flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-slate-900 -ml-2 cursor-pointer"
+                  >
+                    <ArrowLeft size={15} />
+                    <span>{t('ministry_workspace.back_to_ministries')}</span>
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2 flex-wrap">
+                  {/* Ministry Switcher Chips (when multiple exist) */}
+                  {campusMinistries.length > 1 && (
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
+                      <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider hidden lg:inline mr-1">
+                        {t('ministry_workspace.switch_ministry_label')}:
+                      </span>
+                      {campusMinistries.map((min) => {
+                        const isSelected = activeMinistry?.id === min.id;
+                        const isKids = min.type === MinistryType.KIDS;
+                        return (
+                          <button
+                            key={min.id}
+                            type="button"
+                            onClick={() => handleSelectMinistry(min.id)}
+                            className={clsx(
+                              'flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer select-none',
+                              isSelected
+                                ? 'bg-slate-900 text-white shadow-2xs'
+                                : 'bg-slate-100 hover:bg-slate-200/70 text-slate-700',
+                            )}
+                          >
+                            {isKids ? (
+                              <FaChild
+                                className={clsx('w-3 h-3', isSelected ? 'text-teal-300' : 'text-teal-600')}
+                              />
+                            ) : (
+                              <Layers
+                                size={13}
+                                className={clsx(isSelected ? 'text-white/80' : 'text-primary')}
+                              />
+                            )}
+                            <span>{min.name}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => setPdfModalOpen(true)}
+                    className="gap-1.5 cursor-pointer shrink-0 text-xs font-bold"
+                    title={t('ministry_workspace.download_pdf_tooltip')}
+                  >
+                    <FileDown size={14} className="text-slate-500" />
+                    <span className="hidden sm:inline">{t('ministry_workspace.download_pdf_btn')}</span>
+                  </Button>
+                </div>
+              </div>
+
+              {/* Row 2: Ministry Identity (Identical to User Reference Screenshot) */}
+              <div className="flex items-start sm:items-center justify-between gap-4">
+                <div className="flex items-start sm:items-center gap-3.5">
+                  <div
+                    className={clsx(
+                      'w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-lg shadow-2xs shrink-0',
+                      activeMinistry.type === MinistryType.KIDS
+                        ? 'bg-amber-50 text-amber-500 border border-amber-200/80'
+                        : 'bg-indigo-50 text-indigo-700 border border-indigo-200/80',
+                    )}
+                  >
+                    {activeMinistry.type === MinistryType.KIDS ? (
+                      <span className="text-2xl select-none">👶</span>
+                    ) : (
+                      <FolderKanban size={22} />
+                    )}
                   </div>
+
                   <div>
-                    <div className="flex items-center gap-1.5">
-                      <h2 className="text-sm sm:text-base font-extrabold text-gray-900 leading-tight">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight">
                         {activeMinistry.name}
-                      </h2>
+                      </h1>
+
+                      <span
+                        className={clsx(
+                          'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold',
+                          activeMinistry.state === MinistryStateEnum.ACTIVE
+                            ? 'bg-emerald-50 text-emerald-600 border border-emerald-200'
+                            : 'bg-slate-100 text-slate-600 border border-slate-200',
+                        )}
+                      >
+                        {activeMinistry.state === MinistryStateEnum.ACTIVE ? (
+                          <>
+                            <CheckCircle2 size={11} className="text-emerald-500" />
+                            {t('ministry_workspace.status_active')}
+                          </>
+                        ) : (
+                          <>
+                            <XCircle size={11} />
+                            {t('ministry_workspace.status_inactive')}
+                          </>
+                        )}
+                      </span>
+
+                      <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
+                        <span>&bull;</span>
+                        <span>{selectedCampusName}</span>
+                      </span>
+
                       <button
                         type="button"
                         onClick={handleOpenEditModal}
-                        className="text-gray-400 hover:text-gray-700 p-1 rounded-md transition-colors cursor-pointer"
+                        className="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors cursor-pointer"
                         title={t('ministry_workspace.edit_ministry_tooltip')}
                       >
                         <Edit2 size={13} />
                       </button>
                     </div>
-                    {activeMinistry.description && (
-                      <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{activeMinistry.description}</p>
-                    )}
+
+                    <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
+                      {activeMinistry.description || 'Ministerio para el cuidado y formación de la iglesia'}
+                    </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="default"
-                    size="sm"
-                    onClick={() => setPdfModalOpen(true)}
-                    className="gap-1.5 cursor-pointer shrink-0 text-xs"
-                    title={t('ministry_workspace.download_pdf_tooltip')}
-                  >
-                    <FileDown size={14} className="text-gray-500" />
-                    <span>{t('ministry_workspace.download_pdf_btn')}</span>
-                  </Button>
-
-                  <span
-                    className={clsx(
-                      'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold shadow-2xs',
-                      activeMinistry.state === MinistryStateEnum.ACTIVE
-                        ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        : 'bg-gray-100 text-gray-600 border border-gray-200',
-                    )}
-                  >
-                    {activeMinistry.state === MinistryStateEnum.ACTIVE ? (
-                      <>
-                        <CheckCircle2 size={11} /> {t('ministry_workspace.status_active')}
-                      </>
-                    ) : (
-                      <>
-                        <XCircle size={11} /> {t('ministry_workspace.status_inactive')}
-                      </>
-                    )}
-                  </span>
-                </div>
-              </div>
-
-              {/* Executive KPI Strip */}
-              <div className="grid grid-cols-3 gap-2 pt-2 border-t border-gray-100">
-                <div className="bg-slate-50/80 rounded-xl p-2.5 text-center border border-gray-100">
-                  <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    {t('ministry_workspace.kpi_teams')}
-                  </span>
-                  <span className="text-lg font-black text-gray-900 mt-0.5 block">
-                    {workspace?.summary.totalTeams ?? 0}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50/80 rounded-xl p-2.5 text-center border border-gray-100">
-                  <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    {t('ministry_workspace.kpi_supervision')}
-                  </span>
-                  <div className="flex items-center justify-center gap-1 mt-0.5">
-                    <span className="text-lg font-black text-gray-900">
-                      {workspace?.summary.teamsWithSupervisor ?? 0}
-                    </span>
-                    <span className="text-xs font-bold text-gray-400">
-                      / {workspace?.summary.teamsRequiringSupervisor ?? workspace?.summary.totalTeams ?? 0}
-                    </span>
+                {/* Discreet KPIs Summary (Desktop-only) */}
+                {workspace?.summary && (
+                  <div className="hidden xl:flex items-center gap-4 text-xs font-semibold text-slate-500">
+                    <div>
+                      <span className="font-extrabold text-slate-900 text-sm">{workspace.summary.totalTeams}</span>{' '}
+                      {t('ministry_workspace.kpi_teams').toLowerCase()}
+                    </div>
+                    <span className="text-slate-300">&bull;</span>
+                    <div>
+                      <span className="font-extrabold text-slate-900 text-sm">{workspace.summary.teamsWithSupervisor}</span>
+                      <span className="text-slate-400 text-[10px]">/{workspace.summary.teamsRequiringSupervisor || workspace.summary.totalTeams}</span>{' '}
+                      {t('ministry_workspace.kpi_supervision').toLowerCase()}
+                    </div>
+                    <span className="text-slate-300">&bull;</span>
+                    <div>
+                      <span className="font-extrabold text-slate-900 text-sm">{workspace.summary.totalVolunteers}</span>{' '}
+                      {t('ministry_workspace.kpi_workforce').toLowerCase()}
+                    </div>
                   </div>
-                </div>
-
-                <div className="bg-slate-50/80 rounded-xl p-2.5 text-center border border-gray-100">
-                  <span className="block text-[10px] font-bold text-gray-500 uppercase tracking-wider">
-                    {t('ministry_workspace.kpi_workforce')}
-                  </span>
-                  <span className="text-lg font-black text-gray-900 mt-0.5 block">
-                    {workspace?.summary.totalVolunteers ?? 0}
-                  </span>
-                </div>
+                )}
               </div>
-            </div>
 
-            {/* Clean 3-Tabs Control (Equipos, Liderazgo, Estructura) */}
-            <div className="grid grid-cols-3 gap-1 p-1 bg-slate-200/80 rounded-2xl border border-gray-200/70 shadow-2xs">
-              {WORKSPACE_TABS.map((tab) => {
-                const Icon = tab.icon;
-                const isSelected = activeTab === tab.key;
-                return (
-                  <button
-                    key={tab.key}
-                    type="button"
-                    onClick={() => handleTabChange(tab.key)}
-                    className={clsx(
-                      'flex items-center justify-center gap-1.5 py-2 px-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer select-none',
-                      isSelected
-                        ? 'bg-white text-gray-900 shadow-xs scale-[1.01]'
-                        : 'text-gray-600 hover:text-gray-900 bg-transparent',
-                    )}
-                  >
-                    <Icon
-                      size={14}
+              {/* Row 3: Modern Clean Underline Tabs (Matching Screenshot) */}
+              <div className="flex items-center gap-6 sm:gap-8 border-b border-slate-200/90 pt-2 overflow-x-auto no-scrollbar">
+                {WORKSPACE_TABS.map((tab) => {
+                  const Icon = tab.icon;
+                  const isSelected = activeTab === tab.key;
+                  return (
+                    <button
+                      key={tab.key}
+                      type="button"
+                      onClick={() => handleTabChange(tab.key)}
                       className={clsx(
+                        'flex items-center gap-2 pb-3 pt-1 text-xs sm:text-sm font-bold transition-all border-b-2 -mb-px cursor-pointer shrink-0 select-none',
                         isSelected
-                          ? tab.key === 'teams'
-                            ? 'text-teal-600'
-                            : tab.key === 'leadership'
-                            ? 'text-amber-500'
-                            : 'text-primary'
-                          : 'text-gray-400',
+                          ? 'border-slate-900 text-slate-900 font-extrabold'
+                          : 'border-transparent text-slate-500 hover:text-slate-800 hover:border-slate-300',
                       )}
-                    />
-                    <span className="truncate hidden sm:inline">{t(tab.labelKey)}</span>
-                    <span className="truncate sm:hidden">{t(tab.shortLabelKey)}</span>
-                  </button>
-                );
-              })}
+                    >
+                      <Icon
+                        size={16}
+                        className={clsx(tab.iconColor, !isSelected && 'opacity-70')}
+                      />
+                      <span className="hidden sm:inline">{t(tab.labelKey)}</span>
+                      <span className="sm:hidden">{t(tab.shortLabelKey)}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            {/* Tab Views (Teams without duplicate metrics) */}
+            {/* Active Subpage Component */}
             <div className="mt-1">
+              {activeTab === 'schedule' && (
+                <MinistrySchedulingSection
+                  ministryId={activeMinistry.id}
+                  churchCampusId={selectedCampusId}
+                  workspaceGroups={currentWorkspace?.groups}
+                  onRefreshWorkspace={refetchWorkspace}
+                />
+              )}
+
               {activeTab === 'teams' && (
                 <MinistryTeamsSection
                   ministryId={activeMinistry.id}
@@ -599,7 +554,9 @@ export const MinistryWorkspaceView: React.FC = () => {
                   churchCampusId={selectedCampusId}
                   workspaceAreas={currentWorkspace?.areas}
                   workspaceGroups={currentWorkspace?.groups}
+                  workspaceTeams={currentWorkspace?.teams}
                   onRefreshWorkspace={refetchWorkspace}
+                  onNavigateToTab={(targetTab) => handleTabChange(targetTab as WorkspaceTabKey)}
                 />
               )}
             </div>
@@ -608,23 +565,23 @@ export const MinistryWorkspaceView: React.FC = () => {
 
         {/* Empty Campus Ministries State */}
         {!isBusy && (!activeMinistry || campusMinistries.length === 0) && (
-          <div className="bg-white rounded-2xl p-8 border border-gray-200/80 shadow-2xs text-center flex flex-col items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-primary/10 text-primary border border-primary/20 flex items-center justify-center">
-              <FolderKanban size={24} />
+          <div className="bg-white rounded-3xl p-10 border border-slate-200/80 shadow-xs text-center flex flex-col items-center justify-center gap-3">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-600 border border-indigo-100 flex items-center justify-center">
+              <FolderKanban size={28} />
             </div>
-            <h3 className="text-sm font-extrabold text-gray-900">
+            <h3 className="text-base font-extrabold text-slate-900">
               {t('ministry_workspace.empty_title', { campus: selectedCampusName })}
             </h3>
-            <p className="text-xs text-gray-500 max-w-sm">
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md">
               {t('ministry_workspace.empty_desc', { volunteers: volunteersTerm.toLowerCase() })}
             </p>
             <Button
               variant="primary"
-              size="sm"
+              size="md"
               onClick={handleOpenCreateModal}
-              className="mt-1 flex items-center gap-1.5"
+              className="mt-2 flex items-center gap-2 text-xs sm:text-sm font-bold shadow-xs cursor-pointer"
             >
-              <Plus size={14} />
+              <Plus size={16} />
               <span>{t('ministry_workspace.create_ministry_btn')}</span>
             </Button>
           </div>

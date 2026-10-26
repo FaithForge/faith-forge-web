@@ -1,5 +1,33 @@
 [
   {
+    "version": "3.18.0",
+    "type": "minor",
+    "timestamp": "2026-10-26T02:45:19.222Z",
+    "dateFormatted": "25/10/2026 09:45 PM",
+    "title": "Nuevo Directorio de Miembros y Mejoras en Calendario",
+    "changes": [
+      "Rediseño del Directorio de Usuarios con estadísticas en tiempo real, filtros rápidos y vista adaptada para móvil y escritorio.",
+      "Exportación directa de la lista de miembros a formato CSV para su consulta externa.",
+      "Mayor claridad visual en el calendario para distinguir eventos y reuniones programadas en horarios cercanos.",
+      "Mejoras en el menú de navegación y selección de secciones."
+    ]
+  },
+  {
+    "version": "3.17.0",
+    "type": "minor",
+    "timestamp": "2026-10-24T23:05:06.171Z",
+    "dateFormatted": "24/10/2026 06:05 PM",
+    "title": "Calendario Interactivo de Reuniones y Rotación de Grupos",
+    "changes": [
+      "added:Calendario interactivo mensual, semanal y de agenda para administrar reuniones recurrentes, eventos de fecha única y suspensiones por festivos o vacaciones.",
+      "added:Sistema de etiquetas de campaña o evento con sugerencias inteligentes para agrupar congresos de varios días y consultar sus estadísticas consolidadas.",
+      "added:Programación de rotación secuencial de grupos por ministerio con vigencia por fechas, intervalo personalizable de semanas y asignación de múltiples grupos en eventos macro.",
+      "improved:Cálculo exacto de estadísticas y asistencia de voluntarios basado exclusivamente en el grupo o grupos programados en cada servicio y fecha.",
+      "improved:Creación intuitiva de reuniones estilo Google Calendar arrastrando el rango de horas deseado directamente sobre el horario semanal.",
+      "improved:Modales centrados y optimizados para la experiencia de administración en escritorio, eliminando la interfaz de panel deslizable inferior en la gestión de reuniones."
+    ]
+  },
+  {
     "version": "3.16.0",
     "type": "minor",
     "timestamp": "2026-10-21T02:46:52.909Z",
