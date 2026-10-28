@@ -176,8 +176,12 @@ export type IKidCreator = IVolunteerInfo;
 
 export interface IKid {
   id: string;
+  userId?: string;
   churchId?: string;
-  faithForgeId: number;
+  userCode: number;
+  nationalIdType?: UserIdType;
+  nationalId?: string;
+  isChurchMember?: boolean;
   firstName: string;
   lastName: string;
   gender: UserGenderCode;
@@ -200,6 +204,7 @@ export interface IKid {
 
 export interface IKidGuardian {
   id: string;
+  userCode?: number;
   nationalId: string;
   nationalIdType: UserIdType;
   firstName: string;
@@ -300,6 +305,8 @@ export interface IAccount extends ReduxDefaultStateWithoutData {
 
 // CREATE
 export interface ICreateKid {
+  nationalIdType?: UserIdType;
+  nationalId?: string;
   firstName: string;
   lastName: string;
   birthday: Date;
@@ -336,6 +343,8 @@ export interface ICreateKidRegistration {
 
 // UPDATE
 export interface IUpdateKid {
+  nationalIdType?: UserIdType;
+  nationalId?: string;
   firstName?: string;
   lastName?: string;
   gender?: UserGenderCode;
@@ -362,7 +371,11 @@ export interface IKidGuardians extends ReduxDefaultState<IKidGuardian> {}
 
 export interface IAssignedKidItem {
   id: string;
-  faithForgeId?: number;
+  userId?: string;
+  userCode?: number;
+  nationalIdType?: UserIdType;
+  nationalId?: string;
+  isChurchMember?: boolean;
   firstName: string;
   lastName: string;
   gender: UserGenderCode;
@@ -408,7 +421,7 @@ export interface IKidLiveTrackingItem {
   id: string;
   kidId: string;
   kidFullName: string;
-  faithForgeId?: number;
+  userCode?: number;
   gender: string;
   photoUrl?: string;
   birthday?: string;

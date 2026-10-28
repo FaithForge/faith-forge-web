@@ -201,7 +201,7 @@ export const ChildIncidentReportForm: React.FC<ChildIncidentReportFormProps> = (
           fullName: rawName,
           photoUrl,
           areaName: area?.name || 'Servicio Médico',
-          code: user?.faithForgeId,
+          code: user?.userCode,
         };
       });
     }
@@ -222,7 +222,7 @@ export const ChildIncidentReportForm: React.FC<ChildIncidentReportFormProps> = (
         fullName: rawName,
         photoUrl,
         areaName: area?.name || 'Servicio Médico',
-        code: user?.faithForgeId,
+        code: user?.userCode,
       });
     }
     return options;

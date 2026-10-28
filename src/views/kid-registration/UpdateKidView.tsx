@@ -14,7 +14,8 @@ import {
   useGetKidPresignedUploadUrlMutation,
   useUploadKidPhotoFallbackMutation,
 } from '@/libs/state/redux/api/kidChurchApi';
-import { userGenderSelect, healthSecurityEntitySelect, IUpdateKid } from '@/libs/models';
+import { userGenderSelect, healthSecurityEntitySelect, idKidTypeSelect, UserIdType, IUpdateKid } from '@/libs/models';
+import { useKidsTerm } from '@/libs/hooks/useTerm';
 import { 
   KID_AGE_COPY, 
   isKidUnderMinAge 
@@ -26,6 +27,7 @@ import { validateTwoLastNames } from '@/libs/utils/validator';
 import PageHeader from '@/components/ui/PageHeader';
 import { UpdateKidSkeleton } from '@/components/ui/DetailSkeleton';
 import { APP_ROUTES } from '@/config/routes';
+import { isFeatureEnabled } from '@/config/features';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import SelectSearch from '@/components/ui/SelectSearch';
@@ -35,6 +37,8 @@ import { useTranslation } from 'react-i18next';
 
 const UpdateKidView: React.FC = () => {
   const { t } = useTranslation(['kidRegistration', 'common']);
+  const guardianTerm = useKidsTerm('guardian');
+  const isKidRegisterEnabled = isFeatureEnabled('kidRegister');
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { data: kid, isLoading: kidLoading } = useGetKidQuery({ id: id || '' }, { skip: !id });
@@ -64,6 +68,8 @@ const UpdateKidView: React.FC = () => {
     if (kid) {
       setValue('firstName', capitalizeWords(kid.firstName || ''));
       setValue('lastName', capitalizeWords(kid.lastName || ''));
+      setValue('nationalIdType', kid.nationalIdType || UserIdType.RC);
+      setValue('nationalId', kid.nationalId || '');
       if (kid.birthday) {
         setValue('birthday', toDateOnlyInputValue(kid.birthday));
       }
@@ -181,9 +187,14 @@ const UpdateKidView: React.FC = () => {
         }
       }
 
+      const trimmedNationalId = isKidRegisterEnabled ? values.nationalId?.trim() || undefined : kid?.nationalId;
       const updatePayload: IUpdateKid = {
         firstName: values.firstName.trim(),
         lastName: values.lastName.trim(),
+        nationalId: trimmedNationalId,
+        nationalIdType: isKidRegisterEnabled
+          ? (trimmedNationalId ? (values.nationalIdType as UserIdType) : undefined)
+          : (kid?.nationalIdType as UserIdType | undefined),
         birthday: values.birthday,
         gender: values.gender,
         staticGroup,
@@ -201,12 +212,22 @@ const UpdateKidView: React.FC = () => {
 
       toast.success(t('kidRegistration:form.success_kid_updated'));
       navigate(APP_ROUTES.kidRegistration.checkIn(id), { replace: true });
-    } catch {
-      toast.error(t('common:states.error_occurred'));
+    } catch (error: unknown) {
+      const err = error as { data?: { message?: string }; message?: string };
+      toast.error(err?.data?.message || err?.message || t('common:states.error_occurred'));
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const kidIdTypeOptions = useMemo(
+    () =>
+      idKidTypeSelect.map((opt) => ({
+        id: opt.value,
+        name: opt.label,
+      })),
+    [],
+  );
 
   const kidGroupOptions = useMemo(() => {
     return kidGroups.map((g) => ({
@@ -309,6 +330,38 @@ const UpdateKidView: React.FC = () => {
                 validate: validateTwoLastNames
               })}
             />
+
+            {isKidRegisterEnabled && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Controller
+                  name="nationalIdType"
+                  control={control}
+                  render={({ field }) => (
+                    <SelectSearch
+                      label={t('kidRegistration:form.identification_type_label')}
+                      options={kidIdTypeOptions}
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder={t('kidRegistration:form.identification_type_placeholder')}
+                    />
+                  )}
+                />
+
+                <Input
+                  label={t('kidRegistration:form.identification_number_label')}
+                  placeholder={t('kidRegistration:form.identification_number_placeholder')}
+                  badge={
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded-full border border-gray-200">
+                      {t('kidRegistration:form.optional_badge')}
+                    </span>
+                  }
+                  helperText={t('kidRegistration:form.identification_optional_hint', {
+                    guardian: guardianTerm.toLowerCase(),
+                  })}
+                  {...register('nationalId')}
+                />
+              </div>
+            )}
 
             {/* Date of Birth (Up to 13 years old for edition) */}
             <div className="mb-2">

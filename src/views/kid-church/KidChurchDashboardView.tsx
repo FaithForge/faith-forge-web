@@ -19,7 +19,6 @@ import {
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useVolunteerAttendanceLiveSync } from '@/libs/hooks/useVolunteerAttendanceLiveSync';
-import { isFeatureEnabled } from '@/config/features';
 import { APP_ROUTES } from '@/config/routes';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
@@ -45,7 +44,6 @@ export const KidChurchDashboardView: React.FC = () => {
   const kidsClassroomsName = useKidsTerm('classrooms');
   const kidsModuleName = useKidsTerm('module_alias');
 
-  const isVolunteerAttendanceEnabled = isFeatureEnabled('volunteerAttendance');
   const { canTakeVolunteerAttendance, isSuperAdmin } = usePermissions();
   const { activeGroupConfigId } = useAppSelector((state) => state.volunteerContextSlice);
 
@@ -62,7 +60,6 @@ export const KidChurchDashboardView: React.FC = () => {
     },
     {
       skip:
-        !isVolunteerAttendanceEnabled ||
         !canTakeVolunteerAttendance ||
         !currentMeeting?.id ||
         (!effectiveGroupId && !isSuperAdmin),
@@ -73,8 +70,7 @@ export const KidChurchDashboardView: React.FC = () => {
   useVolunteerAttendanceLiveSync({
     churchMeetingId: currentMeeting?.id,
     enabled: Boolean(
-      isVolunteerAttendanceEnabled &&
-        canTakeVolunteerAttendance &&
+      canTakeVolunteerAttendance &&
         currentMeeting?.id &&
         (effectiveGroupId || isSuperAdmin),
     ),
@@ -210,7 +206,7 @@ export const KidChurchDashboardView: React.FC = () => {
       const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(searchText);
       if (numericId) {
         result = result.filter((kid: IKid) => {
-          const code = String(kid.faithForgeId || kid.id || '').toLowerCase();
+          const code = String(kid.userCode || kid.id || '').toLowerCase();
           return code.includes(numericId.toLowerCase());
         });
       } else if (filterByFirstName || filterByLastName) {
@@ -260,7 +256,7 @@ export const KidChurchDashboardView: React.FC = () => {
       )}
 
       {/* Volunteer Attendance Alert Banner for Group Coordinators */}
-      {isVolunteerAttendanceEnabled && canTakeVolunteerAttendance && currentMeeting && attendanceSummary && attendanceSummary.total > 0 && (
+      {canTakeVolunteerAttendance && currentMeeting && attendanceSummary && attendanceSummary.total > 0 && (
         <div className="mt-1">
           {attendanceSummary.counts.taken === 0 ? (
             <div
@@ -492,7 +488,7 @@ export const KidChurchDashboardView: React.FC = () => {
 
                     return (
                       <Cell
-                        key={kid.id || kid.faithForgeId}
+                        key={kid.id || kid.userCode}
                         title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
                         subtitle={subtitleText}
                         gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}

@@ -75,9 +75,16 @@ export const idGuardianTypeSelect = [
   { value: UserIdType.PS, label: IdType.PS },
 ];
 
+export const idKidTypeSelect = [
+  { value: UserIdType.RC, label: IdType.RC },
+  { value: UserIdType.TI, label: IdType.TI },
+  { value: UserIdType.CE, label: IdType.CE },
+  { value: UserIdType.PS, label: IdType.PS },
+];
+
 export interface IUser {
   id: string;
-  faithForgeId: number;
+  userCode: number;
   nationalIdType?: UserIdType;
   nationalId?: string;
   firstName: string;

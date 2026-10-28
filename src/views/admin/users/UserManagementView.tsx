@@ -37,7 +37,7 @@ import { useSearchScroll } from '@/libs/context/SearchScrollContext';
 import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 
-type QuickFilterType = 'all' | 'volunteers' | 'leaders' | 'pending';
+type QuickFilterType = 'all' | 'volunteers' | 'leaders' | 'pending' | 'without_document';
 
 interface AvatarPalette {
   bg: string;
@@ -233,16 +233,20 @@ const UserManagementView: React.FC = () => {
     (state) => state.userSlice
   );
 
+  const hasNationalIdFilter = quickFilter === 'without_document' ? false : true;
   const prevSearchTextRef = useRef<string | null>(null);
+  const prevHasNationalIdRef = useRef<boolean>(hasNationalIdFilter);
 
   // Search logic with debounce and automatic refresh on mutations
   useEffect(() => {
     const isFirstMount = prevSearchTextRef.current === null;
     const isSearchChanged = !isFirstMount && searchText !== prevSearchTextRef.current;
+    const isDocFilterChanged = !isFirstMount && hasNationalIdFilter !== prevHasNationalIdRef.current;
     prevSearchTextRef.current = searchText;
+    prevHasNationalIdRef.current = hasNationalIdFilter;
 
     if (isFirstMount && users.length > 0 && !needsRefresh) return;
-    if (!isFirstMount && !isSearchChanged && !needsRefresh && users.length > 0) return;
+    if (!isFirstMount && !isSearchChanged && !isDocFilterChanged && !needsRefresh && users.length > 0) return;
 
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
@@ -252,10 +256,10 @@ const UserManagementView: React.FC = () => {
     const delay = isSearchChanged && searchText.trim().length > 0 ? 400 : 0;
 
     if (delay === 0) {
-      dispatch(GetUsers({ findText: searchText }));
+      dispatch(GetUsers({ findText: searchText, hasNationalId: hasNationalIdFilter }));
     } else {
       timeoutRef.current = setTimeout(() => {
-        dispatch(GetUsers({ findText: searchText }));
+        dispatch(GetUsers({ findText: searchText, hasNationalId: hasNationalIdFilter }));
       }, delay);
     }
 
@@ -265,7 +269,7 @@ const UserManagementView: React.FC = () => {
         timeoutRef.current = null;
       }
     };
-  }, [searchText, dispatch, needsRefresh, users.length]);
+  }, [searchText, hasNationalIdFilter, dispatch, needsRefresh, users.length]);
 
   /**
    * Clears search input and immediately fetches full user list.
@@ -277,7 +281,7 @@ const UserManagementView: React.FC = () => {
     }
     prevSearchTextRef.current = '';
     setSearchText('');
-    dispatch(GetUsers({ findText: '' }));
+    dispatch(GetUsers({ findText: '', hasNationalId: hasNationalIdFilter }));
   };
 
   /**
@@ -285,7 +289,7 @@ const UserManagementView: React.FC = () => {
    */
   const handleRefreshUsers = async () => {
     try {
-      await dispatch(GetUsers({ findText: searchText })).unwrap();
+      await dispatch(GetUsers({ findText: searchText, hasNationalId: hasNationalIdFilter })).unwrap();
     } catch {
       // ignore
     }
@@ -298,11 +302,11 @@ const UserManagementView: React.FC = () => {
    */
   const handleLoadMore = useCallback(async () => {
     try {
-      await dispatch(GetMoreUsers({ findText: searchText })).unwrap();
+      await dispatch(GetMoreUsers({ findText: searchText, hasNationalId: hasNationalIdFilter })).unwrap();
     } catch (e) {
       console.error(e);
     }
-  }, [dispatch, searchText]);
+  }, [dispatch, searchText, hasNationalIdFilter]);
 
   const { sentinelRef, loadingMore, triggerLoadMore } = useInfiniteScroll({
     onLoadMore: handleLoadMore,
@@ -385,7 +389,7 @@ const UserManagementView: React.FC = () => {
     ];
 
     const rows = filteredUsers.map((u) => [
-      u.faithForgeId || u.id,
+      u.userCode || u.id,
       `"${(u.firstName || '').replace(/"/g, '""')}"`,
       `"${(u.lastName || '').replace(/"/g, '""')}"`,
       u.nationalIdType || 'CC',
@@ -686,6 +690,24 @@ const UserManagementView: React.FC = () => {
                 {stats.pending}
               </span>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setQuickFilter('without_document')}
+              className={clsx(
+                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs transition-all shrink-0 cursor-pointer',
+                quickFilter === 'without_document'
+                  ? 'bg-slate-900 text-white font-bold shadow-xs'
+                  : 'bg-gray-50 text-gray-600 hover:bg-gray-100 font-medium border border-gray-200/60'
+              )}
+            >
+              <span>{t('directory.tab_without_document')}</span>
+              {quickFilter === 'without_document' && (
+                <span className="px-1.5 py-0.2 rounded-full text-[10px] font-bold bg-white/20 text-white">
+                  {stats.totalLoaded}
+                </span>
+              )}
+            </button>
           </div>
         </div>
 
@@ -828,7 +850,7 @@ const UserManagementView: React.FC = () => {
                                   {fullName}
                                 </button>
                                 <span className="text-[11px] text-gray-400 font-medium">
-                                  ID: #{user.faithForgeId || user.id.slice(0, 8)}
+                                  ID: #{user.userCode || user.id.slice(0, 8)}
                                 </span>
                               </div>
                             </div>
@@ -1092,7 +1114,7 @@ const UserManagementView: React.FC = () => {
                       {/* Card Footer: Left Info & Right "Ver Ficha" action */}
                       <div className="border-t border-gray-100 pt-2.5 flex items-center justify-between text-xs">
                         <span className="text-gray-400 font-medium">
-                          ID: #{user.faithForgeId || user.id.slice(0, 8)}
+                          ID: #{user.userCode || user.id.slice(0, 8)}
                         </span>
 
                         <button

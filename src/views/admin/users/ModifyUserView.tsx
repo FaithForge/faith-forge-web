@@ -420,7 +420,7 @@ const ModifyUserView: React.FC = () => {
                   {foundUser.firstName} {foundUser.lastName}
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  ID: #{foundUser.faithForgeId || foundUser.id.slice(0, 8)} • {foundUser.nationalIdType || 'CC'}: {foundUser.nationalId}
+                  ID: #{foundUser.userCode || foundUser.id.slice(0, 8)} • {foundUser.nationalIdType || 'CC'}: {foundUser.nationalId}
                 </p>
 
                 <div className="flex items-center gap-2 justify-center sm:justify-start mt-3">

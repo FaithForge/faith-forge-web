@@ -1,6 +1,7 @@
 import React from 'react';
 import { Eye, Cake } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
+import { MdVerified } from 'react-icons/md';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
 import TagKidGroup from '@/components/ui/TagKidGroup';
@@ -40,6 +41,7 @@ export const KidProfileCard: React.FC<KidProfileCardProps> = ({
   onOpenPhotoModal,
 }) => {
   const { t } = useTranslation(['kidRegistration', 'common']);
+  const isVerified = Boolean((kid?.nationalId && String(kid.nationalId).trim()) || kid?.isChurchMember);
 
   return (
     <>
@@ -102,9 +104,19 @@ export const KidProfileCard: React.FC<KidProfileCardProps> = ({
           <div className="flex-1 min-w-0">
             <h3 className="text-lg sm:text-xl font-bold text-gray-800 leading-snug break-words">
               {capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`)}
+              {isVerified && (
+                <span
+                  className="relative inline-flex items-center justify-center shrink-0 align-middle ml-1.5 text-sky-500"
+                  title={t('kidRegistration:check_in.verified_tooltip')}
+                  aria-label={t('kidRegistration:check_in.verified_tooltip')}
+                >
+                  <span className="absolute w-2 h-2 bg-white rounded-full" />
+                  <MdVerified className="relative z-10 w-5 h-5 shrink-0" />
+                </span>
+              )}
             </h3>
             <h4 className="text-sm text-gray-500 font-medium mt-0.5">
-              {t('kidRegistration:check_in.code_label')}: {kid?.faithForgeId || kid?.id}
+              {t('kidRegistration:check_in.code_label')}: {kid?.userCode || kid?.id}
               {formattedAge ? ` • ${t('kidRegistration:check_in.age_label')}: ${formattedAge}` : ''}
             </h4>
             <div className="flex items-center gap-2 mt-2.5 flex-wrap">

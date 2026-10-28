@@ -99,7 +99,7 @@ export const generatePreviewAttendanceData = (params: IFetchAttendanceReportPara
         checkInTimeFormatted: timeStr,
         kid: {
           id: `mock-k-${kidCounter}`,
-          faithForgeId: 1000 + kidCounter,
+          userCode: 1000 + kidCounter,
           firstName,
           lastName,
           gender: isM ? 'M' : 'F',

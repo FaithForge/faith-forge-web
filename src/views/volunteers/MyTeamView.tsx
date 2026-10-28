@@ -22,7 +22,6 @@ import { useVolunteerAttendanceLiveSync } from '@/libs/hooks/useVolunteerAttenda
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { usePermissions } from '@/libs/hooks/usePermissions';
-import { isFeatureEnabled } from '@/config/features';
 import { APP_ROUTES } from '@/config/routes';
 import { EntityState, MinistryAreaScope, VolunteerApplicationStatus } from '@/libs/models';
 import { IVolunteerAssignment, VolunteerRole } from '@/libs/models/Volunteer';
@@ -340,7 +339,6 @@ export const MyTeamView: React.FC = () => {
   }, [refreshApplicationsCount]);
 
   const { currentMeeting } = useChurchMeetingStatus();
-  const isVolunteerAttendanceEnabled = isFeatureEnabled('volunteerAttendance');
 
   const { data: attendanceSummary, refetch: refetchSummary } =
     useGetVolunteerAttendanceSummaryQuery(
@@ -349,7 +347,7 @@ export const MyTeamView: React.FC = () => {
         ministryGroupConfigId: isAreaCoordinator ? undefined : effectiveGroupId,
       },
       {
-        skip: !isVolunteerAttendanceEnabled || !canTakeVolunteerAttendance || !currentMeeting?.id,
+        skip: !canTakeVolunteerAttendance || !currentMeeting?.id,
         refetchOnMountOrArgChange: true,
       },
     );
@@ -503,8 +501,7 @@ export const MyTeamView: React.FC = () => {
       ) : (
         <>
           {/* Live Service Attendance Notice */}
-          {isVolunteerAttendanceEnabled &&
-            canTakeVolunteerAttendance &&
+          {canTakeVolunteerAttendance &&
             currentMeeting &&
             attendanceSummary &&
             attendanceSummary.total > 0 && (

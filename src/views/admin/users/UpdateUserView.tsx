@@ -388,7 +388,7 @@ const UpdateUserView: React.FC = () => {
                 {loadedUser?.firstName} {loadedUser?.lastName}
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
-                ID: #{loadedUser?.faithForgeId || loadedUser?.id?.slice(0, 8)} • {loadedUser?.nationalIdType || 'CC'}: {loadedUser?.nationalId}
+                ID: #{loadedUser?.userCode || loadedUser?.id?.slice(0, 8)} • {loadedUser?.nationalIdType || 'CC'}: {loadedUser?.nationalId}
               </p>
 
               <div className="flex items-center gap-2 justify-center sm:justify-start mt-3">

@@ -330,7 +330,7 @@ const UserDetailView: React.FC = () => {
                   </div>
 
                   <h2 className="text-xs sm:text-sm text-gray-500 font-medium mt-0.5">
-                    ID: #{user.faithForgeId || (user.id ? user.id.slice(0, 8) : '')} • {user.nationalIdType || 'CC'}:{' '}
+                    ID: #{user.userCode || (user.id ? user.id.slice(0, 8) : '')} • {user.nationalIdType || 'CC'}:{' '}
                     <span className="font-bold text-gray-700">{user.nationalId || 'Sin documento'}</span>
                   </h2>
 

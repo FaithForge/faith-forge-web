@@ -458,13 +458,7 @@ function App() {
                 <Route path={APP_ROUTES.kidChurch.myTeam} element={<MyTeamView />} />
                 <Route
                   path={APP_ROUTES.kidChurch.volunteerAttendance}
-                  element={
-                    isFeatureEnabled('volunteerAttendance') ? (
-                      <VolunteerAttendanceView />
-                    ) : (
-                      <Navigate to={APP_ROUTES.kidChurch.root} replace />
-                    )
-                  }
+                  element={<VolunteerAttendanceView />}
                 />
                 <Route
                   path={APP_ROUTES.kidChurch.reports}

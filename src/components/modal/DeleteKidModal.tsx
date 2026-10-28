@@ -219,7 +219,7 @@ export const DeleteKidModal: React.FC<DeleteKidModalProps> = ({
                           {capitalizeWords(`${selectedTargetKid.firstName} ${selectedTargetKid.lastName}`)}
                         </h4>
                         <span className="text-[11px] text-gray-500 font-medium">
-                          Código: #{selectedTargetKid.faithForgeId}
+                          Código: #{selectedTargetKid.userCode}
                         </span>
                       </div>
                     </div>
@@ -308,7 +308,7 @@ export const DeleteKidModal: React.FC<DeleteKidModalProps> = ({
                                   {formatPersonShortName(target.firstName, target.lastName)}
                                 </p>
                                 <p className="text-[11px] text-gray-500 font-medium">
-                                  Código: #{target.faithForgeId}
+                                  Código: #{target.userCode}
                                   {target.kidGroup?.name ? ` • ${target.kidGroup.name}` : ''}
                                 </p>
                               </div>

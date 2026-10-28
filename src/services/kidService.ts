@@ -92,7 +92,7 @@ export const searchKidsForTransfer = async (
           registrationChurchMeetingId: meetingId,
           filterByFirstName,
           filterByLastName,
-          filterByFaithForge: numericId,
+          filterByUserCode: numericId,
         },
         headers: { Authorization: `Bearer ${token}` },
       },

@@ -4,6 +4,7 @@ import AppDrawer from '@/components/ui/AppDrawer';
 import Button from '@/components/ui/Button';
 import { X, Cake, Phone, AlertTriangle, Eye, CheckCircle2, BellRing } from 'lucide-react';
 import { FaWhatsapp, FaChild, FaChildDress } from 'react-icons/fa6';
+import { MdVerified } from 'react-icons/md';
 import dayjs from 'dayjs';
 import clsx from 'clsx';
 import { toast } from 'sonner';
@@ -26,6 +27,7 @@ import { UserRole, ChurchRole, AppRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import { isFeatureEnabled } from '@/config/features';
 import { useGetKidQuery, useSendUrgentGuardianNoticeMutation } from '@/libs/state/redux/api/kidChurchApi';
 
 // Patrón de alerta urgente prolongado: pulsos de 1 segundo con pausas de 250ms (~10s)
@@ -131,6 +133,8 @@ const KidDetailsModal: React.FC<KidDetailsModalProps> = ({
   const formattedAge = kid.age != null
     ? `${Math.floor(kid.age)} años${kid.ageInMonths ? ` y ${kid.ageInMonths - Math.floor(kid.age) * 12} meses` : ''}`
     : null;
+
+  const isVerified = Boolean((kid?.nationalId && String(kid.nationalId).trim()) || kid?.isChurchMember);
 
   const isEpsUnknown = kid?.healthSecurityEntity?.trim()?.toUpperCase() === 'NO SABE';
 
@@ -381,9 +385,19 @@ const KidDetailsModal: React.FC<KidDetailsModalProps> = ({
                   <div className="flex-1 min-w-0">
                     <h3 className="text-lg sm:text-xl font-bold text-gray-800 leading-snug break-words">
                       {capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`)}
+                      {isVerified && (
+                        <span
+                          className="relative inline-flex items-center justify-center shrink-0 align-middle ml-1.5 text-sky-500"
+                          title={t('kid_details.verified_tooltip')}
+                          aria-label={t('kid_details.verified_tooltip')}
+                        >
+                          <span className="absolute w-2 h-2 bg-white rounded-full" />
+                          <MdVerified className="relative z-10 w-5 h-5 shrink-0" />
+                        </span>
+                      )}
                     </h3>
                     <h4 className="text-sm text-gray-500 font-medium mt-0.5">
-                      {t('kid_details.code_prefix', { code: kid?.faithForgeId || kid?.id })}{formattedAge ? ` • ${t('kid_details.age_prefix', { age: formattedAge })}` : ''}
+                      {t('kid_details.code_prefix', { code: kid?.userCode || kid?.id })}{formattedAge ? ` • ${t('kid_details.age_prefix', { age: formattedAge })}` : ''}
                     </h4>
                     <div className="flex items-center gap-2 mt-2.5 flex-wrap">
                       <TagKidGroup
@@ -416,6 +430,15 @@ const KidDetailsModal: React.FC<KidDetailsModalProps> = ({
                   {t('kid_details.section_kid_data')}
                 </h2>
                 <div className="flex flex-col gap-y-3 text-sm">
+                  {isFeatureEnabled('kidRegister') && kid?.nationalId && (
+                    <div className="flex justify-between items-center py-1 border-b border-gray-50">
+                      <span className="font-semibold text-gray-500">{t('kid_details.label_document')}</span>
+                      <span className="font-bold text-gray-800">
+                        {kid.nationalIdType || 'RC'}: {kid.nationalId}
+                      </span>
+                    </div>
+                  )}
+
                   {formattedAge && (
                     <div className="flex justify-between items-center py-1 border-b border-gray-50">
                       <span className="font-semibold text-gray-500">{t('kid_details.label_age')}</span>
@@ -600,9 +623,19 @@ const KidDetailsModal: React.FC<KidDetailsModalProps> = ({
           <div className="mt-3 text-center">
             <h4 className="font-bold text-gray-900 text-base">
               {capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
+              {isVerified && (
+                <span
+                  className="relative inline-flex items-center justify-center shrink-0 align-middle ml-1.5 text-sky-500"
+                  title={t('kid_details.verified_tooltip')}
+                  aria-label={t('kid_details.verified_tooltip')}
+                >
+                  <span className="absolute w-1.5 h-1.5 bg-white rounded-full" />
+                  <MdVerified className="relative z-10 w-4 h-4 shrink-0" />
+                </span>
+              )}
             </h4>
             <p className="text-xs text-gray-500 font-medium mt-0.5">
-              {kid.faithForgeId ? t('kid_details.code_prefix', { code: kid.faithForgeId }) : ''}
+              {kid.userCode ? t('kid_details.code_prefix', { code: kid.userCode }) : ''}
             </p>
           </div>
         </div>

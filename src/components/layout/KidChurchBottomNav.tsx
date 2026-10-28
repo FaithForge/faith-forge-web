@@ -113,7 +113,7 @@ export const KidChurchBottomNav: React.FC = () => {
     });
   }
 
-  if (isFeatureEnabled('volunteerAttendance') && canTakeVolunteerAttendance) {
+  if (canTakeVolunteerAttendance) {
     navItems.push({
       path: APP_ROUTES.kidChurch.volunteerAttendance,
       icon: ClipboardCheck,

@@ -328,12 +328,12 @@ const parseUserSearchParams = (findText?: string) => {
 /**
  * Fetches the first page of users with optional search filtering via GET /users.
  *
- * @param {Object} payload - Search payload with findText.
+ * @param {Object} payload - Search payload with findText and optional hasNationalId filter.
  * @returns {Promise<any>} Paginated user data.
  */
 export const GetUsers = createAsyncThunk(
   'user/GetUsers',
-  async (payload: { findText: string }, { getState }) => {
+  async (payload: { findText: string; hasNationalId?: boolean }, { getState }) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
     const filters = parseUserSearchParams(payload.findText);
@@ -348,6 +348,9 @@ export const GetUsers = createAsyncThunk(
             limit: PAGINATION_REGISTRATION_LIMIT,
             page: 1,
             ...filters,
+            ...(payload.hasNationalId !== undefined
+              ? { filterByHasNationalId: payload.hasNationalId }
+              : {}),
           },
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -360,12 +363,12 @@ export const GetUsers = createAsyncThunk(
 /**
  * Fetches additional pages of users for infinite scrolling via GET /users.
  *
- * @param {Object} payload - Search payload with findText.
+ * @param {Object} payload - Search payload with findText and optional hasNationalId filter.
  * @returns {Promise<any>} Paginated user data.
  */
 export const GetMoreUsers = createAsyncThunk(
   'user/GetMoreUsers',
-  async (payload: { findText: string }, { getState }) => {
+  async (payload: { findText: string; hasNationalId?: boolean }, { getState }) => {
     const state = getState() as RootState;
     const user = state.userSlice;
     const { token } = state.authSlice;
@@ -381,6 +384,9 @@ export const GetMoreUsers = createAsyncThunk(
             limit: PAGINATION_REGISTRATION_LIMIT,
             page: user.currentPage + 1,
             ...filters,
+            ...(payload.hasNationalId !== undefined
+              ? { filterByHasNationalId: payload.hasNationalId }
+              : {}),
           },
           headers: { Authorization: `Bearer ${token}` },
         },

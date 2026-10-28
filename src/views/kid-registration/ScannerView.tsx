@@ -368,7 +368,7 @@ const ScannerView = () => {
                         )}
                       </div>
                       <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-                        <span className="text-xs font-medium text-gray-500">{t('kidRegistration:scanner.code_label', { code: kid.faithForgeId })}</span>
+                        <span className="text-xs font-medium text-gray-500">{t('kidRegistration:scanner.code_label', { code: kid.userCode })}</span>
                         <span className="text-gray-300">•</span>
                         <div className="flex items-center gap-1.5">
                           <TagKidGroup kidGroup={displayedGroupName} staticGroup={isStatic} className="text-[10px] py-0.5 px-2" />

@@ -8,21 +8,21 @@ describe('filterRegisteredKids', () => {
       id: 'kid-1',
       firstName: 'Matías David',
       lastName: 'Carbal Din',
-      faithForgeId: 113563,
+      userCode: 113563,
       age: 2,
     } as unknown as IKid,
     {
       id: 'kid-2',
       firstName: 'Sofía',
       lastName: 'Pérez Gómez',
-      faithForgeId: 204918,
+      userCode: 204918,
       age: 4,
     } as unknown as IKid,
     {
       id: 'kid-3',
       firstName: 'Lucas',
       lastName: 'García',
-      faithForgeId: 301294,
+      userCode: 301294,
       age: 6,
     } as unknown as IKid,
   ];
@@ -56,7 +56,7 @@ describe('filterRegisteredKids', () => {
     expect(results[0].id).toBe('kid-1');
   });
 
-  it('matches by numeric faithForgeId code', () => {
+  it('matches by numeric userCode', () => {
     const results = filterRegisteredKids(mockKids, '113563');
     expect(results).toHaveLength(1);
     expect(results[0].id).toBe('kid-1');

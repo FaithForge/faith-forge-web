@@ -1,7 +1,9 @@
 import React from 'react';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, IdCard } from 'lucide-react';
 import clsx from 'clsx';
 import { useTranslation } from 'react-i18next';
+import Button from '@/components/ui/Button';
+import { isFeatureEnabled } from '@/config/features';
 import { capitalizeWords } from '@/libs/utils/text';
 import { formatDateOnly } from '@/libs/utils/date';
 
@@ -11,11 +13,12 @@ interface KidInfoCardProps {
   isEpsUnknown: boolean;
   canViewCreatorInfo: boolean;
   guardianTerm: string;
+  onOpenUpdateDocumentModal?: () => void;
 }
 
 /**
  * Child medical and general information card for KidCheckInView.
- * Displays birthday, gender, EPS, medical conditions, notes, and creator info.
+ * Displays birthday, gender, identity document, EPS, medical conditions, notes, and creator info.
  *
  * @param {KidInfoCardProps} props - Component props.
  * @returns {JSX.Element}
@@ -26,11 +29,43 @@ export const KidInfoCard: React.FC<KidInfoCardProps> = ({
   isEpsUnknown,
   canViewCreatorInfo,
   guardianTerm,
+  onOpenUpdateDocumentModal,
 }) => {
   const { t } = useTranslation(['kidRegistration', 'common']);
+  const isKidRegisterEnabled = isFeatureEnabled('kidRegister');
+  const hasDocument = Boolean(kid?.nationalId && String(kid.nationalId).trim());
 
   return (
     <>
+      {/* Banner recordatorio si el niño aún no tiene documento de identidad */}
+      {isKidRegisterEnabled && !hasDocument && (
+        <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-2xl mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs leading-relaxed shadow-xs">
+          <div className="flex items-start gap-3">
+            <IdCard size={20} className="text-amber-600 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h4 className="font-bold text-amber-900 text-sm mb-0.5">
+                {t('kidRegistration:check_in.missing_document_alert_title')}
+              </h4>
+              <p className="text-amber-800">
+                {t('kidRegistration:check_in.missing_document_alert_desc', {
+                  guardian: guardianTerm.toLowerCase(),
+                })}
+              </p>
+            </div>
+          </div>
+          {onOpenUpdateDocumentModal && (
+            <Button
+              type="button"
+              size="sm"
+              onClick={onOpenUpdateDocumentModal}
+              className="shrink-0 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl self-end sm:self-center shadow-2xs"
+            >
+              {t('kidRegistration:check_in.btn_add_document')}
+            </Button>
+          )}
+        </div>
+      )}
+
       {/* Banner de aviso si la EPS es NO SABE */}
       {isEpsUnknown && (
         <div className="bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-2xl mb-4 flex items-start gap-3 text-xs leading-relaxed shadow-xs">
@@ -52,6 +87,30 @@ export const KidInfoCard: React.FC<KidInfoCardProps> = ({
           {t('kidRegistration:form.step_kid_info')}
         </h2>
         <div className="flex flex-col gap-y-3 text-sm">
+          {isKidRegisterEnabled && (
+            <div className="flex justify-between items-center py-1 border-b border-gray-50">
+              <span className="font-semibold text-gray-500">
+                {t('kidRegistration:check_in.identification_label')}
+              </span>
+              <div className="flex items-center gap-2 flex-wrap justify-end">
+                {hasDocument ? (
+                  <span className="font-bold text-gray-800">
+                    {kid.nationalIdType || 'RC'}: {kid.nationalId}
+                  </span>
+                ) : (
+                  <>
+                    <span className="font-medium text-gray-400">
+                      {t('kidRegistration:check_in.no_document')}
+                    </span>
+                    <span className="px-2 py-0.5 text-[10px] font-bold bg-amber-50 text-amber-700 rounded-full border border-amber-200">
+                      {t('kidRegistration:check_in.badge_pending_document')}
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+
           {formattedAge && (
             <div className="flex justify-between items-center py-1 border-b border-gray-50">
               <span className="font-semibold text-gray-500">{t('kidRegistration:check_in.age_label')}</span>

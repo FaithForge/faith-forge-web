@@ -16,6 +16,7 @@ import ProcessingPrintModal from '@/components/modal/ProcessingPrintModal';
 import UpdateGuardianModal from '@/components/modal/UpdateGuardianModal';
 import AssignGuardianModal from '@/components/modal/AssignGuardianModal';
 import DeleteKidModal from '@/components/modal/DeleteKidModal';
+import UpdateKidDocumentModal from '@/components/modal/UpdateKidDocumentModal';
 
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { useGetKidQuery, useGetKidGroupsQuery } from '@/libs/state/redux/api/kidChurchApi';
@@ -25,6 +26,7 @@ import { useKidsTerm } from '@/libs/hooks/useTerm';
 import { KID_AGE_COPY } from '@/libs/common-types/constants';
 import { capitalizeWords } from '@/libs/utils/text';
 import { APP_ROUTES } from '@/config/routes';
+import { isFeatureEnabled } from '@/config/features';
 
 import { useKidCheckInData } from './hooks/useKidCheckInData';
 import { useKidCheckInActions } from './hooks/useKidCheckInActions';
@@ -48,6 +50,7 @@ const KidCheckInView: React.FC = () => {
 
   const guardianTerm = useKidsTerm('guardian');
   const guardiansTerm = useKidsTerm('guardians');
+  const isKidRegisterEnabled = isFeatureEnabled('kidRegister');
 
   const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
   const currentMeeting = useAppSelector((state) => state.churchMeetingSlice.current);
@@ -71,6 +74,7 @@ const KidCheckInView: React.FC = () => {
   const [showMenu, setShowMenu] = useState(false);
   const [showAssignGuardianModal, setShowAssignGuardianModal] = useState(false);
   const [showDeleteKidModal, setShowDeleteKidModal] = useState(false);
+  const [showUpdateDocumentModal, setShowUpdateDocumentModal] = useState(false);
   const [showAdminOutOfScheduleModal, setShowAdminOutOfScheduleModal] = useState(false);
   const [showPhotoModal, setShowPhotoModal] = useState(false);
   const [imageError, setImageError] = useState(false);
@@ -250,6 +254,9 @@ const KidCheckInView: React.FC = () => {
               isEpsUnknown={isEpsUnknown}
               canViewCreatorInfo={canViewCreatorInfo}
               guardianTerm={guardianTerm}
+              onOpenUpdateDocumentModal={
+                isKidRegisterEnabled ? () => setShowUpdateDocumentModal(true) : undefined
+              }
             />
 
             {isRegistered ? (
@@ -358,6 +365,15 @@ const KidCheckInView: React.FC = () => {
         kid={kid}
         onConfirm={handleDeleteKid}
       />
+
+      {isKidRegisterEnabled && (
+        <UpdateKidDocumentModal
+          open={showUpdateDocumentModal}
+          onClose={() => setShowUpdateDocumentModal(false)}
+          kid={kid}
+          onSuccess={() => refetchKid()}
+        />
+      )}
 
       <ConfirmModal
         open={showAdminOutOfScheduleModal}

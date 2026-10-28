@@ -54,7 +54,7 @@ export interface GetKidsArgs {
   registrationChurchMeetingId?: string;
   filterByFirstName?: string;
   filterByLastName?: string;
-  filterByFaithForge?: string;
+  filterByUserCode?: string;
 }
 
 export interface GetKidsResponse {
@@ -72,6 +72,7 @@ export interface GetKidArgs {
 
 export interface GetKidGuardianArgs {
   nationalId: string;
+  nationalIdType?: string;
 }
 
 export interface CreateKidRegistrationApiPayload extends ICreateKidRegistration {
@@ -202,7 +203,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
           registrationChurchMeetingId: args?.registrationChurchMeetingId,
           filterByFirstName: args?.filterByFirstName,
           filterByLastName: args?.filterByLastName,
-          filterByFaithForge: args?.filterByFaithForge,
+          filterByUserCode: args?.filterByUserCode,
         },
       }),
       providesTags: (result) =>
@@ -248,10 +249,11 @@ export const kidChurchApi = baseApi.injectEndpoints({
     }),
 
     getKidGuardian: builder.query<IKidGuardian, GetKidGuardianArgs>({
-      query: ({ nationalId }) => ({
+      query: ({ nationalId, nationalIdType }) => ({
         microservice: MicroserviceEnum.KidChurch,
         url: `/kid-guardian/${encodeURIComponent(nationalId)}`,
         method: HttpRequestMethod.GET,
+        params: nationalIdType ? { nationalIdType } : undefined,
       }),
       providesTags: (result) =>
         result?.id
@@ -469,7 +471,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
             id: reg?.id || k.id || '',
             kidId: k.id || '',
             kidFullName: `${k.firstName || ''} ${k.lastName || ''}`.trim(),
-            faithForgeId: k.faithForgeId,
+            userCode: k.userCode,
             gender: k.gender || '',
             photoUrl: k.photoUrl,
             birthday: k.birthday,

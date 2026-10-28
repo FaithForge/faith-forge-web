@@ -180,7 +180,7 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
             phone: item.phone,
             dialCodePhone: item.dialCodePhone,
             photoUrl: item.photoUrl,
-            faithForgeId: 0,
+            userCode: 0,
             gender: 'M' as any,
             state: 'ACTIVE' as any,
             roles: [],

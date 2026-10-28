@@ -417,9 +417,9 @@ const ProfileView: React.FC = () => {
                       </span>
                     )}
 
-                    {user.faithForgeId && (
+                    {user.userCode && (
                       <span className="text-xs font-mono text-slate-400">
-                        #{user.faithForgeId}
+                        #{user.userCode}
                       </span>
                     )}
                   </div>

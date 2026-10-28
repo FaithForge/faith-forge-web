@@ -50,7 +50,7 @@ export const filterRegisteredKids = (kids: IKid[], query: string): IKid[] => {
   return kids.filter((kid) => {
     const fullName = `${kid.firstName || ''} ${kid.lastName || ''}`;
     const cleanFullName = removeAccentsAndFormat(fullName).toLowerCase();
-    const code = String(kid.faithForgeId || '');
+    const code = String(kid.userCode || '');
 
     const matchesName = cleanLetters.length > 0 && cleanFullName.includes(cleanLetters);
     const matchesCode = cleanDigits.length > 0 && code.includes(cleanDigits);
@@ -221,7 +221,7 @@ export const KidSelector: React.FC<KidSelectorProps> = ({
             onSearchChange={() => {}}
             selectedPerson={{
               name: capitalizeWords(`${selectedKid.firstName} ${selectedKid.lastName}`.trim()),
-              code: selectedKid.faithForgeId || undefined,
+              code: selectedKid.userCode || undefined,
               photoUrl: selectedKid.photoUrl,
               tag:
                 selectedKid.kidGroup?.name ||
@@ -367,7 +367,7 @@ export const KidSelector: React.FC<KidSelectorProps> = ({
                           <p className="text-[10px] text-gray-500">
                             {groupName ? `${groupName} • ` : ''}
                             {kid.age ? `${kid.age} años` : ''}
-                            {kid.faithForgeId ? ` • #${kid.faithForgeId}` : ''}
+                            {kid.userCode ? ` • #${kid.userCode}` : ''}
                           </p>
                         </div>
                       </div>

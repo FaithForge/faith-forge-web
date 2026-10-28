@@ -17,11 +17,11 @@ import { validatePhoneNumber, isPhoneValid, formatPhoneDisplay } from '@/libs/ut
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import {
-  IdType,
   UserIdType,
   UserGenderCode,
   userGenderSelect,
   kidRelationSelect,
+  idGuardianTypeSelect,
   IKidGuardian,
   ICreateKidGuardian,
   KidGuardianRelationEnum,
@@ -33,13 +33,10 @@ interface AssignGuardianModalProps {
   kidId: string;
 }
 
-const idTypeOptions = [
-  { id: UserIdType.CC, name: IdType.CC },
-  { id: UserIdType.TI, name: IdType.TI },
-  { id: UserIdType.RC, name: IdType.RC },
-  { id: UserIdType.CE, name: IdType.CE },
-  { id: UserIdType.PS, name: IdType.PS },
-];
+const idTypeOptions = idGuardianTypeSelect.map((opt) => ({
+  id: opt.value,
+  name: opt.label,
+}));
 
 const genderOptions = userGenderSelect.map(g => ({
   id: g.value,
@@ -101,7 +98,10 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     const cleanDoc = nationalId.trim();
     if (cleanDoc) {
       try {
-        const guardianData = await triggerGetGuardian({ nationalId: cleanDoc }).unwrap();
+        const guardianData = await triggerGetGuardian({
+          nationalId: cleanDoc,
+          nationalIdType,
+        }).unwrap();
         if (guardianData) {
           setExistingGuardian(guardianData);
           toast.success(`${guardianTerm} encontrado(a) en el sistema`);
@@ -231,16 +231,46 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               </div>
             )}
 
-            {/* Salvedad visual si el acudiente existente tiene formato de teléfono errado */}
-            {existingGuardian && !isPhoneValid(phone || existingGuardian.phone, dialCodePhone || existingGuardian.dialCodePhone) && (
-              <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
-                <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                <div className="leading-relaxed">
-                  <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}:</strong>
-                  El número registrado para este {guardianTerm.toLowerCase()} ({formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo inferior para poder asignarlo.
+            {/* Salvedad visual si el acudiente existente no tiene teléfono o tiene formato de teléfono errado */}
+            {existingGuardian && (() => {
+              const hasExistingPhone = Boolean(existingGuardian.phone?.trim());
+              const isCurrentValid = isPhoneValid(phone, dialCodePhone);
+
+              if (isCurrentValid) return null;
+
+              if (hasExistingPhone) {
+                const isExistingValid = isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone);
+                if (!isExistingValid) {
+                  return (
+                    <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
+                      <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                      <div className="leading-relaxed">
+                        <strong className="block font-bold text-amber-950 mb-0.5">
+                          {t('kidRegistration:form.invalid_phone_title', { guardian: guardianTerm.toLowerCase() })}
+                        </strong>
+                        {t('kidRegistration:form.invalid_phone_modal_description', {
+                          guardian: guardianTerm.toLowerCase(),
+                          phone: formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone),
+                        })}
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              }
+
+              return (
+                <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
+                  <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div className="leading-relaxed">
+                    <strong className="block font-bold text-amber-950 mb-0.5">
+                      {t('kidRegistration:form.missing_phone_title', { guardian: guardianTerm.toLowerCase() })}
+                    </strong>
+                    {t('kidRegistration:form.missing_phone_modal_description', { guardian: guardianTerm.toLowerCase() })}
+                  </div>
                 </div>
-              </div>
-            )}
+              );
+            })()}
 
             {/* Tipo de Documento */}
             <SelectSearch
@@ -312,7 +342,7 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
               onDialCodeChange={setDialCodePhone}
               onPhoneChange={setPhone}
               helperNotice={
-                existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)
+                existingGuardian && Boolean(existingGuardian.phone?.trim()) && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)
                   ? t('kidRegistration:form.update_phone_hint', { guardian: guardianTerm.toLowerCase() })
                   : undefined
               }

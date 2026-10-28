@@ -181,7 +181,7 @@ const CoordinatorRegistrationDashboardView: React.FC = () => {
                 const isBday = isDateToday(kid.birthday);
 
                 let subtitleText = t('kidRegistration:dashboard.code_label', {
-                  code: kid.faithForgeId || kid.id,
+                  code: kid.userCode || kid.id,
                 });
                 let showOverageStyle = false;
 
@@ -192,7 +192,7 @@ const CoordinatorRegistrationDashboardView: React.FC = () => {
                       })}`
                     : '';
                   subtitleText = `${t('kidRegistration:dashboard.code_label', {
-                    code: kid.faithForgeId || kid.id,
+                    code: kid.userCode || kid.id,
                   })}${timeStr}`;
                 } else if (overage) {
                   subtitleText = KID_AGE_COPY.maxAgeDashboardSubtitle;

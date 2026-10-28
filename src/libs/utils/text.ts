@@ -95,7 +95,7 @@ export interface EntitySearchParams {
 
 /**
  * Parses raw search input for entity search bars (kids and users) according to search rules:
- * 1. If composed strictly of digits, treats input as numeric ID (faithForgeId or nationalId).
+ * 1. If composed strictly of digits, treats input as numeric ID (userCode or nationalId).
  * 2. If it starts with a space (e.g. " Peña"), searches solely by last name.
  * 3. The first word is parsed as firstName.
  * 4. All remaining words (second in adelante) are parsed as lastName.

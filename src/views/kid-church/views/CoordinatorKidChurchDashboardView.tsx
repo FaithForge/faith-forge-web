@@ -20,7 +20,6 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import KidDetailsModal from '@/components/modal/KidDetailsModal';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { APP_ROUTES } from '@/config/routes';
-import { isFeatureEnabled } from '@/config/features';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
@@ -61,10 +60,6 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
   const supervisorsTerm = useKidsTerm('supervisor');
   const coordinatorsTerm = useChurchTerm('coordinators');
 
-  const { isVolunteerAttendanceEnabled } = useMemo(
-    () => ({ isVolunteerAttendanceEnabled: isFeatureEnabled('volunteerAttendance') }),
-    [],
-  );
   const { canTakeVolunteerAttendance } = usePermissions();
 
   const {
@@ -108,7 +103,7 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
       const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(searchText);
       if (numericId) {
         result = result.filter((kid) => {
-          const code = String(kid.faithForgeId || kid.id || '').toLowerCase();
+          const code = String(kid.userCode || kid.id || '').toLowerCase();
           return code.includes(numericId.toLowerCase());
         });
       } else if (filterByFirstName || filterByLastName) {
@@ -176,8 +171,7 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
       )}
 
       {/* Volunteer Attendance Alert Banner for Group Coordinators */}
-      {isVolunteerAttendanceEnabled &&
-        canTakeVolunteerAttendance &&
+      {canTakeVolunteerAttendance &&
         currentMeeting &&
         attendanceSummary &&
         attendanceSummary.total > 0 && (
@@ -333,51 +327,49 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
               /> */}
             </div>
 
-            {/* 2. SECCIÓN: SERVIDORES (SEGUNDA) - Condicional a que la asistencia esté activa */}
-            {isVolunteerAttendanceEnabled && (
-              <div className="space-y-3.5 pt-3 border-t border-slate-200/90">
-                <div className="flex items-center gap-2 px-0.5">
-                  <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
-                    <UserCheck className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-                  <div className="min-w-0">
-                    <h2 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight uppercase">
-                      {t('coordinator_dashboard.section_servers_title', {
-                        volunteers: volunteersTerm,
-                        defaultValue: `Personal & ${volunteersTerm}`,
-                      })}
-                    </h2>
-                    <p className="text-[11px] font-semibold text-slate-500 leading-tight">
-                      {t('coordinator_dashboard.section_servers_subtitle', {
-                        classrooms: classroomsTerm.toLowerCase(),
-                        defaultValue: `Asistencia general del equipo y distribución por ${classroomsTerm.toLowerCase()}`,
-                      })}
-                    </p>
-                  </div>
+            {/* 2. SECCIÓN: SERVIDORES (SEGUNDA) */}
+            <div className="space-y-3.5 pt-3 border-t border-slate-200/90">
+              <div className="flex items-center gap-2 px-0.5">
+                <div className="w-7 h-7 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center shrink-0">
+                  <UserCheck className="w-4 h-4 stroke-[2.5]" />
                 </div>
-
-                {/* Asistencia General (Tarjeta con Total, Compl, Pend y 4 estados) */}
-                <TeamAttendanceSummaryCard stats={teamAttendanceSummaryStats} />
-
-                {/* Gráfico de Barras Horizontales de Servidores por Área */}
-                <ServersPerAreaChart
-                  data={areaServerData}
-                  volunteersTerm={volunteersTerm}
-                  teachersTerm={teachersTerm}
-                  supervisorsTerm={supervisorsTerm}
-                  coordinatorsTerm={coordinatorsTerm}
-                />
-
-                {/* Distribución de Personal en Salones vs Otras Áreas */}
-                <ServerDistributionCards
-                  stats={serverDistributionStats}
-                  classroomsTerm={classroomsTerm}
-                  volunteersTerm={volunteersTerm}
-                  teachersTerm={teachersTerm}
-                  supervisorsTerm={supervisorsTerm}
-                />
+                <div className="min-w-0">
+                  <h2 className="text-xs sm:text-sm font-black text-slate-900 tracking-tight uppercase">
+                    {t('coordinator_dashboard.section_servers_title', {
+                      volunteers: volunteersTerm,
+                      defaultValue: `Personal & ${volunteersTerm}`,
+                    })}
+                  </h2>
+                  <p className="text-[11px] font-semibold text-slate-500 leading-tight">
+                    {t('coordinator_dashboard.section_servers_subtitle', {
+                      classrooms: classroomsTerm.toLowerCase(),
+                      defaultValue: `Asistencia general del equipo y distribución por ${classroomsTerm.toLowerCase()}`,
+                    })}
+                  </p>
+                </div>
               </div>
-            )}
+
+              {/* Asistencia General (Tarjeta con Total, Compl, Pend y 4 estados) */}
+              <TeamAttendanceSummaryCard stats={teamAttendanceSummaryStats} />
+
+              {/* Gráfico de Barras Horizontales de Servidores por Área */}
+              <ServersPerAreaChart
+                data={areaServerData}
+                volunteersTerm={volunteersTerm}
+                teachersTerm={teachersTerm}
+                supervisorsTerm={supervisorsTerm}
+                coordinatorsTerm={coordinatorsTerm}
+              />
+
+              {/* Distribución de Personal en Salones vs Otras Áreas */}
+              <ServerDistributionCards
+                stats={serverDistributionStats}
+                classroomsTerm={classroomsTerm}
+                volunteersTerm={volunteersTerm}
+                teachersTerm={teachersTerm}
+                supervisorsTerm={supervisorsTerm}
+              />
+            </div>
 
             {/* Safe spacer so last card never collides with floating BottomNav */}
             <div className="h-28 sm:h-32 shrink-0 pointer-events-none" aria-hidden="true" />
@@ -518,7 +510,7 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
 
                     return (
                       <Cell
-                        key={kid.id || kid.faithForgeId}
+                        key={kid.id || kid.userCode}
                         title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
                         subtitle={subtitleText}
                         gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}

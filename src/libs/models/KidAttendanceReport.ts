@@ -4,7 +4,7 @@
 
 export interface IAttendanceReportKid {
   id: string;
-  faithForgeId?: number;
+  userCode?: number;
   firstName: string;
   lastName: string;
   gender: 'M' | 'F';

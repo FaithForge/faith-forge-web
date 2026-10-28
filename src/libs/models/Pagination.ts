@@ -12,7 +12,7 @@ export interface Pagination {
   order?: Order;
   filterByFirstName?: string;
   filterByLastName?: string;
-  filterByFaithForge?: string;
+  filterByUserCode?: string;
 }
 
 export interface PaginationResponse<T> {

@@ -125,7 +125,15 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
           </button>
         </div>
 
-        {guardian && !isPhoneValid(guardian.phone, guardian.dialCodePhone) && (
+        {guardian && !guardian.phone?.trim() && (
+          <div className="mb-3 p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2.5">
+            <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
+            <span className="leading-relaxed">
+              <strong>Teléfono no registrado:</strong> Debe preguntarle a {guardianTerm.toLowerCase()} su número para registrarlo y poder registrar la asistencia del niño.
+            </span>
+          </div>
+        )}
+        {guardian && Boolean(guardian.phone?.trim()) && !isPhoneValid(guardian.phone, guardian.dialCodePhone) && (
           <div className="mb-3 p-3 bg-amber-50 border border-amber-200 text-amber-900 text-xs rounded-xl flex items-start gap-2.5">
             <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
             <span className="leading-relaxed">

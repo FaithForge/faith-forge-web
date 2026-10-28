@@ -37,7 +37,6 @@ import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useVolunteerAttendanceLiveSync } from '@/libs/hooks/useVolunteerAttendanceLiveSync';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
-import { isFeatureEnabled } from '@/config/features';
 import { APP_ROUTES } from '@/config/routes';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import TeamAttendanceSummaryCard from '@/views/kid-church/components/TeamAttendanceSummaryCard';
@@ -261,9 +260,9 @@ export const VolunteerAttendanceView: React.FC = () => {
   const volunteersTerm = useChurchTerm('volunteers');
   const volunteerTerm = useChurchTerm('volunteer');
 
-  // Guard: Feature flag gating and permission
+  // Guard: Permission
   useEffect(() => {
-    if (!isFeatureEnabled('volunteerAttendance') || !canTakeVolunteerAttendance) {
+    if (!canTakeVolunteerAttendance) {
       navigate(APP_ROUTES.kidChurch.root, { replace: true });
     }
   }, [navigate, canTakeVolunteerAttendance]);

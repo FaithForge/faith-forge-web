@@ -3,6 +3,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
 import { APP_ROUTES } from "@/config/routes";
+import { isFeatureEnabled } from '@/config/features';
 import { Camera, ChevronRight, Check, Trash2, Search, UserCheck, AlertTriangle, X } from 'lucide-react';
 import { FaChild, FaChildDress } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +30,7 @@ import { updateCurrentKid } from '@/libs/state/redux/slices/kid-church/kid.slice
 import { useNavigationGuard } from '@/libs/context/NavigationGuardContext';
 import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 
-import { healthSecurityEntitySelect, IdType, UserIdType, UserGenderCode } from '@/libs/models/User';
+import { healthSecurityEntitySelect, UserIdType, UserGenderCode, idKidTypeSelect, idGuardianTypeSelect } from '@/libs/models/User';
 import { kidRelationSelect, ICreateKid, ICreateKidGuardian, KidGuardianRelationEnum, IKidGuardian } from '@/libs/models';
 import { 
   KID_MAX_AGE_YEARS, 
@@ -51,6 +52,7 @@ const NewKidView = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const guardianTerm = useKidsTerm('guardian');
+  const isKidRegisterEnabled = isFeatureEnabled('kidRegister');
   const newKidSteps = useMemo(() => [
     t('kidRegistration:form.step_kid_info'), 
     t('kidRegistration:form.step_guardian_info', { guardian: guardianTerm })
@@ -103,6 +105,8 @@ const NewKidView = () => {
     defaultValues: {
       firstName: '',
       lastName: '',
+      nationalIdType: UserIdType.RC,
+      nationalId: '',
       birthday: '',
       gender: '',
       healthSecurityEntity: '',
@@ -140,6 +144,7 @@ const NewKidView = () => {
   const hasKidData = Boolean(
     watchedKid?.firstName?.trim() ||
     watchedKid?.lastName?.trim() ||
+    (isKidRegisterEnabled && watchedKid?.nationalId?.trim()) ||
     watchedKid?.birthday ||
     watchedKid?.gender ||
     watchedKid?.healthSecurityEntity ||
@@ -305,9 +310,12 @@ const NewKidView = () => {
         churchCampusSlice.church?.id ||
         churchCampusSlice.current?.churchId;
 
+      const trimmedKidNationalId = isKidRegisterEnabled ? (values.nationalId?.trim() || undefined) : undefined;
       const kidPayload: ICreateKid = {
         firstName: values.firstName,
         lastName: values.lastName,
+        nationalId: trimmedKidNationalId,
+        nationalIdType: trimmedKidNationalId ? (values.nationalIdType as UserIdType) : undefined,
         birthday: values.birthday,
         gender: values.gender as UserGenderCode,
         staticGroup: staticGroup,
@@ -413,13 +421,23 @@ const NewKidView = () => {
     return isKidUnderMinAge(birthdayVal);
   }, [birthdayVal]);
 
-  const idTypeOptions = [
-    { id: UserIdType.CC, name: IdType.CC },
-    { id: UserIdType.TI, name: IdType.TI },
-    { id: UserIdType.RC, name: IdType.RC },
-    { id: UserIdType.CE, name: IdType.CE },
-    { id: UserIdType.PS, name: IdType.PS },
-  ];
+  const idTypeOptions = useMemo(
+    () =>
+      idGuardianTypeSelect.map((opt) => ({
+        id: opt.value,
+        name: opt.label,
+      })),
+    [],
+  );
+
+  const kidIdTypeOptions = useMemo(
+    () =>
+      idKidTypeSelect.map((opt) => ({
+        id: opt.value,
+        name: opt.label,
+      })),
+    [],
+  );
 
   const watchedGuardianGender = watchGuardian('gender');
   const availableRelations = kidRelationSelect
@@ -429,10 +447,14 @@ const NewKidView = () => {
   const [isSearchingGuardian, setIsSearchingGuardian] = useState(false);
   const checkNationalId = async () => {
     const doc = getGuardianValues('nationalId');
+    const docType = getGuardianValues('nationalIdType');
     if (doc && doc.trim().length > 0) {
       setIsSearchingGuardian(true);
       try {
-        const data = await triggerGetGuardian({ nationalId: doc.trim() }).unwrap();
+        const data = await triggerGetGuardian({
+          nationalId: doc.trim(),
+          nationalIdType: docType,
+        }).unwrap();
         if (data) {
           setExistingGuardian(data);
           toast.success(`${guardianTerm} encontrado(a) en la base de datos`);
@@ -526,6 +548,38 @@ const NewKidView = () => {
                 error={kidErrors.lastName?.message as string} 
                 required 
               />
+
+              {isKidRegisterEnabled && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Controller
+                    name="nationalIdType"
+                    control={kidControl}
+                    render={({ field }) => (
+                      <SelectSearch
+                        label={t('kidRegistration:form.identification_type_label')}
+                        options={kidIdTypeOptions}
+                        value={field.value}
+                        onChange={field.onChange}
+                        placeholder={t('kidRegistration:form.identification_type_placeholder')}
+                      />
+                    )}
+                  />
+
+                  <Input
+                    label={t('kidRegistration:form.identification_number_label')}
+                    placeholder={t('kidRegistration:form.identification_number_placeholder')}
+                    badge={
+                      <span className="px-2 py-0.5 text-[10px] font-bold bg-gray-100 text-gray-600 rounded-full border border-gray-200">
+                        {t('kidRegistration:form.optional_badge')}
+                      </span>
+                    }
+                    helperText={t('kidRegistration:form.identification_optional_hint', {
+                      guardian: guardianTerm.toLowerCase(),
+                    })}
+                    {...registerKid('nationalId')}
+                  />
+                </div>
+              )}
 
               <div>
                 <Controller
@@ -858,7 +912,7 @@ const NewKidView = () => {
                     onPhoneChange={field.onChange}
                     error={guardianErrors.phone?.message as string}
                     helperNotice={
-                      existingGuardian && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)
+                      existingGuardian && Boolean(existingGuardian.phone?.trim()) && isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone)
                         ? t('kidRegistration:form.update_phone_hint', { guardian: guardianTerm.toLowerCase() })
                         : undefined
                     }
@@ -866,15 +920,47 @@ const NewKidView = () => {
                 )}
               />
 
-              {existingGuardian && !isPhoneValid(watchGuardian('phone') || existingGuardian.phone, watchGuardian('dialCodePhone') || existingGuardian.dialCodePhone) && (
-                <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
-                  <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
-                  <div className="leading-relaxed">
-                    <strong className="block font-bold text-amber-950 mb-0.5">Teléfono errado — Preguntar número correcto a {guardianTerm.toLowerCase()}:</strong>
-                    El número registrado para este {guardianTerm.toLowerCase()} ({formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone)}) tiene un formato inválido. Debe preguntarle el número correcto y corregirlo en el campo de teléfono antes de continuar.
+              {existingGuardian && (() => {
+                const hasExistingPhone = Boolean(existingGuardian.phone?.trim());
+                const currentPhone = watchGuardian('phone');
+                const currentDialCode = watchGuardian('dialCodePhone') || existingGuardian.dialCodePhone || '+57';
+                const isCurrentValid = isPhoneValid(currentPhone, currentDialCode);
+
+                if (isCurrentValid) return null;
+
+                if (hasExistingPhone) {
+                  const isExistingValid = isPhoneValid(existingGuardian.phone, existingGuardian.dialCodePhone);
+                  if (!isExistingValid) {
+                    return (
+                      <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
+                        <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                        <div className="leading-relaxed">
+                          <strong className="block font-bold text-amber-950 mb-0.5">
+                            {t('kidRegistration:form.invalid_phone_title', { guardian: guardianTerm.toLowerCase() })}
+                          </strong>
+                          {t('kidRegistration:form.invalid_phone_description', {
+                            guardian: guardianTerm.toLowerCase(),
+                            phone: formatPhoneDisplay(existingGuardian.phone, existingGuardian.dialCodePhone),
+                          })}
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                }
+
+                return (
+                  <div className="bg-amber-50 border-2 border-amber-300 text-amber-950 p-3.5 rounded-xl flex items-start gap-2.5 text-xs shadow-xs">
+                    <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                    <div className="leading-relaxed">
+                      <strong className="block font-bold text-amber-950 mb-0.5">
+                        {t('kidRegistration:form.missing_phone_title', { guardian: guardianTerm.toLowerCase() })}
+                      </strong>
+                      {t('kidRegistration:form.missing_phone_description', { guardian: guardianTerm.toLowerCase() })}
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
 
               {/* Gender */}
               <Controller

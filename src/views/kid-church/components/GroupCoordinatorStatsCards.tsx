@@ -7,7 +7,6 @@ import { CoordinatorKpiMetrics } from '../hooks/useGroupCoordinatorStats';
 export interface GroupCoordinatorStatsCardsProps {
   kpis: CoordinatorKpiMetrics;
   totalClassrooms?: number;
-  isVolunteerAttendanceEnabled?: boolean;
 }
 
 /**

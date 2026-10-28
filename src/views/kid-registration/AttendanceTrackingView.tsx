@@ -156,7 +156,7 @@ const AttendanceTrackingView: React.FC = () => {
         (i) =>
           i.kidFullName.toLowerCase().includes(q) ||
           i.guardianFullName.toLowerCase().includes(q) ||
-          (i.faithForgeId && i.faithForgeId.toString().includes(q)),
+          (i.userCode && i.userCode.toString().includes(q)),
       );
     }
     return list;
@@ -464,9 +464,9 @@ const AttendanceTrackingView: React.FC = () => {
                           <h3 className="text-xs sm:text-sm font-bold text-gray-900 truncate">
                             {capitalizeWords(item.kidFullName)}
                           </h3>
-                          {item.faithForgeId && (
+                          {item.userCode && (
                             <span className="text-[10px] font-bold text-gray-400 shrink-0">
-                              #{item.faithForgeId}
+                              #{item.userCode}
                             </span>
                           )}
                         </div>
