@@ -158,11 +158,16 @@ export const ChangeVolunteerRoleModal: React.FC<
 
   // Available active teams in selected campus
   const availableTeams = useMemo<IServiceAreaGroup[]>(() => {
-    return serviceAreaGroups.filter(
-      (sag) =>
-        sag.churchCampusId === selectedCampusId &&
-        sag.state === ServiceAreaGroupStateEnum.ACTIVE,
-    );
+    return serviceAreaGroups.filter((sag) => {
+      const isSagActive =
+        !sag.state || sag.state === ServiceAreaGroupStateEnum.ACTIVE;
+      return (
+        (!selectedCampusId ||
+          !sag.churchCampusId ||
+          sag.churchCampusId === selectedCampusId) &&
+        isSagActive
+      );
+    });
   }, [serviceAreaGroups, selectedCampusId]);
 
   const availableAreasForCampus = useMemo<IMinistryArea[]>(() => {
@@ -171,7 +176,8 @@ export const ChangeVolunteerRoleModal: React.FC<
     );
     return areas.filter(
       (area) =>
-        area.state === MinistryAreaStateEnum.ACTIVE && areaIdSet.has(area.id),
+        (!area.state || area.state === MinistryAreaStateEnum.ACTIVE) &&
+        areaIdSet.has(area.id),
     );
   }, [availableTeams, areas]);
 
@@ -245,11 +251,14 @@ export const ChangeVolunteerRoleModal: React.FC<
     setSelectedAreaId(initialAreaId);
     setSelectedGroupId(initialGroupId);
 
-    const campusTeams = serviceAreaGroups.filter(
-      (sag) =>
-        sag.churchCampusId === initialCampusId &&
-        sag.state === ServiceAreaGroupStateEnum.ACTIVE,
-    );
+    const campusTeams = serviceAreaGroups.filter((sag) => {
+      return (
+        (!initialCampusId ||
+          !sag.churchCampusId ||
+          sag.churchCampusId === initialCampusId) &&
+        (!sag.state || sag.state === ServiceAreaGroupStateEnum.ACTIVE)
+      );
+    });
 
     if (currentTeam) {
       setSelectedTeamAreaId(currentTeam.ministryAreaId);
@@ -278,11 +287,14 @@ export const ChangeVolunteerRoleModal: React.FC<
    */
   const handleCampusChange = (newCampusId: string) => {
     setSelectedCampusId(newCampusId);
-    const campusTeams = serviceAreaGroups.filter(
-      (team) =>
-        team.churchCampusId === newCampusId &&
-        team.state === ServiceAreaGroupStateEnum.ACTIVE,
-    );
+    const campusTeams = serviceAreaGroups.filter((team) => {
+      return (
+        (!newCampusId ||
+          !team.churchCampusId ||
+          team.churchCampusId === newCampusId) &&
+        (!team.state || team.state === ServiceAreaGroupStateEnum.ACTIVE)
+      );
+    });
     if (campusTeams.length > 0) {
       const areaExists = campusTeams.some(
         (t) => t.ministryAreaId === selectedTeamAreaId,

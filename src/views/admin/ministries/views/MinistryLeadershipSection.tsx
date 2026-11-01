@@ -6,7 +6,10 @@ import {
   IMinistryGroupConfig,
   IMinistryWorkspaceCoordinator,
   IMinistryWorkspaceLeadership,
+  IMinistryWorkspaceTeam,
+  IServiceAreaGroup,
   IVolunteerAssignment,
+  ServiceAreaGroupStateEnum,
   VolunteerRole,
 } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -41,6 +44,7 @@ interface MinistryLeadershipSectionProps {
   workspaceLeadership?: IMinistryWorkspaceLeadership;
   workspaceAreas?: IMinistryArea[];
   workspaceGroups?: IMinistryGroupConfig[];
+  workspaceTeams?: IMinistryWorkspaceTeam[];
   onRefreshWorkspace?: () => void;
 }
 
@@ -94,6 +98,7 @@ export const MinistryLeadershipSection: React.FC<
   workspaceLeadership,
   workspaceAreas,
   workspaceGroups,
+  workspaceTeams,
   onRefreshWorkspace,
 }) => {
   const { t } = useTranslation('admin');
@@ -141,6 +146,32 @@ export const MinistryLeadershipSection: React.FC<
     [workspaceGroups, groupsByMinistry, ministryId],
   );
   const campuses = campusesState.data;
+
+  const effectiveCampusTeams = useMemo<IServiceAreaGroup[]>(() => {
+    if (workspaceTeams && workspaceTeams.length > 0) {
+      return workspaceTeams.map((wt) => ({
+        id: wt.id,
+        ministryAreaId: wt.ministryAreaId,
+        ministryGroupConfigId: wt.ministryGroupConfigId,
+        churchCampusId: wt.churchCampusId || churchCampusId || '',
+        state: wt.state ?? ServiceAreaGroupStateEnum.ACTIVE,
+        ministryArea: {
+          id: wt.ministryAreaId,
+          ministryId,
+          name: wt.ministryAreaName,
+          scope: wt.ministryAreaScope,
+          requiresSupervisor: wt.requiresSupervisor,
+        },
+        ministryGroupConfig: {
+          id: wt.ministryGroupConfigId,
+          ministryId,
+          name: wt.ministryGroupConfigName,
+          position: 0,
+        },
+      }));
+    }
+    return serviceAreaGroups;
+  }, [workspaceTeams, churchCampusId, ministryId, serviceAreaGroups]);
 
   // Partition Keys
   const ministryCoordsKey = `ministry_coords_${ministryId}`;
@@ -809,7 +840,7 @@ export const MinistryLeadershipSection: React.FC<
         areas={areas}
         groups={groups}
         campuses={campuses}
-        serviceAreaGroups={serviceAreaGroups}
+        serviceAreaGroups={effectiveCampusTeams}
         existingAssignments={allCoordinators}
         defaultRole={defaultRoleToAssign}
         onSuccess={() => {
@@ -828,7 +859,7 @@ export const MinistryLeadershipSection: React.FC<
         areas={areas}
         groups={groups}
         campuses={campuses}
-        serviceAreaGroups={serviceAreaGroups}
+        serviceAreaGroups={effectiveCampusTeams}
         volunteersList={volunteersList}
         onSuccess={() => {
           fetchCoordinators();

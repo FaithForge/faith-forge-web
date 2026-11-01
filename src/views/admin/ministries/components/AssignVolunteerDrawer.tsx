@@ -1,8 +1,10 @@
-import React, { useEffect, useState, useRef, useMemo } from 'react';
 import AppModal from '@/components/ui/AppModal';
-import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
+import { HttpRequestMethod, MS } from '@/libs/common-types/global';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { getVolunteerRoleLabel, useChurchTerm } from '@/libs/hooks/useTerm';
 import {
   IChurchCampus,
   IMinistryArea,
@@ -13,33 +15,31 @@ import {
   IVolunteerAssignment,
   MinistryAreaStateEnum,
   MinistryGroupConfigStateEnum,
+  MinistryType,
   MinistryVolunteerAssignmentStateEnum,
   ServiceAreaGroupStateEnum,
   VolunteerRole,
-  MinistryType,
 } from '@/libs/models';
-import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import {
   CreateVolunteer,
   CreateVolunteerAssignment,
   GetVolunteerAssignments,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-import { HttpRequestMethod, MS } from '@/libs/common-types/global';
+import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import { microserviceApiRequest } from '@/libs/utils/http';
-import { toast } from 'sonner';
+import clsx from 'clsx';
 import {
-  ShieldCheck,
+  Award,
   Check,
-  User as UserIcon,
   Crown,
   Layers,
+  ShieldCheck,
+  User as UserIcon,
   Users,
-  Award,
 } from 'lucide-react';
-import clsx from 'clsx';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 interface AssignVolunteerDrawerProps {
   open: boolean;
@@ -73,7 +73,8 @@ const ROLE_DEFINITIONS_BASE: Array<{
   {
     role: VolunteerRole.AREA_GENERAL_COORDINATOR,
     label: 'Coordinador General de Área',
-    description: 'Coordina una área específica a través de todos los grupos y sedes.',
+    description:
+      'Coordina una área específica a través de todos los grupos y sedes.',
     badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
     icon: Layers,
   },
@@ -87,14 +88,16 @@ const ROLE_DEFINITIONS_BASE: Array<{
   {
     role: VolunteerRole.SUPERVISOR,
     label: 'Supervisor de Equipo',
-    description: 'Lidera la operación de un equipo específico en una sede (Área × Grupo).',
+    description:
+      'Lidera la operación de un equipo específico en una sede (Área × Grupo).',
     badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-300',
     icon: ShieldCheck,
   },
   {
     role: VolunteerRole.VOLUNTEER,
     label: 'Servidor',
-    description: 'Miembro voluntario activo sirviendo en el equipo (Área × Grupo).',
+    description:
+      'Miembro voluntario activo sirviendo en el equipo (Área × Grupo).',
     badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-300',
     icon: Award,
   },
@@ -125,7 +128,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
   const dispatch = useAppDispatch();
   const { token } = useAppSelector((state) => state.authSlice);
-  const volunteersState = useAppSelector((state) => state.volunteerSlice.volunteers.data);
+  const volunteersState = useAppSelector(
+    (state) => state.volunteerSlice.volunteers.data,
+  );
   const currentMinistry = useAppSelector((state) =>
     state.ministrySlice.ministries.find((m) => m.id === ministryId),
   );
@@ -172,22 +177,23 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
    * @param {string} userId - User identifier to query.
    * @returns {Promise<IVolunteer | undefined>} Found volunteer or undefined.
    */
-  const fetchVolunteerByUserId = async (userId: string): Promise<IVolunteer | undefined> => {
+  const fetchVolunteerByUserId = async (
+    userId: string,
+  ): Promise<IVolunteer | undefined> => {
     try {
       const res = await microserviceApiRequest({
         microservice: MS.Church,
         method: HttpRequestMethod.GET,
-        url: '/volunteer',
+        url: `/volunteer/by-user/${userId}`,
         options: {
-          params: { search: userId, limit: 10 },
           headers: { Authorization: `Bearer ${token}` },
         },
       });
-      const responseData = res.data;
-      const list: IVolunteer[] = Array.isArray(responseData)
-        ? responseData
-        : responseData?.data || [];
-      return list.find((v) => v.userId === userId);
+      const responseData = res.data?.data || res.data;
+      if (responseData && responseData.id) {
+        return responseData as IVolunteer;
+      }
+      return undefined;
     } catch {
       return undefined;
     }
@@ -208,7 +214,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   // Step 3: Scope selection
   const [selectedAreaId, setSelectedAreaId] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState('');
-  const [selectedCampusId, setSelectedCampusId] = useState(churchCampusId || '');
+  const [selectedCampusId, setSelectedCampusId] = useState(
+    churchCampusId || '',
+  );
   const [selectedTeamAreaId, setSelectedTeamAreaId] = useState('');
   const [selectedTeamGroupId, setSelectedTeamGroupId] = useState('');
 
@@ -217,16 +225,24 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
   // Filter service area groups based on selected campus
   const availableTeams = useMemo<IServiceAreaGroup[]>(() => {
     return serviceAreaGroups.filter((sag: IServiceAreaGroup) => {
-      const isSagActive = sag.state === ServiceAreaGroupStateEnum.ACTIVE;
-      return sag.churchCampusId === selectedCampusId && isSagActive;
+      const isSagActive =
+        sag.state === undefined || sag.state === ServiceAreaGroupStateEnum.ACTIVE;
+      return (
+        (!selectedCampusId ||
+          !sag.churchCampusId ||
+          sag.churchCampusId === selectedCampusId) &&
+        isSagActive
+      );
     });
   }, [serviceAreaGroups, selectedCampusId]);
 
   // Areas that actually have teams configured in this campus
   const availableAreasForCampus = useMemo<IMinistryArea[]>(() => {
-    const areaIdSet = new Set(availableTeams.map((t: IServiceAreaGroup) => t.ministryAreaId));
+    const areaIdSet = new Set(
+      availableTeams.map((t: IServiceAreaGroup) => t.ministryAreaId),
+    );
     return areas.filter((a: IMinistryArea) => {
-      const isAreaActive = a.state === MinistryAreaStateEnum.ACTIVE;
+      const isAreaActive = !a.state || a.state === MinistryAreaStateEnum.ACTIVE;
       return isAreaActive && areaIdSet.has(a.id);
     });
   }, [availableTeams, areas]);
@@ -236,10 +252,13 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     const matchingTeams = availableTeams.filter(
       (t: IServiceAreaGroup) => t.ministryAreaId === selectedTeamAreaId,
     );
-    const groupIdSet = new Set(matchingTeams.map((t: IServiceAreaGroup) => t.ministryGroupConfigId));
+    const groupIdSet = new Set(
+      matchingTeams.map((t: IServiceAreaGroup) => t.ministryGroupConfigId),
+    );
     return groups
       .filter((g: IMinistryGroupConfig) => {
-        const isGroupActive = g.state === MinistryGroupConfigStateEnum.ACTIVE;
+        const isGroupActive =
+          !g.state || g.state === MinistryGroupConfigStateEnum.ACTIVE;
         return isGroupActive && groupIdSet.has(g.id);
       })
       .sort((a, b) => a.position - b.position);
@@ -263,18 +282,22 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       setSelectedRole(defaultRole || VolunteerRole.VOLUNTEER);
 
       const activeAreas = areas.filter(
-        (a) => a.state === MinistryAreaStateEnum.ACTIVE,
+        (a) => !a.state || a.state === MinistryAreaStateEnum.ACTIVE,
       );
       const activeGroups = groups.filter(
-        (g) => g.state === MinistryGroupConfigStateEnum.ACTIVE,
+        (g) => !g.state || g.state === MinistryGroupConfigStateEnum.ACTIVE,
       );
       setSelectedAreaId(activeAreas[0]?.id || '');
       setSelectedGroupId(activeGroups[0]?.id || '');
 
       if (defaultServiceAreaGroupId) {
-        const foundTeam = serviceAreaGroups.find((s) => s.id === defaultServiceAreaGroupId);
+        const foundTeam = serviceAreaGroups.find(
+          (s) => s.id === defaultServiceAreaGroupId,
+        );
         if (foundTeam) {
-          setSelectedCampusId(foundTeam.churchCampusId);
+          setSelectedCampusId(
+            foundTeam.churchCampusId || churchCampusId || campuses[0]?.id || '',
+          );
           setSelectedTeamAreaId(foundTeam.ministryAreaId);
           setSelectedTeamGroupId(foundTeam.ministryGroupConfigId);
         } else {
@@ -287,8 +310,8 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
         const campusTeams = serviceAreaGroups.filter((t) => {
           return (
-            t.churchCampusId === campId &&
-            t.state === ServiceAreaGroupStateEnum.ACTIVE
+            (!campId || !t.churchCampusId || t.churchCampusId === campId) &&
+            (!t.state || t.state === ServiceAreaGroupStateEnum.ACTIVE)
           );
         });
         if (campusTeams.length > 0) {
@@ -315,17 +338,25 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     setSelectedCampusId(newCampusId);
     const campusTeams = serviceAreaGroups.filter((t) => {
       return (
-        t.churchCampusId === newCampusId &&
-        t.state === ServiceAreaGroupStateEnum.ACTIVE
+        (!newCampusId || !t.churchCampusId || t.churchCampusId === newCampusId) &&
+        (!t.state || t.state === ServiceAreaGroupStateEnum.ACTIVE)
       );
     });
     if (campusTeams.length > 0) {
-      const areaExists = campusTeams.some((t) => t.ministryAreaId === selectedTeamAreaId);
-      const targetAreaId = areaExists ? selectedTeamAreaId : campusTeams[0].ministryAreaId;
+      const areaExists = campusTeams.some(
+        (t) => t.ministryAreaId === selectedTeamAreaId,
+      );
+      const targetAreaId = areaExists
+        ? selectedTeamAreaId
+        : campusTeams[0].ministryAreaId;
       setSelectedTeamAreaId(targetAreaId);
 
-      const areaTeams = campusTeams.filter((t) => t.ministryAreaId === targetAreaId);
-      const groupExists = areaTeams.some((t) => t.ministryGroupConfigId === selectedTeamGroupId);
+      const areaTeams = campusTeams.filter(
+        (t) => t.ministryAreaId === targetAreaId,
+      );
+      const groupExists = areaTeams.some(
+        (t) => t.ministryGroupConfigId === selectedTeamGroupId,
+      );
       const targetGroupId = groupExists
         ? selectedTeamGroupId
         : areaTeams[0]?.ministryGroupConfigId || '';
@@ -343,7 +374,8 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     );
     if (matchingTeams.length > 0) {
       const groupExists = matchingTeams.some(
-        (t: IServiceAreaGroup) => t.ministryGroupConfigId === selectedTeamGroupId,
+        (t: IServiceAreaGroup) =>
+          t.ministryGroupConfigId === selectedTeamGroupId,
       );
       if (!groupExists) {
         setSelectedTeamGroupId(matchingTeams[0].ministryGroupConfigId);
@@ -372,7 +404,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
     setSearching(true);
     searchTimeoutRef.current = setTimeout(async () => {
       try {
-        const res = await dispatch(GetUsers({ findText: searchText.trim() })).unwrap();
+        const res = await dispatch(
+          GetUsers({ findText: searchText.trim() }),
+        ).unwrap();
         const usersList: IUser[] = res?.data || [];
         setSearchResults(usersList);
       } catch {
@@ -408,7 +442,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       selectedRole === VolunteerRole.SUPERVISOR
     ) {
       if (!matchedTeam) {
-        toast.error('Debes seleccionar un área y un grupo válidos para esta sede');
+        toast.error(
+          'Debes seleccionar un área y un grupo válidos para esta sede',
+        );
         return;
       }
       targetServiceAreaGroupId = matchedTeam.id;
@@ -455,7 +491,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       let volunteer: IVolunteer | undefined =
         volunteersState.find((v) => v.userId === selectedUser.id) ||
         existingAssignments.find(
-          (a) => a.volunteer?.userId === selectedUser.id || a.volunteer?.id === selectedUser.id,
+          (a) =>
+            a.volunteer?.userId === selectedUser.id ||
+            a.volunteer?.id === selectedUser.id,
         )?.volunteer;
 
       // If not present in local state, fetch directly by userId from Church MS
@@ -466,7 +504,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
       // If still not found, attempt to register as a new volunteer in Church MS
       if (!volunteer) {
         try {
-          volunteer = await dispatch(CreateVolunteer({ userId: selectedUser.id })).unwrap();
+          volunteer = await dispatch(
+            CreateVolunteer({ userId: selectedUser.id }),
+          ).unwrap();
         } catch (createErr: unknown) {
           // If conflict (409) occurs because the user was already registered as a volunteer,
           // retrieve their existing volunteer profile using direct search
@@ -554,7 +594,8 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                     {selectedUser.firstName} {selectedUser.lastName}
                   </p>
                   <p className="text-xs text-gray-500">
-                    Doc: {selectedUser.nationalId || 'S/N'} • Tel: {selectedUser.phone || 'S/T'}
+                    Doc: {selectedUser.nationalId || 'S/N'} • Tel:{' '}
+                    {selectedUser.phone || 'S/T'}
                   </p>
                 </div>
               </div>
@@ -580,7 +621,9 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
               />
 
               {searching && (
-                <p className="text-xs text-gray-400 px-1">Buscando usuarios en la base de datos...</p>
+                <p className="text-xs text-gray-400 px-1">
+                  Buscando usuarios en la base de datos...
+                </p>
               )}
 
               {searchResults.length > 0 && (
@@ -630,7 +673,8 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
         {/* Step 2: Role Selection */}
         <div>
           <label className="text-xs font-bold text-gray-800 uppercase tracking-wide block mb-1.5">
-            2. Seleccionar Rol Jerárquico <span className="text-rose-500">*</span>
+            2. Seleccionar Rol Jerárquico{' '}
+            <span className="text-rose-500">*</span>
           </label>
           <div className="flex flex-col gap-2">
             {roleDefinitions.map((item) => {
@@ -650,17 +694,25 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                   <div
                     className={clsx(
                       'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5',
-                      isSelected ? 'bg-primary text-white' : 'bg-slate-100 text-gray-600',
+                      isSelected
+                        ? 'bg-primary text-white'
+                        : 'bg-slate-100 text-gray-600',
                     )}
                   >
                     <Icon size={16} />
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-bold text-gray-900">{item.label}</p>
-                      {isSelected && <Check size={16} className="text-primary shrink-0" />}
+                      <p className="text-xs font-bold text-gray-900">
+                        {item.label}
+                      </p>
+                      {isSelected && (
+                        <Check size={16} className="text-primary shrink-0" />
+                      )}
                     </div>
-                    <p className="text-[11px] text-gray-500 mt-0.5">{item.description}</p>
+                    <p className="text-[11px] text-gray-500 mt-0.5">
+                      {item.description}
+                    </p>
                   </div>
                 </div>
               );
@@ -676,15 +728,16 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
           {selectedRole === VolunteerRole.MINISTRY_GENERAL_COORDINATOR && (
             <div className="p-3 bg-white rounded-xl border border-gray-200 text-xs text-gray-700">
-              <span className="font-bold">Alcance global:</span> El servidor coordinará todas las
-              áreas, grupos y sedes de este ministerio.
+              <span className="font-bold">Alcance global:</span> El servidor
+              coordinará todas las áreas, grupos y sedes de este ministerio.
             </div>
           )}
 
           {selectedRole === VolunteerRole.AREA_GENERAL_COORDINATOR && (
             <div>
               <label className="text-xs font-semibold text-gray-700 block mb-1">
-                Área de Servicio a Coordinar <span className="text-rose-500">*</span>
+                Área de Servicio a Coordinar{' '}
+                <span className="text-rose-500">*</span>
               </label>
               <Select
                 value={selectedAreaId}
@@ -738,7 +791,8 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
 
               {availableTeams.length === 0 ? (
                 <p className="text-xs text-amber-600 bg-amber-50 p-2.5 rounded-xl border border-amber-200">
-                  No hay combinaciones de equipos creadas en esta sede. Créalas primero en la pestaña &quot;Equipos&quot;.
+                  No hay combinaciones de equipos creadas en esta sede. Créalas
+                  primero en la pestaña &quot;Equipos&quot;.
                 </p>
               ) : (
                 <div className="flex flex-col gap-3">
@@ -796,9 +850,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
             className="flex-1"
             loading={submitting}
             loadingText="Asignando..."
-            disabled={
-              !selectedUser || (isTeamScope && !matchedTeam)
-            }
+            disabled={!selectedUser || (isTeamScope && !matchedTeam)}
           >
             Confirmar Asignación
           </Button>

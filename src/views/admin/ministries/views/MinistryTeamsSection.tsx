@@ -9,6 +9,7 @@ import {
   IServiceAreaGroup,
   IVolunteerAssignment,
   MinistryGroupConfigStateEnum,
+  ServiceAreaGroupStateEnum,
   VolunteerRole,
 } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -215,8 +216,8 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
         id: wt.id,
         ministryAreaId: wt.ministryAreaId,
         ministryGroupConfigId: wt.ministryGroupConfigId,
-        churchCampusId: wt.churchCampusId,
-        state: wt.state,
+        churchCampusId: wt.churchCampusId || effectiveCampusId,
+        state: wt.state ?? ServiceAreaGroupStateEnum.ACTIVE,
         ministryArea: {
           id: wt.ministryAreaId,
           ministryId,
@@ -239,6 +240,13 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
         areaIdSet.has(sag.ministryAreaId),
     );
   }, [workspaceTeams, serviceAreaGroups, effectiveCampusId, areas, ministryId]);
+
+  const effectiveTeams = useMemo<IServiceAreaGroup[]>(() => {
+    if (currentCampusTeams.length > 0) {
+      return currentCampusTeams;
+    }
+    return serviceAreaGroups;
+  }, [currentCampusTeams, serviceAreaGroups]);
 
   const campusTeamAssignments = useMemo(() => {
     if (!campusTeamsKey) return [];
@@ -1221,11 +1229,11 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
         open={assignDrawerOpen}
         onOpenChange={setAssignDrawerOpen}
         ministryId={ministryId}
-        churchCampusId={selectedCampusId}
+        churchCampusId={effectiveCampusId}
         areas={areas}
         groups={groups}
         campuses={campuses}
-        serviceAreaGroups={serviceAreaGroups}
+        serviceAreaGroups={effectiveTeams}
         existingAssignments={campusTeamAssignments}
         defaultRole={assignDefaultRole}
         defaultServiceAreaGroupId={assignDefaultTeamId}

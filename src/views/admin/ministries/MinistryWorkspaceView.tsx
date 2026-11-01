@@ -608,6 +608,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                   workspaceLeadership={currentWorkspace?.leadership}
                   workspaceAreas={currentWorkspace?.areas}
                   workspaceGroups={currentWorkspace?.groups}
+                  workspaceTeams={currentWorkspace?.teams}
                   onRefreshWorkspace={handleRefreshWorkspace}
                 />
               )}
