@@ -1,37 +1,37 @@
-import React, { useEffect, useState } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
-import {
-  IVolunteer,
-  IVolunteerAssignment,
-  VolunteerRole,
-} from '@/libs/models';
-import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { getVolunteerRoleLabel, useChurchTerm } from '@/libs/hooks/useTerm';
+import { IVolunteer, IVolunteerAssignment, VolunteerRole } from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   DeleteVolunteerAssignment,
   GetVolunteerWithAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
-import { formatPhoneWithDialCode } from '@/libs/utils/text';
-import { toast } from 'sonner';
-import {
-  User as UserIcon,
-  Trash2,
-  Phone,
-  Mail,
-  FileText,
-  Crown,
-  Layers,
-  Users,
-  ShieldCheck,
-  Award,
-  Inbox,
-} from 'lucide-react';
+import { formatDateOnly } from '@/libs/utils/date';
+import { capitalizeWords, formatPhoneWithDialCode } from '@/libs/utils/text';
 import clsx from 'clsx';
+import {
+  Award,
+  Clock,
+  Crown,
+  FileText,
+  History,
+  Inbox,
+  Layers,
+  Mail,
+  Phone,
+  ShieldCheck,
+  Trash2,
+  User as UserIcon,
+  Users,
+} from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
 
 interface VolunteerDetailDrawerProps {
   open: boolean;
@@ -85,11 +85,14 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
 }) => {
   useModalBackClose(open, () => onOpenChange(false));
 
+  const { t } = useTranslation('admin');
   const dispatch = useAppDispatch();
   const campuses = useAppSelector((state) => state.churchCampusSlice.data);
-  const { currentVolunteerAssignments, loadingCurrentAssignments } = useAppSelector(
-    (state) => state.volunteerSlice,
-  );
+  const {
+    currentVolunteerAssignments,
+    currentVolunteerAssignmentHistory,
+    loadingCurrentAssignments,
+  } = useAppSelector((state) => state.volunteerSlice);
   const volunteerTerm = useChurchTerm('volunteer');
   const churchOverrides = useAppSelector(
     (state) =>
@@ -97,7 +100,8 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
       state.churchCampusSlice.church?.terminologyOverrides,
   );
 
-  const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] =
+    useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
 
   useEffect(() => {
@@ -120,7 +124,9 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
   const handleConfirmDelete = async () => {
     if (!assignmentToDelete || !volunteer) return;
     try {
-      await dispatch(DeleteVolunteerAssignment({ id: assignmentToDelete.id })).unwrap();
+      await dispatch(
+        DeleteVolunteerAssignment({ id: assignmentToDelete.id }),
+      ).unwrap();
       toast.success('Asignación eliminada exitosamente');
       dispatch(GetVolunteerWithAssignments({ volunteerId: volunteer.id }));
       dispatch(GetVolunteers({ force: true }));
@@ -132,7 +138,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={`Detalle de ${volunteerTerm}`}
@@ -143,13 +149,19 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
         <div className="bg-slate-50 border border-gray-200/80 rounded-2xl p-4 flex items-center gap-3.5 shadow-xs">
           <div className="w-14 h-14 rounded-full bg-white border border-gray-200 text-primary flex items-center justify-center font-bold text-lg shrink-0 overflow-hidden shadow-xs">
             {user?.photoUrl ? (
-              <img src={user.photoUrl} alt={name} className="w-full h-full object-cover" />
+              <img
+                src={user.photoUrl}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <UserIcon size={24} />
             )}
           </div>
           <div className="min-w-0">
-            <h3 className="text-base font-extrabold text-gray-900 truncate">{name}</h3>
+            <h3 className="text-base font-extrabold text-gray-900 truncate">
+              {name}
+            </h3>
             <div className="flex flex-col gap-0.5 mt-1 text-xs text-gray-500">
               {user?.nationalId && (
                 <div className="flex items-center gap-1.5">
@@ -186,7 +198,9 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
             </h4>
             <span className="text-xs font-semibold text-primary">
               {currentVolunteerAssignments.length}{' '}
-              {currentVolunteerAssignments.length === 1 ? 'asignación' : 'asignaciones'}
+              {currentVolunteerAssignments.length === 1
+                ? 'asignación'
+                : 'asignaciones'}
             </span>
           </div>
 
@@ -196,14 +210,16 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
             <div className="p-6 bg-slate-50 border border-dashed border-gray-200 rounded-2xl text-center flex flex-col items-center gap-2">
               <Inbox size={20} className="text-gray-400" />
               <p className="text-xs text-gray-500">
-                Este {volunteerTerm.toLowerCase()} no cuenta con asignaciones activas.
+                Este {volunteerTerm.toLowerCase()} no cuenta con asignaciones
+                activas.
               </p>
             </div>
           ) : (
             <div className="flex flex-col gap-2.5">
               {currentVolunteerAssignments.map((asg) => {
                 const roleConfig =
-                  ROLE_STYLE_MAP[asg.role] || ROLE_STYLE_MAP[VolunteerRole.VOLUNTEER];
+                  ROLE_STYLE_MAP[asg.role] ||
+                  ROLE_STYLE_MAP[VolunteerRole.VOLUNTEER];
                 const RoleIcon = roleConfig.icon;
                 const asgMinistry =
                   asg.ministry ||
@@ -283,6 +299,32 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
                         <p className="text-xs font-semibold text-gray-800 mt-1 truncate">
                           {scopeText || 'Alcance general'}
                         </p>
+                        {(asg.startedAt ||
+                          asg.createdAt ||
+                          asg.assignedByUser) && (
+                          <div className="flex items-center gap-2 mt-1 flex-wrap text-[10.5px] text-gray-500">
+                            {(asg.startedAt || asg.createdAt) && (
+                              <span className="inline-flex items-center gap-1">
+                                <Clock size={10} className="text-gray-400" />
+                                {t('volunteer_tracking.active_since', {
+                                  date: formatDateOnly(
+                                    (asg.startedAt || asg.createdAt) as string,
+                                  ),
+                                })}
+                              </span>
+                            )}
+                            {asg.assignedByUser && (
+                              <span>
+                                •{' '}
+                                {t('volunteer_tracking.assigned_by', {
+                                  name: capitalizeWords(
+                                    `${asg.assignedByUser.firstName ?? ''} ${asg.assignedByUser.lastName ?? ''}`.trim(),
+                                  ),
+                                })}
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -300,6 +342,120 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
             </div>
           )}
         </div>
+
+        {/* Assignment History Section */}
+        {!loadingCurrentAssignments &&
+          currentVolunteerAssignmentHistory.length > 0 && (
+            <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-1.5 px-1">
+                <History size={14} className="text-gray-500" />
+                <h4 className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+                  {t('volunteer_tracking.history_section_title', {
+                    count: currentVolunteerAssignmentHistory.length,
+                  })}
+                </h4>
+              </div>
+
+              <div className="flex flex-col gap-2">
+                {currentVolunteerAssignmentHistory.map((hist) => {
+                  const roleConfig =
+                    ROLE_STYLE_MAP[hist.role] ||
+                    ROLE_STYLE_MAP[VolunteerRole.VOLUNTEER];
+                  const RoleIcon = roleConfig.icon;
+                  const asgMinistry =
+                    hist.ministry ||
+                    hist.ministryArea?.ministry ||
+                    hist.serviceAreaGroup?.ministryArea?.ministry;
+                  const roleLabel = getVolunteerRoleLabel(hist.role, {
+                    ministryType: asgMinistry?.type,
+                    ministryOverrides: asgMinistry?.terminologyOverrides,
+                    churchOverrides,
+                  });
+
+                  const sag = hist.serviceAreaGroup;
+                  const scopeText = sag
+                    ? `${sag.ministryArea?.name ?? ''} × ${sag.ministryGroupConfig?.name ?? ''}`
+                    : hist.ministryArea?.name ||
+                      hist.ministryGroupConfig?.name ||
+                      hist.ministry?.name ||
+                      'Alcance general';
+
+                  const startDateStr =
+                    hist.startedAt || hist.createdAt
+                      ? formatDateOnly(
+                          (hist.startedAt || hist.createdAt) as string,
+                        )
+                      : '—';
+                  const endDateStr =
+                    hist.endedAt || hist.updatedAt
+                      ? formatDateOnly(
+                          (hist.endedAt || hist.updatedAt) as string,
+                        )
+                      : t('volunteer_tracking.ongoing');
+
+                  return (
+                    <div
+                      key={hist.id}
+                      className="p-3 bg-slate-50/90 border border-gray-200/70 rounded-2xl flex items-start gap-2.5 opacity-90"
+                    >
+                      <div className="w-7 h-7 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-gray-500 shrink-0 mt-0.5">
+                        <RoleIcon size={14} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className={clsx(
+                              'text-[10px] font-bold px-2 py-0.5 rounded-full border',
+                              roleConfig.badge,
+                            )}
+                          >
+                            {roleLabel}
+                          </span>
+                          <span className="text-[9.5px] font-bold px-1.5 py-0.5 rounded-md bg-gray-200/70 text-gray-600 uppercase">
+                            {t('volunteer_tracking.history_badge_closed')}
+                          </span>
+                        </div>
+                        <p className="text-xs font-semibold text-gray-700 mt-0.5 truncate">
+                          {scopeText}
+                        </p>
+                        <div className="flex flex-col gap-0.5 mt-1 text-[10.5px] text-gray-500">
+                          <span>
+                            {t('volunteer_tracking.period_range', {
+                              start: startDateStr,
+                              end: endDateStr,
+                            })}
+                          </span>
+                          {(hist.assignedByUser || hist.endedByUser) && (
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {hist.assignedByUser && (
+                                <span>
+                                  {t('volunteer_tracking.assigned_by', {
+                                    name: capitalizeWords(
+                                      `${hist.assignedByUser.firstName ?? ''} ${hist.assignedByUser.lastName ?? ''}`.trim(),
+                                    ),
+                                  })}
+                                </span>
+                              )}
+                              {hist.endedByUser && (
+                                <span>
+                                  {hist.assignedByUser ? '• ' : ''}
+                                  {t('volunteer_tracking.ended_by', {
+                                    name: capitalizeWords(
+                                      `${hist.endedByUser.firstName ?? ''} ${hist.endedByUser.lastName ?? ''}`.trim(),
+                                    ),
+                                  })}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
         <div className="pt-2">
           <Button
@@ -323,7 +479,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
         type="danger"
         onConfirm={handleConfirmDelete}
       />
-    </AppDrawer>
+    </AppModal>
   );
 };
 

@@ -1,43 +1,46 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Crown,
-  Layers,
-  Users,
-  ShieldCheck,
-  Plus,
-  Trash2,
-  MapPin,
-  Inbox,
-  User as UserIcon,
-  AlertCircle,
-  ChevronDown,
-  ChevronsDown,
-  ChevronsUp,
-  Sparkles,
-} from 'lucide-react';
 import Button from '@/components/ui/Button';
-import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import Select from '@/components/ui/Select';
+import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import {
+  IServiceAreaGroup,
+  IVolunteerAssignment,
+  MinistryAreaStateEnum,
+  VolunteerRole,
+} from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
+import { GetServiceAreaGroups } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import {
   DeleteVolunteerAssignment,
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { GetServiceAreaGroups } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import {
-  IServiceAreaGroup,
-  IVolunteerAssignment,
-  VolunteerRole,
-  MinistryAreaStateEnum,
-} from '@/libs/models';
-import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
-import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
-import TeamRosterDrawer from '../components/TeamRosterDrawer';
-import { toast } from 'sonner';
 import clsx from 'clsx';
+import {
+  AlertCircle,
+  ArrowUpDown,
+  ChevronDown,
+  ChevronsDown,
+  ChevronsUp,
+  Crown,
+  Inbox,
+  Layers,
+  MapPin,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  Trash2,
+  User as UserIcon,
+  Users,
+} from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
+import ChangeVolunteerRoleModal from '../components/ChangeVolunteerRoleModal';
+import TeamRosterModal from '../components/TeamRosterModal';
 
 interface VolunteerAssignmentsTabProps {
   ministryId: string;
@@ -61,19 +64,22 @@ const ROLE_LABEL_SHORT: Record<VolunteerRole, string> = {
  * @param {VolunteerAssignmentsTabProps} props - Component properties.
  * @returns {JSX.Element} The rendered assignments management view.
  */
-export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = ({
-  ministryId,
-  churchCampusId,
-}) => {
+export const VolunteerAssignmentsTab: React.FC<
+  VolunteerAssignmentsTabProps
+> = ({ ministryId, churchCampusId }) => {
+  const { t } = useTranslation('admin');
   const dispatch = useAppDispatch();
   const volunteerTerm = useChurchTerm('volunteer');
   const volunteersTerm = useChurchTerm('volunteers');
-  const volunteerRoleLabel = useVolunteerRoleLabel(VolunteerRole.VOLUNTEER, ministryId, { short: true });
+  const volunteerRoleLabel = useVolunteerRoleLabel(
+    VolunteerRole.VOLUNTEER,
+    ministryId,
+    { short: true },
+  );
 
   const campusesState = useAppSelector((state) => state.churchCampusSlice);
-  const { areasByMinistry, groupsByMinistry, serviceAreaGroups } = useAppSelector(
-    (state) => state.ministrySlice,
-  );
+  const { areasByMinistry, groupsByMinistry, serviceAreaGroups } =
+    useAppSelector((state) => state.ministrySlice);
   const {
     volunteers: { data: volunteersList },
     assignments,
@@ -85,21 +91,32 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
   const [activeSubTab, setActiveSubTab] = useState<SubTabType>('teams');
 
   // Collapsible areas state (closed by default)
-  const [expandedAreaIds, setExpandedAreaIds] = useState<Set<string>>(new Set());
+  const [expandedAreaIds, setExpandedAreaIds] = useState<Set<string>>(
+    new Set(),
+  );
 
   // Campus selection
   const [selectedCampusId, setSelectedCampusId] = useState<string>('');
 
   // Drawers & Modals
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
-  const [assignDefaultRole, setAssignDefaultRole] = useState<VolunteerRole | undefined>(undefined);
-  const [assignDefaultTeamId, setAssignDefaultTeamId] = useState<string | undefined>(undefined);
+  const [assignDefaultRole, setAssignDefaultRole] = useState<
+    VolunteerRole | undefined
+  >(undefined);
+  const [assignDefaultTeamId, setAssignDefaultTeamId] = useState<
+    string | undefined
+  >(undefined);
 
-  const [selectedRosterTeam, setSelectedRosterTeam] = useState<IServiceAreaGroup | null>(null);
+  const [selectedRosterTeam, setSelectedRosterTeam] =
+    useState<IServiceAreaGroup | null>(null);
   const [rosterDrawerOpen, setRosterDrawerOpen] = useState(false);
 
-  const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] =
+    useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [assignmentToChangeRole, setAssignmentToChangeRole] =
+    useState<IVolunteerAssignment | null>(null);
+  const [changeRoleModalOpen, setChangeRoleModalOpen] = useState(false);
 
   const areas = useMemo(
     () =>
@@ -177,7 +194,14 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
         force: false,
       }),
     );
-  }, [dispatch, ministryId, campuses.length, ministryCoordsKey, areaCoordsKey, groupCoordsKey]);
+  }, [
+    dispatch,
+    ministryId,
+    campuses.length,
+    ministryCoordsKey,
+    areaCoordsKey,
+    groupCoordsKey,
+  ]);
 
   // Background preload volunteers list for name & photo resolution
   useEffect(() => {
@@ -241,7 +265,8 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     areas.forEach((a) => {
       map[a.id] = source.filter(
         (asg) =>
-          asg.role === VolunteerRole.AREA_GENERAL_COORDINATOR && asg.ministryAreaId === a.id,
+          asg.role === VolunteerRole.AREA_GENERAL_COORDINATOR &&
+          asg.ministryAreaId === a.id,
       );
     });
     return map;
@@ -254,7 +279,8 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     groups.forEach((g) => {
       map[g.id] = source.filter(
         (asg) =>
-          asg.role === VolunteerRole.GROUP_COORDINATOR && asg.ministryGroupConfigId === g.id,
+          asg.role === VolunteerRole.GROUP_COORDINATOR &&
+          asg.ministryGroupConfigId === g.id,
       );
     });
     return map;
@@ -264,7 +290,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
   const currentCampusTeams = useMemo(() => {
     const areaIdSet = new Set(areas.map((a) => a.id));
     return serviceAreaGroups.filter(
-      (sag) => sag.churchCampusId === selectedCampusId && areaIdSet.has(sag.ministryAreaId),
+      (sag) =>
+        sag.churchCampusId === selectedCampusId &&
+        areaIdSet.has(sag.ministryAreaId),
     );
   }, [serviceAreaGroups, selectedCampusId, areas]);
 
@@ -280,7 +308,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     }> = [];
 
     areas.forEach((area) => {
-      const matchingTeams = currentCampusTeams.filter((t) => t.ministryAreaId === area.id);
+      const matchingTeams = currentCampusTeams.filter(
+        (t) => t.ministryAreaId === area.id,
+      );
       if (matchingTeams.length > 0) {
         map.push({ area, teams: matchingTeams });
       }
@@ -288,7 +318,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
     // Also include leftover teams for areas not in areas list
     const registeredAreaIds = new Set(areas.map((a) => a.id));
-    const leftoverTeams = currentCampusTeams.filter((t) => !registeredAreaIds.has(t.ministryAreaId));
+    const leftoverTeams = currentCampusTeams.filter(
+      (t) => !registeredAreaIds.has(t.ministryAreaId),
+    );
     if (leftoverTeams.length > 0) {
       map.push({
         area: {
@@ -327,23 +359,34 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
       0,
     );
     return ministryCoordinators.length + areaCoordsCount + groupCoordsCount;
-  }, [ministryCoordinators, areaCoordinatorsByAreaId, groupCoordinatorsByGroupId]);
+  }, [
+    ministryCoordinators,
+    areaCoordinatorsByAreaId,
+    groupCoordinatorsByGroupId,
+  ]);
 
   const teamsWithSupervisorCount = useMemo(() => {
     return currentCampusTeams.filter((team) =>
       campusTeamAssignments.some(
-        (a) => a.serviceAreaGroupId === team.id && a.role === VolunteerRole.SUPERVISOR,
+        (a) =>
+          a.serviceAreaGroupId === team.id &&
+          a.role === VolunteerRole.SUPERVISOR,
       ),
     ).length;
   }, [currentCampusTeams, campusTeamAssignments]);
 
   const totalVolunteersInCampusTeams = useMemo(() => {
     return campusTeamAssignments.filter(
-      (a) => a.role === VolunteerRole.VOLUNTEER || a.role === VolunteerRole.SUPERVISOR,
+      (a) =>
+        a.role === VolunteerRole.VOLUNTEER ||
+        a.role === VolunteerRole.SUPERVISOR,
     ).length;
   }, [campusTeamAssignments]);
 
-  const handleOpenAssignDrawer = (role?: VolunteerRole, serviceAreaGroupId?: string) => {
+  const handleOpenAssignDrawer = (
+    role?: VolunteerRole,
+    serviceAreaGroupId?: string,
+  ) => {
     setAssignDefaultRole(role);
     setAssignDefaultTeamId(serviceAreaGroupId);
     setAssignDrawerOpen(true);
@@ -363,7 +406,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
     if (!assignmentToDelete) return;
     try {
       const deletedRole = assignmentToDelete.role;
-      await dispatch(DeleteVolunteerAssignment({ id: assignmentToDelete.id })).unwrap();
+      await dispatch(
+        DeleteVolunteerAssignment({ id: assignmentToDelete.id }),
+      ).unwrap();
       toast.success('Asignación eliminada exitosamente');
       setAssignmentToDelete(null);
 
@@ -455,15 +500,18 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
    */
   const getVolunteerName = useCallback(
     (asg: IVolunteerAssignment): string => {
-      const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+      const vId =
+        asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
         asg.churchMember ||
         asg.ministryVolunteer ||
         volunteersList.find(
-          (v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+          (v) =>
+            v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
         );
-      const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+      const user =
+        asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
       return user && (user.firstName || user.lastName)
         ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
         : '';
@@ -490,13 +538,17 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
   const renderPersonItem = (asg: IVolunteerAssignment, roleLabel?: string) => {
     const name = getVolunteerName(asg) || `${volunteerTerm} asignado(a)`;
-    const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+    const vId =
+      asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
     const vol =
       asg.volunteer ||
       asg.churchMember ||
       asg.ministryVolunteer ||
-      volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
-    const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+      volunteersList.find(
+        (v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+      );
+    const user =
+      asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
     const nationalId = user?.nationalId;
     const photoUrl = user?.photoUrl;
 
@@ -508,7 +560,11 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
         <div className="flex items-center gap-2.5 min-w-0">
           <div className="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
             {photoUrl ? (
-              <img src={photoUrl} alt={name} className="w-full h-full object-cover" />
+              <img
+                src={photoUrl}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <UserIcon size={14} />
             )}
@@ -522,14 +578,27 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => handleOpenDeleteConfirm(asg)}
-          className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
-          title="Remover Asignación"
-        >
-          <Trash2 size={13} />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setAssignmentToChangeRole(asg);
+              setChangeRoleModalOpen(true);
+            }}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+            title={t('volunteer_role_change.btn_tooltip')}
+          >
+            <ArrowUpDown size={13} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenDeleteConfirm(asg)}
+            className="w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
+            title="Remover Asignación"
+          >
+            <Trash2 size={13} />
+          </button>
+        </div>
       </div>
     );
   };
@@ -546,7 +615,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
           <p className="text-xl sm:text-2xl font-extrabold text-gray-900 mt-1">
             {totalVolunteersInCampusTeams}
           </p>
-          <p className="text-[11px] text-gray-400">{volunteersTerm} y supervisores</p>
+          <p className="text-[11px] text-gray-400">
+            {volunteersTerm} y supervisores
+          </p>
         </div>
 
         <div className="bg-white rounded-2xl p-3 sm:p-3.5 border border-gray-200/80 shadow-xs flex flex-col justify-between">
@@ -580,7 +651,8 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
             {currentCampusTeams.length}
           </p>
           <p className="text-[11px] text-gray-400">
-            {teamsWithSupervisorCount}/{currentCampusTeams.length || 1} con supervisor
+            {teamsWithSupervisorCount}/{currentCampusTeams.length || 1} con
+            supervisor
           </p>
         </div>
       </div>
@@ -598,8 +670,15 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                 : 'text-gray-600 hover:text-gray-900',
             )}
           >
-            <ShieldCheck size={14} className={activeSubTab === 'teams' ? 'text-primary' : 'text-gray-400'} />
-            <span className="truncate">Equipos ({currentCampusTeams.length})</span>
+            <ShieldCheck
+              size={14}
+              className={
+                activeSubTab === 'teams' ? 'text-primary' : 'text-gray-400'
+              }
+            />
+            <span className="truncate">
+              Equipos ({currentCampusTeams.length})
+            </span>
           </button>
 
           <button
@@ -612,7 +691,14 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                 : 'text-gray-600 hover:text-gray-900',
             )}
           >
-            <Crown size={14} className={activeSubTab === 'leadership' ? 'text-amber-500' : 'text-gray-400'} />
+            <Crown
+              size={14}
+              className={
+                activeSubTab === 'leadership'
+                  ? 'text-amber-500'
+                  : 'text-gray-400'
+              }
+            />
             <span className="truncate">Liderazgo ({totalCoordinators})</span>
           </button>
         </div>
@@ -659,7 +745,8 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
             </div>
           )}
 
-          {loadingCampusTeams && assignmentsByPartition[campusTeamsKey] === undefined ? (
+          {loadingCampusTeams &&
+          assignmentsByPartition[campusTeamsKey] === undefined ? (
             <CellListSkeleton count={4} />
           ) : currentCampusTeams.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 border border-gray-200/80 text-center flex flex-col items-center justify-center gap-3 shadow-xs">
@@ -671,7 +758,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                   No hay equipos configurados en esta sede
                 </h3>
                 <p className="text-xs text-gray-500 mt-0.5">
-                  Genera las combinaciones de Área × Grupo en la pestaña &quot;Equipos&quot; para asignar {volunteersTerm.toLowerCase()}.
+                  Genera las combinaciones de Área × Grupo en la pestaña
+                  &quot;Equipos&quot; para asignar{' '}
+                  {volunteersTerm.toLowerCase()}.
                 </p>
               </div>
             </div>
@@ -680,7 +769,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
               {/* Expand / Collapse all control */}
               <div className="flex items-center justify-between px-1">
                 <p className="text-xs font-medium text-gray-500">
-                  {teamsByArea.length} {teamsByArea.length === 1 ? 'área' : 'áreas'} • Haz clic para desplegar
+                  {teamsByArea.length}{' '}
+                  {teamsByArea.length === 1 ? 'área' : 'áreas'} • Haz clic para
+                  desplegar
                 </p>
                 <button
                   type="button"
@@ -694,7 +785,10 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                     </>
                   ) : (
                     <>
-                      <ChevronsDown size={14} className="text-primary shrink-0" />
+                      <ChevronsDown
+                        size={14}
+                        className="text-primary shrink-0"
+                      />
                       <span>Expandir todas</span>
                     </>
                   )}
@@ -704,7 +798,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
               {teamsByArea.map(({ area, teams }) => {
                 const areaTeamIds = new Set(teams.map((t) => t.id));
                 const areaTotalMembers = campusTeamAssignments.filter(
-                  (a) => a.serviceAreaGroupId && areaTeamIds.has(a.serviceAreaGroupId),
+                  (a) =>
+                    a.serviceAreaGroupId &&
+                    areaTeamIds.has(a.serviceAreaGroupId),
                 ).length;
                 const isExpanded = expandedAreaIds.has(area.id);
 
@@ -729,7 +825,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                             {area.name}
                           </h3>
                           <p className="text-[11px] text-gray-500 font-medium">
-                            {teams.length} {teams.length === 1 ? 'equipo' : 'equipos'} • {areaTotalMembers}{' '}
+                            {teams.length}{' '}
+                            {teams.length === 1 ? 'equipo' : 'equipos'} •{' '}
+                            {areaTotalMembers}{' '}
                             {areaTotalMembers === 1 ? 'miembro' : 'miembros'}
                           </p>
                         </div>
@@ -742,7 +840,8 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                         <div
                           className={clsx(
                             'w-7 h-7 rounded-lg flex items-center justify-center text-gray-400 bg-slate-100 transition-transform duration-200',
-                            isExpanded && 'rotate-180 text-gray-700 bg-slate-200/80',
+                            isExpanded &&
+                              'rotate-180 text-gray-700 bg-slate-200/80',
                           )}
                         >
                           <ChevronDown size={16} />
@@ -756,13 +855,17 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
                           {teams.map((team) => {
                             const group =
-                              groups.find((g) => g.id === team.ministryGroupConfigId) ||
-                              team.ministryGroupConfig;
-                            const teamAssignments = campusTeamAssignments.filter(
-                              (a) => a.serviceAreaGroupId === team.id,
-                            );
+                              groups.find(
+                                (g) => g.id === team.ministryGroupConfigId,
+                              ) || team.ministryGroupConfig;
+                            const teamAssignments =
+                              campusTeamAssignments.filter(
+                                (a) => a.serviceAreaGroupId === team.id,
+                              );
                             const supervisors = sortAssignmentsByName(
-                              teamAssignments.filter((a) => a.role === VolunteerRole.SUPERVISOR),
+                              teamAssignments.filter(
+                                (a) => a.role === VolunteerRole.SUPERVISOR,
+                              ),
                             );
                             const volunteersCount = teamAssignments.filter(
                               (a) => a.role === VolunteerRole.VOLUNTEER,
@@ -789,22 +892,31 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                                       <div className="flex flex-col gap-1">
                                         {supervisors.map((sup) => {
                                           const supervisorName =
-                                            getVolunteerName(sup) || 'Supervisor asignado';
+                                            getVolunteerName(sup) ||
+                                            'Supervisor asignado';
 
                                           return (
                                             <div
                                               key={sup.id}
                                               className="flex items-center gap-1.5 text-gray-700 font-medium truncate"
                                             >
-                                              <ShieldCheck size={13} className="text-indigo-600 shrink-0" />
-                                              <span className="truncate">Sup: {supervisorName}</span>
+                                              <ShieldCheck
+                                                size={13}
+                                                className="text-indigo-600 shrink-0"
+                                              />
+                                              <span className="truncate">
+                                                Sup: {supervisorName}
+                                              </span>
                                             </div>
                                           );
                                         })}
                                       </div>
                                     ) : (
                                       <div className="flex items-center gap-1.5 text-amber-700 font-semibold">
-                                        <AlertCircle size={13} className="shrink-0" />
+                                        <AlertCircle
+                                          size={13}
+                                          className="shrink-0"
+                                        />
                                         <span>Sin supervisor asignado</span>
                                       </div>
                                     )}
@@ -812,7 +924,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
 
                                   <p className="text-[11px] text-gray-500 mt-1">
                                     👥 {volunteersCount}{' '}
-                                    {volunteersCount === 1 ? `${volunteerTerm.toLowerCase()} activo(a)` : `${volunteersTerm.toLowerCase()} activos(as)`}
+                                    {volunteersCount === 1
+                                      ? `${volunteerTerm.toLowerCase()} activo(a)`
+                                      : `${volunteersTerm.toLowerCase()} activos(as)`}
                                   </p>
                                 </div>
 
@@ -823,10 +937,16 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                                     variant="default"
                                     className="flex-1 text-xs py-1.5 gap-1"
                                   >
-                                    <Users size={13} /> Ver Plantilla ({teamAssignments.length})
+                                    <Users size={13} /> Ver Plantilla (
+                                    {teamAssignments.length})
                                   </Button>
                                   <Button
-                                    onClick={() => handleOpenAssignDrawer(VolunteerRole.VOLUNTEER, team.id)}
+                                    onClick={() =>
+                                      handleOpenAssignDrawer(
+                                        VolunteerRole.VOLUNTEER,
+                                        team.id,
+                                      )
+                                    }
                                     size="sm"
                                     className="text-xs py-1.5 px-2.5 gap-1"
                                     title={`Agregar ${volunteerRoleLabel.toLowerCase()}`}
@@ -866,7 +986,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
               </div>
               <Button
                 onClick={() =>
-                  handleOpenAssignDrawer(VolunteerRole.MINISTRY_GENERAL_COORDINATOR)
+                  handleOpenAssignDrawer(
+                    VolunteerRole.MINISTRY_GENERAL_COORDINATOR,
+                  )
                 }
                 size="sm"
                 variant="default"
@@ -917,8 +1039,11 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
             </div>
 
             {areas.length === 0 ? (
-              <p className="text-xs text-gray-500">No hay áreas de servicio configuradas.</p>
-            ) : loadingAreaCoords && assignmentsByPartition[areaCoordsKey] === undefined ? (
+              <p className="text-xs text-gray-500">
+                No hay áreas de servicio configuradas.
+              </p>
+            ) : loadingAreaCoords &&
+              assignmentsByPartition[areaCoordsKey] === undefined ? (
               <CellListSkeleton count={2} />
             ) : (
               <div className="flex flex-col gap-3">
@@ -930,10 +1055,14 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                       className="p-3 rounded-xl border border-gray-200/80 bg-slate-50/40 flex flex-col gap-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-gray-800">{area.name}</span>
+                        <span className="text-xs font-bold text-gray-800">
+                          {area.name}
+                        </span>
                         <span className="text-[10px] text-gray-500">
                           {assigned.length}{' '}
-                          {assigned.length === 1 ? 'coordinador' : 'coordinadores'}
+                          {assigned.length === 1
+                            ? 'coordinador'
+                            : 'coordinadores'}
                         </span>
                       </div>
 
@@ -977,8 +1106,11 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
             </div>
 
             {groups.length === 0 ? (
-              <p className="text-xs text-gray-500">No hay grupos configurados.</p>
-            ) : loadingGroupCoords && assignmentsByPartition[groupCoordsKey] === undefined ? (
+              <p className="text-xs text-gray-500">
+                No hay grupos configurados.
+              </p>
+            ) : loadingGroupCoords &&
+              assignmentsByPartition[groupCoordsKey] === undefined ? (
               <CellListSkeleton count={2} />
             ) : (
               <div className="flex flex-col gap-3">
@@ -995,7 +1127,9 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
                         </span>
                         <span className="text-[10px] text-gray-500">
                           {assigned.length}{' '}
-                          {assigned.length === 1 ? 'coordinador' : 'coordinadores'}
+                          {assigned.length === 1
+                            ? 'coordinador'
+                            : 'coordinadores'}
                         </span>
                       </div>
 
@@ -1017,23 +1151,24 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
         </div>
       )}
 
-      {/* TEAM ROSTER DRAWER */}
+      {/* TEAM ROSTER MODAL */}
       {selectedRosterTeam && (
-        <TeamRosterDrawer
+        <TeamRosterModal
           open={rosterDrawerOpen}
           onOpenChange={setRosterDrawerOpen}
           team={selectedRosterTeam}
           areaName={
-            areas.find((a) => a.id === selectedRosterTeam.ministryAreaId)?.name ||
-            selectedRosterTeam.ministryArea?.name
+            areas.find((a) => a.id === selectedRosterTeam.ministryAreaId)
+              ?.name || selectedRosterTeam.ministryArea?.name
           }
           groupName={
-            groups.find((g) => g.id === selectedRosterTeam.ministryGroupConfigId)?.name ||
-            selectedRosterTeam.ministryGroupConfig?.name
+            groups.find(
+              (g) => g.id === selectedRosterTeam.ministryGroupConfigId,
+            )?.name || selectedRosterTeam.ministryGroupConfig?.name
           }
           campusName={
-            campuses.find((c) => c.id === selectedRosterTeam.churchCampusId)?.name ||
-            selectedRosterTeam.churchCampus?.name
+            campuses.find((c) => c.id === selectedRosterTeam.churchCampusId)
+              ?.name || selectedRosterTeam.churchCampus?.name
           }
           assignments={campusTeamAssignments}
           volunteersList={volunteersList}
@@ -1043,8 +1178,27 @@ export const VolunteerAssignmentsTab: React.FC<VolunteerAssignmentsTabProps> = (
           onDeleteAssignment={(asg) => {
             handleOpenDeleteConfirm(asg);
           }}
+          onChangeRole={(asg) => {
+            setAssignmentToChangeRole(asg);
+            setChangeRoleModalOpen(true);
+          }}
         />
       )}
+
+      {/* ROLE CHANGE / PROMOTION / DEMOTION MODAL */}
+      <ChangeVolunteerRoleModal
+        open={changeRoleModalOpen}
+        onOpenChange={setChangeRoleModalOpen}
+        assignment={assignmentToChangeRole}
+        ministryId={ministryId}
+        churchCampusId={selectedCampusId}
+        areas={areas}
+        groups={groups}
+        campuses={campuses}
+        serviceAreaGroups={serviceAreaGroups}
+        volunteersList={volunteersList}
+        onSuccess={handleAssignmentSuccess}
+      />
 
       {/* GLOBAL / CONTEXTUAL ASSIGN DRAWER */}
       <AssignVolunteerDrawer

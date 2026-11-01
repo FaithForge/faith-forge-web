@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import { ShieldAlert, Trash2, AlertTriangle } from 'lucide-react';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -92,14 +92,13 @@ export const UnassignUserRoleModal: React.FC<UnassignUserRoleModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={(o) => !o && onClose()}
       onClose={onClose}
       title="Eliminar Rol Asignado"
       maxHeight="max-h-[90dvh]"
-      contentClassName="bg-surface"
-      bodyClassName="p-5 flex flex-col gap-4 pb-12"
+      bodyClassName="p-5 flex flex-col gap-4 pb-6"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* User Target Header */}
@@ -197,7 +196,7 @@ export const UnassignUserRoleModal: React.FC<UnassignUserRoleModalProps> = ({
               </>
             )}
           </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

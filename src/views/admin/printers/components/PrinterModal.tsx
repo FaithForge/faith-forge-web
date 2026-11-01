@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
@@ -120,7 +120,7 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={
@@ -256,7 +256,7 @@ export const PrinterModal: React.FC<PrinterModalProps> = ({
           </Button>
         </div>
       </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FileDown, ShieldCheck, Loader2, FileText, Smartphone } from 'lucide-react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -1228,11 +1228,10 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
   }, [t]);
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={t('export_pdf_modal.title')}
-      contentClassName="max-w-lg mx-auto"
     >
       <div className="p-4 flex flex-col gap-4">
         <p className="text-xs text-gray-500 leading-relaxed -mt-1">
@@ -1377,7 +1376,7 @@ export const ExportOrganizationPdfModal: React.FC<ExportOrganizationPdfModalProp
           </Button>
         </div>
       </div>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

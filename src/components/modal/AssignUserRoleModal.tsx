@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import { ShieldPlus, ShieldCheck, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
@@ -116,14 +116,13 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={(o) => !o && onClose()}
       onClose={onClose}
       title="Asignar Nuevo Rol"
       maxHeight="max-h-[90dvh]"
-      contentClassName="bg-surface"
-      bodyClassName="p-5 flex flex-col gap-4 pb-12"
+      bodyClassName="p-5 flex flex-col gap-4 pb-6"
     >
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             {/* User Target Header */}
@@ -244,7 +243,7 @@ export const AssignUserRoleModal: React.FC<AssignUserRoleModalProps> = ({
               </>
             )}
           </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

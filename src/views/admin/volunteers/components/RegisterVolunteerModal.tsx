@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { IUser } from '@/libs/models';
@@ -114,7 +114,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={`Registrar ${volunteerTerm}`}
@@ -236,7 +236,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
           </Button>
         </div>
       </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

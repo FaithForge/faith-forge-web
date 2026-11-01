@@ -1,40 +1,40 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import {
-  Users,
-  Star,
-  Landmark,
-  Plus,
-  Edit2,
-  CheckCircle2,
-  XCircle,
-  FolderKanban,
-  Layers,
-  FileDown,
-  CalendarDays,
-  ArrowLeft,
-} from 'lucide-react';
-import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import PageHeader from '@/components/ui/PageHeader';
+import { APP_ROUTES } from '@/config/routes';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
+import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
 import {
   useGetChurchCampusesQuery,
   useGetMinistryWorkspaceOverviewQuery,
 } from '@/libs/state/redux/api/churchApi';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
-import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
-import { FaChild } from 'react-icons/fa6';
-import { APP_ROUTES } from '@/config/routes';
-import { useChurchTerm } from '@/libs/hooks/useTerm';
-import MinistryTeamsSection from './views/MinistryTeamsSection';
-import MinistryLeadershipSection from './views/MinistryLeadershipSection';
-import MinistryStructureSection from './views/MinistryStructureSection';
-import MinistryModal from './components/MinistryModal';
-import ExportOrganizationPdfModal from './components/ExportOrganizationPdfModal';
-import MinistrySchedulingSection from './views/MinistrySchedulingSection';
 import clsx from 'clsx';
+import {
+  ArrowLeft,
+  CalendarDays,
+  CheckCircle2,
+  Edit2,
+  FileDown,
+  FolderKanban,
+  Landmark,
+  Layers,
+  Plus,
+  Star,
+  Users,
+  XCircle,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FaChild } from 'react-icons/fa6';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import ExportOrganizationPdfModal from './components/ExportOrganizationPdfModal';
+import MinistryModal from './components/MinistryModal';
+import MinistryLeadershipSection from './views/MinistryLeadershipSection';
+import MinistrySchedulingSection from './views/MinistrySchedulingSection';
+import MinistryStructureSection from './views/MinistryStructureSection';
+import MinistryTeamsSection from './views/MinistryTeamsSection';
 
 /**
  * Key identifiers for the ministry workspace operational subpages.
@@ -109,7 +109,10 @@ export const MinistryWorkspaceView: React.FC = () => {
   const { t } = useTranslation('admin');
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { id: urlMinistryId, section: urlSection } = useParams<{ id?: string; section?: string }>();
+  const { id: urlMinistryId, section: urlSection } = useParams<{
+    id?: string;
+    section?: string;
+  }>();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Dynamic terminology
@@ -117,8 +120,11 @@ export const MinistryWorkspaceView: React.FC = () => {
   const volunteersTerm = useChurchTerm('volunteers');
 
   // 1. Fetch available Campuses via RTK Query
-  const { data: campuses = [], isLoading: loadingCampuses } = useGetChurchCampusesQuery();
-  const currentReduxCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const { data: campuses = [], isLoading: loadingCampuses } =
+    useGetChurchCampusesQuery();
+  const currentReduxCampus = useAppSelector(
+    (state) => state.churchCampusSlice.current,
+  );
 
   // 2. Resolve Target Ministry ID from Route or Query
   const activeMinistryIdParam = useMemo(() => {
@@ -142,7 +148,10 @@ export const MinistryWorkspaceView: React.FC = () => {
     refetch: refetchWorkspace,
   } = useGetMinistryWorkspaceOverviewQuery(
     selectedCampusId || activeMinistryIdParam
-      ? { churchCampusId: selectedCampusId || undefined, ministryId: activeMinistryIdParam }
+      ? {
+          churchCampusId: selectedCampusId || undefined,
+          ministryId: activeMinistryIdParam,
+        }
       : undefined,
     { skip: !selectedCampusId && !activeMinistryIdParam },
   );
@@ -150,19 +159,39 @@ export const MinistryWorkspaceView: React.FC = () => {
   // Check if current workspace data in cache belongs to the currently selected campus
   const isWorkspaceStale = Boolean(
     workspace?.ministry?.churchCampusId &&
-      selectedCampusId &&
-      workspace.ministry.churchCampusId !== selectedCampusId,
+    selectedCampusId &&
+    workspace.ministry.churchCampusId !== selectedCampusId,
   );
 
   const activeMinistry = isWorkspaceStale ? undefined : workspace?.ministry;
-  const campusMinistries = isWorkspaceStale ? [] : workspace?.campusMinistries || [];
+  const campusMinistries = isWorkspaceStale
+    ? []
+    : workspace?.campusMinistries || [];
   const currentWorkspace = isWorkspaceStale ? undefined : workspace;
-  const isBusy = loadingWorkspace || fetchingWorkspace || isWorkspaceStale;
+  const isBusy =
+    ((loadingWorkspace || fetchingWorkspace) && !currentWorkspace) ||
+    isWorkspaceStale;
+
+  /**
+   * Safely triggers a workspace refetch when the query subscription is active.
+   */
+  const handleRefreshWorkspace = () => {
+    if (!selectedCampusId && !activeMinistryIdParam) return;
+    try {
+      refetchWorkspace();
+    } catch {
+      // Ignore if query has not been started or subscription is inactive
+    }
+  };
 
   // Sync selectedCampusId whenever URL campusId changes
   useEffect(() => {
     const urlCampus = searchParams.get('campusId');
-    if (urlCampus && urlCampus !== selectedCampusId && campuses.some((c) => c.id === urlCampus)) {
+    if (
+      urlCampus &&
+      urlCampus !== selectedCampusId &&
+      campuses.some((c) => c.id === urlCampus)
+    ) {
       setSelectedCampusId(urlCampus);
       sessionStorage.setItem('ministries_selected_campus_id', urlCampus);
     }
@@ -194,7 +223,13 @@ export const MinistryWorkspaceView: React.FC = () => {
       setSelectedCampusId(candidateId);
       sessionStorage.setItem('ministries_selected_campus_id', candidateId);
     }
-  }, [campuses, currentReduxCampus?.id, searchParams, selectedCampusId, workspace?.ministry?.churchCampusId]);
+  }, [
+    campuses,
+    currentReduxCampus?.id,
+    searchParams,
+    selectedCampusId,
+    workspace?.ministry?.churchCampusId,
+  ]);
 
   /**
    * Updates the selected campus and synchronizes with URL query and redux.
@@ -273,7 +308,7 @@ export const MinistryWorkspaceView: React.FC = () => {
    * Callback invoked after successful ministry creation or update.
    */
   const handleModalSuccess = () => {
-    refetchWorkspace();
+    handleRefreshWorkspace();
   };
 
   const selectedCampusName = useMemo(() => {
@@ -369,12 +404,19 @@ export const MinistryWorkspaceView: React.FC = () => {
                           >
                             {isKids ? (
                               <FaChild
-                                className={clsx('w-3 h-3', isSelected ? 'text-teal-300' : 'text-teal-600')}
+                                className={clsx(
+                                  'w-3 h-3',
+                                  isSelected
+                                    ? 'text-teal-300'
+                                    : 'text-teal-600',
+                                )}
                               />
                             ) : (
                               <Layers
                                 size={13}
-                                className={clsx(isSelected ? 'text-white/80' : 'text-primary')}
+                                className={clsx(
+                                  isSelected ? 'text-white/80' : 'text-primary',
+                                )}
                               />
                             )}
                             <span>{min.name}</span>
@@ -392,7 +434,9 @@ export const MinistryWorkspaceView: React.FC = () => {
                     title={t('ministry_workspace.download_pdf_tooltip')}
                   >
                     <FileDown size={14} className="text-slate-500" />
-                    <span className="hidden sm:inline">{t('ministry_workspace.download_pdf_btn')}</span>
+                    <span className="hidden sm:inline">
+                      {t('ministry_workspace.download_pdf_btn')}
+                    </span>
                   </Button>
                 </div>
               </div>
@@ -431,7 +475,10 @@ export const MinistryWorkspaceView: React.FC = () => {
                       >
                         {activeMinistry.state === MinistryStateEnum.ACTIVE ? (
                           <>
-                            <CheckCircle2 size={11} className="text-emerald-500" />
+                            <CheckCircle2
+                              size={11}
+                              className="text-emerald-500"
+                            />
                             {t('ministry_workspace.status_active')}
                           </>
                         ) : (
@@ -458,7 +505,8 @@ export const MinistryWorkspaceView: React.FC = () => {
                     </div>
 
                     <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-                      {activeMinistry.description || 'Ministerio para el cuidado y formación de la iglesia'}
+                      {activeMinistry.description ||
+                        'Ministerio para el cuidado y formación de la iglesia'}
                     </p>
                   </div>
                 </div>
@@ -467,18 +515,28 @@ export const MinistryWorkspaceView: React.FC = () => {
                 {workspace?.summary && (
                   <div className="hidden xl:flex items-center gap-4 text-xs font-semibold text-slate-500">
                     <div>
-                      <span className="font-extrabold text-slate-900 text-sm">{workspace.summary.totalTeams}</span>{' '}
+                      <span className="font-extrabold text-slate-900 text-sm">
+                        {workspace.summary.totalTeams}
+                      </span>{' '}
                       {t('ministry_workspace.kpi_teams').toLowerCase()}
                     </div>
                     <span className="text-slate-300">&bull;</span>
                     <div>
-                      <span className="font-extrabold text-slate-900 text-sm">{workspace.summary.teamsWithSupervisor}</span>
-                      <span className="text-slate-400 text-[10px]">/{workspace.summary.teamsRequiringSupervisor || workspace.summary.totalTeams}</span>{' '}
+                      <span className="font-extrabold text-slate-900 text-sm">
+                        {workspace.summary.teamsWithSupervisor}
+                      </span>
+                      <span className="text-slate-400 text-[10px]">
+                        /
+                        {workspace.summary.teamsRequiringSupervisor ||
+                          workspace.summary.totalTeams}
+                      </span>{' '}
                       {t('ministry_workspace.kpi_supervision').toLowerCase()}
                     </div>
                     <span className="text-slate-300">&bull;</span>
                     <div>
-                      <span className="font-extrabold text-slate-900 text-sm">{workspace.summary.totalVolunteers}</span>{' '}
+                      <span className="font-extrabold text-slate-900 text-sm">
+                        {workspace.summary.totalVolunteers}
+                      </span>{' '}
                       {t('ministry_workspace.kpi_workforce').toLowerCase()}
                     </div>
                   </div>
@@ -504,9 +562,14 @@ export const MinistryWorkspaceView: React.FC = () => {
                     >
                       <Icon
                         size={16}
-                        className={clsx(tab.iconColor, !isSelected && 'opacity-70')}
+                        className={clsx(
+                          tab.iconColor,
+                          !isSelected && 'opacity-70',
+                        )}
                       />
-                      <span className="hidden sm:inline">{t(tab.labelKey)}</span>
+                      <span className="hidden sm:inline">
+                        {t(tab.labelKey)}
+                      </span>
                       <span className="sm:hidden">{t(tab.shortLabelKey)}</span>
                     </button>
                   );
@@ -522,7 +585,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                   ministryName={activeMinistry.name}
                   churchCampusId={selectedCampusId}
                   workspaceGroups={currentWorkspace?.groups}
-                  onRefreshWorkspace={refetchWorkspace}
+                  onRefreshWorkspace={handleRefreshWorkspace}
                 />
               )}
 
@@ -533,7 +596,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                   workspaceTeams={currentWorkspace?.teams}
                   workspaceGroups={currentWorkspace?.groups}
                   workspaceAreas={currentWorkspace?.areas}
-                  onRefreshWorkspace={refetchWorkspace}
+                  onRefreshWorkspace={handleRefreshWorkspace}
                   hideMetrics={true}
                 />
               )}
@@ -545,7 +608,7 @@ export const MinistryWorkspaceView: React.FC = () => {
                   workspaceLeadership={currentWorkspace?.leadership}
                   workspaceAreas={currentWorkspace?.areas}
                   workspaceGroups={currentWorkspace?.groups}
-                  onRefreshWorkspace={refetchWorkspace}
+                  onRefreshWorkspace={handleRefreshWorkspace}
                 />
               )}
 
@@ -556,8 +619,10 @@ export const MinistryWorkspaceView: React.FC = () => {
                   workspaceAreas={currentWorkspace?.areas}
                   workspaceGroups={currentWorkspace?.groups}
                   workspaceTeams={currentWorkspace?.teams}
-                  onRefreshWorkspace={refetchWorkspace}
-                  onNavigateToTab={(targetTab) => handleTabChange(targetTab as WorkspaceTabKey)}
+                  onRefreshWorkspace={handleRefreshWorkspace}
+                  onNavigateToTab={(targetTab) =>
+                    handleTabChange(targetTab as WorkspaceTabKey)
+                  }
                 />
               )}
             </div>
@@ -571,10 +636,14 @@ export const MinistryWorkspaceView: React.FC = () => {
               <FolderKanban size={28} />
             </div>
             <h3 className="text-base font-extrabold text-slate-900">
-              {t('ministry_workspace.empty_title', { campus: selectedCampusName })}
+              {t('ministry_workspace.empty_title', {
+                campus: selectedCampusName,
+              })}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 max-w-md">
-              {t('ministry_workspace.empty_desc', { volunteers: volunteersTerm.toLowerCase() })}
+              {t('ministry_workspace.empty_desc', {
+                volunteers: volunteersTerm.toLowerCase(),
+              })}
             </p>
             <Button
               variant="primary"

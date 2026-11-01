@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
@@ -112,7 +112,7 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? 'Editar Ministerio' : 'Nuevo Ministerio'}
@@ -267,7 +267,7 @@ export const MinistryModal: React.FC<MinistryModalProps> = ({
           </Button>
         </div>
       </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

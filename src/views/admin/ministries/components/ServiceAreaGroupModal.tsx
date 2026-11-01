@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import {
@@ -124,7 +124,7 @@ export const ServiceAreaGroupModal: React.FC<ServiceAreaGroupModalProps> = ({
   }));
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title="Nuevo Equipo de Servicio"
@@ -199,7 +199,7 @@ export const ServiceAreaGroupModal: React.FC<ServiceAreaGroupModalProps> = ({
           </Button>
         </div>
       </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import { 
   KeyRound, 
   UserCheck, 
@@ -217,14 +217,13 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
   const submitButtonText = isUpdating ? 'Actualizar Credenciales' : 'Crear Cuenta';
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={(o) => !o && onClose()}
       onClose={onClose}
       title={modalTitle}
       maxHeight="max-h-[92dvh]"
-      contentClassName="bg-surface"
-      bodyClassName="p-5 flex flex-col gap-4 pb-12"
+      bodyClassName="p-5 flex flex-col gap-4 pb-6"
     >
             {/* User Target Header */}
             {user && (
@@ -395,7 +394,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                 <KeyRound size={18} /> {submitButtonText}
               </Button>
             </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

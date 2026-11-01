@@ -2,6 +2,7 @@ import React, { ReactNode } from 'react';
 import { Drawer } from 'vaul';
 import { X } from 'lucide-react';
 import clsx from 'clsx';
+import AppModal from '@/components/ui/AppModal';
 
 export interface AppDrawerProps {
   open: boolean;
@@ -20,12 +21,15 @@ export interface AppDrawerProps {
   contentClassName?: string;
   bodyClassName?: string;
   headerClassName?: string;
+  variant?: 'drawer' | 'modal';
   onCloseAutoFocus?: (e: Event) => void;
   onPointerDownOutside?: (e: any) => void;
   onInteractOutside?: (e: any) => void;
   overlayZIndex?: string;
   contentZIndex?: string;
 }
+
+export { AppModal };
 
 /**
  * Reusable application drawer component based on Vaul.
@@ -54,6 +58,7 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
   contentClassName = '',
   bodyClassName = '',
   headerClassName = '',
+  variant = 'drawer',
   onCloseAutoFocus,
   onPointerDownOutside,
   onInteractOutside,
@@ -67,6 +72,35 @@ export const AppDrawer: React.FC<AppDrawerProps> = ({
       onOpenChange(false);
     }
   };
+
+  if (variant === 'modal') {
+    return (
+      <AppModal
+        open={open}
+        onOpenChange={onOpenChange}
+        title={title}
+        icon={icon}
+        showCloseButton={showCloseButton}
+        onClose={onClose}
+        dismissible={dismissible}
+        nested={nested}
+        repositionInputs={repositionInputs}
+        maxHeight={maxHeight}
+        headerLeft={headerLeft}
+        headerRight={headerRight}
+        contentClassName={contentClassName}
+        bodyClassName={bodyClassName}
+        headerClassName={headerClassName}
+        overlayZIndex={overlayZIndex}
+        contentZIndex={contentZIndex}
+        onCloseAutoFocus={onCloseAutoFocus}
+        onPointerDownOutside={onPointerDownOutside}
+        onInteractOutside={onInteractOutside}
+      >
+        {children}
+      </AppModal>
+    );
+  }
 
   return (
     <Drawer.Root

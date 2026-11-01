@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import ModalOverlay from '@/components/ui/ModalOverlay';
 import { Layers, X, ShieldCheck, Crown, Users, Award } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
@@ -336,8 +336,14 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
   };
 
   return (
-    <AppDrawer open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <div className="flex flex-col h-full max-w-lg mx-auto w-full">
+    <ModalOverlay
+      open={open}
+      onClose={onClose}
+      wrapperClassName="items-center justify-center p-3 sm:p-4"
+      panelClassName="w-full max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto"
+    >
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-gray-200/90 mx-auto animate-in fade-in zoom-in-95 duration-200">
+        <div className="flex flex-col h-full max-w-lg mx-auto w-full">
         {/* Header */}
         <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -537,8 +543,9 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
           </div>
         </form>
       </div>
-    </AppDrawer>
-  );
+    </div>
+  </ModalOverlay>
+);
 };
 
 export default AssignUserMinistryModal;

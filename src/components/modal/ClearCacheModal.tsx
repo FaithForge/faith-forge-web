@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CacheScope, useClearCacheMutation } from '@/libs/state/redux/api/churchApi';
 import { resetChurchPrinterState } from '@/libs/state/redux/slices/church/churchPrinter.slice';
@@ -126,12 +126,11 @@ export const ClearCacheModal: React.FC<ClearCacheModalProps> = ({
   ];
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={t('admin:dashboard.clear_cache_drawer.title')}
       icon={<Database size={18} className="text-primary" />}
-      contentClassName="sm:max-w-lg sm:mx-auto shadow-2xl"
       bodyClassName="px-5 py-5 sm:px-6 sm:py-6 bg-slate-50/70"
     >
       <div className="flex flex-col">
@@ -245,7 +244,7 @@ export const ClearCacheModal: React.FC<ClearCacheModalProps> = ({
           </div>
         </div>
       </div>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

@@ -57,14 +57,13 @@ let nextModalId = 0;
  */
 export const useModalBackClose = (open: boolean, onClose?: () => void) => {
   const modalIdRef = useRef<string | null>(null);
-  if (!modalIdRef.current) {
-    modalIdRef.current = `modal_${++nextModalId}`;
-  }
+  if (!modalIdRef.current) modalIdRef.current = `modal_${++nextModalId}`;
 
   const onCloseRef = useRef(onClose);
   onCloseRef.current = onClose;
 
   const isPushedRef = useRef(false);
+  const closedByPopStateRef = useRef(false);
 
   useEffect(() => {
     ensureGlobalListener();
@@ -73,13 +72,17 @@ export const useModalBackClose = (open: boolean, onClose?: () => void) => {
     if (!open || !onCloseRef.current) {
       if (isPushedRef.current) {
         isPushedRef.current = false;
+        const wasPopState = closedByPopStateRef.current;
+        closedByPopStateRef.current = false;
         // Remove from global stack
         const idx = modalStack.findIndex((m) => m.id === id);
-        if (idx !== -1) {
-          modalStack.splice(idx, 1);
-        }
-        // Revert pushed history entry silently without closing parent modals
-        if (window.history.state?.modalOpen) {
+        if (idx !== -1) modalStack.splice(idx, 1);
+        // Revert pushed history entry silently only if this modal owns the current history state
+        if (
+          !wasPopState &&
+          window.history.state?.modalOpen &&
+          window.history.state?.modalId === id
+        ) {
           isInternalBack = true;
           window.history.back();
         }
@@ -87,8 +90,12 @@ export const useModalBackClose = (open: boolean, onClose?: () => void) => {
       return;
     }
 
-    // Modal just opened: register in stack and push history state
-    window.history.pushState({ modalOpen: true, modalId: id }, '');
+    // Modal just opened: register in stack and push history state preserving router state
+    closedByPopStateRef.current = false;
+    window.history.pushState(
+      { ...(window.history.state || {}), modalOpen: true, modalId: id },
+      '',
+    );
     isPushedRef.current = true;
 
     // Add / update in modal stack
@@ -96,9 +103,8 @@ export const useModalBackClose = (open: boolean, onClose?: () => void) => {
     const entry: ModalEntry = {
       id,
       onClose: () => {
-        if (onCloseRef.current) {
-          onCloseRef.current();
-        }
+        closedByPopStateRef.current = true;
+        if (onCloseRef.current) onCloseRef.current();
       },
     };
 
@@ -111,11 +117,15 @@ export const useModalBackClose = (open: boolean, onClose?: () => void) => {
     return () => {
       if (isPushedRef.current) {
         isPushedRef.current = false;
+        const wasPopState = closedByPopStateRef.current;
+        closedByPopStateRef.current = false;
         const idx = modalStack.findIndex((m) => m.id === id);
-        if (idx !== -1) {
-          modalStack.splice(idx, 1);
-        }
-        if (window.history.state?.modalOpen) {
+        if (idx !== -1) modalStack.splice(idx, 1);
+        if (
+          !wasPopState &&
+          window.history.state?.modalOpen &&
+          window.history.state?.modalId === id
+        ) {
           isInternalBack = true;
           window.history.back();
         }
@@ -123,4 +133,3 @@ export const useModalBackClose = (open: boolean, onClose?: () => void) => {
     };
   }, [open]);
 };
-

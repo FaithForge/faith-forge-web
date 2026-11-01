@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import {
@@ -175,7 +175,7 @@ export const TerminologyModal: React.FC<TerminologyModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title="Vocabulario y Nomenclatura"
@@ -413,6 +413,6 @@ export const TerminologyModal: React.FC<TerminologyModalProps> = ({
           )}
         </Button>
       </div>
-    </AppDrawer>
+    </AppModal>
   );
 };

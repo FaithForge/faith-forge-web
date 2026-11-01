@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { IKidGroup, IMinistryArea, MinistryAreaScope, MinistryAreaStateEnum, MinistryType } from '@/libs/models';
@@ -177,7 +177,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? 'Editar Área de Servicio' : 'Nueva Área de Servicio'}
@@ -419,7 +419,7 @@ export const MinistryAreaModal: React.FC<MinistryAreaModalProps> = ({
           </Button>
         </div>
       </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

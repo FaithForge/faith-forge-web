@@ -1,11 +1,11 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import {
+  CreateVolunteerPermissionGrantPayload,
   GetVolunteerAssignmentsPayload,
   GetVolunteersPayload,
   IVolunteer,
   IVolunteerAssignment,
   IVolunteerPermissionGrant,
-  CreateVolunteerPermissionGrantPayload,
   MinistryVolunteerAssignmentStateEnum,
   PaginationResponse,
   VolunteerRole,
@@ -38,7 +38,8 @@ export const GetVolunteers = createAsyncThunk(
     if (payload.ministryId) params.ministryId = payload.ministryId;
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
     if (payload.role) params.role = payload.role;
-    if (payload.search && payload.search.trim()) params.search = payload.search.trim();
+    if (payload.search && payload.search.trim())
+      params.search = payload.search.trim();
     if (payload.state !== undefined) params.state = payload.state;
 
     try {
@@ -55,7 +56,9 @@ export const GetVolunteers = createAsyncThunk(
       ).data;
 
       const isArray = Array.isArray(response);
-      const rawVolunteers: IVolunteer[] = isArray ? response : response?.data || [];
+      const rawVolunteers: IVolunteer[] = isArray
+        ? response
+        : response?.data || [];
       const currentPage: number = isArray ? 1 : response?.currentPage || 1;
       const totalPages: number = isArray ? 1 : response?.totalPages || 1;
 
@@ -66,7 +69,9 @@ export const GetVolunteers = createAsyncThunk(
       } as PaginationResponse<IVolunteer>;
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al obtener voluntarios');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al obtener voluntarios',
+      );
     }
   },
 );
@@ -90,7 +95,8 @@ export const GetMoreVolunteers = createAsyncThunk(
     if (payload.ministryId) params.ministryId = payload.ministryId;
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
     if (payload.role) params.role = payload.role;
-    if (payload.search && payload.search.trim()) params.search = payload.search.trim();
+    if (payload.search && payload.search.trim())
+      params.search = payload.search.trim();
     if (payload.state !== undefined) params.state = payload.state;
 
     try {
@@ -107,7 +113,9 @@ export const GetMoreVolunteers = createAsyncThunk(
       ).data;
 
       const isArray = Array.isArray(response);
-      const rawVolunteers: IVolunteer[] = isArray ? response : response?.data || [];
+      const rawVolunteers: IVolunteer[] = isArray
+        ? response
+        : response?.data || [];
       const currentPage: number = isArray ? 1 : response?.currentPage || 1;
       const totalPages: number = isArray ? 1 : response?.totalPages || 1;
 
@@ -118,7 +126,9 @@ export const GetMoreVolunteers = createAsyncThunk(
       } as PaginationResponse<IVolunteer>;
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al cargar más voluntarios');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al cargar más voluntarios',
+      );
     }
   },
 );
@@ -174,11 +184,12 @@ export const CreateVolunteer = createAsyncThunk(
       }
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al registrar voluntario');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al registrar voluntario',
+      );
     }
   },
 );
-
 
 /**
  * Queries volunteer assignments by scope or role via GET /volunteer-assignment
@@ -204,8 +215,10 @@ export const GetVolunteerAssignments = createAsyncThunk(
     if (payload.ministryId) params.ministryId = payload.ministryId;
     if (payload.churchCampusId) params.churchCampusId = payload.churchCampusId;
     if (payload.ministryAreaId) params.ministryAreaId = payload.ministryAreaId;
-    if (payload.ministryGroupConfigId) params.ministryGroupConfigId = payload.ministryGroupConfigId;
-    if (payload.serviceAreaGroupId) params.serviceAreaGroupId = payload.serviceAreaGroupId;
+    if (payload.ministryGroupConfigId)
+      params.ministryGroupConfigId = payload.ministryGroupConfigId;
+    if (payload.serviceAreaGroupId)
+      params.serviceAreaGroupId = payload.serviceAreaGroupId;
     if (payload.volunteerId) params.volunteerId = payload.volunteerId;
     if (payload.role) params.role = payload.role;
     if (payload.state !== undefined) params.state = payload.state;
@@ -224,14 +237,21 @@ export const GetVolunteerAssignments = createAsyncThunk(
       ).data;
 
       const isArray = Array.isArray(response);
-       
-      const rawAssignments = (isArray ? response : response?.data || []) as any[];
+
+      const rawAssignments = (
+        isArray ? response : response?.data || []
+      ) as any[];
       const currentPage = isArray ? 1 : response?.currentPage || 1;
       const totalPages = isArray ? 1 : response?.totalPages || 1;
 
       const normalizedAssignments = rawAssignments.map((asg) => {
-        const volunteer = asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
-        const volunteerId = asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
+        const volunteer =
+          asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
+        const volunteerId =
+          asg.churchMemberId ||
+          asg.volunteerId ||
+          asg.ministryVolunteerId ||
+          volunteer.id;
         const user = asg.churchMember?.user || asg.user || volunteer.user;
 
         return {
@@ -255,7 +275,9 @@ export const GetVolunteerAssignments = createAsyncThunk(
       };
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al obtener asignaciones de voluntarios');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al obtener asignaciones de voluntarios',
+      );
     }
   },
 );
@@ -304,7 +326,9 @@ export const CreateVolunteerAssignment = createAsyncThunk(
       return response as IVolunteerAssignment;
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al crear asignación');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al crear asignación',
+      );
     }
   },
 );
@@ -315,6 +339,10 @@ export const CreateVolunteerAssignment = createAsyncThunk(
  * @param {Object} payload - Assignment update payload.
  * @param {string} payload.id - Assignment identifier.
  * @param {VolunteerRole} [payload.role] - Updated role.
+ * @param {string} [payload.serviceAreaGroupId] - Target service area group.
+ * @param {string} [payload.ministryGroupConfigId] - Target group config.
+ * @param {string} [payload.ministryAreaId] - Target ministry area.
+ * @param {string} [payload.ministryId] - Target ministry.
  * @param {MinistryVolunteerAssignmentStateEnum} [payload.state] - State enum.
  * @returns {Promise<IVolunteerAssignment>} The updated assignment.
  */
@@ -324,6 +352,10 @@ export const UpdateVolunteerAssignment = createAsyncThunk(
     payload: {
       id: string;
       role?: VolunteerRole;
+      serviceAreaGroupId?: string;
+      ministryGroupConfigId?: string;
+      ministryAreaId?: string;
+      ministryId?: string;
       state?: MinistryVolunteerAssignmentStateEnum;
     },
     { getState, rejectWithValue },
@@ -348,7 +380,9 @@ export const UpdateVolunteerAssignment = createAsyncThunk(
       return response as IVolunteerAssignment;
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al actualizar la asignación');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al actualizar la asignación',
+      );
     }
   },
 );
@@ -380,7 +414,9 @@ export const DeleteVolunteerAssignment = createAsyncThunk(
       return id;
     } catch (err) {
       const error = err as AxiosError;
-      return rejectWithValue(error.response?.data ?? 'Error al eliminar la asignación');
+      return rejectWithValue(
+        error.response?.data ?? 'Error al eliminar la asignación',
+      );
     }
   },
 );
@@ -411,18 +447,25 @@ export const GetVolunteerWithAssignments = createAsyncThunk(
         })
       ).data;
 
-      // Backend returns either an array or an object with .assignments
-       
+      // Backend returns either an array or an object with .assignments and .assignmentHistory
       const assignmentsList = Array.isArray(response)
         ? response
-        : (response?.assignments || []);
+        : response?.assignments || [];
+      const historyList = Array.isArray(response)
+        ? []
+        : response?.assignmentHistory || [];
 
-       
-      return assignmentsList.map((asg: any) => ({
+      const mapAssignment = (asg: any): IVolunteerAssignment => ({
         ...asg,
-        volunteerId: asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId,
+        volunteerId:
+          asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId,
         volunteer: asg.churchMember || asg.volunteer || asg.ministryVolunteer,
-      })) as IVolunteerAssignment[];
+      });
+
+      return {
+        assignments: assignmentsList.map(mapAssignment),
+        assignmentHistory: historyList.map(mapAssignment),
+      };
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(
@@ -462,7 +505,8 @@ export const GetVolunteerByUserId = createAsyncThunk(
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(
-        error.response?.data ?? 'Error al obtener datos de servidor del usuario',
+        error.response?.data ??
+          'Error al obtener datos de servidor del usuario',
       );
     }
   },
@@ -494,11 +538,14 @@ export const GetUserPermissionGrants = createAsyncThunk(
         })
       ).data;
 
-      return (Array.isArray(response) ? response : []) as IVolunteerPermissionGrant[];
+      return (
+        Array.isArray(response) ? response : []
+      ) as IVolunteerPermissionGrant[];
     } catch (err) {
       const error = err as AxiosError;
       return rejectWithValue(
-        error.response?.data ?? 'Error al obtener permisos temporales del usuario',
+        error.response?.data ??
+          'Error al obtener permisos temporales del usuario',
       );
     }
   },
@@ -512,7 +559,10 @@ export const GetUserPermissionGrants = createAsyncThunk(
  */
 export const CreateVolunteerPermissionGrant = createAsyncThunk(
   'church/CreateVolunteerPermissionGrant',
-  async (payload: CreateVolunteerPermissionGrantPayload, { getState, rejectWithValue }) => {
+  async (
+    payload: CreateVolunteerPermissionGrantPayload,
+    { getState, rejectWithValue },
+  ) => {
     const state = getState() as RootState;
     const { token } = state.authSlice;
 
@@ -547,7 +597,10 @@ export const CreateVolunteerPermissionGrant = createAsyncThunk(
  */
 export const RevokeVolunteerPermissionGrant = createAsyncThunk(
   'church/RevokeVolunteerPermissionGrant',
-  async (payload: { grantId: string; userId?: string }, { getState, rejectWithValue }) => {
+  async (
+    payload: { grantId: string; userId?: string },
+    { getState, rejectWithValue },
+  ) => {
     const { grantId } = payload;
     const state = getState() as RootState;
     const { token } = state.authSlice;
@@ -571,4 +624,3 @@ export const RevokeVolunteerPermissionGrant = createAsyncThunk(
     }
   },
 );
-

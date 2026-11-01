@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { Building2, Check, Sparkles } from 'lucide-react';
 import { FaChild } from 'react-icons/fa6';
 import clsx from 'clsx';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { setActiveMinistry } from '@/libs/state/redux/slices/church/volunteerContext.slice';
 import { useGetMinistriesQuery } from '@/libs/state/redux/api/churchApi';
@@ -106,7 +106,7 @@ export const SelectMinistryModal: React.FC<SelectMinistryModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={
@@ -191,7 +191,7 @@ export const SelectMinistryModal: React.FC<SelectMinistryModalProps> = ({
           )}
         </div>
       </div>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

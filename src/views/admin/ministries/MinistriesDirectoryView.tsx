@@ -1,36 +1,35 @@
-import React, { useMemo, useState, useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import {
-  FolderKanban,
-  MapPin,
-  Plus,
-  Edit2,
-  CalendarClock,
-  ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
-  XCircle,
-  FileDown,
-  Sparkles,
-} from 'lucide-react';
-import { FaChild } from 'react-icons/fa6';
-import clsx from 'clsx';
-import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
-import Select from '@/components/ui/Select';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import PageHeader from '@/components/ui/PageHeader';
+import Select from '@/components/ui/Select';
+import { APP_ROUTES } from '@/config/routes';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
+import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
 import {
   useGetChurchCampusesQuery,
   useGetMinistryWorkspaceOverviewQuery,
 } from '@/libs/state/redux/api/churchApi';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
-import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
-import { APP_ROUTES } from '@/config/routes';
-import { useChurchTerm } from '@/libs/hooks/useTerm';
-import MinistryModal from './components/MinistryModal';
+import clsx from 'clsx';
+import {
+  ArrowRight,
+  CalendarClock,
+  CheckCircle2,
+  Edit2,
+  FileDown,
+  FolderKanban,
+  Plus,
+  ShieldCheck,
+  Sparkles,
+  XCircle,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { FaChild } from 'react-icons/fa6';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import ExportOrganizationPdfModal from './components/ExportOrganizationPdfModal';
+import MinistryModal from './components/MinistryModal';
 
 /**
  * Top-level Ministry Directory Hub view for administrators at /admin/ministries.
@@ -50,8 +49,11 @@ export const MinistriesDirectoryView: React.FC = () => {
   const volunteersTerm = useChurchTerm('volunteers');
 
   // 1. Fetch Campuses
-  const { data: campuses = [], isLoading: loadingCampuses } = useGetChurchCampusesQuery();
-  const currentReduxCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const { data: campuses = [], isLoading: loadingCampuses } =
+    useGetChurchCampusesQuery();
+  const currentReduxCampus = useAppSelector(
+    (state) => state.churchCampusSlice.current,
+  );
 
   // 2. Resolve Active Campus ID with multi-level fallback
   const [selectedCampusId, setSelectedCampusId] = useState<string>(() => {
@@ -76,7 +78,11 @@ export const MinistriesDirectoryView: React.FC = () => {
   // Synchronize campus selection when URL or Redux updates
   useEffect(() => {
     const urlCampus = searchParams.get('campusId');
-    if (urlCampus && urlCampus !== selectedCampusId && campuses.some((c) => c.id === urlCampus)) {
+    if (
+      urlCampus &&
+      urlCampus !== selectedCampusId &&
+      campuses.some((c) => c.id === urlCampus)
+    ) {
       setSelectedCampusId(urlCampus);
       sessionStorage.setItem('ministries_selected_campus_id', urlCampus);
     }
@@ -172,7 +178,8 @@ export const MinistriesDirectoryView: React.FC = () => {
   }, [campuses, selectedCampusId, currentReduxCampus?.name]);
 
   const campusMinistries = workspace?.campusMinistries || [];
-  const isBusy = loadingCampuses || loadingWorkspace || fetchingWorkspace;
+  const isBusy =
+    loadingCampuses || ((loadingWorkspace || fetchingWorkspace) && !workspace);
 
   return (
     <div className="min-h-full flex-1 w-full bg-slate-50/70 pb-28">
@@ -272,7 +279,9 @@ export const MinistriesDirectoryView: React.FC = () => {
               const isKids = min.type === MinistryType.KIDS;
               const isActive = min.state === MinistryStateEnum.ACTIVE;
               const isSelectedWorkspace = workspace?.ministry?.id === min.id;
-              const minSummary = isSelectedWorkspace ? workspace?.summary : undefined;
+              const minSummary = isSelectedWorkspace
+                ? workspace?.summary
+                : undefined;
 
               return (
                 <div
@@ -291,7 +300,11 @@ export const MinistriesDirectoryView: React.FC = () => {
                               : 'bg-indigo-50 text-indigo-700 border border-indigo-200/90',
                           )}
                         >
-                          {isKids ? <FaChild className="w-5 h-5" /> : <FolderKanban size={20} />}
+                          {isKids ? (
+                            <FaChild className="w-5 h-5" />
+                          ) : (
+                            <FolderKanban size={20} />
+                          )}
                         </div>
                         <div>
                           <div className="flex items-center gap-1.5">
@@ -305,7 +318,9 @@ export const MinistriesDirectoryView: React.FC = () => {
                                 handleOpenEditModal(min);
                               }}
                               className="text-slate-400 hover:text-slate-700 p-1 rounded-md transition-colors cursor-pointer"
-                              title={t('ministry_workspace.edit_ministry_tooltip')}
+                              title={t(
+                                'ministry_workspace.edit_ministry_tooltip',
+                              )}
                             >
                               <Edit2 size={13} />
                             </button>
@@ -318,7 +333,10 @@ export const MinistriesDirectoryView: React.FC = () => {
                           >
                             {isActive ? (
                               <>
-                                <CheckCircle2 size={11} className="text-emerald-500" />
+                                <CheckCircle2
+                                  size={11}
+                                  className="text-emerald-500"
+                                />
                                 {t('ministry_workspace.status_active')}
                               </>
                             ) : (
@@ -346,7 +364,8 @@ export const MinistriesDirectoryView: React.FC = () => {
 
                     {/* Description */}
                     <p className="text-xs text-slate-500 mt-3 line-clamp-2 min-h-[32px]">
-                      {min.description || 'Sin descripción detallada configurada.'}
+                      {min.description ||
+                        'Sin descripción detallada configurada.'}
                     </p>
 
                     {/* Compact Metrics Chips */}
@@ -368,7 +387,9 @@ export const MinistriesDirectoryView: React.FC = () => {
                           <span className="text-base font-black text-slate-900 mt-0.5 block">
                             {minSummary.teamsWithSupervisor}
                             <span className="text-[10px] font-bold text-slate-400 ml-0.5">
-                              /{minSummary.teamsRequiringSupervisor || minSummary.totalTeams}
+                              /
+                              {minSummary.teamsRequiringSupervisor ||
+                                minSummary.totalTeams}
                             </span>
                           </span>
                         </div>
@@ -390,7 +411,9 @@ export const MinistriesDirectoryView: React.FC = () => {
                     <Button
                       variant="primary"
                       size="sm"
-                      onClick={() => navigate(APP_ROUTES.admin.ministryTeams(min.id))}
+                      onClick={() =>
+                        navigate(APP_ROUTES.admin.ministryTeams(min.id))
+                      }
                       className="flex-1 justify-center gap-1.5 text-xs font-bold shadow-2xs cursor-pointer"
                     >
                       <ShieldCheck size={14} />
@@ -401,7 +424,9 @@ export const MinistriesDirectoryView: React.FC = () => {
                     <Button
                       variant="default"
                       size="sm"
-                      onClick={() => navigate(APP_ROUTES.admin.ministrySchedule(min.id))}
+                      onClick={() =>
+                        navigate(APP_ROUTES.admin.ministrySchedule(min.id))
+                      }
                       className="justify-center gap-1.5 text-xs font-bold cursor-pointer text-indigo-700 bg-indigo-50/70 hover:bg-indigo-100 border-indigo-200"
                       title={t('ministry_workspace.schedule_shortcut_btn')}
                     >
@@ -422,10 +447,14 @@ export const MinistriesDirectoryView: React.FC = () => {
               <FolderKanban size={28} />
             </div>
             <h3 className="text-base font-extrabold text-slate-900">
-              {t('ministry_workspace.empty_title', { campus: selectedCampusName })}
+              {t('ministry_workspace.empty_title', {
+                campus: selectedCampusName,
+              })}
             </h3>
             <p className="text-xs sm:text-sm text-slate-500 max-w-md">
-              {t('ministry_workspace.empty_desc', { volunteers: volunteersTerm.toLowerCase() })}
+              {t('ministry_workspace.empty_desc', {
+                volunteers: volunteersTerm.toLowerCase(),
+              })}
             </p>
             <Button
               variant="primary"
@@ -446,7 +475,15 @@ export const MinistriesDirectoryView: React.FC = () => {
         onOpenChange={setModalOpen}
         ministryToEdit={ministryToEdit}
         churchCampusId={selectedCampusId}
-        onSuccess={() => refetchWorkspace()}
+        onSuccess={() => {
+          if (selectedCampusId) {
+            try {
+              refetchWorkspace();
+            } catch {
+              // Ignore if query has not been started
+            }
+          }
+        }}
       />
 
       {/* Export Official Organization PDF Modal */}

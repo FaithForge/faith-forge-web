@@ -1,36 +1,39 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import {
-  Crown,
-  Layers,
-  Users,
-  Search,
-  X,
-  Plus,
-  Trash2,
-  Phone,
-  Sparkles,
-} from 'lucide-react';
 import Button from '@/components/ui/Button';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import {
+  IMinistryArea,
+  IMinistryGroupConfig,
+  IMinistryWorkspaceCoordinator,
+  IMinistryWorkspaceLeadership,
+  IVolunteerAssignment,
+  VolunteerRole,
+} from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import {
   DeleteVolunteerAssignment,
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import {
-  IVolunteerAssignment,
-  VolunteerRole,
-  IMinistryWorkspaceLeadership,
-  IMinistryWorkspaceCoordinator,
-  IMinistryArea,
-  IMinistryGroupConfig,
-} from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
-import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
-import { toast } from 'sonner';
 import clsx from 'clsx';
+import {
+  ArrowUpDown,
+  Crown,
+  Layers,
+  Phone,
+  Plus,
+  Search,
+  Sparkles,
+  Trash2,
+  Users,
+  X,
+} from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { toast } from 'sonner';
+import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
+import ChangeVolunteerRoleModal from '../components/ChangeVolunteerRoleModal';
 
 interface MinistryLeadershipSectionProps {
   ministryId: string;
@@ -51,10 +54,30 @@ interface FilterTab {
 }
 
 const LEADERSHIP_FILTER_TABS: FilterTab[] = [
-  { key: 'ALL', label: 'Todos los Líderes', shortLabel: 'Todos', icon: Sparkles },
-  { key: 'GENERAL', label: 'Coord. General', shortLabel: 'General', icon: Crown },
-  { key: 'AREAS', label: 'Coord. por Área', shortLabel: 'Por Área', icon: Layers },
-  { key: 'GROUPS', label: 'Coord. por Grupo', shortLabel: 'Por Grupo', icon: Users },
+  {
+    key: 'ALL',
+    label: 'Todos los Líderes',
+    shortLabel: 'Todos',
+    icon: Sparkles,
+  },
+  {
+    key: 'GENERAL',
+    label: 'Coord. General',
+    shortLabel: 'General',
+    icon: Crown,
+  },
+  {
+    key: 'AREAS',
+    label: 'Coord. por Área',
+    shortLabel: 'Por Área',
+    icon: Layers,
+  },
+  {
+    key: 'GROUPS',
+    label: 'Coord. por Grupo',
+    shortLabel: 'Por Grupo',
+    icon: Users,
+  },
 ];
 
 /**
@@ -63,7 +86,9 @@ const LEADERSHIP_FILTER_TABS: FilterTab[] = [
  * @param {MinistryLeadershipSectionProps} props - Component properties.
  * @returns {JSX.Element} Rendered leadership management view.
  */
-export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps> = ({
+export const MinistryLeadershipSection: React.FC<
+  MinistryLeadershipSectionProps
+> = ({
   ministryId,
   churchCampusId,
   workspaceLeadership,
@@ -71,12 +96,12 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   workspaceGroups,
   onRefreshWorkspace,
 }) => {
+  const { t } = useTranslation('admin');
   const dispatch = useAppDispatch();
 
   const campusesState = useAppSelector((state) => state.churchCampusSlice);
-  const { areasByMinistry, groupsByMinistry, serviceAreaGroups } = useAppSelector(
-    (state) => state.ministrySlice,
-  );
+  const { areasByMinistry, groupsByMinistry, serviceAreaGroups } =
+    useAppSelector((state) => state.ministrySlice);
   const {
     volunteers: { data: volunteersList },
     assignments,
@@ -86,13 +111,20 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
 
   // Search & Filter State
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedFilter, setSelectedFilter] = useState<LeadershipCategoryFilter>('ALL');
+  const [selectedFilter, setSelectedFilter] =
+    useState<LeadershipCategoryFilter>('ALL');
 
   // Modals & Drawers State
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
-  const [defaultRoleToAssign, setDefaultRoleToAssign] = useState<VolunteerRole | undefined>(undefined);
-  const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
+  const [defaultRoleToAssign, setDefaultRoleToAssign] = useState<
+    VolunteerRole | undefined
+  >(undefined);
+  const [assignmentToDelete, setAssignmentToDelete] =
+    useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [assignmentToChangeRole, setAssignmentToChangeRole] =
+    useState<IVolunteerAssignment | null>(null);
+  const [changeRoleModalOpen, setChangeRoleModalOpen] = useState(false);
 
   const areas = useMemo(
     () =>
@@ -103,8 +135,8 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   );
   const groups = useMemo(
     () =>
-      [...(workspaceGroups || groupsByMinistry[ministryId] || [])].sort((a, b) =>
-        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+      [...(workspaceGroups || groupsByMinistry[ministryId] || [])].sort(
+        (a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       ),
     [workspaceGroups, groupsByMinistry, ministryId],
   );
@@ -118,7 +150,9 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   const loadingMinistryCoords = loadingByPartition[ministryCoordsKey] ?? false;
   const loadingAreaCoords = loadingByPartition[areaCoordsKey] ?? false;
   const loadingGroupCoords = loadingByPartition[groupCoordsKey] ?? false;
-  const isLoading = workspaceLeadership ? false : loadingMinistryCoords || loadingAreaCoords || loadingGroupCoords;
+  const isLoading = workspaceLeadership
+    ? false
+    : loadingMinistryCoords || loadingAreaCoords || loadingGroupCoords;
 
   // Fetch Coordinators with limit=500
   const fetchCoordinators = useCallback(
@@ -162,7 +196,9 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   const allCoordinators = useMemo(() => {
     if (workspaceLeadership) {
       const list: IVolunteerAssignment[] = [];
-      const mapItem = (item: IMinistryWorkspaceCoordinator): IVolunteerAssignment => ({
+      const mapItem = (
+        item: IMinistryWorkspaceCoordinator,
+      ): IVolunteerAssignment => ({
         id: item.assignmentId,
         volunteerId: item.volunteerId,
         churchMemberId: item.churchMemberId,
@@ -188,9 +224,15 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
         },
       });
 
-      workspaceLeadership.generalCoordinators.forEach((c) => list.push(mapItem(c)));
-      workspaceLeadership.areaCoordinators.forEach((c) => list.push(mapItem(c)));
-      workspaceLeadership.groupCoordinators.forEach((c) => list.push(mapItem(c)));
+      workspaceLeadership.generalCoordinators.forEach((c) =>
+        list.push(mapItem(c)),
+      );
+      workspaceLeadership.areaCoordinators.forEach((c) =>
+        list.push(mapItem(c)),
+      );
+      workspaceLeadership.groupCoordinators.forEach((c) =>
+        list.push(mapItem(c)),
+      );
       return list;
     }
 
@@ -221,24 +263,36 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
       }
     });
     return Array.from(fallbackMap.values());
-  }, [assignmentsByPartition, ministryCoordsKey, areaCoordsKey, groupCoordsKey, assignments]);
+  }, [
+    assignmentsByPartition,
+    ministryCoordsKey,
+    areaCoordsKey,
+    groupCoordsKey,
+    assignments,
+  ]);
 
   /**
    * Resolves volunteer user profile details.
    */
   const getVolunteerDetails = useCallback(
     (asg: IVolunteerAssignment) => {
-      const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+      const vId =
+        asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
         asg.churchMember ||
         asg.ministryVolunteer ||
-        volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
-      const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+        volunteersList.find(
+          (v) =>
+            v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+        );
+      const user =
+        asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
 
-      const rawName = user && (user.firstName || user.lastName)
-        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-        : 'Líder asignado';
+      const rawName =
+        user && (user.firstName || user.lastName)
+          ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+          : 'Líder asignado';
       const fullName = capitalizeWords(rawName);
 
       return {
@@ -276,24 +330,28 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
     );
     const q = searchTerm.toLowerCase().trim();
 
-    return areas.map((area) => {
-      const matching = areaCoords.filter((asg) => asg.ministryAreaId === area.id);
-      const filtered = q
-        ? matching.filter((asg) => {
-            const d = getVolunteerDetails(asg);
-            return (
-              d.fullName.toLowerCase().includes(q) ||
-              (d.nationalId && d.nationalId.toLowerCase().includes(q)) ||
-              area.name.toLowerCase().includes(q)
-            );
-          })
-        : matching;
+    return areas
+      .map((area) => {
+        const matching = areaCoords.filter(
+          (asg) => asg.ministryAreaId === area.id,
+        );
+        const filtered = q
+          ? matching.filter((asg) => {
+              const d = getVolunteerDetails(asg);
+              return (
+                d.fullName.toLowerCase().includes(q) ||
+                (d.nationalId && d.nationalId.toLowerCase().includes(q)) ||
+                area.name.toLowerCase().includes(q)
+              );
+            })
+          : matching;
 
-      return {
-        area,
-        coordinators: filtered,
-      };
-    }).filter((item) => (q ? item.coordinators.length > 0 : true));
+        return {
+          area,
+          coordinators: filtered,
+        };
+      })
+      .filter((item) => (q ? item.coordinators.length > 0 : true));
   }, [allCoordinators, areas, searchTerm, getVolunteerDetails]);
 
   // 3. Coordinators by Group (in alphabetical order as requested)
@@ -306,26 +364,28 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
       a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
     );
 
-    return sortedGroups.map((group) => {
-      const matching = groupCoords.filter(
-        (asg) => asg.ministryGroupConfigId === group.id,
-      );
-      const filtered = q
-        ? matching.filter((asg) => {
-            const d = getVolunteerDetails(asg);
-            return (
-              d.fullName.toLowerCase().includes(q) ||
-              (d.nationalId && d.nationalId.toLowerCase().includes(q)) ||
-              group.name.toLowerCase().includes(q)
-            );
-          })
-        : matching;
+    return sortedGroups
+      .map((group) => {
+        const matching = groupCoords.filter(
+          (asg) => asg.ministryGroupConfigId === group.id,
+        );
+        const filtered = q
+          ? matching.filter((asg) => {
+              const d = getVolunteerDetails(asg);
+              return (
+                d.fullName.toLowerCase().includes(q) ||
+                (d.nationalId && d.nationalId.toLowerCase().includes(q)) ||
+                group.name.toLowerCase().includes(q)
+              );
+            })
+          : matching;
 
-      return {
-        group,
-        coordinators: filtered,
-      };
-    }).filter((item) => (q ? item.coordinators.length > 0 : true));
+        return {
+          group,
+          coordinators: filtered,
+        };
+      })
+      .filter((item) => (q ? item.coordinators.length > 0 : true));
   }, [allCoordinators, groups, searchTerm, getVolunteerDetails]);
 
   // Counts for Filter Chips
@@ -357,7 +417,9 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
   const handleConfirmDelete = async () => {
     if (!assignmentToDelete) return;
     try {
-      await dispatch(DeleteVolunteerAssignment({ id: assignmentToDelete.id })).unwrap();
+      await dispatch(
+        DeleteVolunteerAssignment({ id: assignmentToDelete.id }),
+      ).unwrap();
       toast.success('Asignación de liderazgo eliminada exitosamente');
       setAssignmentToDelete(null);
       fetchCoordinators();
@@ -367,7 +429,11 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
     }
   };
 
-  const renderLeaderRow = (asg: IVolunteerAssignment, roleTitle: string, roleClass: string) => {
+  const renderLeaderRow = (
+    asg: IVolunteerAssignment,
+    roleTitle: string,
+    roleClass: string,
+  ) => {
     const details = getVolunteerDetails(asg);
 
     return (
@@ -420,14 +486,27 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={() => handleOpenDelete(asg)}
-          className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
-          title="Remover Asignación"
-        >
-          <Trash2 size={14} />
-        </button>
+        <div className="flex items-center gap-1 shrink-0">
+          <button
+            type="button"
+            onClick={() => {
+              setAssignmentToChangeRole(asg);
+              setChangeRoleModalOpen(true);
+            }}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+            title={t('volunteer_role_change.btn_tooltip')}
+          >
+            <ArrowUpDown size={14} />
+          </button>
+          <button
+            type="button"
+            onClick={() => handleOpenDelete(asg)}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
+            title="Remover Asignación"
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
       </div>
     );
   };
@@ -491,12 +570,17 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
                   : 'bg-white text-gray-600 border-gray-200/90 hover:bg-slate-100 hover:text-gray-900',
               )}
             >
-              <Icon size={12} className={isSelected ? 'text-white' : 'text-gray-400'} />
+              <Icon
+                size={12}
+                className={isSelected ? 'text-white' : 'text-gray-400'}
+              />
               <span>{tab.shortLabel}</span>
               <span
                 className={clsx(
                   'px-1.5 py-0.2 rounded-full text-[10px] font-extrabold',
-                  isSelected ? 'bg-white/25 text-white' : 'bg-slate-100 text-gray-600',
+                  isSelected
+                    ? 'bg-white/25 text-white'
+                    : 'bg-slate-100 text-gray-600',
                 )}
               >
                 {count}
@@ -598,7 +682,9 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
                       </span>
                       <span className="text-[11px] font-bold text-gray-400">
                         {coordinators.length}{' '}
-                        {coordinators.length === 1 ? 'coordinador' : 'coordinadores'}
+                        {coordinators.length === 1
+                          ? 'coordinador'
+                          : 'coordinadores'}
                       </span>
                     </div>
 
@@ -610,7 +696,9 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
                         <button
                           type="button"
                           onClick={() =>
-                            handleOpenAssign(VolunteerRole.AREA_GENERAL_COORDINATOR)
+                            handleOpenAssign(
+                              VolunteerRole.AREA_GENERAL_COORDINATOR,
+                            )
                           }
                           className="text-xs font-bold text-primary hover:underline cursor-pointer"
                         >
@@ -672,7 +760,9 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
                       </span>
                       <span className="text-[11px] font-bold text-gray-400">
                         {coordinators.length}{' '}
-                        {coordinators.length === 1 ? 'coordinador' : 'coordinadores'}
+                        {coordinators.length === 1
+                          ? 'coordinador'
+                          : 'coordinadores'}
                       </span>
                     </div>
 
@@ -722,6 +812,24 @@ export const MinistryLeadershipSection: React.FC<MinistryLeadershipSectionProps>
         serviceAreaGroups={serviceAreaGroups}
         existingAssignments={allCoordinators}
         defaultRole={defaultRoleToAssign}
+        onSuccess={() => {
+          fetchCoordinators();
+          onRefreshWorkspace?.();
+        }}
+      />
+
+      {/* ROLE CHANGE / PROMOTION / DEMOTION MODAL */}
+      <ChangeVolunteerRoleModal
+        open={changeRoleModalOpen}
+        onOpenChange={setChangeRoleModalOpen}
+        assignment={assignmentToChangeRole}
+        ministryId={ministryId}
+        churchCampusId={churchCampusId}
+        areas={areas}
+        groups={groups}
+        campuses={campuses}
+        serviceAreaGroups={serviceAreaGroups}
+        volunteersList={volunteersList}
         onSuccess={() => {
           fetchCoordinators();
           onRefreshWorkspace?.();
