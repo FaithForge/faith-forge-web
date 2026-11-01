@@ -21,6 +21,7 @@ import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import Input from '@/components/ui/Input';
 import {
+  ChurchMeetingKind,
   ChurchMeetingStateEnum,
   IMinistryGroupConfig,
   IMinistryMeetingGroupAssignment,
@@ -83,19 +84,37 @@ export const MinistryRotationModal: React.FC<MinistryRotationModalProps> = ({
   );
 
   const sortedChurchMeetings = React.useMemo(() => {
-    return [...churchMeetings].sort((meetingA, meetingB) => {
+    const todayStr = dayjs().format('YYYY-MM-DD');
+
+    const eligibleMeetings = churchMeetings.filter((meeting) => {
+      // Preserve existing rotation meeting when editing so the selection is never blanked out
+      if (existingRotation && existingRotation.churchMeetingId === meeting.id) {
+        return true;
+      }
+
+      // 1. Must be strictly recurrent (cyclical weekly rotation applies only to recurrent meetings)
+      const isRecurrent =
+        (meeting.kind ?? ChurchMeetingKind.RECURRENT) === ChurchMeetingKind.RECURRENT &&
+        !meeting.specificDate;
+      if (!isRecurrent) return false;
+
+      // 2. Must not have an expired endDate
+      if (meeting.endDate && meeting.endDate < todayStr) {
+        return false;
+      }
+
+      return true;
+    });
+
+    return [...eligibleMeetings].sort((meetingA, meetingB) => {
       const dayOrderA =
         meetingA.day && DAY_ORDER[meetingA.day.toUpperCase()] !== undefined
           ? DAY_ORDER[meetingA.day.toUpperCase()]
-          : meetingA.specificDate
-          ? dayjs(meetingA.specificDate).day()
           : 7;
 
       const dayOrderB =
         meetingB.day && DAY_ORDER[meetingB.day.toUpperCase()] !== undefined
           ? DAY_ORDER[meetingB.day.toUpperCase()]
-          : meetingB.specificDate
-          ? dayjs(meetingB.specificDate).day()
           : 7;
 
       if (dayOrderA !== dayOrderB) {
@@ -110,7 +129,7 @@ export const MinistryRotationModal: React.FC<MinistryRotationModalProps> = ({
 
       return meetingA.name.localeCompare(meetingB.name);
     });
-  }, [churchMeetings]);
+  }, [churchMeetings, existingRotation]);
 
   const [upsertRotation, { isLoading: isSaving }] = useUpsertMinistryGroupAssignmentMutation();
   const [deleteRotation, { isLoading: isDeleting }] = useDeleteMinistryGroupAssignmentMutation();

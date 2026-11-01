@@ -239,7 +239,15 @@
     "past_date_schedule_blocked": "No se pueden programar reuniones en fechas o momentos pasados",
     "past_meeting_banner": "Esta reunión ya finalizó. Puedes consultar su historial, pero no modificarla.",
     "past_meeting_locked_notice": "Historial protegido contra modificaciones",
-    "no_groups_assigned_historical": "No hubo grupos asignados para este servicio"
+    "no_groups_assigned_historical": "No hubo grupos asignados para este servicio",
+    "all_ministries_schedule_title": "Ministerios y Grupos en este horario",
+    "all_ministries_schedule_subtitle": "Grupos de servicio que atienden durante este horario de reunión",
+    "no_ministries_found": "No hay ministerios registrados en esta sede",
+    "no_group_scheduled": "Sin grupo asignado",
+    "single_date_badge": "Puntual",
+    "rotation_badge": "Rotación",
+    "view_ministry_workspace": "Ver ministerio",
+    "service_suspended_notice": "Servicio suspendido en esta fecha"
   },
   "ministry_workspace": {
     "title": "Gestión de Ministerios",

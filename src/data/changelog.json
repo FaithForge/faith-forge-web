@@ -1,5 +1,16 @@
 [
   {
+    "version": "3.19.1",
+    "type": "patch",
+    "timestamp": "2026-11-01T02:25:45.173Z",
+    "dateFormatted": "31/10/2026 09:25 PM",
+    "title": "Ajuste en la visualización de salones para supervisores",
+    "changes": [
+      "Los supervisores con salón asignado ahora visualizan exclusivamente el salón correspondiente a su área de servicio.",
+      "Visualización de los ministerios de la iglesia y grupos de servicio correspondientes en el detalle del calendario general de reuniones."
+    ]
+  },
+  {
     "version": "3.19.0",
     "type": "minor",
     "timestamp": "2026-10-30T00:12:48.613Z",

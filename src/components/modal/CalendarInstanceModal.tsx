@@ -35,6 +35,7 @@ import {
   useDeleteChurchMeetingExceptionMutation,
   useGetMinistryWorkspaceOverviewQuery,
   useGetMinistryGroupAssignmentsQuery,
+  useGetChurchMeetingDetailQuery,
   useUpsertMinistryGroupAssignmentMutation,
   useDeleteMinistryGroupAssignmentMutation,
   useDeleteChurchMeetingMutation,
@@ -138,6 +139,22 @@ export const CalendarInstanceModal: React.FC<CalendarInstanceModalProps> = ({
     },
     { skip: !open || !ministryId || !instance?.meeting.id },
   );
+
+  // Query meeting details and scheduled ministries across the church when viewed from the general calendar
+  const {
+    data: meetingDetail,
+    isLoading: isLoadingMeetingDetail,
+  } = useGetChurchMeetingDetailQuery(
+    {
+      churchMeetingId: instance?.meeting.id || '',
+      serviceDate: instance?.serviceDate || '',
+    },
+    {
+      skip: !open || !instance?.meeting.id || !instance?.serviceDate || Boolean(ministryId),
+    },
+  );
+
+  const generalMinistriesSchedule = meetingDetail?.ministries ?? instance?.ministries ?? [];
 
   // Mutations
   const [upsertException, { isLoading: savingException }] =
@@ -610,7 +627,119 @@ export const CalendarInstanceModal: React.FC<CalendarInstanceModalProps> = ({
             )
           ) : null}
 
-          {/* Section 3: Ministry Group Assignment & Sequential Rotations */}
+          {/* Section 3: General Calendar - All Ministries & Group Schedules */}
+          {!ministryId && (
+            <div className="rounded-2xl border border-slate-200/90 bg-white p-4 sm:p-5 flex flex-col gap-3.5 shadow-xs">
+              <div className="flex items-center justify-between gap-2 flex-wrap">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                    <Users size={16} />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      {t('admin:calendar.all_ministries_schedule_title')}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 font-medium">
+                      {t('admin:calendar.all_ministries_schedule_subtitle')}
+                    </p>
+                  </div>
+                </div>
+
+                {generalMinistriesSchedule.length > 0 && (
+                  <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full border border-slate-200/80">
+                    {generalMinistriesSchedule.length}{' '}
+                    {generalMinistriesSchedule.length === 1
+                      ? t('admin:ministry_workspace.tabs.teams_short')
+                      : 'ministerios'}
+                  </span>
+                )}
+              </div>
+
+              {isLoadingMeetingDetail && !instance?.ministries ? (
+                <div className="space-y-2.5 pt-1">
+                  {[1, 2, 3].map((skeletonIdx) => (
+                    <div
+                      key={skeletonIdx}
+                      className="h-14 rounded-2xl bg-slate-100/80 animate-pulse border border-slate-200/50"
+                    />
+                  ))}
+                </div>
+              ) : generalMinistriesSchedule.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-200 p-4 text-center">
+                  <p className="text-xs text-slate-500 font-medium">
+                    {t('admin:calendar.no_ministries_found')}
+                  </p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-2 pt-0.5">
+                  {generalMinistriesSchedule.map((item) => {
+                    const hasGroups = item.scheduledGroups && item.scheduledGroups.length > 0;
+
+                    return (
+                      <div
+                        key={item.ministryId}
+                        className={clsx(
+                          'p-3 sm:p-3.5 rounded-2xl border transition-colors flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-4',
+                          instance.isCancelled
+                            ? 'border-slate-200/70 bg-slate-50/60 opacity-80'
+                            : hasGroups
+                            ? 'border-slate-200/90 bg-slate-50/70 hover:bg-slate-50'
+                            : 'border-dashed border-slate-200 bg-slate-50/40',
+                        )}
+                      >
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div
+                            className={clsx(
+                              'w-8 h-8 rounded-xl flex items-center justify-center shrink-0 text-xs font-bold',
+                              hasGroups
+                                ? 'bg-primary/10 text-primary'
+                                : 'bg-slate-200/70 text-slate-500',
+                            )}
+                          >
+                            <Users size={15} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-xs font-extrabold text-slate-900 block truncate">
+                              {item.ministryName}
+                            </span>
+                            {item.assignmentNotes && (
+                              <p className="text-[10px] text-slate-500 italic truncate mt-0.5">
+                                {item.assignmentNotes}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 flex-wrap sm:justify-end shrink-0">
+                          {instance.isCancelled ? (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-rose-50 text-rose-600 border border-rose-200/70">
+                              {t('admin:calendar.service_suspended_notice')}
+                            </span>
+                          ) : hasGroups ? (
+                            item.scheduledGroups.map((group) => (
+                              <span
+                                key={group.id}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-white text-slate-800 border border-slate-200/90 shadow-2xs"
+                              >
+                                <span className="w-2 h-2 rounded-full bg-primary" />
+                                <span>{group.name}</span>
+                              </span>
+                            ))
+                          ) : (
+                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-medium bg-slate-100 text-slate-400 border border-slate-200/70">
+                              {t('admin:calendar.no_group_scheduled')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Section 4: Ministry Group Assignment & Sequential Rotations (Specific Ministry Workspace) */}
           {ministryId && isPast && (
             <div className="rounded-2xl border border-slate-200/80 bg-white p-4 flex flex-col gap-3">
               <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wide">

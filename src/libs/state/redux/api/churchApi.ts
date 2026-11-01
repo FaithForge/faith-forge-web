@@ -31,6 +31,8 @@ import {
   RequestPresignedReportUploadUrlPayload,
   PresignedUploadUrlResponse,
   ICalendarMeetingInstance,
+  IChurchMeetingDetail,
+  GetChurchMeetingDetailArgs,
   GetCalendarMeetingsArgs,
   IChurchMeetingTag,
   IChurchMeetingException,
@@ -514,6 +516,22 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: [
         { type: 'ChurchMeeting', id: 'CALENDAR' },
         { type: 'ChurchMeeting', id: 'LIST' },
+      ],
+    }),
+
+    getChurchMeetingDetail: builder.query<
+      IChurchMeetingDetail,
+      GetChurchMeetingDetailArgs
+    >({
+      query: ({ churchMeetingId, serviceDate }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/church-meeting/${churchMeetingId}`,
+        method: HttpRequestMethod.GET,
+        params: serviceDate ? { serviceDate } : undefined,
+      }),
+      providesTags: [
+        { type: 'ChurchMeeting', id: 'ASSIGNMENTS' },
+        { type: 'ChurchMeeting', id: 'CALENDAR' },
       ],
     }),
 
@@ -1036,6 +1054,8 @@ export const {
   useLazyGetMinistryAnalyticsQuery,
   useGetCalendarMeetingsQuery,
   useLazyGetCalendarMeetingsQuery,
+  useGetChurchMeetingDetailQuery,
+  useLazyGetChurchMeetingDetailQuery,
   useGetChurchMeetingTagsQuery,
   useCreateChurchMeetingTagMutation,
   useUpdateChurchMeetingTagMutation,

@@ -147,7 +147,7 @@ export const ChurchMeetingModal: React.FC<ChurchMeetingModalProps> = ({
   const isEditing = Boolean(meetingToEdit);
   const isAlreadyArchived = meetingToEdit?.state === ChurchMeetingStateEnum.ARCHIVED;
 
-  // Determine whether this one-time meeting has already ended in the past
+  // Determine whether this one-time or recurrent meeting has already ended in the past
   const isPastMeeting = useMemo(() => {
     if (!meetingToEdit) return false;
     if (meetingToEdit.kind === ChurchMeetingKind.ONE_TIME && meetingToEdit.specificDate) {
@@ -157,6 +157,9 @@ export const ChurchMeetingModal: React.FC<ChurchMeetingModalProps> = ({
         if (endDateTime.isValid()) return endDateTime.isBefore(dayjs());
       }
       return dayjs(meetingToEdit.specificDate).endOf('day').isBefore(dayjs());
+    }
+    if (meetingToEdit.kind === ChurchMeetingKind.RECURRENT && meetingToEdit.endDate) {
+      return dayjs(meetingToEdit.endDate).endOf('day').isBefore(dayjs());
     }
     return false;
   }, [meetingToEdit]);

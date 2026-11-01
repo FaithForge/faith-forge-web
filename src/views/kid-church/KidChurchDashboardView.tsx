@@ -44,13 +44,31 @@ export const KidChurchDashboardView: React.FC = () => {
   const kidsClassroomsName = useKidsTerm('classrooms');
   const kidsModuleName = useKidsTerm('module_alias');
 
-  const { canTakeVolunteerAttendance, isSuperAdmin } = usePermissions();
-  const { activeGroupConfigId } = useAppSelector((state) => state.volunteerContextSlice);
+  const { can, canTakeVolunteerAttendance, isSuperAdmin } = usePermissions();
+  const shouldFilterAssignedOnly = can('classroom:view-assigned-only');
+  const {
+    campuses,
+    activeCampusId,
+    activeGroupConfigId,
+  } = useAppSelector((state) => state.volunteerContextSlice);
 
   const effectiveGroupId =
     activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP'
       ? activeGroupConfigId
       : undefined;
+
+  // Active campus and group context to identify supervisor's assigned classroom
+  const activeCampusData = useMemo(() => {
+    return campuses.find((c) => c.id === (activeCampusId || currentCampus?.id));
+  }, [campuses, activeCampusId, currentCampus?.id]);
+
+  const activeGroupData = useMemo(() => {
+    return activeCampusData?.groups.find((g) => g.id === activeGroupConfigId);
+  }, [activeCampusData, activeGroupConfigId]);
+
+  const assignedAreas = useMemo(() => {
+    return activeGroupData?.areas || [];
+  }, [activeGroupData]);
 
   // RTK Query: Query attendance summary for the active service and group
   const { data: attendanceSummary } = useGetVolunteerAttendanceSummaryQuery(
@@ -90,14 +108,44 @@ export const KidChurchDashboardView: React.FC = () => {
     refetch: refetchKidGroups,
   } = useGetKidGroupsQuery();
 
+  // Classrooms filtered by assigned area when user is restricted to assigned areas only
+  const effectiveKidGroups = useMemo(() => {
+    if (!shouldFilterAssignedOnly || assignedAreas.length === 0) {
+      return kidGroups;
+    }
+
+    const assignedAreaNames = new Set(
+      assignedAreas
+        .map((a) =>
+          a.name
+            ?.toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .trim(),
+        )
+        .filter(Boolean),
+    );
+
+    const matched = kidGroups.filter((group) => {
+      const normalizedName = group.name
+        ?.toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .trim();
+      return assignedAreaNames.has(normalizedName);
+    });
+
+    return matched.length > 0 ? matched : kidGroups;
+  }, [shouldFilterAssignedOnly, assignedAreas, kidGroups]);
+
   // Classrooms sorted from youngest to oldest age
   const sortedKidGroups = useMemo(() => {
-    return sortKidGroupsByAge(kidGroups);
-  }, [kidGroups]);
+    return sortKidGroupsByAge(effectiveKidGroups);
+  }, [effectiveKidGroups]);
 
   // Always query all kids for the active meeting when multiple classrooms exist,
   // so all classroom counters remain populated even when filtering by a specific classroom.
-  const activeKidGroupId = kidGroups.length === 1 ? kidGroups[0].id : undefined;
+  const activeKidGroupId = effectiveKidGroups.length === 1 ? effectiveKidGroups[0].id : undefined;
 
   const todayIso = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
 
@@ -142,7 +190,7 @@ export const KidChurchDashboardView: React.FC = () => {
   const { setSearchAvailable, registerSearchFocusHandler } = useSearchScroll();
 
   useEffect(() => {
-    const isAvailable = !loadingKidGroups && kidGroups.length > 0;
+    const isAvailable = !loadingKidGroups && effectiveKidGroups.length > 0;
     setSearchAvailable(isAvailable);
     if (isAvailable) {
       registerSearchFocusHandler(() => {
@@ -154,20 +202,20 @@ export const KidChurchDashboardView: React.FC = () => {
       setSearchAvailable(false);
       registerSearchFocusHandler(null);
     };
-  }, [loadingKidGroups, kidGroups.length, setSearchAvailable, registerSearchFocusHandler]);
+  }, [loadingKidGroups, effectiveKidGroups.length, setSearchAvailable, registerSearchFocusHandler]);
 
   // Auto-preselect when user is Supervisor with a single assigned classroom (length === 1)
   useEffect(() => {
-    if (kidGroups.length === 1 && selectedKidGroupId !== kidGroups[0].id) {
-      setSelectedKidGroupId(kidGroups[0].id);
+    if (effectiveKidGroups.length === 1 && selectedKidGroupId !== effectiveKidGroups[0].id) {
+      setSelectedKidGroupId(effectiveKidGroups[0].id);
     }
-  }, [kidGroups, selectedKidGroupId]);
+  }, [effectiveKidGroups, selectedKidGroupId]);
 
   // Listen for BottomNav tab click to reset search and filters
   useEffect(() => {
     const handleReset = () => {
       setSearchText('');
-      if (kidGroups.length > 1) {
+      if (effectiveKidGroups.length > 1) {
         setSelectedKidGroupId('');
       }
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -180,7 +228,7 @@ export const KidChurchDashboardView: React.FC = () => {
     return () => {
       window.removeEventListener('reset-kid-church-dashboard', handleReset);
     };
-  }, [kidGroups.length, refetchAttendance]);
+  }, [effectiveKidGroups.length, refetchAttendance]);
 
   const handleRefresh = async () => {
     setIsRefreshing(true);
@@ -236,7 +284,7 @@ export const KidChurchDashboardView: React.FC = () => {
           <div className="min-w-0">
             <span className="text-[11px] font-bold uppercase tracking-wider text-primary block truncate">
               {currentCampus?.name || t('dashboard.campus_fallback')}
-              {kidGroups.length === 1 && ` • ${t('dashboard.classroom_prefix', { name: kidGroups[0].name })}`}
+              {effectiveKidGroups.length === 1 && ` • ${t('dashboard.classroom_prefix', { name: effectiveKidGroups[0].name })}`}
             </span>
             <h2 className="text-base font-black text-gray-800 truncate">
               {currentMeeting.name}
@@ -329,14 +377,14 @@ export const KidChurchDashboardView: React.FC = () => {
       )}
 
       {/* Loading State for Classrooms */}
-      {loadingKidGroups && kidGroups.length === 0 && (
+      {loadingKidGroups && effectiveKidGroups.length === 0 && (
         <div className="flex flex-col gap-2 mt-2">
           <CellListSkeleton count={4} />
         </div>
       )}
 
       {/* State: No authorized classrooms (User has 0 classrooms) */}
-      {!loadingKidGroups && kidGroups.length === 0 && (
+      {!loadingKidGroups && effectiveKidGroups.length === 0 && (
         <div className="bg-amber-50 border border-amber-200/80 rounded-2xl p-6 text-center flex flex-col items-center gap-3 shadow-xs my-auto">
           <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center">
             <ShieldAlert size={24} />
@@ -353,7 +401,7 @@ export const KidChurchDashboardView: React.FC = () => {
       )}
 
       {/* When user has authorized classrooms (length > 0) */}
-      {!loadingKidGroups && kidGroups.length > 0 && (
+      {!loadingKidGroups && effectiveKidGroups.length > 0 && (
         <>
           {/* Search Input (scrolls with content, revealed as lupa in TopBar on scroll) */}
           <div className="py-1">
@@ -361,8 +409,8 @@ export const KidChurchDashboardView: React.FC = () => {
               ref={searchInputRef}
               icon="search"
               placeholder={
-                kidGroups.length === 1
-                  ? t('dashboard.search_placeholder_single', { classroom: kidGroups[0].name })
+                effectiveKidGroups.length === 1
+                  ? t('dashboard.search_placeholder_single', { classroom: effectiveKidGroups[0].name })
                   : t('dashboard.search_placeholder_multi')
               }
               value={searchText}
@@ -373,7 +421,7 @@ export const KidChurchDashboardView: React.FC = () => {
           </div>
 
           {/* Multiple Classrooms Selector (Only shown if user has more than 1 classroom) */}
-          {kidGroups.length > 1 && (
+          {effectiveKidGroups.length > 1 && (
             <div className="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 flex flex-col gap-2">
               <div className="flex items-center justify-between px-0.5">
                 <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wide">

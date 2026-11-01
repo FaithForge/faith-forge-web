@@ -231,6 +231,33 @@ export interface ICalendarMeetingInstance {
   rotationAssignmentId?: string;
   rotationIntervalWeeks?: number;
   rotationStartDate?: string;
+  ministries?: IMeetingMinistrySchedule[];
+}
+
+export interface IMeetingMinistrySchedule {
+  ministryId: string;
+  ministryName: string;
+  ministryType: MinistryType;
+  scheduledGroupIds: string[];
+  scheduledGroups: IMinistryGroupConfig[];
+  hasScheduleRule: boolean;
+  isSingleDateAssignment: boolean;
+  assignmentNotes?: string | null;
+}
+
+export interface IChurchMeetingDetail {
+  serviceDate: string;
+  meeting: IChurchMeeting;
+  isCancelled: boolean;
+  exceptionId?: string | null;
+  exceptionReason?: string | null;
+  isPast: boolean;
+  ministries: IMeetingMinistrySchedule[];
+}
+
+export interface GetChurchMeetingDetailArgs {
+  churchMeetingId: string;
+  serviceDate?: string;
 }
 
 export interface GetCalendarMeetingsArgs {
