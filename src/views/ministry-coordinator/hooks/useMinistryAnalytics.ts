@@ -1,18 +1,18 @@
-import { useState, useEffect, useMemo } from 'react';
-import dayjs from 'dayjs';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { TemporalFilterValue } from '@/components/ui/TemporalFilterSelector';
+import { Days } from '@/libs/common-types/constants/days';
+import { usePermissions } from '@/libs/hooks/usePermissions';
+import { ChurchMeetingStateEnum } from '@/libs/models/Church';
+import { IMinistry } from '@/libs/models/Ministry';
 import {
   useGetChurchMeetingsQuery,
   useGetChurchMeetingTagsQuery,
   useGetMinistriesQuery,
   useGetMinistryAnalyticsQuery,
 } from '@/libs/state/redux/api/churchApi';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { setActiveMinistry } from '@/libs/state/redux/slices/church/volunteerContext.slice';
-import { TemporalFilterValue } from '@/components/ui/TemporalFilterSelector';
-import { usePermissions } from '@/libs/hooks/usePermissions';
-import { IMinistry } from '@/libs/models/Ministry';
-import { Days } from '@/libs/common-types/constants/days';
-import { ChurchMeetingStateEnum } from '@/libs/models/Church';
+import dayjs from 'dayjs';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 const DAYJS_TO_DAYS: Record<number, Days> = {
   0: Days.SUNDAY,
@@ -71,19 +71,21 @@ export const useMinistryAnalytics = () => {
     campuses,
   } = useAppSelector((state) => state.volunteerContextSlice);
 
-  const currentCampus = useAppSelector((state) => state.churchCampusSlice.current);
+  const currentCampus = useAppSelector(
+    (state) => state.churchCampusSlice.current,
+  );
   const effectiveCampusId = activeCampusId || currentCampus?.id;
 
   // Active campus context from volunteer assignment
   const currentCampusContext = useMemo(
     () => campuses.find((c) => c.id === effectiveCampusId),
-    [campuses, effectiveCampusId]
+    [campuses, effectiveCampusId],
   );
 
   // Fetch campus ministries to resolve available ministries and types
   const { data: campusMinistries = [] } = useGetMinistriesQuery(
     effectiveCampusId ? { churchCampusId: effectiveCampusId } : undefined,
-    { skip: !effectiveCampusId }
+    { skip: !effectiveCampusId },
   );
 
   // Determine all available ministries for the current coordinator in this campus
@@ -98,9 +100,14 @@ export const useMinistryAnalytics = () => {
 
     const map = new Map<string, { id: string; name: string; type?: string }>();
 
-    if (currentCampusContext?.ministryCoordinators && currentCampusContext.ministryCoordinators.length > 0) {
+    if (
+      currentCampusContext?.ministryCoordinators &&
+      currentCampusContext.ministryCoordinators.length > 0
+    ) {
       for (const coord of currentCampusContext.ministryCoordinators) {
-        const enriched = campusMinistries.find((m: IMinistry) => m.id === coord.ministryId);
+        const enriched = campusMinistries.find(
+          (m: IMinistry) => m.id === coord.ministryId,
+        );
         map.set(coord.ministryId, {
           id: coord.ministryId,
           name: coord.ministryName,
@@ -135,11 +142,13 @@ export const useMinistryAnalytics = () => {
             ministryId: single.id,
             ministryName: single.name,
             ministryType: single.type,
-          })
+          }),
         );
       }
     } else if (availableMinistries.length > 1) {
-      const isCurrentValid = availableMinistries.some((m: { id: string }) => m.id === activeMinistryId);
+      const isCurrentValid = availableMinistries.some(
+        (m: { id: string }) => m.id === activeMinistryId,
+      );
       if (!isCurrentValid) {
         setIsMinistryModalOpen(true);
       }
@@ -147,15 +156,17 @@ export const useMinistryAnalytics = () => {
   }, [availableMinistries, activeMinistryId, dispatch]);
 
   // Temporal filter state (defaults to LAST_7_DAYS)
-  const [temporalFilter, setTemporalFilter] = useState<TemporalFilterValue>(() => {
-    const today = dayjs();
-    return {
-      preset: 'LAST_7_DAYS',
-      from: today.subtract(6, 'day').format('YYYY-MM-DD'),
-      to: today.format('YYYY-MM-DD'),
-      label: 'Últimos 7 días',
-    };
-  });
+  const [temporalFilter, setTemporalFilter] = useState<TemporalFilterValue>(
+    () => {
+      const today = dayjs();
+      return {
+        preset: 'LAST_7_DAYS',
+        from: today.subtract(6, 'day').format('YYYY-MM-DD'),
+        to: today.format('YYYY-MM-DD'),
+        label: 'Últimos 7 días',
+      };
+    },
+  );
 
   // Selected meeting IDs filter (empty array means all meetings / panoramic)
   const [selectedMeetingIds, setSelectedMeetingIds] = useState<string[]>([]);
@@ -165,13 +176,15 @@ export const useMinistryAnalytics = () => {
   // Fetch church meetings for active campus
   const { data: rawMeetings = [] } = useGetChurchMeetingsQuery(
     effectiveCampusId ? { churchCampusId: effectiveCampusId } : undefined,
-    { skip: !effectiveCampusId }
+    { skip: !effectiveCampusId },
   );
 
   // Fetch active tags for active campus
   const { data: availableTags = [] } = useGetChurchMeetingTagsQuery(
-    effectiveCampusId ? { churchCampusId: effectiveCampusId, suggestionsOnly: false } : { churchCampusId: '' },
-    { skip: !effectiveCampusId }
+    effectiveCampusId
+      ? { churchCampusId: effectiveCampusId, suggestionsOnly: false }
+      : { churchCampusId: '' },
+    { skip: !effectiveCampusId },
   );
 
   // Filter meetings strictly by the selected day, date range, or event tag
@@ -181,8 +194,8 @@ export const useMinistryAnalytics = () => {
     const daysInRange = getDaysInRange(temporalFilter.from, temporalFilter.to);
 
     return rawMeetings.filter((meeting) => {
-      // Exclude soft-deleted meetings
-      if (meeting.state && meeting.state !== ChurchMeetingStateEnum.ACTIVE) {
+      // Exclude only soft-deleted meetings (disabled/archived meetings remain valid for historical stats)
+      if (meeting.state && meeting.state === ChurchMeetingStateEnum.DELETED) {
         return false;
       }
       if (selectedTagId && meeting.tagId !== selectedTagId) {
@@ -193,15 +206,33 @@ export const useMinistryAnalytics = () => {
     });
   }, [rawMeetings, temporalFilter.from, temporalFilter.to, selectedTagId]);
 
-  // Clean up selectedMeetingIds if they are no longer in the filtered meetings list
+  const wasAutoSelectedRef = useRef(false);
+
+  // Auto-select single meeting when exactly 1 meeting is available, and clean up stale selections
   useEffect(() => {
-    if (selectedMeetingIds.length > 0) {
-      const valid = selectedMeetingIds.filter((id) =>
-        filteredMeetings.some((m) => m.id === id)
-      );
-      if (valid.length !== selectedMeetingIds.length) {
-        setSelectedMeetingIds(valid);
+    if (filteredMeetings.length === 1) {
+      const singleId = filteredMeetings[0].id;
+      if (
+        selectedMeetingIds.length !== 1 ||
+        selectedMeetingIds[0] !== singleId
+      ) {
+        wasAutoSelectedRef.current = true;
+        setSelectedMeetingIds([singleId]);
       }
+    } else if (filteredMeetings.length > 1) {
+      if (wasAutoSelectedRef.current) {
+        wasAutoSelectedRef.current = false;
+        setSelectedMeetingIds([]);
+      } else if (selectedMeetingIds.length > 0) {
+        const valid = selectedMeetingIds.filter((id) =>
+          filteredMeetings.some((m) => m.id === id),
+        );
+        if (valid.length !== selectedMeetingIds.length) {
+          setSelectedMeetingIds(valid);
+        }
+      }
+    } else {
+      wasAutoSelectedRef.current = false;
     }
   }, [filteredMeetings, selectedMeetingIds]);
 
@@ -222,14 +253,17 @@ export const useMinistryAnalytics = () => {
       if (!m.initialHour) return false;
       const start = m.initialHour;
       const end = m.finalHour
-        ? dayjs(`2000-01-01 ${m.finalHour}`).add(30, 'minute').format('HH:mm:ss')
+        ? dayjs(`2000-01-01 ${m.finalHour}`)
+            .add(30, 'minute')
+            .format('HH:mm:ss')
         : '23:59:59';
       return nowTime >= start && nowTime <= end;
     });
   }, [isSelectionToday, filteredMeetings]);
 
   // Fetch ministry analytics via churchApi
-  const effectiveMinistryId = activeMinistryId || (availableMinistries[0]?.id ?? '');
+  const effectiveMinistryId =
+    activeMinistryId || (availableMinistries[0]?.id ?? '');
 
   const {
     data: analyticsData,
@@ -244,23 +278,66 @@ export const useMinistryAnalytics = () => {
       churchCampusId: effectiveCampusId,
       from: temporalFilter.from,
       to: temporalFilter.to,
-      churchMeetingIds: selectedMeetingIds.length > 0 ? selectedMeetingIds : undefined,
+      churchMeetingIds:
+        selectedMeetingIds.length > 0 ? selectedMeetingIds : undefined,
       tagId: selectedTagId || undefined,
     },
     {
-      skip: !effectiveMinistryId || !effectiveCampusId || !hasMeetingsForSelection,
-    }
+      skip:
+        !effectiveMinistryId || !effectiveCampusId || !hasMeetingsForSelection,
+    },
   );
 
   const activeMinistry = useMemo(() => {
     if (!effectiveMinistryId) return null;
-    const found = availableMinistries.find((m: { id: string }) => m.id === effectiveMinistryId);
+    const found = availableMinistries.find(
+      (m: { id: string }) => m.id === effectiveMinistryId,
+    );
     return {
       id: effectiveMinistryId,
       name: found?.name || activeMinistryName || 'Ministerio',
       type: found?.type || activeMinistryType || 'GENERAL',
     };
-  }, [effectiveMinistryId, availableMinistries, activeMinistryName, activeMinistryType]);
+  }, [
+    effectiveMinistryId,
+    availableMinistries,
+    activeMinistryName,
+    activeMinistryType,
+  ]);
+
+  // Exact service dates that have historical statistics in DB
+  const allowedDates = analyticsData?.availableDates;
+
+  // Allowed days of the week based on campus church meetings and historical dates
+  const allowedDaysOfWeek = useMemo(() => {
+    const days = new Set<number>();
+
+    if (rawMeetings && rawMeetings.length > 0) {
+      rawMeetings.forEach((m) => {
+        if (m.state && m.state === ChurchMeetingStateEnum.DELETED) return;
+        if (selectedTagId && m.tagId !== selectedTagId) return;
+        if (m.day) {
+          const found = Object.entries(DAYJS_TO_DAYS).find(
+            ([, v]) => v === m.day,
+          );
+          if (found) {
+            days.add(Number(found[0]));
+          }
+        }
+      });
+    }
+
+    if (allowedDates && allowedDates.length > 0) {
+      allowedDates.forEach((dateStr) => {
+        const d = dayjs(dateStr);
+        if (d.isValid()) {
+          days.add(d.day());
+        }
+      });
+    }
+
+    return days.size > 0 ? Array.from(days) : undefined;
+  }, [rawMeetings, selectedTagId, allowedDates]);
 
   return {
     data: analyticsData,
@@ -279,6 +356,8 @@ export const useMinistryAnalytics = () => {
     selectedTagId,
     setSelectedTagId,
     availableTags,
+    allowedDaysOfWeek,
+    allowedDates,
     meetings: filteredMeetings,
     rawMeetings,
     hasMeetingsForSelection,

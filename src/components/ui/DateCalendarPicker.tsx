@@ -1,67 +1,91 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import * as Popover from '@radix-ui/react-popover';
+import clsx from 'clsx';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
-import { Calendar, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
-import clsx from 'clsx';
-import ModalOverlay from '@/components/ui/ModalOverlay';
+import {
+  Calendar,
+  CalendarDays,
+  ChevronLeft,
+  ChevronRight,
+  X,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useState } from 'react';
 
-type DateCalendarPickerProps = {
+export type DateCalendarPickerProps = {
   value: string;
   onChange: (value: string) => void;
   minDate?: string;
   maxDate?: string;
   allowedDaysOfWeek?: number[]; // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
-  label: string;
+  allowedDates?: string[]; // exact YYYY-MM-DD dates that are allowed
+  label?: string;
   helpText?: string;
+  placeholder?: string;
   disabled?: boolean;
+  className?: string;
 };
 
 type CalendarCell = {
   date: string;
   day: number;
   isDisabled: boolean;
+  isAllowedMeetingDay: boolean;
   isSelected: boolean;
   isToday: boolean;
 };
 
 /**
  * Modern custom calendar date picker aligned with the app design system.
- * Supports day-of-week restrictions (e.g. enabling only Sundays for Sunday services).
+ * Supports day-of-week and exact-date restrictions (e.g. enabling only dates with church meetings).
+ * Operates as an anchored, responsive popover tailored for desktop and mobile without disruptive full-screen modal overlays.
  *
- * @param {DateCalendarPickerProps} props - Value, date limits, allowed days of week, label, change callback and disabled state.
- * @returns {JSX.Element}
+ * @param {DateCalendarPickerProps} props - Value, date limits, allowed days/dates, label, callback, and disabled state.
+ * @returns {JSX.Element} Rendered date calendar picker.
  */
-const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
+export const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
   value,
   onChange,
   minDate,
   maxDate,
   allowedDaysOfWeek,
+  allowedDates,
   label,
   helpText,
+  placeholder,
   disabled = false,
+  className = '',
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [draftValue, setDraftValue] = useState(value);
-  const [viewMonth, setViewMonth] = useState(dayjs(value || maxDate || undefined).startOf('month'));
+  const [viewMonth, setViewMonth] = useState(
+    dayjs(value || maxDate || undefined).startOf('month'),
+  );
 
   useEffect(() => {
     setDraftValue(value);
     setViewMonth(dayjs(value || maxDate || undefined).startOf('month'));
   }, [maxDate, value]);
 
-  const normalizedMinDate = useMemo(() => (minDate ? dayjs(minDate).startOf('day') : null), [minDate]);
-  const normalizedMaxDate = useMemo(() => (maxDate ? dayjs(maxDate).startOf('day') : null), [maxDate]);
+  const normalizedMinDate = useMemo(
+    () => (minDate ? dayjs(minDate).startOf('day') : null),
+    [minDate],
+  );
+  const normalizedMaxDate = useMemo(
+    () => (maxDate ? dayjs(maxDate).startOf('day') : null),
+    [maxDate],
+  );
   const todayStr = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
 
-  const weekDays = useMemo(() => ['L', 'M', 'M', 'J', 'V', 'S', 'D'], []);
+  const weekDays = useMemo(() => ['L', 'M', 'X', 'J', 'V', 'S', 'D'], []);
 
   const monthCells = useMemo(() => {
     const startOfMonth = viewMonth.startOf('month');
     const daysInMonth = viewMonth.daysInMonth();
     const monthStartOffset = (startOfMonth.day() + 6) % 7;
     const totalCells = Math.ceil((monthStartOffset + daysInMonth) / 7) * 7;
-    const currentSelection = draftValue ? dayjs(draftValue).startOf('day') : null;
+    const currentSelection = draftValue
+      ? dayjs(draftValue).startOf('day')
+      : null;
 
     const cells: Array<CalendarCell | null> = [];
 
@@ -74,183 +98,234 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
 
       const cellDate = startOfMonth.date(dayNumber).format('YYYY-MM-DD');
       const currentDate = dayjs(cellDate).startOf('day');
-      
+
       const isDayOfWeekAllowed =
         allowedDaysOfWeek && allowedDaysOfWeek.length > 0
           ? allowedDaysOfWeek.includes(currentDate.day())
           : true;
 
+      const isDateAllowed =
+        allowedDates && allowedDates.length > 0
+          ? allowedDates.includes(cellDate)
+          : true;
+
+      // If exact dates with stats exist, use them; otherwise fallback to allowed days of week
+      const isAllowedMeetingDay =
+        allowedDates && allowedDates.length > 0
+          ? isDateAllowed
+          : isDayOfWeekAllowed;
+
       const isDisabled =
-        !isDayOfWeekAllowed ||
-        (normalizedMinDate ? currentDate.isBefore(normalizedMinDate, 'day') : false) ||
-        (normalizedMaxDate ? currentDate.isAfter(normalizedMaxDate, 'day') : false);
+        !isAllowedMeetingDay ||
+        (normalizedMinDate
+          ? currentDate.isBefore(normalizedMinDate, 'day')
+          : false) ||
+        (normalizedMaxDate
+          ? currentDate.isAfter(normalizedMaxDate, 'day')
+          : false);
 
       cells.push({
         date: cellDate,
         day: dayNumber,
         isDisabled,
-        isSelected: !!currentSelection && currentSelection.isSame(currentDate, 'day'),
+        isAllowedMeetingDay,
+        isSelected:
+          !!currentSelection && currentSelection.isSame(currentDate, 'day'),
         isToday: cellDate === todayStr,
       });
     }
 
     return cells;
-  }, [draftValue, normalizedMaxDate, normalizedMinDate, viewMonth, todayStr, allowedDaysOfWeek]);
+  }, [
+    draftValue,
+    normalizedMaxDate,
+    normalizedMinDate,
+    viewMonth,
+    todayStr,
+    allowedDaysOfWeek,
+    allowedDates,
+  ]);
 
   const monthTitle = useMemo(() => {
-    const titleFormatter = new Intl.DateTimeFormat('es-ES', { month: 'long', year: 'numeric' });
+    const titleFormatter = new Intl.DateTimeFormat('es-ES', {
+      month: 'long',
+      year: 'numeric',
+    });
     const raw = titleFormatter.format(viewMonth.toDate());
     return raw.charAt(0).toUpperCase() + raw.slice(1);
   }, [viewMonth]);
 
-  const openPicker = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (disabled) return;
-    setDraftValue(value);
-    setViewMonth(dayjs(value || maxDate || undefined).startOf('month'));
-    setIsOpen(true);
-  };
-
-  const closePicker = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    setIsOpen(false);
-  };
-
-  const confirmSelection = (e?: React.MouseEvent) => {
-    e?.stopPropagation();
-    if (!draftValue) return;
-    onChange(draftValue);
-    closePicker(e);
-  };
-
-  const handleDayClick = (date: string, isDisabled: boolean, e?: React.MouseEvent) => {
+  const handleDayClick = (
+    date: string,
+    isDisabled: boolean,
+    e?: React.MouseEvent,
+  ) => {
     e?.stopPropagation();
     if (isDisabled) return;
     setDraftValue(date);
+    onChange(date);
+    setIsOpen(false);
   };
 
   const handleQuickSelectRecent = (e?: React.MouseEvent) => {
     e?.stopPropagation();
+
+    if (allowedDates && allowedDates.length > 0) {
+      const latest = allowedDates[0];
+      setDraftValue(latest);
+      setViewMonth(dayjs(latest).startOf('month'));
+      onChange(latest);
+      setIsOpen(false);
+      return;
+    }
+
     let d = dayjs(todayStr);
+
     if (allowedDaysOfWeek && allowedDaysOfWeek.length > 0) {
-      while (!allowedDaysOfWeek.includes(d.day())) {
+      let attempts = 0;
+      while (!allowedDaysOfWeek.includes(d.day()) && attempts < 14) {
         d = d.subtract(1, 'day');
+        attempts += 1;
       }
     }
+
     const recentDateStr = d.format('YYYY-MM-DD');
     setDraftValue(recentDateStr);
     setViewMonth(d.startOf('month'));
+    onChange(recentDateStr);
+    setIsOpen(false);
   };
 
   const formattedDisplay = useMemo(() => {
-    if (!value) return 'Seleccionar fecha...';
+    if (!value) return placeholder || 'Seleccionar fecha...';
     const d = dayjs(value).locale('es');
-    const day = d.format('DD');
+    const dayName = d.format('dddd');
+    const capitalDay = dayName.charAt(0).toUpperCase() + dayName.slice(1);
+    const dayNum = d.format('D');
     const rawMonth = d.format('MMMM');
     const month = rawMonth.charAt(0).toUpperCase() + rawMonth.slice(1);
     const year = d.format('YYYY');
-    return `${day} de ${month} de ${year}`;
-  }, [value]);
+    return `${capitalDay}, ${dayNum} de ${month} de ${year}`;
+  }, [value, placeholder]);
 
   return (
-    <div className="flex flex-col gap-1.5" onClick={(e) => e.stopPropagation()}>
-      {/* Label */}
-      <label className="flex items-center gap-2 text-xs font-bold text-gray-700 uppercase tracking-wide">
-        <Calendar size={15} className="text-primary" /> {label}
-      </label>
+    <div className={clsx('flex flex-col gap-1.5', className)}>
+      {/* Optional Label */}
+      {label && (
+        <label className="flex items-center gap-2 text-xs font-bold text-slate-700 uppercase tracking-wide">
+          <CalendarDays className="w-3.5 h-3.5 text-[#0284c7]" /> {label}
+        </label>
+      )}
 
-      {/* Styled Input Trigger */}
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={openPicker}
-        className={clsx(
-          'flex items-center justify-between w-full rounded-xl border-2 border-gray-200 bg-white text-text-main py-2.5 px-3.5 focus:border-primary transition-colors outline-none text-sm shadow-sm font-medium text-left',
-          disabled
-            ? 'opacity-50 cursor-not-allowed bg-gray-50'
-            : 'hover:border-primary/50 active:scale-[0.99]'
-        )}
-      >
-        <span className={clsx(value && !disabled ? 'text-gray-800 font-semibold' : 'text-gray-400 font-normal')}>
-          {disabled ? 'Selecciona un servicio primero...' : formattedDisplay}
-        </span>
-        <Calendar size={17} className="text-gray-400 shrink-0 ml-2" />
-      </button>
-
-      {helpText && <p className="text-[11px] text-gray-400 font-medium px-0.5">{helpText}</p>}
-
-      {/* Modern Calendar Modal */}
-      <ModalOverlay
-        open={isOpen}
-        onClose={closePicker}
-        panelClassName="w-full max-w-sm overflow-hidden rounded-3xl bg-white shadow-2xl ring-1 ring-black/5"
-      >
-        <div onClick={(event) => event.stopPropagation()} className="flex flex-col">
-          {/* Header */}
-          <div className="p-4 bg-gray-50/80 border-b border-gray-100 flex items-center justify-between">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                <Calendar size={18} />
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-800 text-sm">Seleccionar Fecha</h3>
-                <p className="text-[11px] text-gray-500 font-medium">Elige el día a consultar</p>
-              </div>
+      {/* Anchored Popover Root */}
+      <Popover.Root open={isOpen} onOpenChange={setIsOpen}>
+        <Popover.Trigger asChild disabled={disabled}>
+          <button
+            type="button"
+            disabled={disabled}
+            className={clsx(
+              'flex items-center justify-between w-full rounded-2xl border-2 border-slate-200 bg-white text-slate-800 py-2.5 px-3.5 hover:border-slate-300 focus:border-[#0284c7] transition-all outline-hidden text-xs font-semibold shadow-2xs text-left',
+              disabled
+                ? 'opacity-50 cursor-not-allowed bg-slate-50'
+                : 'hover:border-[#0284c7]/50 active:scale-[0.99]',
+            )}
+          >
+            <div className="flex items-center gap-2 min-w-0 pr-2">
+              <Calendar className="w-4 h-4 text-[#0284c7] shrink-0" />
+              <span
+                className={clsx(
+                  value && !disabled
+                    ? 'text-slate-800 font-bold truncate'
+                    : 'text-slate-400 font-normal truncate',
+                )}
+              >
+                {disabled
+                  ? 'Selecciona un servicio primero...'
+                  : formattedDisplay}
+              </span>
             </div>
-            <button
-              type="button"
-              onClick={closePicker}
-              className="w-8 h-8 flex items-center justify-center rounded-full bg-gray-200/60 text-gray-500 hover:bg-gray-200 transition-colors"
-            >
-              <X size={16} />
-            </button>
-          </div>
+            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0 opacity-60" />
+          </button>
+        </Popover.Trigger>
 
-          {/* Body */}
-          <div className="p-4">
+        <Popover.Portal>
+          <Popover.Content
+            align="start"
+            sideOffset={6}
+            collisionPadding={12}
+            className="z-[300] w-[min(calc(100vw-32px),320px)] bg-white rounded-3xl shadow-2xl border border-slate-200 p-4 space-y-3 animate-in fade-in-80 zoom-in-95 outline-hidden"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0">
+                  <CalendarDays className="w-4 h-4" />
+                </div>
+                <div>
+                  <h4 className="text-xs font-bold text-slate-900">
+                    Seleccionar Fecha
+                  </h4>
+                  {allowedDaysOfWeek && allowedDaysOfWeek.length > 0 && (
+                    <p className="text-[10px] text-slate-400 font-medium">
+                      Solo días con reuniones
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <Popover.Close asChild>
+                <button
+                  type="button"
+                  className="w-7 h-7 flex items-center justify-center rounded-full bg-slate-100 hover:bg-slate-200 text-slate-500 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </Popover.Close>
+            </div>
+
             {/* Month Navigator */}
-            <div className="mb-3 flex items-center justify-between">
+            <div className="flex items-center justify-between pt-0.5">
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setViewMonth((currentMonth) => currentMonth.subtract(1, 'month'));
+                  setViewMonth((m) => m.subtract(1, 'month'));
                 }}
-                className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                className="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                <ChevronLeft size={18} />
+                <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <div className="text-sm font-bold text-gray-900 tracking-wide">
+              <span className="text-xs font-bold text-slate-800 tracking-wide">
                 {monthTitle}
-              </div>
+              </span>
 
               <button
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation();
-                  setViewMonth((currentMonth) => currentMonth.add(1, 'month'));
+                  setViewMonth((m) => m.add(1, 'month'));
                 }}
-                className="w-9 h-9 rounded-xl border border-gray-200 flex items-center justify-center text-gray-600 hover:bg-gray-100 hover:border-gray-300 transition-colors"
+                className="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center text-slate-600 hover:bg-slate-50 transition-colors"
               >
-                <ChevronRight size={18} />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
 
-            {/* Weekday headers */}
-            <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-bold uppercase tracking-wider text-gray-400 mb-1">
-              {weekDays.map((weekDay, idx) => (
-                <div key={`${weekDay}-${idx}`} className="py-1">
-                  {weekDay}
+            {/* Weekday labels */}
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-400">
+              {weekDays.map((wd, i) => (
+                <div key={i} className="py-0.5">
+                  {wd}
                 </div>
               ))}
             </div>
 
-            {/* Day grid */}
+            {/* Days grid */}
             <div className="grid grid-cols-7 gap-1">
-              {monthCells.map((cell, index) => {
+              {monthCells.map((cell, idx) => {
                 if (!cell) {
-                  return <div key={`empty-${index}`} className="h-9" />;
+                  return <div key={`empty-${idx}`} className="h-9" />;
                 }
 
                 return (
@@ -258,53 +333,69 @@ const DateCalendarPicker: React.FC<DateCalendarPickerProps> = ({
                     key={cell.date}
                     type="button"
                     disabled={cell.isDisabled}
-                    onClick={(e) => handleDayClick(cell.date, cell.isDisabled, e)}
+                    onClick={(e) =>
+                      handleDayClick(cell.date, cell.isDisabled, e)
+                    }
                     className={clsx(
-                      'relative h-9 rounded-xl text-xs font-bold transition-all flex items-center justify-center',
-                      cell.isDisabled && 'cursor-not-allowed text-gray-300 bg-gray-50/40 opacity-40',
+                      'relative h-9 rounded-xl text-xs font-bold transition-all flex flex-col items-center justify-center',
+                      cell.isDisabled &&
+                        'cursor-not-allowed text-slate-300 bg-slate-50/40 opacity-35',
                       !cell.isDisabled &&
                         !cell.isSelected &&
-                        'text-gray-800 bg-white border border-gray-100 hover:bg-primary/10 hover:border-primary hover:text-primary active:scale-90 shadow-2xs',
-                      cell.isToday && !cell.isSelected && 'border border-primary/40 text-primary font-black',
-                      cell.isSelected && 'bg-primary text-primary-foreground shadow-md font-black scale-105'
+                        'text-slate-800 bg-white border border-slate-100 hover:bg-sky-50 hover:border-sky-300 hover:text-[#0284c7] active:scale-95 shadow-2xs',
+                      cell.isToday &&
+                        !cell.isSelected &&
+                        'border border-sky-400 text-[#0284c7] font-black',
+                      cell.isSelected &&
+                        'bg-[#0284c7] text-white shadow-xs font-black scale-105',
                     )}
                   >
-                    {cell.day}
+                    <span>{cell.day}</span>
+                    {cell.isAllowedMeetingDay && !cell.isDisabled && (
+                      <span
+                        className={clsx(
+                          'w-1 h-1 rounded-full -mb-1',
+                          cell.isSelected ? 'bg-white' : 'bg-[#0284c7]',
+                        )}
+                      />
+                    )}
                   </button>
                 );
               })}
             </div>
 
             {/* Footer */}
-            <div className="mt-4 flex items-center justify-between gap-2 border-t border-gray-100 pt-3">
+            <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
               <button
                 type="button"
                 onClick={handleQuickSelectRecent}
-                className="rounded-xl bg-primary/10 px-3 py-1.5 text-xs font-bold text-primary transition-colors hover:bg-primary/20"
+                className="text-[11px] font-bold text-[#0284c7] hover:underline"
               >
-                {allowedDaysOfWeek && allowedDaysOfWeek.length > 0 ? 'Último Servicio' : 'Hoy'}
+                {allowedDaysOfWeek && allowedDaysOfWeek.length > 0
+                  ? 'Último servicio'
+                  : 'Hoy'}
               </button>
 
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={closePicker}
-                  className="rounded-xl border border-gray-200 px-3.5 py-1.5 text-xs font-bold text-gray-600 transition-colors hover:bg-gray-100"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmSelection}
-                  className="rounded-xl bg-primary px-4 py-1.5 text-xs font-bold text-primary-foreground shadow-sm transition-all hover:opacity-90 active:scale-95 flex items-center gap-1"
-                >
-                  <Check size={14} /> Confirmar
-                </button>
+              <div className="flex items-center gap-1.5">
+                <Popover.Close asChild>
+                  <button
+                    type="button"
+                    className="px-2.5 py-1 rounded-xl border border-slate-200 text-[11px] font-semibold text-slate-600 hover:bg-slate-50 transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </Popover.Close>
               </div>
             </div>
-          </div>
-        </div>
-      </ModalOverlay>
+          </Popover.Content>
+        </Popover.Portal>
+      </Popover.Root>
+
+      {helpText && (
+        <p className="text-[11px] text-slate-400 font-medium px-0.5">
+          {helpText}
+        </p>
+      )}
     </div>
   );
 };

@@ -1,12 +1,12 @@
-import React from 'react';
-import { useTranslation } from 'react-i18next';
-import { Layers, Shield, UserCheck, Crown } from 'lucide-react';
+import { useChurchTerm } from '@/libs/hooks/useTerm';
 import {
-  IMinistryStructureAnalytics,
   IMinistryArea,
+  IMinistryStructureAnalytics,
   IMinistryWorkspaceCoordinator,
 } from '@/libs/models/Ministry';
-import { useChurchTerm } from '@/libs/hooks/useTerm';
+import { Crown, Layers, Shield, UserCheck } from 'lucide-react';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
 
 interface MinistryStructureSectionProps {
   structure: IMinistryStructureAnalytics;
@@ -19,7 +19,9 @@ interface MinistryStructureSectionProps {
  * @param {MinistryStructureSectionProps} props - Section properties.
  * @returns {JSX.Element} Rendered ministry structure card.
  */
-export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> = ({ structure }) => {
+export const MinistryStructureSection: React.FC<
+  MinistryStructureSectionProps
+> = ({ structure }) => {
   const { t } = useTranslation(['admin', 'common', 'hub']);
   const volunteerTerm = useChurchTerm('volunteer');
   const volunteersTerm = useChurchTerm('volunteers');
@@ -40,7 +42,11 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
         <div>
           <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
             <Layers className="w-5 h-5 text-[#0284c7]" />
-            <span>{t('admin:ministry.structure_title', { defaultValue: 'Estructura y Áreas de Servicio' })}</span>
+            <span>
+              {t('admin:ministry.structure_title', {
+                defaultValue: 'Estructura y Áreas de Servicio',
+              })}
+            </span>
           </h2>
           <p className="text-xs text-slate-500 mt-0.5">
             {t('admin:ministry.structure_subtitle', {
@@ -52,22 +58,30 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
         <div className="flex items-center gap-2 text-xs font-semibold text-slate-600 bg-slate-50 px-3 py-1.5 rounded-xl border border-slate-200">
           <UserCheck className="w-4 h-4 text-[#0284c7]" />
           <span>
-            {assignmentsCount} {volunteersTerm.toLowerCase()} ({groups.length} grupos)
+            {assignmentsCount} {volunteersTerm.toLowerCase()} ({groups.length}{' '}
+            grupos)
           </span>
         </div>
       </div>
 
       {areas.length === 0 ? (
         <div className="text-center py-6 text-xs text-slate-400 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-          {t('common:empty.no_areas', { defaultValue: 'No se encontraron áreas de servicio configuradas en este ministerio.' })}
+          {t('common:empty.no_areas', {
+            defaultValue:
+              'No se encontraron áreas de servicio configuradas en este ministerio.',
+          })}
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           {areas.map((area: IMinistryArea) => {
             const areaTeams = teams.filter((t) => t.ministryAreaId === area.id);
-            const areaVolunteersCount = areaTeams.reduce((sum, t) => sum + (t.totalMembersCount || 0), 0);
+            const areaVolunteersCount = areaTeams.reduce(
+              (sum, t) => sum + (t.totalMembersCount || 0),
+              0,
+            );
             const coordsForArea = areaCoordinators.filter(
-              (c: IMinistryWorkspaceCoordinator) => c.ministryAreaId === area.id
+              (c: IMinistryWorkspaceCoordinator) =>
+                c.ministryAreaId === area.id,
             );
 
             return (
@@ -84,11 +98,6 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
                       <h3 className="text-sm font-bold text-slate-900 truncate">
                         {area.name}
                       </h3>
-                      {area.scope && (
-                        <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                          {area.scope}
-                        </span>
-                      )}
                     </div>
                   </div>
 
@@ -105,19 +114,30 @@ export const MinistryStructureSection: React.FC<MinistryStructureSectionProps> =
                 {/* Area stats breakdown */}
                 <div className="flex items-center justify-between pt-2 border-t border-slate-100 text-xs text-slate-500">
                   <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-slate-700">{areaTeams.length}</span>
-                    <span>{areaTeams.length === 1 ? 'grupo asignado' : 'grupos asignados'}</span>
+                    <span className="font-semibold text-slate-700">
+                      {areaTeams.length}
+                    </span>
+                    <span>
+                      {areaTeams.length === 1
+                        ? 'grupo asignado'
+                        : 'grupos asignados'}
+                    </span>
                   </div>
 
                   {coordsForArea.length > 0 ? (
                     <div className="flex items-center gap-1 text-sky-700 bg-sky-50 px-2 py-0.5 rounded-md font-semibold text-[11px]">
                       <Crown className="w-3 h-3 text-[#0284c7]" />
                       <span>
-                        {coordsForArea.length} {coordsForArea.length === 1 ? 'coordinador' : 'coordinadores'}
+                        {coordsForArea.length}{' '}
+                        {coordsForArea.length === 1
+                          ? 'coordinador'
+                          : 'coordinadores'}
                       </span>
                     </div>
                   ) : (
-                    <span className="text-slate-400 text-[11px]">Sin coordinador</span>
+                    <span className="text-slate-400 text-[11px]">
+                      Sin coordinador
+                    </span>
                   )}
                 </div>
               </div>

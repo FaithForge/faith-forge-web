@@ -1,5 +1,39 @@
 [
   {
+    "version": "3.19.4",
+    "type": "patch",
+    "timestamp": "2026-11-01T05:12:44.596Z",
+    "dateFormatted": "01/11/2026 12:12 AM",
+    "title": "Habilitación de fechas basada en estadísticas reales registradas",
+    "changes": [
+      "Soporte para reuniones deshabilitadas que tienen estadísticas históricas registradas",
+      "Calendario restringe y resalta exclusivamente las fechas que contienen métricas en base de datos"
+    ]
+  },
+  {
+    "version": "3.19.3",
+    "type": "patch",
+    "timestamp": "2026-11-01T05:04:19.783Z",
+    "dateFormatted": "01/11/2026 12:04 AM",
+    "title": "Calendario para desktop con filtrado por fechas de reunión",
+    "changes": [
+      "DateCalendarPicker con popover anclado para desktop y mobile",
+      "Restricción visual y funcional solo a fechas con reuniones programadas"
+    ]
+  },
+  {
+    "version": "3.19.2",
+    "type": "patch",
+    "timestamp": "2026-11-01T04:57:07.693Z",
+    "dateFormatted": "31/10/2026 11:57 PM",
+    "title": "Desglose por grupos y reuniones en reporte de ministerio",
+    "changes": [
+      "Desglose y filtro de asistencia por grupo y grupos programados",
+      "Selección automática y visualización directa de reunión única",
+      "Estadísticas por reunión para períodos con múltiples servicios"
+    ]
+  },
+  {
     "version": "3.19.1",
     "type": "patch",
     "timestamp": "2026-11-01T02:25:45.173Z",

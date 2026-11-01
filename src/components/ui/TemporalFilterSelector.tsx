@@ -1,10 +1,10 @@
+import DateCalendarPicker from '@/components/ui/DateCalendarPicker';
+import { formatDateOnly } from '@/libs/utils/date';
+import clsx from 'clsx';
+import dayjs from 'dayjs';
+import { Calendar, CalendarDays } from 'lucide-react';
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import dayjs from 'dayjs';
-import { Calendar, ChevronDown, Clock, CalendarDays } from 'lucide-react';
-import clsx from 'clsx';
-import Input from '@/components/ui/Input';
-import { formatDateOnly } from '@/libs/utils/date';
 
 export type TemporalFilterPreset =
   | 'DAY'
@@ -26,11 +26,17 @@ interface TemporalFilterSelectorProps {
   value: TemporalFilterValue;
   onChange: (val: TemporalFilterValue) => void;
   className?: string;
+  allowedDaysOfWeek?: number[];
+  allowedDates?: string[];
+  maxDate?: string;
+  minDate?: string;
 }
 
 /**
  * Multi-temporal filter selector for statistical dashboards.
  * Allows switching between Day, 7 days, Week, Month, Current Year, Last Year, and Custom range.
+ * Empowers the Day and Custom calendar pickers to restrict selection strictly to dates
+ * that had church meetings, with anchored desktop popovers.
  *
  * @param {TemporalFilterSelectorProps} props - Component properties.
  * @returns {JSX.Element} Filter bar with preset pills and expandable date controls.
@@ -39,23 +45,50 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
   value,
   onChange,
   className = '',
+  allowedDaysOfWeek,
+  allowedDates,
+  maxDate,
+  minDate,
 }) => {
   const { t } = useTranslation(['common', 'hub']);
-  const [showCustomInputs, setShowCustomInputs] = useState(value.preset === 'CUSTOM' || value.preset === 'DAY');
-  const [specificDay, setSpecificDay] = useState(
-    value.preset === 'DAY' && value.from ? value.from : dayjs().format('YYYY-MM-DD')
+  const [showCustomInputs, setShowCustomInputs] = useState(
+    value.preset === 'CUSTOM' || value.preset === 'DAY',
   );
-  const [customFrom, setCustomFrom] = useState(value.from || dayjs().subtract(7, 'day').format('YYYY-MM-DD'));
-  const [customTo, setCustomTo] = useState(value.to || dayjs().format('YYYY-MM-DD'));
+  const [specificDay, setSpecificDay] = useState(
+    value.preset === 'DAY' && value.from
+      ? value.from
+      : dayjs().format('YYYY-MM-DD'),
+  );
+  const [customFrom, setCustomFrom] = useState(
+    value.from || dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
+  );
+  const [customTo, setCustomTo] = useState(
+    value.to || dayjs().format('YYYY-MM-DD'),
+  );
 
   const presets: { id: TemporalFilterPreset; label: string }[] = [
     { id: 'DAY', label: t('common:temporal.day', { defaultValue: 'Día' }) },
-    { id: 'LAST_7_DAYS', label: t('common:temporal.last_7_days', { defaultValue: '7 días' }) },
-    { id: 'WEEK', label: t('common:temporal.week', { defaultValue: 'Semana' }) },
+    {
+      id: 'LAST_7_DAYS',
+      label: t('common:temporal.last_7_days', { defaultValue: '7 días' }),
+    },
+    {
+      id: 'WEEK',
+      label: t('common:temporal.week', { defaultValue: 'Semana' }),
+    },
     { id: 'MONTH', label: t('common:temporal.month', { defaultValue: 'Mes' }) },
-    { id: 'CURRENT_YEAR', label: t('common:temporal.current_year', { defaultValue: 'Año actual' }) },
-    { id: 'LAST_YEAR', label: t('common:temporal.last_year', { defaultValue: 'Hace un año' }) },
-    { id: 'CUSTOM', label: t('common:temporal.custom', { defaultValue: 'Rango' }) },
+    {
+      id: 'CURRENT_YEAR',
+      label: t('common:temporal.current_year', { defaultValue: 'Año actual' }),
+    },
+    {
+      id: 'LAST_YEAR',
+      label: t('common:temporal.last_year', { defaultValue: 'Hace un año' }),
+    },
+    {
+      id: 'CUSTOM',
+      label: t('common:temporal.custom', { defaultValue: 'Rango' }),
+    },
   ];
 
   const handleSelectPreset = (preset: TemporalFilterPreset) => {
@@ -63,11 +96,35 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
 
     if (preset === 'DAY') {
       setShowCustomInputs(true);
+      let targetDay = specificDay;
+
+      if (allowedDates && allowedDates.length > 0) {
+        if (!allowedDates.includes(targetDay)) {
+          targetDay = allowedDates[0];
+          setSpecificDay(targetDay);
+        }
+      } else if (allowedDaysOfWeek && allowedDaysOfWeek.length > 0) {
+        const d = dayjs(targetDay);
+        if (!allowedDaysOfWeek.includes(d.day())) {
+          let attempts = 0;
+          let searchDate = dayjs();
+          while (
+            !allowedDaysOfWeek.includes(searchDate.day()) &&
+            attempts < 14
+          ) {
+            searchDate = searchDate.subtract(1, 'day');
+            attempts += 1;
+          }
+          targetDay = searchDate.format('YYYY-MM-DD');
+          setSpecificDay(targetDay);
+        }
+      }
+
       onChange({
         preset: 'DAY',
-        from: specificDay,
-        to: specificDay,
-        label: formatDateOnly(specificDay, 'D [de] MMMM'),
+        from: targetDay,
+        to: targetDay,
+        label: formatDateOnly(targetDay, 'D [de] MMMM'),
       });
       return;
     }
@@ -92,7 +149,9 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
         preset,
         from,
         to,
-        label: t('common:temporal.last_7_days', { defaultValue: 'Últimos 7 días' }),
+        label: t('common:temporal.last_7_days', {
+          defaultValue: 'Últimos 7 días',
+        }),
       });
     } else if (preset === 'WEEK') {
       const from = today.startOf('week').format('YYYY-MM-DD');
@@ -134,39 +193,6 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
     }
   };
 
-  const handleSpecificDayChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newDay = e.target.value;
-    setSpecificDay(newDay);
-    onChange({
-      preset: 'DAY',
-      from: newDay,
-      to: newDay,
-      label: formatDateOnly(newDay, 'D [de] MMMM'),
-    });
-  };
-
-  const handleCustomFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newFrom = e.target.value;
-    setCustomFrom(newFrom);
-    onChange({
-      preset: 'CUSTOM',
-      from: newFrom,
-      to: customTo,
-      label: `${formatDateOnly(newFrom, 'D MMM')} - ${formatDateOnly(customTo, 'D MMM')}`,
-    });
-  };
-
-  const handleCustomToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newTo = e.target.value;
-    setCustomTo(newTo);
-    onChange({
-      preset: 'CUSTOM',
-      from: customFrom,
-      to: newTo,
-      label: `${formatDateOnly(customFrom, 'D MMM')} - ${formatDateOnly(newTo, 'D MMM')}`,
-    });
-  };
-
   return (
     <div className={clsx('space-y-2.5', className)}>
       {/* Scrollable preset pills bar */}
@@ -182,7 +208,7 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
                 'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 outline-hidden',
                 isActive
                   ? 'bg-[#0284c7] text-white shadow-xs scale-[1.02]'
-                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300'
+                  : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300',
               )}
             >
               {p.label}
@@ -191,51 +217,100 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
         })}
       </div>
 
-      {/* Date controls when DAY or CUSTOM is selected */}
+      {/* Date controls when DAY is selected: using custom calendar picker */}
       {showCustomInputs && value.preset === 'DAY' && (
-        <div className="p-3 bg-white rounded-2xl border border-sky-100 shadow-2xs flex items-center gap-3">
-          <CalendarDays className="w-4 h-4 text-[#0284c7] shrink-0" />
-          <div className="flex-1">
-            <Input
-              type="date"
-              value={specificDay}
-              onChange={handleSpecificDayChange}
-              className="py-1 px-2.5 text-xs font-semibold text-slate-800"
-            />
+        <div className="p-3 bg-white rounded-2xl border border-sky-100 shadow-2xs space-y-2">
+          <div className="flex items-center justify-between text-xs font-bold text-slate-700">
+            <span className="flex items-center gap-1.5">
+              <CalendarDays className="w-4 h-4 text-[#0284c7]" />
+              {t('common:temporal.service_day', {
+                defaultValue: 'Día a consultar',
+              })}
+            </span>
+            <span className="text-[11px] font-semibold text-slate-500 capitalize">
+              {formatDateOnly(specificDay, 'dddd, D [de] MMMM')}
+            </span>
           </div>
-          <span className="text-[11px] font-medium text-slate-500 shrink-0">
-            {formatDateOnly(specificDay, 'dddd, D MMMM')}
-          </span>
+
+          <DateCalendarPicker
+            value={specificDay}
+            onChange={(newDay) => {
+              setSpecificDay(newDay);
+              onChange({
+                preset: 'DAY',
+                from: newDay,
+                to: newDay,
+                label: formatDateOnly(newDay, 'D [de] MMMM'),
+              });
+            }}
+            allowedDaysOfWeek={allowedDaysOfWeek}
+            allowedDates={allowedDates}
+            maxDate={maxDate || dayjs().format('YYYY-MM-DD')}
+            minDate={minDate}
+            helpText={
+              allowedDaysOfWeek && allowedDaysOfWeek.length > 0
+                ? t('common:temporal.only_service_days_help', {
+                    defaultValue:
+                      'Solo las fechas con reuniones programadas están habilitadas',
+                  })
+                : undefined
+            }
+          />
         </div>
       )}
 
+      {/* Date controls when CUSTOM range is selected */}
       {showCustomInputs && value.preset === 'CUSTOM' && (
         <div className="p-3 bg-white rounded-2xl border border-sky-100 shadow-2xs space-y-2">
           <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
             <Calendar className="w-3.5 h-3.5 text-[#0284c7]" />
-            <span>{t('common:temporal.custom_range', { defaultValue: 'Rango personalizado' })}</span>
+            <span>
+              {t('common:temporal.custom_range', {
+                defaultValue: 'Rango personalizado',
+              })}
+            </span>
           </div>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <div>
               <span className="text-[10px] text-slate-400 font-medium block mb-1">
                 {t('common:from', { defaultValue: 'Desde' })}
               </span>
-              <Input
-                type="date"
+              <DateCalendarPicker
                 value={customFrom}
-                onChange={handleCustomFromChange}
-                className="py-1 px-2 text-xs font-semibold"
+                onChange={(newFrom) => {
+                  setCustomFrom(newFrom);
+                  onChange({
+                    preset: 'CUSTOM',
+                    from: newFrom,
+                    to: customTo,
+                    label: `${formatDateOnly(newFrom, 'D MMM')} - ${formatDateOnly(customTo, 'D MMM')}`,
+                  });
+                }}
+                allowedDaysOfWeek={allowedDaysOfWeek}
+                allowedDates={allowedDates}
+                maxDate={customTo || maxDate || dayjs().format('YYYY-MM-DD')}
+                minDate={minDate}
               />
             </div>
             <div>
               <span className="text-[10px] text-slate-400 font-medium block mb-1">
                 {t('common:to', { defaultValue: 'Hasta' })}
               </span>
-              <Input
-                type="date"
+              <DateCalendarPicker
                 value={customTo}
-                onChange={handleCustomToChange}
-                className="py-1 px-2 text-xs font-semibold"
+                onChange={(newTo) => {
+                  setCustomTo(newTo);
+                  onChange({
+                    preset: 'CUSTOM',
+                    from: customFrom,
+                    to: newTo,
+                    label: `${formatDateOnly(customFrom, 'D MMM')} - ${formatDateOnly(newTo, 'D MMM')}`,
+                  });
+                }}
+                allowedDaysOfWeek={allowedDaysOfWeek}
+                allowedDates={allowedDates}
+                minDate={customFrom || minDate}
+                maxDate={maxDate || dayjs().format('YYYY-MM-DD')}
               />
             </div>
           </div>

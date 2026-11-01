@@ -1,8 +1,4 @@
-import {
-  EntityState,
-  IChurchCampus,
-  IChurchMeeting,
-} from './Church';
+import { EntityState, IChurchCampus, IChurchMeeting } from './Church';
 import { ReduxDefaultState } from './Redux';
 
 export enum MinistryMeetingGroupAssignmentKind {
@@ -338,6 +334,18 @@ export interface IKidsMeetingStatHistory {
   byClassroom: IKidsMeetingStatClassroomBreakdown[];
 }
 
+export interface IMinistryMeetingStatBreakdown {
+  meetingId: string;
+  meetingName: string;
+  day?: string;
+  initialHour?: string;
+  finalHour?: string;
+  serviceDate: string;
+  scheduledGroupIds: string[];
+  volunteers: IVolunteerMeetingStatHistory;
+  kids?: IKidsMeetingStatHistory | null;
+}
+
 export interface IMinistryAnalyticsResponse {
   ministry: IMinistry;
   temporalRange: {
@@ -353,11 +361,16 @@ export interface IMinistryAnalyticsResponse {
     leadership: IMinistryWorkspaceLeadership;
     assignmentsCount: number;
   };
+  byMeeting?: IMinistryMeetingStatBreakdown[];
+  availableDates?: string[];
 }
 
 export type IMinistryVolunteerAnalytics = IVolunteerMeetingStatHistory;
-export type IMinistryKidsAnalytics = NonNullable<IMinistryAnalyticsResponse['kids']>;
-export type IMinistryStructureAnalytics = IMinistryAnalyticsResponse['structure'];
+export type IMinistryKidsAnalytics = NonNullable<
+  IMinistryAnalyticsResponse['kids']
+>;
+export type IMinistryStructureAnalytics =
+  IMinistryAnalyticsResponse['structure'];
 
 export interface IServiceReminderPreviewItem {
   userId: string;
@@ -383,7 +396,3 @@ export interface ISendServiceRemindersResponse {
   totalSent: number;
   failedCount: number;
 }
-
-
-
-
