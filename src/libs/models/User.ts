@@ -309,17 +309,21 @@ export function generateTemporaryPassword(): string {
   return `Igle${currentYear}*${randomSuffix}`;
 }
 
-export type InAppNotificationType =
-  | 'URGENT_NOTICE'
-  | 'KID_REGISTERED'
-  | 'GUARDIAN_RESPONSE'
-  | 'GENERAL';
+export enum InAppNotificationType {
+  URGENT_NOTICE = 'URGENT_NOTICE',
+  KID_REGISTERED = 'KID_REGISTERED',
+  GUARDIAN_RESPONSE = 'GUARDIAN_RESPONSE',
+  SERVICE_REMINDER = 'SERVICE_REMINDER',
+  GENERAL = 'GENERAL',
+}
+
+export type InAppNotificationTypeValue = InAppNotificationType | `${InAppNotificationType}`;
 
 export interface IInAppNotification {
   id: string;
   userId: string;
-  experience: UserExperienceEnum;
-  type: InAppNotificationType;
+  experience?: UserExperienceEnum | 'ALL' | string;
+  type: InAppNotificationType | `${InAppNotificationType}`;
   title: string;
   body: string;
   kidId?: string;

@@ -11,6 +11,7 @@ export interface ApiRequestOptions {
   cache?: boolean;
   forceRefresh?: boolean;
   _retry?: boolean;
+  timeout?: number;
 }
 
 /**
@@ -246,7 +247,7 @@ const executeApiRequest = async (
     }
   }
 
-  const instance = axios.create({ baseURL, timeout: 20000 });
+  const instance = axios.create({ baseURL, timeout: options.timeout ?? 20000 });
 
   try {
     let response: AxiosResponse;

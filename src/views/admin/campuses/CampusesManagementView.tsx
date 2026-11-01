@@ -14,6 +14,10 @@ import {
   Compass,
   CalendarClock,
   ArrowRight,
+  Clock,
+  FileText,
+  Navigation,
+  ExternalLink,
 } from 'lucide-react';
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
@@ -23,8 +27,16 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses, DeleteChurchCampus } from '@/libs/state/redux/thunks/church/church.thunk';
-import { ChurchCampusStateEnum, IChurchCampus, KidAttendanceFlowModeEnum } from '@/libs/models';
+import { useGetChurchMeetingsQuery } from '@/libs/state/redux/api/churchApi';
+import {
+  ChurchCampusStateEnum,
+  ChurchMeetingStateEnum,
+  IChurchCampus,
+  IChurchMeeting,
+  KidAttendanceFlowModeEnum,
+} from '@/libs/models';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
+import { LumbrelaDateTime } from '@/libs/utils/lumbrelaDateTime';
 import { APP_ROUTES } from '@/config/routes';
 import CampusModal from './components/CampusModal';
 import { toast } from 'sonner';
@@ -49,6 +61,7 @@ const CampusesManagementView: React.FC = () => {
   const meetingsTerm = useChurchTerm('meetings');
 
   const campuses = useAppSelector((state) => state.churchCampusSlice);
+  const { data: allMeetings } = useGetChurchMeetingsQuery();
 
   const [searchText, setSearchText] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilterType>('ALL');
@@ -56,6 +69,18 @@ const CampusesManagementView: React.FC = () => {
   const [campusToEdit, setCampusToEdit] = useState<IChurchCampus | null>(null);
   const [campusToDelete, setCampusToDelete] = useState<IChurchCampus | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Group meetings by campus ID for enriched card metrics
+  const meetingsByCampus = useMemo(() => {
+    const map = new Map<string, IChurchMeeting[]>();
+    for (const m of allMeetings || []) {
+      if (!m.churchCampusId) continue;
+      const list = map.get(m.churchCampusId) || [];
+      list.push(m);
+      map.set(m.churchCampusId, list);
+    }
+    return map;
+  }, [allMeetings]);
 
   // Load campuses on mount
   useEffect(() => {
@@ -286,35 +311,46 @@ const CampusesManagementView: React.FC = () => {
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
               {filteredCampuses.map((campus) => {
                 const isActive = campus.state === ChurchCampusStateEnum.ACTIVE;
+                const campusMeetings = meetingsByCampus.get(campus.id) || [];
+                const activeMeetingsCount = campusMeetings.filter(
+                  (m) => m.state !== ChurchMeetingStateEnum.DELETED,
+                ).length;
+                const localTimeStr = LumbrelaDateTime()
+                  .tz(campus.timezone || 'America/Bogota')
+                  .format('hh:mm A');
+                const hasGps = campus.latitude != null && campus.longitude != null;
+                const mapsUrl = hasGps
+                  ? `https://www.google.com/maps/search/?api=1&query=${campus.latitude},${campus.longitude}`
+                  : null;
 
                 return (
                   <div
                     key={campus.id}
-                    className="group bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/80 shadow-xs hover:shadow-md hover:border-slate-300 transition-all flex flex-col justify-between gap-4"
+                    className="group bg-white rounded-3xl p-5 sm:p-6 border border-slate-200/90 shadow-xs hover:shadow-lg hover:border-slate-300 transition-all flex flex-col justify-between gap-5"
                   >
-                    {/* Top Row: Icon, Name, Position, Status & Actions */}
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-4">
+                      {/* Top Header Row */}
                       <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center gap-3.5 min-w-0">
                           <div
                             className={clsx(
-                              'w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 border transition-colors',
+                              'w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 border transition-all shadow-xs',
                               isActive
-                                ? 'bg-emerald-50 text-emerald-600 border-emerald-100 group-hover:bg-emerald-100/70'
+                                ? 'bg-gradient-to-br from-emerald-50 to-teal-100/60 text-emerald-700 border-emerald-200/80 group-hover:shadow-emerald-500/10'
                                 : 'bg-slate-100 text-slate-500 border-slate-200 group-hover:bg-slate-200/80',
                             )}
                           >
-                            <Building2 size={20} />
+                            <Building2 size={22} />
                           </div>
 
                           <div className="min-w-0">
-                            <h2 className="text-base font-extrabold text-slate-900 truncate">
+                            <h2 className="text-base sm:text-lg font-extrabold text-slate-900 truncate">
                               {campus.name}
                             </h2>
-                            <div className="flex items-center gap-1.5 mt-1">
+                            <div className="flex flex-wrap items-center gap-1.5 mt-1">
                               {campus.position !== undefined && (
                                 <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-slate-100 text-slate-700 border border-slate-200/70">
                                   {t('admin:campuses.order_badge', { order: campus.position })}
@@ -368,48 +404,133 @@ const CampusesManagementView: React.FC = () => {
                         </div>
                       </div>
 
-                      {/* Address / Description */}
-                      {campus.description ? (
-                        <p className="text-xs text-slate-500 flex items-center gap-1.5 mt-1 line-clamp-2">
-                          <Compass size={13} className="text-slate-400 shrink-0" />
-                          <span>{campus.description}</span>
-                        </p>
+                      {/* Physical Address & Geolocation Box */}
+                      {campus.address || campus.city ? (
+                        <div className="p-3.5 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100/50 border border-slate-200/80 flex flex-col gap-2">
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-2.5 min-w-0">
+                              <div className="w-7 h-7 rounded-lg bg-indigo-50 border border-indigo-100/80 text-indigo-600 flex items-center justify-center shrink-0 mt-0.5">
+                                <MapPin size={14} />
+                              </div>
+                              <div className="min-w-0">
+                                <span className="text-xs font-bold text-slate-800 block leading-snug">
+                                  {campus.address || 'Ubicación física sin dirección'}
+                                </span>
+                                {(campus.city || campus.country) && (
+                                  <span className="text-[11px] text-slate-500 font-medium block mt-0.5">
+                                    {campus.city ? `${campus.city}${campus.stateProvince ? `, ${campus.stateProvince}` : ''}${campus.country ? `, ${campus.country}` : ''}` : campus.country}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+
+                            {mapsUrl && (
+                              <a
+                                href={mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 text-[11px] font-bold text-indigo-600 hover:text-indigo-700 bg-white border border-indigo-200/80 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 shadow-2xs hover:bg-indigo-50/50 transition-colors"
+                                title="Abrir en Google Maps / Waze"
+                              >
+                                <Navigation size={12} className="text-indigo-500" />
+                                <span>Ver mapa</span>
+                                <ExternalLink size={10} className="text-slate-400" />
+                              </a>
+                            )}
+                          </div>
+                        </div>
                       ) : (
-                        <p className="text-xs text-slate-400 mt-1 italic">
-                          {t('admin:campuses.field_description_placeholder')}
-                        </p>
+                        <div className="p-3 rounded-2xl bg-slate-50/60 border border-dashed border-slate-200 text-xs text-slate-400 flex items-center justify-between">
+                          <span className="flex items-center gap-1.5">
+                            <MapPin size={13} className="text-slate-400" />
+                            <span>Sin ubicación física ni mapa asignado</span>
+                          </span>
+                          <button
+                            type="button"
+                            onClick={(e) => handleOpenEdit(e, campus)}
+                            className="text-[11px] font-semibold text-primary hover:underline cursor-pointer"
+                          >
+                            Configurar
+                          </button>
+                        </div>
                       )}
 
-                      {/* Flow Mode */}
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <span className="text-[11px] font-semibold text-slate-400">
-                          {t('admin:campuses.flow_badge_prefix')}
+                      {/* Additional Description / Access notes */}
+                      {campus.description && (
+                        <div className="p-2.5 rounded-xl bg-amber-50/50 border border-amber-100 text-xs text-amber-900 flex items-start gap-2">
+                          <FileText size={13} className="text-amber-600 shrink-0 mt-0.5" />
+                          <span className="line-clamp-2 leading-relaxed">{campus.description}</span>
+                        </div>
+                      )}
+
+                      {/* Key Indicators Grid (2 columns inside card) */}
+                      <div className="grid grid-cols-2 gap-2.5">
+                        {/* Meetings Metric Box */}
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 text-primary flex items-center justify-center shrink-0 shadow-2xs">
+                            <CalendarClock size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider">
+                              {meetingsTerm}
+                            </span>
+                            <span className="text-xs font-bold text-slate-800 truncate block">
+                              {activeMeetingsCount > 0
+                                ? `${activeMeetingsCount} regulares`
+                                : 'Sin cultos'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Local Time & Timezone Metric Box */}
+                        <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/70 flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-xl bg-white border border-slate-200/80 text-indigo-600 flex items-center justify-center shrink-0 shadow-2xs">
+                            <Clock size={16} />
+                          </div>
+                          <div className="min-w-0">
+                            <span className="text-[10px] uppercase font-bold text-slate-400 block tracking-wider truncate" title={campus.timezone}>
+                              {campus.timezone?.split('/').pop()?.replace(/_/g, ' ') || 'Local'}
+                            </span>
+                            <span className="text-xs font-bold text-slate-800 truncate block">
+                              {localTimeStr}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Attendance Flow Banner */}
+                      <div className="px-3.5 py-2.5 rounded-xl bg-indigo-50/60 border border-indigo-100/90 flex items-center justify-between gap-2 text-xs">
+                        <span className="text-[11px] font-bold text-indigo-950 flex items-center gap-1.5">
+                          <Sparkles size={13} className="text-indigo-600" />
+                          <span>{t('admin:campuses.field_flow_label', 'Flujo de Niños')}</span>
                         </span>
-                        <span className="px-2.5 py-0.5 rounded-lg bg-indigo-50 border border-indigo-100 text-indigo-700 font-bold text-[10px]">
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-lg bg-white border border-indigo-200 text-indigo-700 shadow-2xs">
                           {getFlowModeLabel(campus.kidAttendanceFlowMode)}
                         </span>
                       </div>
                     </div>
 
-                    {/* Bottom Action Bar: Jump directly to meetings of this campus */}
-                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <button
-                        type="button"
+                    {/* Bottom Action Footer */}
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-3">
+                      <Button
+                        variant="primary"
+                        size="sm"
                         onClick={() => navigate(`${APP_ROUTES.admin.churchMeetings}?campusId=${campus.id}`)}
-                        className="inline-flex items-center gap-1.5 text-xs font-semibold text-primary hover:text-primary/80 transition-colors cursor-pointer group/link"
+                        className="flex-1 flex items-center justify-center gap-2 text-xs py-2 shadow-2xs cursor-pointer group/link"
                       >
                         <CalendarClock size={15} />
-                        <span>Ver {meetingsTerm}</span>
+                        <span>Ver {meetingsTerm} ({activeMeetingsCount})</span>
                         <ArrowRight size={13} className="group-hover/link:translate-x-0.5 transition-transform" />
-                      </button>
+                      </Button>
 
-                      <button
-                        type="button"
+                      <Button
+                        variant="ghost"
+                        size="sm"
                         onClick={(e) => handleOpenEdit(e, campus)}
-                        className="text-xs font-semibold text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                        className="text-xs font-bold text-slate-600 hover:text-slate-900 border border-slate-200/80 hover:bg-slate-100/80 py-2 px-3.5 rounded-xl cursor-pointer"
                       >
                         Editar
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 );

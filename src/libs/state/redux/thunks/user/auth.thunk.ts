@@ -4,6 +4,7 @@ import { createAsyncThunk } from '@reduxjs/toolkit';
 import { RootState } from '../../store';
 import { logout, setExperiences } from '../../slices/user/auth.slice';
 import { setVolunteerContext } from '../../slices/church/volunteerContext.slice';
+import { baseApi } from '../../api/baseApi';
 
 export const UserLogin = createAsyncThunk(
   'user/UserLogin',
@@ -39,6 +40,7 @@ export const UserLogin = createAsyncThunk(
                 headers: {
                   Authorization: `Bearer ${response.token}`,
                 },
+                timeout: 5000,
               },
             })
           ).data;
@@ -140,6 +142,7 @@ export const UserLogout = createAsyncThunk(
         });
       }
     } finally {
+      dispatch(baseApi.util.resetApiState());
       dispatch(logout());
     }
   },

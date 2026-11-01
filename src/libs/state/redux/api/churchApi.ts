@@ -41,6 +41,8 @@ import {
   ChurchMeetingTagStateEnum,
   ChurchMeetingKind,
   ChurchMeetingStateEnum,
+  IServiceReminderPreviewResponse,
+  ISendServiceRemindersResponse,
 } from '@/libs/models';
 import { getActiveTenantChurchId } from '@/libs/utils/tenant';
 
@@ -320,6 +322,36 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, arg) => [
         { type: 'Ministry', id: `ANALYTICS_${arg.id}` },
         { type: 'VolunteerAttendance', id: 'LIST' },
+      ],
+    }),
+
+    getMinistryServiceRemindersPreview: builder.query<
+      IServiceReminderPreviewResponse,
+      { ministryId: string; targetDate?: string }
+    >({
+      query: ({ ministryId, targetDate }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/ministry/${ministryId}/service-reminders/preview`,
+        method: HttpRequestMethod.GET,
+        params: targetDate ? { targetDate } : {},
+      }),
+      providesTags: (_result, _error, { ministryId }) => [
+        { type: 'Ministry', id: `REMINDERS_${ministryId}` },
+      ],
+    }),
+
+    sendMinistryServiceReminders: builder.mutation<
+      ISendServiceRemindersResponse,
+      { ministryId: string; targetDate?: string; churchMeetingId?: string }
+    >({
+      query: ({ ministryId, ...body }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/ministry/${ministryId}/service-reminders/send`,
+        method: HttpRequestMethod.POST,
+        body,
+      }),
+      invalidatesTags: (_result, _error, { ministryId }) => [
+        { type: 'Ministry', id: `REMINDERS_${ministryId}` },
       ],
     }),
 
@@ -1013,6 +1045,9 @@ export const {
   useGetMinistryGroupAssignmentsQuery,
   useUpsertMinistryGroupAssignmentMutation,
   useDeleteMinistryGroupAssignmentMutation,
+  useGetMinistryServiceRemindersPreviewQuery,
+  useLazyGetMinistryServiceRemindersPreviewQuery,
+  useSendMinistryServiceRemindersMutation,
 } = churchApi;
 
 

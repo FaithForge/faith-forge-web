@@ -1,5 +1,19 @@
 [
   {
+    "version": "3.19.0",
+    "type": "minor",
+    "timestamp": "2026-10-30T00:12:48.613Z",
+    "dateFormatted": "29/10/2026 07:12 PM",
+    "title": "Recordatorios de Servicio y Geolocalización con Zona Horaria por Sede",
+    "changes": [
+      "Recordatorios automáticos a las 6:00 PM (según la zona horaria local de cada sede) y manuales para colaboradores con servicio programado para el día siguiente.",
+      "Geolocalización interactiva con mapas OpenStreetMap y detección automática de zona horaria por sede.",
+      "Nuevo panel de confirmación y vista previa de servidores programados antes del envío de alertas.",
+      "Visualización destacada de avisos de servicio en el centro de notificaciones de la aplicación.",
+      "Nuevo panel flotante de notificaciones anclado a la barra superior en la administración con vista optimizada para escritorio y dispositivos móviles."
+    ]
+  },
+  {
     "version": "3.18.0",
     "type": "minor",
     "timestamp": "2026-10-26T02:45:19.222Z",

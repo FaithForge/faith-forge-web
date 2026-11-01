@@ -209,6 +209,15 @@ export const CreateChurchCampus = createAsyncThunk(
       position?: number;
       state?: string;
       kidAttendanceFlowMode?: string;
+      timezone?: string;
+      latitude?: number | null;
+      longitude?: number | null;
+      address?: string | null;
+      city?: string | null;
+      stateProvince?: string | null;
+      country?: string | null;
+      countryCode?: string | null;
+      locationMetadata?: Record<string, any> | null;
     },
     { getState, rejectWithValue, dispatch },
   ) => {
@@ -254,6 +263,15 @@ export const UpdateChurchCampus = createAsyncThunk(
       position?: number;
       state?: string;
       kidAttendanceFlowMode?: string;
+      timezone?: string;
+      latitude?: number | null;
+      longitude?: number | null;
+      address?: string | null;
+      city?: string | null;
+      stateProvince?: string | null;
+      country?: string | null;
+      countryCode?: string | null;
+      locationMetadata?: Record<string, any> | null;
     },
     { getState, rejectWithValue, dispatch },
   ) => {

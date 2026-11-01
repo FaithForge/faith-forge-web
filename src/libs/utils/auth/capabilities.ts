@@ -34,7 +34,9 @@ export type AppCapability =
   | 'dashboard:view-ministry-coordinator'
   // Plataforma Multi-Tenant & Configuración de Iglesia
   | 'platform:manage-churches'
-  | 'church:manage-settings';
+  | 'church:manage-settings'
+  // Recordatorios de Servicio (Experimental Admin)
+  | 'admin:send-service-reminders';
 
 /**
  * Contexto mínimo necesario para resolver capabilities.
@@ -118,6 +120,9 @@ export const hasCapability = (cap: AppCapability, ctx: CapabilityContext): boole
     case 'platform:manage-churches':
       return ctx.isSuperAdmin;
     case 'church:manage-settings':
+      return ctx.isSuperAdmin || ctx.isAdmin;
+
+    case 'admin:send-service-reminders':
       return ctx.isSuperAdmin || ctx.isAdmin;
 
     default:

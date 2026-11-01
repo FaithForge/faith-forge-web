@@ -4,11 +4,13 @@ import AppDrawer from '@/components/ui/AppDrawer';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
+import Textarea from '@/components/ui/Textarea';
 import { ChurchCampusStateEnum, IChurchCampus, KidAttendanceFlowModeEnum } from '@/libs/models';
 import { useAppDispatch } from '@/libs/state/redux/hooks';
 import { CreateChurchCampus, UpdateChurchCampus } from '@/libs/state/redux/thunks/church/church.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
+import CampusLocationPicker, { CampusLocationData } from '@/components/common/CampusLocationPicker';
 import { toast } from 'sonner';
 import {
   MapPin,
@@ -20,6 +22,7 @@ import {
   Sparkles,
   FileText,
   Hash,
+  Globe,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -55,6 +58,17 @@ export const CampusModal: React.FC<CampusModalProps> = ({
   const [kidAttendanceFlowMode, setKidAttendanceFlowMode] = useState<KidAttendanceFlowModeEnum>(
     KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
   );
+  const [locationData, setLocationData] = useState<CampusLocationData>({
+    latitude: null,
+    longitude: null,
+    timezone: 'America/Bogota',
+    address: null,
+    city: null,
+    stateProvince: null,
+    country: null,
+    countryCode: null,
+    locationMetadata: null,
+  });
   const [nameError, setNameError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -71,12 +85,34 @@ export const CampusModal: React.FC<CampusModalProps> = ({
       setKidAttendanceFlowMode(
         campusToEdit.kidAttendanceFlowMode ?? KidAttendanceFlowModeEnum.ONLY_CHECK_IN,
       );
+      setLocationData({
+        latitude: campusToEdit.latitude != null ? Number(campusToEdit.latitude) : null,
+        longitude: campusToEdit.longitude != null ? Number(campusToEdit.longitude) : null,
+        timezone: campusToEdit.timezone || 'America/Bogota',
+        address: campusToEdit.address || null,
+        city: campusToEdit.city || null,
+        stateProvince: campusToEdit.stateProvince || null,
+        country: campusToEdit.country || null,
+        countryCode: campusToEdit.countryCode || null,
+        locationMetadata: campusToEdit.locationMetadata || null,
+      });
     } else {
       setName('');
       setDescription('');
       setPosition('');
       setState(ChurchCampusStateEnum.ACTIVE);
       setKidAttendanceFlowMode(KidAttendanceFlowModeEnum.ONLY_CHECK_IN);
+      setLocationData({
+        latitude: null,
+        longitude: null,
+        timezone: 'America/Bogota',
+        address: null,
+        city: null,
+        stateProvince: null,
+        country: null,
+        countryCode: null,
+        locationMetadata: null,
+      });
     }
     setNameError('');
   }, [open, campusToEdit]);
@@ -90,27 +126,34 @@ export const CampusModal: React.FC<CampusModalProps> = ({
 
     setLoading(true);
     try {
+      const payloadData = {
+        name: name.trim(),
+        description: description.trim() || undefined,
+        position: position !== '' ? Number(position) : undefined,
+        state,
+        kidAttendanceFlowMode,
+        timezone: locationData.timezone || 'America/Bogota',
+        latitude: locationData.latitude,
+        longitude: locationData.longitude,
+        address: locationData.address || undefined,
+        city: locationData.city || undefined,
+        stateProvince: locationData.stateProvince || undefined,
+        country: locationData.country || undefined,
+        countryCode: locationData.countryCode || undefined,
+        locationMetadata: locationData.locationMetadata || undefined,
+      };
+
       if (isEditing && campusToEdit) {
         await dispatch(
           UpdateChurchCampus({
             id: campusToEdit.id,
-            name: name.trim(),
-            description: description.trim() || undefined,
-            position: position !== '' ? Number(position) : undefined,
-            state,
-            kidAttendanceFlowMode,
+            ...payloadData,
           }),
         ).unwrap();
         toast.success(t('admin:campuses.updated_success', { campus: campusTerm }));
       } else {
         await dispatch(
-          CreateChurchCampus({
-            name: name.trim(),
-            description: description.trim() || undefined,
-            position: position !== '' ? Number(position) : undefined,
-            state,
-            kidAttendanceFlowMode,
-          }),
+          CreateChurchCampus(payloadData),
         ).unwrap();
         toast.success(t('admin:campuses.created_success', { campus: campusTerm }));
       }
@@ -196,7 +239,7 @@ export const CampusModal: React.FC<CampusModalProps> = ({
           />
         </div>
 
-        {/* Description / Address Input */}
+        {/* Description Input */}
         <div className="flex flex-col gap-1.5">
           <div className="flex items-center justify-between">
             <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
@@ -207,14 +250,35 @@ export const CampusModal: React.FC<CampusModalProps> = ({
               {t('admin:campuses.field_description_optional')}
             </span>
           </div>
-          <textarea
+          <Textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder={t('admin:campuses.field_description_placeholder')}
             rows={3}
             disabled={loading}
-            className="w-full text-sm rounded-xl border border-gray-200 bg-white p-3 text-gray-900 placeholder:text-gray-400 focus:outline-hidden focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none font-medium"
+            className="placeholder:text-gray-400"
           />
+        </div>
+
+        {/* Geolocation & Timezone Map Section */}
+        <div className="flex flex-col gap-2 pt-2 border-t border-gray-100">
+          <div className="flex items-center justify-between">
+            <label className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+              <Globe size={14} className="text-indigo-600" />
+              <span>{t('admin:campuses.geolocation_section_title', 'Ubicación Geográfica y Zona Horaria')}</span>
+            </label>
+            <span className="text-[11px] text-gray-400 font-normal">
+              {t('admin:campuses.field_description_optional')}
+            </span>
+          </div>
+          {open && (
+            <CampusLocationPicker
+              key={campusToEdit ? campusToEdit.id : 'new-campus'}
+              value={locationData}
+              onChange={setLocationData}
+              disabled={loading}
+            />
+          )}
         </div>
 
         {/* Position Input */}

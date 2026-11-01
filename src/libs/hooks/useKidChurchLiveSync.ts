@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { kidChurchApi } from '@/libs/state/redux/api/kidChurchApi';
 import { API_BASE_URL } from '@/libs/common-types/global';
 
@@ -22,9 +22,10 @@ export const useKidChurchLiveSync = ({
   enabled = true,
 }: UseKidChurchLiveSyncOptions) => {
   const dispatch = useAppDispatch();
+  const token = useAppSelector((state) => state.authSlice.token);
 
   useEffect(() => {
-    if (!enabled || !churchMeetingId) return;
+    if (!enabled || !churchMeetingId || !token) return;
 
     // Connect to SSE stream
     const sseUrl = `${API_BASE_URL}/v1/kid-group/events?churchMeetingId=${encodeURIComponent(
@@ -54,11 +55,13 @@ export const useKidChurchLiveSync = ({
     };
 
     eventSource.onerror = () => {
-      // EventSource automatically handles retry/reconnection per W3C specification.
+      if (eventSource.readyState === EventSource.CLOSED) {
+        eventSource.close();
+      }
     };
 
     return () => {
       eventSource.close();
     };
-  }, [churchMeetingId, enabled, dispatch]);
+  }, [churchMeetingId, enabled, token, dispatch]);
 };

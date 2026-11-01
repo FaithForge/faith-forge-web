@@ -109,6 +109,15 @@ export interface IChurchCampus {
   position?: number;
   state?: ChurchCampusStateEnum;
   kidAttendanceFlowMode?: KidAttendanceFlowModeEnum;
+  timezone?: string;
+  latitude?: number | null;
+  longitude?: number | null;
+  address?: string | null;
+  city?: string | null;
+  stateProvince?: string | null;
+  country?: string | null;
+  countryCode?: string | null;
+  locationMetadata?: Record<string, any> | null;
   meetings?: IChurchMeeting[];
   printers?: IChurchPrinter[];
 }

@@ -519,6 +519,7 @@ export const MinistryWorkspaceView: React.FC = () => {
               {activeTab === 'schedule' && (
                 <MinistrySchedulingSection
                   ministryId={activeMinistry.id}
+                  ministryName={activeMinistry.name}
                   churchCampusId={selectedCampusId}
                   workspaceGroups={currentWorkspace?.groups}
                   onRefreshWorkspace={refetchWorkspace}

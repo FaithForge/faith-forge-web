@@ -332,5 +332,31 @@ export type IMinistryVolunteerAnalytics = IVolunteerMeetingStatHistory;
 export type IMinistryKidsAnalytics = NonNullable<IMinistryAnalyticsResponse['kids']>;
 export type IMinistryStructureAnalytics = IMinistryAnalyticsResponse['structure'];
 
+export interface IServiceReminderPreviewItem {
+  userId: string;
+  fullName?: string;
+  churchMemberId: string;
+  groupName?: string;
+  areaName?: string;
+  churchMeetingId: string;
+  churchMeetingName: string;
+  meetingTime: string;
+  role: string;
+}
+
+export interface IServiceReminderPreviewResponse {
+  targetDate: string;
+  totalScheduled: number;
+  pendingNotification: number;
+  collaborators: IServiceReminderPreviewItem[];
+}
+
+export interface ISendServiceRemindersResponse {
+  targetDate: string;
+  totalSent: number;
+  failedCount: number;
+}
+
+
 
 

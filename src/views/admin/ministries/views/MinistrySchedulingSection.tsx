@@ -10,8 +10,10 @@ import {
   Clock,
   AlertCircle,
   Sparkles,
+  BellRing,
 } from 'lucide-react';
 import Button from '@/components/ui/Button';
+import { Can } from '@/components/auth/Can';
 import {
   EntityState,
   ICalendarMeetingInstance,
@@ -27,6 +29,7 @@ import {
 } from '@/libs/state/redux/api/churchApi';
 import MinistryRotationModal from '../components/MinistryRotationModal';
 import QuickGroupAssignModal from '../components/QuickGroupAssignModal';
+import SendServiceReminderModal from '@/components/modal/SendServiceReminderModal';
 import ChurchScheduleCalendar from '@/components/calendar/ChurchScheduleCalendar';
 
 dayjs.locale('es');
@@ -36,6 +39,7 @@ export interface MinistrySchedulingSectionProps {
   churchCampusId: string;
   workspaceGroups?: IMinistryGroupConfig[];
   onRefreshWorkspace?: () => void;
+  ministryName?: string;
 }
 
 /**
@@ -81,6 +85,7 @@ export const MinistrySchedulingSection: React.FC<MinistrySchedulingSectionProps>
   churchCampusId,
   workspaceGroups = [],
   onRefreshWorkspace,
+  ministryName = 'Ministerio',
 }) => {
   const { t } = useTranslation(['admin', 'common']);
 
@@ -189,6 +194,8 @@ export const MinistrySchedulingSection: React.FC<MinistrySchedulingSectionProps>
   const [quickAssignModalOpen, setQuickAssignModalOpen] = useState(false);
   const [instanceToAssign, setInstanceToAssign] = useState<ICalendarMeetingInstance | null>(null);
 
+  const [reminderModalOpen, setReminderModalOpen] = useState(false);
+
   // Calendar key trigger to force refresh on modal success
   const [calendarRefreshKey, setCalendarRefreshKey] = useState(0);
 
@@ -257,16 +264,33 @@ export const MinistrySchedulingSection: React.FC<MinistrySchedulingSectionProps>
             </div>
           </div>
 
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => handleOpenRotationModal(null)}
-            disabled={activeGroups.length === 0}
-            className="gap-1.5 text-xs font-bold shrink-0 cursor-pointer text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
-          >
-            <Plus size={14} className="text-indigo-600" />
-            <span>{t('admin:ministry_scheduling.btn_configure_rotation')}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Can capability="admin:send-service-reminders">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setReminderModalOpen(true)}
+                className="gap-1.5 text-xs font-bold shrink-0 cursor-pointer text-amber-800 bg-amber-50 hover:bg-amber-100/90 border-amber-200/90"
+              >
+                <BellRing size={13} className="text-amber-600" />
+                <span>{t('admin:service_reminders.btn_open_reminders', { defaultValue: 'Recordatorio Mañana' })}</span>
+                <span className="text-[10px] font-extrabold uppercase bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded-md">
+                  Beta
+                </span>
+              </Button>
+            </Can>
+
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => handleOpenRotationModal(null)}
+              disabled={activeGroups.length === 0}
+              className="gap-1.5 text-xs font-bold shrink-0 cursor-pointer text-indigo-700 bg-indigo-50 hover:bg-indigo-100 border-indigo-200"
+            >
+              <Plus size={14} className="text-indigo-600" />
+              <span>{t('admin:ministry_scheduling.btn_configure_rotation')}</span>
+            </Button>
+          </div>
         </div>
 
         {/* Compact Rules Chips (Single Row or Wrap) */}
@@ -408,6 +432,14 @@ export const MinistrySchedulingSection: React.FC<MinistrySchedulingSectionProps>
         ministryId={ministryId}
         activeGroups={activeGroups}
         onSuccess={handleDataRefresh}
+      />
+
+      {/* Send Service Reminder Modal (Experimental Admin Feature) */}
+      <SendServiceReminderModal
+        open={reminderModalOpen}
+        onOpenChange={setReminderModalOpen}
+        ministryId={ministryId}
+        ministryName={ministryName}
       />
     </div>
   );

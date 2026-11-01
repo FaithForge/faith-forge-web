@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { churchApi } from '@/libs/state/redux/api/churchApi';
 import { API_BASE_URL } from '@/libs/common-types/global';
 
@@ -22,9 +22,10 @@ export const useVolunteerAttendanceLiveSync = ({
   enabled = true,
 }: UseVolunteerAttendanceLiveSyncOptions) => {
   const dispatch = useAppDispatch();
+  const token = useAppSelector((state) => state.authSlice.token);
 
   useEffect(() => {
-    if (!enabled || !churchMeetingId) return;
+    if (!enabled || !churchMeetingId || !token) return;
 
     const sseUrl = `${API_BASE_URL}/v1/volunteer-attendance/events?churchMeetingId=${encodeURIComponent(
       churchMeetingId,
@@ -55,12 +56,14 @@ export const useVolunteerAttendanceLiveSync = ({
     };
 
     eventSource.onerror = () => {
-      // EventSource automatically handles retry/reconnection per W3C specification.
+      if (eventSource.readyState === EventSource.CLOSED) {
+        eventSource.close();
+      }
     };
 
     return () => {
       if (debounceTimer) clearTimeout(debounceTimer);
       eventSource.close();
     };
-  }, [churchMeetingId, enabled, dispatch]);
+  }, [churchMeetingId, enabled, token, dispatch]);
 };

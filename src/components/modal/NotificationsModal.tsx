@@ -35,7 +35,7 @@ import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
  * - For guardian responses: "Respuesta de acudiente - [Nombre del niño]"
  * - For kid registrations: "Registro: [Nombre del niño]"
  */
-const getFormattedTitle = (notif: IInAppNotification, isResponse: boolean): string => {
+export const getFormattedTitle = (notif: IInAppNotification, isResponse: boolean): string => {
   if (isResponse) {
     let rawKid = notif.kidName;
     if (!rawKid && notif.body) {
@@ -54,7 +54,26 @@ const getFormattedTitle = (notif: IInAppNotification, isResponse: boolean): stri
   return notif.title || '';
 };
 
-interface NotificationTerms {
+/**
+ * Formats a 24-hour time string into a 12-hour AM/PM string.
+ *
+ * @param {string} [timeStr] - Raw time string to format (e.g. "19:30:00").
+ * @returns {string} Formatted 12-hour AM/PM string.
+ */
+export const formatTimeAMPM = (timeStr?: string): string => {
+  if (!timeStr) return '';
+  if (/AM|PM/i.test(timeStr)) return timeStr.trim();
+  const parts = timeStr.split(':');
+  if (parts.length < 2) return timeStr;
+  const hour = parseInt(parts[0], 10);
+  if (isNaN(hour)) return timeStr;
+  const minute = parts[1];
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minute} ${ampm}`;
+};
+
+export interface NotificationTerms {
   kidsModuleName: string;
   meetingTerm: string;
   campusTerm: string;
@@ -63,7 +82,7 @@ interface NotificationTerms {
 /**
  * Renders notification body with bold formatting for names, ministry, meeting, and classroom details.
  */
-const renderNotificationBody = (
+export const renderNotificationBody = (
   notif: IInAppNotification,
   isUrgent: boolean,
   isResponse: boolean,
@@ -191,6 +210,50 @@ const renderNotificationBody = (
       }
     }
     return cleanBody;
+  }
+
+  if (notif.type === 'SERVICE_REMINDER' || (notif.data as any)?.type === 'SERVICE_REMINDER') {
+    const rawData = notif.data as Record<string, any> | undefined;
+    const ministryName = rawData?.ministryName;
+    const areaName = rawData?.areaName;
+    const groupName = rawData?.groupName;
+    const meetingTime = rawData?.meetingTime;
+
+    let displayBody = notif.body || '';
+    displayBody = displayBody
+      .replace(/\s*\((?:Área|Area):\s*([^,)]+),\s*Grupo:\s*([^)]+)\)/gi, ' - $1 ($2)')
+      .replace(/\s*\((?:Área|Area):\s*([^)]+)\)/gi, ' - $1')
+      .replace(/\s*\(Grupo:\s*([^)]+)\)/gi, ' ($1)');
+
+    return (
+      <div className="space-y-1.5">
+        <span className="leading-relaxed text-slate-800">{displayBody}</span>
+        {(ministryName || areaName || groupName || meetingTime) && (
+          <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
+            {ministryName && (
+              <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-md border border-indigo-100">
+                {ministryName}
+              </span>
+            )}
+            {areaName && (
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                Área: {areaName}
+              </span>
+            )}
+            {groupName && (
+              <span className="text-[10px] font-semibold text-purple-700 bg-purple-50 px-2 py-0.5 rounded-md border border-purple-100">
+                Grupo: {groupName}
+              </span>
+            )}
+            {meetingTime && (
+              <span className="text-[10px] font-medium text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                Hora: {formatTimeAMPM(meetingTime)}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    );
   }
 
   return notif.body || '';
@@ -409,6 +472,8 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
               const isUrgent = notif.type === 'URGENT_NOTICE';
               const isRegistered = notif.type === 'KID_REGISTERED';
               const isResponse = notif.type === 'GUARDIAN_RESPONSE';
+              const isServiceReminder =
+                notif.type === 'SERVICE_REMINDER' || (notif.data as any)?.type === 'SERVICE_REMINDER';
               const isGuardian = activeExperience === UserExperienceEnum.KID_GUARDIAN;
               const isAcknowledged = notif.status === 'ACKNOWLEDGED';
 
@@ -425,7 +490,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                     !notif.read ? 'shadow-xs' : 'opacity-85',
                     isUrgent
                       ? 'bg-rose-50/75 border-rose-200 ring-1 ring-rose-300/40'
-                      : 'bg-white border-gray-200/90 hover:border-gray-300'
+                      : isServiceReminder
+                        ? 'bg-indigo-50/60 border-indigo-200/80 hover:border-indigo-300'
+                        : 'bg-white border-gray-200/90 hover:border-gray-300'
                   )}
                 >
                   {/* Unread badge */}
@@ -455,7 +522,9 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                             ? 'bg-amber-50/90 border border-amber-200/80'
                             : isRegistered
                               ? 'bg-indigo-50/90 border border-indigo-100'
-                              : 'bg-gray-100/90 border border-gray-200/70'
+                              : isServiceReminder
+                                ? 'bg-indigo-100/90 border border-indigo-200 text-indigo-700'
+                                : 'bg-gray-100/90 border border-gray-200/70'
                       )}
                     >
                       {isUrgent ? (
@@ -470,6 +539,10 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                         <span className="text-xl leading-none" role="img" aria-label="Niño registrado">
                           🧒
                         </span>
+                      ) : isServiceReminder ? (
+                        <span className="text-xl leading-none" role="img" aria-label="Recordatorio de servicio">
+                          🗓️
+                        </span>
                       ) : (
                         <span className="text-lg leading-none" role="img" aria-label="Notificación">
                           🔔
@@ -483,7 +556,7 @@ export const NotificationsModal: React.FC<NotificationsModalProps> = ({
                         <h4
                           className={clsx(
                             'text-xs font-bold leading-snug truncate',
-                            isUrgent ? 'text-rose-900' : 'text-gray-900'
+                            isUrgent ? 'text-rose-900' : isServiceReminder ? 'text-indigo-950 font-extrabold' : 'text-gray-900'
                           )}
                         >
                           {getFormattedTitle(notif, isResponse)}

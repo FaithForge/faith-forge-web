@@ -7,7 +7,6 @@ import {
   User,
   LogOut,
   Search,
-  Bell,
   Menu,
   ChevronRight,
   ChevronDown,
@@ -23,14 +22,13 @@ import { UserLogout } from '@/libs/state/redux/thunks/user/auth.thunk';
 import { APP_ROUTES } from '@/config/routes';
 import { UserExperienceEnum, UserRole } from '@/libs/utils/auth';
 import { capitalizeWords, formatPersonShortName } from '@/libs/utils/text';
-import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageLoader from './PageLoader';
 import { AdminSidebar } from './admin/AdminSidebar';
+import { AdminNotificationsPopover } from './admin/AdminNotificationsPopover';
 
 const UserProfileModal = lazy(() => import('@/components/modal/UserProfileModal'));
 const ChangelogModal = lazy(() => import('@/components/modal/ChangelogModal'));
-const NotificationsModal = lazy(() => import('@/components/modal/NotificationsModal'));
 const TerminologyModal = lazy(() => import('@/components/modal/TerminologyModal').then((m) => ({ default: m.TerminologyModal })));
 const ClearCacheModal = lazy(() => import('@/components/modal/ClearCacheModal').then((m) => ({ default: m.ClearCacheModal })));
 
@@ -59,14 +57,12 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
   // Modals state
   const [profileOpen, setProfileOpen] = useState(false);
   const [changelogOpen, setChangelogOpen] = useState(false);
-  const [notificationsOpen, setNotificationsOpen] = useState(false);
   const [terminologyOpen, setTerminologyOpen] = useState(false);
   const [clearCacheOpen, setClearCacheOpen] = useState(false);
 
   // Lazy modal trackers
   const [hasOpenedProfile, setHasOpenedProfile] = useState(false);
   const [hasOpenedChangelog, setHasOpenedChangelog] = useState(false);
-  const [hasOpenedNotifications, setHasOpenedNotifications] = useState(false);
 
   // Sidebar state
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
@@ -94,12 +90,6 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
       return next;
     });
   };
-
-  const { data: notificationsData } = useGetInAppNotificationsQuery(
-    { experience: UserExperienceEnum.ADMIN },
-    { skip: !user }
-  );
-  const unreadNotifCount = notificationsData?.unreadCount || 0;
 
   const mainRef = useRef<HTMLElement>(null);
   const {
@@ -285,20 +275,8 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
               </button>
             )}
 
-            {/* Notifications Button */}
-            <button
-              type="button"
-              onClick={() => {
-                setHasOpenedNotifications(true);
-                setNotificationsOpen(true);
-              }}
-              title="Notificaciones"
-              aria-label="Notificaciones"
-              className="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-200 outline-none active:scale-95 text-slate-600 hover:text-slate-900 hover:bg-slate-100 cursor-pointer relative"
-            >
-              <Bell size={19} />
-              <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-white" />
-            </button>
+            {/* Notifications Popover */}
+            <AdminNotificationsPopover />
 
             {/* User Dropdown */}
             <DropdownMenu.Root>
@@ -398,17 +376,6 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({ children }) => {
       {hasOpenedChangelog && (
         <Suspense fallback={null}>
           <ChangelogModal open={changelogOpen} onOpenChange={handleOpenChangelog} />
-        </Suspense>
-      )}
-
-      {/* Notifications Modal */}
-      {hasOpenedNotifications && (
-        <Suspense fallback={null}>
-          <NotificationsModal
-            open={notificationsOpen}
-            onOpenChange={setNotificationsOpen}
-            experience={UserExperienceEnum.ADMIN}
-          />
         </Suspense>
       )}
 

@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
-import { useAppDispatch } from '@/libs/state/redux/hooks';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { kidChurchApi } from '@/libs/state/redux/api/kidChurchApi';
 import { API_BASE_URL } from '@/libs/common-types/global';
 
@@ -26,10 +26,11 @@ export const useKidGuardianLiveSync = ({
   enabled = true,
 }: UseKidGuardianLiveSyncOptions): void => {
   const dispatch = useAppDispatch();
+  const token = useAppSelector((state) => state.authSlice.token);
   const { t } = useTranslation(['kidGuardian', 'common']);
 
   useEffect(() => {
-    if (!enabled || !guardianId) return;
+    if (!enabled || !guardianId || !token) return;
 
     const sseUrl = `${API_BASE_URL}/v1/kid-guardian/events?guardianId=${encodeURIComponent(
       guardianId
@@ -108,11 +109,13 @@ export const useKidGuardianLiveSync = ({
     };
 
     eventSource.onerror = () => {
-      // EventSource automatically handles retry/reconnection per W3C specification.
+      if (eventSource.readyState === EventSource.CLOSED) {
+        eventSource.close();
+      }
     };
 
     return () => {
       eventSource.close();
     };
-  }, [guardianId, enabled, dispatch, t]);
+  }, [guardianId, enabled, token, dispatch, t]);
 };
