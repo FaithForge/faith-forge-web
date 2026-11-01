@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { IMinistryGroupConfig, MinistryGroupConfigStateEnum } from '@/libs/models';
@@ -100,7 +100,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
   };
 
   return (
-    <AppDrawer
+    <AppModal
       open={open}
       onOpenChange={onOpenChange}
       title={isEditing ? 'Editar Grupo' : 'Nuevo Grupo'}
@@ -179,7 +179,7 @@ export const MinistryGroupModal: React.FC<MinistryGroupModalProps> = ({
           </Button>
         </div>
       </form>
-    </AppDrawer>
+    </AppModal>
   );
 };
 

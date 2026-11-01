@@ -20,7 +20,7 @@ import {
 import PageHeader from '@/components/ui/PageHeader';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import AppDrawer from '@/components/ui/AppDrawer';
+import AppModal from '@/components/ui/AppModal';
 import PullToRefresh from '@/components/ui/PullToRefresh';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
@@ -396,8 +396,8 @@ const VolunteerDirectoryView: React.FC = () => {
           </button>
         </div>
 
-        {/* Filter Modal Drawer */}
-        <AppDrawer
+        {/* Filter Modal Dialog */}
+        <AppModal
           open={filterDrawerOpen}
           onOpenChange={setFilterDrawerOpen}
           title={`Filtros de ${volunteersTerm}`}
@@ -564,7 +564,7 @@ const VolunteerDirectoryView: React.FC = () => {
               </Button>
             </div>
           </div>
-        </AppDrawer>
+        </AppModal>
 
         {/* Active Filters Summary */}
         {hasActiveFilters && (

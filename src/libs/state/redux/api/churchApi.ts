@@ -1,50 +1,54 @@
-import { HttpRequestMethod, MicroserviceEnum } from '@/libs/common-types/global';
 import {
-  IMinistry,
-  GetMinistryWorkspaceArgs,
-  GetMinistryAnalyticsArgs,
-  IMinistryAnalyticsResponse,
-  IChurch,
-  CreateChurchPayload,
-  UpdateChurchPayload,
-  IChurchMember,
-  IChurchStaff,
-  UpdateChurchStaffRolesPayload,
-  DeleteChurchStaffPayload,
-  IChurchCampus,
-  IChurchMeeting,
-  IChurchPrinter,
-  IMinistryWorkspaceOverview,
-  IVolunteerAttendance,
-  IVolunteerAttendanceSummary,
-  GetVolunteerAttendancePayload,
-  CreateVolunteerAttendancePayload,
-  BatchCreateVolunteerAttendancePayload,
-  IVolunteer,
-  IVolunteerAssignment,
-  GetVolunteerAssignmentsPayload,
-  IChurchReport,
-  CreateChurchReportPayload,
-  UpdateChurchReportStatusPayload,
+  HttpRequestMethod,
+  MicroserviceEnum,
+} from '@/libs/common-types/global';
+import {
   AddChurchReportNotePayload,
-  QueryChurchReportsArgs,
-  RequestPresignedReportUploadUrlPayload,
-  PresignedUploadUrlResponse,
-  ICalendarMeetingInstance,
-  IChurchMeetingDetail,
-  GetChurchMeetingDetailArgs,
-  GetCalendarMeetingsArgs,
-  IChurchMeetingTag,
-  IChurchMeetingException,
-  IMinistryMeetingGroupAssignment,
-  MinistryMeetingGroupAssignmentKind,
-  UpsertMinistryMeetingGroupAssignmentPayload,
-  UpsertChurchMeetingExceptionPayload,
-  ChurchMeetingTagStateEnum,
+  BatchCreateVolunteerAttendancePayload,
   ChurchMeetingKind,
   ChurchMeetingStateEnum,
-  IServiceReminderPreviewResponse,
+  ChurchMeetingTagStateEnum,
+  CreateChurchPayload,
+  CreateChurchReportPayload,
+  CreateVolunteerAttendancePayload,
+  DeleteChurchStaffPayload,
+  GetCalendarMeetingsArgs,
+  GetChurchMeetingDetailArgs,
+  GetMinistryAnalyticsArgs,
+  GetMinistryWorkspaceArgs,
+  GetVolunteerAssignmentsPayload,
+  GetVolunteerAttendancePayload,
+  ICalendarMeetingInstance,
+  IChurch,
+  IChurchCampus,
+  IChurchMeeting,
+  IChurchMeetingDetail,
+  IChurchMeetingException,
+  IChurchMeetingTag,
+  IChurchMember,
+  IChurchPrinter,
+  IChurchReport,
+  IChurchStaff,
+  IMinistry,
+  IMinistryAnalyticsResponse,
+  IMinistryMeetingGroupAssignment,
+  IMinistryWorkspaceOverview,
   ISendServiceRemindersResponse,
+  IServiceReminderPreviewResponse,
+  IVolunteer,
+  IVolunteerAssignment,
+  IVolunteerAttendance,
+  IVolunteerAttendanceSummary,
+  MinistryMeetingGroupAssignmentKind,
+  PresignedUploadUrlResponse,
+  QueryChurchReportsArgs,
+  RequestPresignedReportUploadUrlPayload,
+  UpdateChurchPayload,
+  UpdateChurchReportStatusPayload,
+  UpdateChurchStaffRolesPayload,
+  UpdateVolunteerAssignmentPayload,
+  UpsertChurchMeetingExceptionPayload,
+  UpsertMinistryMeetingGroupAssignmentPayload,
 } from '@/libs/models';
 import { getActiveTenantChurchId } from '@/libs/utils/tenant';
 
@@ -95,7 +99,10 @@ export interface ClearCacheArgs {
  */
 export const churchApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    resolveChurchTenant: builder.query<IChurch | null, ResolveChurchTenantArgs | void>({
+    resolveChurchTenant: builder.query<
+      IChurch | null,
+      ResolveChurchTenantArgs | void
+    >({
       query: (args) => {
         const params: Record<string, string> = {};
         if (args?.slug) params.slug = args.slug;
@@ -109,7 +116,12 @@ export const churchApi = baseApi.injectEndpoints({
         };
       },
       providesTags: (result) =>
-        result ? [{ type: 'Church', id: result.id }, { type: 'Church', id: 'CURRENT' }] : [{ type: 'Church', id: 'CURRENT' }],
+        result
+          ? [
+              { type: 'Church', id: result.id },
+              { type: 'Church', id: 'CURRENT' },
+            ]
+          : [{ type: 'Church', id: 'CURRENT' }],
     }),
 
     getChurches: builder.query<
@@ -131,10 +143,22 @@ export const churchApi = baseApi.injectEndpoints({
         };
       },
       transformResponse: (
-        response: { data?: IChurch[]; total?: number; totalPages?: number; page?: number } | IChurch[],
+        response:
+          | {
+              data?: IChurch[];
+              total?: number;
+              totalPages?: number;
+              page?: number;
+            }
+          | IChurch[],
       ) => {
         if (Array.isArray(response)) {
-          return { data: response, total: response.length, totalPages: 1, page: 1 };
+          return {
+            data: response,
+            total: response.length,
+            totalPages: 1,
+            page: 1,
+          };
         }
         return {
           data: response?.data || [],
@@ -218,7 +242,9 @@ export const churchApi = baseApi.injectEndpoints({
           params,
         };
       },
-      transformResponse: (response: { data?: IChurchMember[]; total?: number } | IChurchMember[]) => {
+      transformResponse: (
+        response: { data?: IChurchMember[]; total?: number } | IChurchMember[],
+      ) => {
         if (Array.isArray(response)) {
           return { data: response, total: response.length };
         }
@@ -230,7 +256,10 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result?.data
           ? [
-              ...result.data.map(({ id }) => ({ type: 'ChurchMember' as const, id })),
+              ...result.data.map(({ id }) => ({
+                type: 'ChurchMember' as const,
+                id,
+              })),
               { type: 'ChurchMember', id: 'LIST' },
             ]
           : [{ type: 'ChurchMember', id: 'LIST' }],
@@ -265,10 +294,7 @@ export const churchApi = baseApi.injectEndpoints({
       invalidatesTags: [{ type: 'ChurchStaff', id: 'LIST' }, 'UserOverview'],
     }),
 
-    deleteChurchStaff: builder.mutation<
-      void,
-      DeleteChurchStaffPayload
-    >({
+    deleteChurchStaff: builder.mutation<void, DeleteChurchStaffPayload>({
       query: (data) => ({
         microservice: MicroserviceEnum.Church,
         url: '/church-staff',
@@ -277,7 +303,6 @@ export const churchApi = baseApi.injectEndpoints({
       }),
       invalidatesTags: [{ type: 'ChurchStaff', id: 'LIST' }, 'UserOverview'],
     }),
-
 
     getMinistryWorkspaceOverview: builder.query<
       IMinistryWorkspaceOverview,
@@ -296,13 +321,26 @@ export const churchApi = baseApi.injectEndpoints({
       },
       providesTags: (result) => [
         { type: 'Ministry', id: 'WORKSPACE' },
-        ...(result?.ministry ? [{ type: 'Ministry' as const, id: result.ministry.id }] : []),
+        ...(result?.ministry
+          ? [{ type: 'Ministry' as const, id: result.ministry.id }]
+          : []),
         { type: 'VolunteerAssignment', id: 'LIST' },
       ],
     }),
 
-    getMinistryAnalytics: builder.query<IMinistryAnalyticsResponse, GetMinistryAnalyticsArgs>({
-      query: ({ id, churchCampusId, from, to, date, churchMeetingIds, tagId }) => {
+    getMinistryAnalytics: builder.query<
+      IMinistryAnalyticsResponse,
+      GetMinistryAnalyticsArgs
+    >({
+      query: ({
+        id,
+        churchCampusId,
+        from,
+        to,
+        date,
+        churchMeetingIds,
+        tagId,
+      }) => {
         const params: Record<string, string> = {};
         if (churchCampusId) params.churchCampusId = churchCampusId;
         if (from) params.from = from;
@@ -357,12 +395,17 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getMinistries: builder.query<IMinistry[], { churchCampusId?: string } | void>({
+    getMinistries: builder.query<
+      IMinistry[],
+      { churchCampusId?: string } | void
+    >({
       query: (args) => ({
         microservice: MicroserviceEnum.Church,
         url: '/ministry',
         method: HttpRequestMethod.GET,
-        params: args?.churchCampusId ? { churchCampusId: args.churchCampusId } : {},
+        params: args?.churchCampusId
+          ? { churchCampusId: args.churchCampusId }
+          : {},
       }),
       providesTags: (result) =>
         result
@@ -388,14 +431,19 @@ export const churchApi = baseApi.injectEndpoints({
         const queryString = searchParams.toString();
         return {
           microservice: MicroserviceEnum.Church,
-          url: queryString ? `/church-meeting?${queryString}` : '/church-meeting',
+          url: queryString
+            ? `/church-meeting?${queryString}`
+            : '/church-meeting',
           method: HttpRequestMethod.GET,
         };
       },
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'ChurchMeeting' as const, id })),
+              ...result.map(({ id }) => ({
+                type: 'ChurchMeeting' as const,
+                id,
+              })),
               { type: 'ChurchMeeting', id: 'LIST' },
             ]
           : [{ type: 'ChurchMeeting', id: 'LIST' }],
@@ -468,7 +516,10 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    deleteChurchMeeting: builder.mutation<void, { id: string; churchCampusId?: string }>({
+    deleteChurchMeeting: builder.mutation<
+      void,
+      { id: string; churchCampusId?: string }
+    >({
       query: ({ id }) => ({
         microservice: MicroserviceEnum.Church,
         url: `/church-meeting/${id}`,
@@ -496,7 +547,10 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getCalendarMeetings: builder.query<ICalendarMeetingInstance[], GetCalendarMeetingsArgs>({
+    getCalendarMeetings: builder.query<
+      ICalendarMeetingInstance[],
+      GetCalendarMeetingsArgs
+    >({
       query: ({ churchCampusId, ministryId, from, to, tagId }) => {
         const params: Record<string, string> = {
           churchCampusId,
@@ -545,7 +599,9 @@ export const churchApi = baseApi.injectEndpoints({
         method: HttpRequestMethod.GET,
         params: {
           churchCampusId,
-          ...(suggestionsOnly !== undefined ? { suggestionsOnly: String(suggestionsOnly) } : {}),
+          ...(suggestionsOnly !== undefined
+            ? { suggestionsOnly: String(suggestionsOnly) }
+            : {}),
         },
       }),
       providesTags: [{ type: 'ChurchMeeting', id: 'TAGS' }],
@@ -624,7 +680,11 @@ export const churchApi = baseApi.injectEndpoints({
 
     getMinistryGroupAssignments: builder.query<
       IMinistryMeetingGroupAssignment[],
-      { ministryId: string; churchMeetingId?: string; kind?: MinistryMeetingGroupAssignmentKind }
+      {
+        ministryId: string;
+        churchMeetingId?: string;
+        kind?: MinistryMeetingGroupAssignmentKind;
+      }
     >({
       query: ({ ministryId, churchMeetingId, kind }) => ({
         microservice: MicroserviceEnum.Church,
@@ -667,7 +727,10 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    getChurchCampuses: builder.query<IChurchCampus[], GetChurchCampusesArgs | void>({
+    getChurchCampuses: builder.query<
+      IChurchCampus[],
+      GetChurchCampusesArgs | void
+    >({
       query: (args) => {
         const churchId = args?.churchId || getActiveTenantChurchId();
         return {
@@ -680,26 +743,56 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'ChurchCampus' as const, id })),
+              ...result.map(({ id }) => ({
+                type: 'ChurchCampus' as const,
+                id,
+              })),
               { type: 'ChurchCampus', id: 'LIST' },
             ]
           : [{ type: 'ChurchCampus', id: 'LIST' }],
     }),
 
-    getChurchPrinters: builder.query<IChurchPrinter[], GetChurchPrintersArgs | void>({
+    getChurchPrinters: builder.query<
+      IChurchPrinter[],
+      GetChurchPrintersArgs | void
+    >({
       query: (args) => ({
         microservice: MicroserviceEnum.Church,
         url: '/church-printers',
         method: HttpRequestMethod.GET,
-        params: args?.churchCampusId ? { churchCampusId: args.churchCampusId } : {},
+        params: args?.churchCampusId
+          ? { churchCampusId: args.churchCampusId }
+          : {},
       }),
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'ChurchPrinter' as const, id })),
+              ...result.map(({ id }) => ({
+                type: 'ChurchPrinter' as const,
+                id,
+              })),
               { type: 'ChurchPrinter', id: 'LIST' },
             ]
           : [{ type: 'ChurchPrinter', id: 'LIST' }],
+    }),
+
+    updateVolunteerAssignment: builder.mutation<
+      IVolunteerAssignment,
+      UpdateVolunteerAssignmentPayload
+    >({
+      query: ({ id, ...data }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/volunteer-assignment/${id}`,
+        method: HttpRequestMethod.PUT,
+        data,
+      }),
+      invalidatesTags: [
+        { type: 'Ministry', id: 'WORKSPACE' },
+        { type: 'VolunteerAssignment', id: 'LIST' },
+        { type: 'Volunteer', id: 'LIST' },
+        { type: 'VolunteerAttendance', id: 'LIST' },
+        { type: 'VolunteerAttendance', id: 'SUMMARY' },
+      ],
     }),
 
     deleteVolunteerAssignment: builder.mutation<void, string>({
@@ -714,7 +807,10 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    clearCache: builder.mutation<{ success: boolean; scope: CacheScope }, ClearCacheArgs | void>({
+    clearCache: builder.mutation<
+      { success: boolean; scope: CacheScope },
+      ClearCacheArgs | void
+    >({
       query: (args) => ({
         microservice: MicroserviceEnum.Church,
         url: '/admin/clear-cache',
@@ -767,8 +863,10 @@ export const churchApi = baseApi.injectEndpoints({
     >({
       query: (args) => {
         const params: Record<string, string | number> = {};
-        if (args?.churchMeetingId) params.churchMeetingId = args.churchMeetingId;
-        if (args?.ministryGroupConfigId) params.ministryGroupConfigId = args.ministryGroupConfigId;
+        if (args?.churchMeetingId)
+          params.churchMeetingId = args.churchMeetingId;
+        if (args?.ministryGroupConfigId)
+          params.ministryGroupConfigId = args.ministryGroupConfigId;
         if (args?.attendanceDate) params.attendanceDate = args.attendanceDate;
         if (args?.page) params.page = args.page;
         params.limit = args?.limit ?? 500;
@@ -779,7 +877,9 @@ export const churchApi = baseApi.injectEndpoints({
           params,
         };
       },
-      transformResponse: (response: { data: IVolunteerAttendance[] } | IVolunteerAttendance[]) => {
+      transformResponse: (
+        response: { data: IVolunteerAttendance[] } | IVolunteerAttendance[],
+      ) => {
         if (response && 'data' in response && Array.isArray(response.data)) {
           return response.data;
         }
@@ -788,7 +888,10 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'VolunteerAttendance' as const, id })),
+              ...result.map(({ id }) => ({
+                type: 'VolunteerAttendance' as const,
+                id,
+              })),
               { type: 'VolunteerAttendance', id: 'LIST' },
             ]
           : [{ type: 'VolunteerAttendance', id: 'LIST' }],
@@ -796,11 +899,18 @@ export const churchApi = baseApi.injectEndpoints({
 
     getVolunteerAttendanceSummary: builder.query<
       IVolunteerAttendanceSummary,
-      { churchMeetingId: string; ministryGroupConfigId?: string; attendanceDate?: string }
+      {
+        churchMeetingId: string;
+        ministryGroupConfigId?: string;
+        attendanceDate?: string;
+      }
     >({
       query: (args) => {
-        const params: Record<string, string> = { churchMeetingId: args.churchMeetingId };
-        if (args.ministryGroupConfigId) params.ministryGroupConfigId = args.ministryGroupConfigId;
+        const params: Record<string, string> = {
+          churchMeetingId: args.churchMeetingId,
+        };
+        if (args.ministryGroupConfigId)
+          params.ministryGroupConfigId = args.ministryGroupConfigId;
         if (args.attendanceDate) params.attendanceDate = args.attendanceDate;
         return {
           microservice: MicroserviceEnum.Church,
@@ -822,9 +932,7 @@ export const churchApi = baseApi.injectEndpoints({
         method: HttpRequestMethod.POST,
         data,
       }),
-      invalidatesTags: [
-        { type: 'VolunteerAttendance', id: 'SUMMARY' },
-      ],
+      invalidatesTags: [{ type: 'VolunteerAttendance', id: 'SUMMARY' }],
     }),
 
     recordBatchVolunteerAttendance: builder.mutation<
@@ -853,17 +961,24 @@ export const churchApi = baseApi.injectEndpoints({
         result ? [{ type: 'VolunteerAssignment', id: result.id }] : [],
     }),
 
-    getChurchReports: builder.query<IChurchReport[], QueryChurchReportsArgs | void>({
+    getChurchReports: builder.query<
+      IChurchReport[],
+      QueryChurchReportsArgs | void
+    >({
       query: (args) => {
         const params: Record<string, unknown> = {};
         if (args?.churchCampusId) params.churchCampusId = args.churchCampusId;
-        if (args?.churchMeetingId) params.churchMeetingId = args.churchMeetingId;
+        if (args?.churchMeetingId)
+          params.churchMeetingId = args.churchMeetingId;
         if (args?.date) params.date = args.date;
         if (args?.ministryId) params.ministryId = args.ministryId;
-        if (args?.serviceAreaGroupId) params.serviceAreaGroupId = args.serviceAreaGroupId;
+        if (args?.serviceAreaGroupId)
+          params.serviceAreaGroupId = args.serviceAreaGroupId;
         if (args?.type) params.type = args.type;
-        if (args?.statuses && args.statuses.length > 0) params.statuses = args.statuses.join(',');
-        if (args?.excludeClosed !== undefined) params.excludeClosed = args.excludeClosed;
+        if (args?.statuses && args.statuses.length > 0)
+          params.statuses = args.statuses.join(',');
+        if (args?.excludeClosed !== undefined)
+          params.excludeClosed = args.excludeClosed;
         return {
           microservice: MicroserviceEnum.Church,
           url: '/church/reports',
@@ -880,7 +995,10 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    createChurchReport: builder.mutation<IChurchReport, CreateChurchReportPayload>({
+    createChurchReport: builder.mutation<
+      IChurchReport,
+      CreateChurchReportPayload
+    >({
       query: (payload) => ({
         microservice: MicroserviceEnum.Church,
         url: '/church/reports',
@@ -906,7 +1024,10 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    addChurchReportNote: builder.mutation<IChurchReport, AddChurchReportNotePayload>({
+    addChurchReportNote: builder.mutation<
+      IChurchReport,
+      AddChurchReportNotePayload
+    >({
       query: ({ id, ...body }) => ({
         microservice: MicroserviceEnum.Church,
         url: `/church/reports/${id}/notes`,
@@ -944,7 +1065,6 @@ export const churchApi = baseApi.injectEndpoints({
     }),
 
     getVolunteerAssignments: builder.query<
-
       IVolunteerAssignment[],
       GetVolunteerAssignmentsPayload | void
     >({
@@ -954,8 +1074,10 @@ export const churchApi = baseApi.injectEndpoints({
         if (args?.ministryId) params.ministryId = args.ministryId;
         if (args?.churchCampusId) params.churchCampusId = args.churchCampusId;
         if (args?.ministryAreaId) params.ministryAreaId = args.ministryAreaId;
-        if (args?.ministryGroupConfigId) params.ministryGroupConfigId = args.ministryGroupConfigId;
-        if (args?.serviceAreaGroupId) params.serviceAreaGroupId = args.serviceAreaGroupId;
+        if (args?.ministryGroupConfigId)
+          params.ministryGroupConfigId = args.ministryGroupConfigId;
+        if (args?.serviceAreaGroupId)
+          params.serviceAreaGroupId = args.serviceAreaGroupId;
         if (args?.volunteerId) params.volunteerId = args.volunteerId;
         if (args?.role) params.role = args.role;
         if (args?.state !== undefined) params.state = args.state;
@@ -973,9 +1095,13 @@ export const churchApi = baseApi.injectEndpoints({
         const isArray = Array.isArray(response);
         const raw = (isArray ? response : response?.data || []) as any[];
         return raw.map((asg) => {
-          const volunteer = asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
+          const volunteer =
+            asg.churchMember || asg.volunteer || asg.ministryVolunteer || {};
           const volunteerId =
-            asg.churchMemberId || asg.volunteerId || asg.ministryVolunteerId || volunteer.id;
+            asg.churchMemberId ||
+            asg.volunteerId ||
+            asg.ministryVolunteerId ||
+            volunteer.id;
           const user = asg.churchMember?.user || asg.user || volunteer.user;
 
           return {
@@ -994,7 +1120,10 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (result) =>
         result
           ? [
-              ...result.map(({ id }) => ({ type: 'VolunteerAssignment' as const, id })),
+              ...result.map(({ id }) => ({
+                type: 'VolunteerAssignment' as const,
+                id,
+              })),
               { type: 'VolunteerAssignment', id: 'LIST' },
             ]
           : [{ type: 'VolunteerAssignment', id: 'LIST' }],
@@ -1029,6 +1158,7 @@ export const {
   useLazyGetChurchCampusesQuery,
   useGetChurchPrintersQuery,
   useLazyGetChurchPrintersQuery,
+  useUpdateVolunteerAssignmentMutation,
   useDeleteVolunteerAssignmentMutation,
   useClearCacheMutation,
   useGetVolunteerAssignmentsQuery,
@@ -1069,5 +1199,3 @@ export const {
   useLazyGetMinistryServiceRemindersPreviewQuery,
   useSendMinistryServiceRemindersMutation,
 } = churchApi;
-
-

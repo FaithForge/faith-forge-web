@@ -10,6 +10,7 @@ type ModalOverlayProps = {
   wrapperClassName?: string;
   backdropClassName?: string;
   closeOnBackdropClick?: boolean;
+  overlayZIndex?: string;
 };
 
 const mergeClasses = (...classes: Array<string | false | null | undefined>) => classes.filter(Boolean).join(' ');
@@ -28,6 +29,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
   wrapperClassName = '',
   backdropClassName = '',
   closeOnBackdropClick = true,
+  overlayZIndex,
 }) => {
   useModalBackClose(open, onClose);
 
@@ -85,7 +87,7 @@ const ModalOverlay: React.FC<ModalOverlayProps> = ({
 
   return createPortal(
     <div
-      className={mergeClasses('fixed inset-0 z-[9999] flex items-end justify-center p-3 sm:items-center pointer-events-auto', wrapperClassName)}
+      className={mergeClasses('fixed inset-0 flex items-end justify-center p-3 sm:items-center pointer-events-auto', overlayZIndex || 'z-[9999]', wrapperClassName)}
       aria-modal="true"
       role="dialog"
       data-vaul-no-drag

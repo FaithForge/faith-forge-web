@@ -1,8 +1,12 @@
-import { EntityState, IChurchCampus, IChurchMeeting } from './Church';
-import { IMinistry, IMinistryArea, IMinistryGroupConfig, IServiceAreaGroup } from './Ministry';
-import { IUser } from './User';
 import { UserExperienceEnum, UserRole } from '../utils/auth';
-
+import { EntityState, IChurchCampus, IChurchMeeting } from './Church';
+import {
+  IMinistry,
+  IMinistryArea,
+  IMinistryGroupConfig,
+  IServiceAreaGroup,
+} from './Ministry';
+import { IUser } from './User';
 
 export const MinistryVolunteerStateEnum = {
   ...EntityState,
@@ -38,6 +42,7 @@ export interface IVolunteer {
   state?: MinistryVolunteerStateEnum;
   user?: Partial<IUser>;
   assignments?: IVolunteerAssignment[];
+  assignmentHistory?: IVolunteerAssignment[];
 }
 
 export interface IChurchMember {
@@ -47,8 +52,8 @@ export interface IChurchMember {
   state?: ChurchMemberStateEnum;
   user?: Partial<IUser>;
   assignments?: IVolunteerAssignment[];
+  assignmentHistory?: IVolunteerAssignment[];
 }
-
 
 export interface IVolunteerAssignment {
   id: string;
@@ -63,6 +68,12 @@ export interface IVolunteerAssignment {
   ministryId?: string;
   churchCampusId?: string;
   state?: MinistryVolunteerAssignmentStateEnum;
+  startedAt?: string | Date;
+  endedAt?: string | Date | null;
+  assignedByUserId?: string | null;
+  endedByUserId?: string | null;
+  assignedByUser?: Partial<IUser>;
+  endedByUser?: Partial<IUser>;
   volunteer?: IVolunteer;
   ministryVolunteer?: IVolunteer;
   churchMember?: IChurchMember;
@@ -73,6 +84,16 @@ export interface IVolunteerAssignment {
   ministry?: IMinistry;
   createdAt?: string | Date;
   updatedAt?: string | Date;
+}
+
+export interface UpdateVolunteerAssignmentPayload {
+  id: string;
+  role?: VolunteerRole;
+  serviceAreaGroupId?: string;
+  ministryGroupConfigId?: string;
+  ministryAreaId?: string;
+  ministryId?: string;
+  state?: MinistryVolunteerAssignmentStateEnum;
 }
 
 /**
@@ -323,7 +344,3 @@ export interface IUserOverviewResponse {
   permissions: string[];
   volunteerContext?: IVolunteerContextResponse;
 }
-
-
-
-

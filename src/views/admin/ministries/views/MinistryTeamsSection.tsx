@@ -1,45 +1,46 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import clsx from 'clsx';
-import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ShieldCheck,
-  Users,
-  Plus,
-  Inbox,
-  AlertCircle,
-  Search,
-  X,
-  ChevronRight,
-  ChevronDown,
-  FolderKanban,
-  CheckCircle2,
-  Filter,
-} from 'lucide-react';
-import Select from '@/components/ui/Select';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
+import Select from '@/components/ui/Select';
+import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import {
+  IMinistryArea,
+  IMinistryGroupConfig,
+  IMinistryWorkspaceTeam,
+  IServiceAreaGroup,
+  IVolunteerAssignment,
+  MinistryGroupConfigStateEnum,
+  VolunteerRole,
+} from '@/libs/models';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
+import { GetServiceAreaGroups } from '@/libs/state/redux/thunks/church/ministry.thunk';
 import {
   DeleteVolunteerAssignment,
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
-import { GetServiceAreaGroups } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import {
-  IServiceAreaGroup,
-  IVolunteerAssignment,
-  VolunteerRole,
-  MinistryGroupConfigStateEnum,
-  IMinistryWorkspaceTeam,
-  IMinistryGroupConfig,
-  IMinistryArea,
-} from '@/libs/models';
 import { capitalizeWords } from '@/libs/utils/text';
-import { useChurchTerm, useVolunteerRoleLabel } from '@/libs/hooks/useTerm';
-import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
-import TeamRosterDrawer from '../components/TeamRosterDrawer';
+import clsx from 'clsx';
+import { AnimatePresence, motion } from 'framer-motion';
+import {
+  AlertCircle,
+  CheckCircle2,
+  ChevronDown,
+  ChevronRight,
+  Filter,
+  FolderKanban,
+  Inbox,
+  Plus,
+  Search,
+  ShieldCheck,
+  Users,
+  X,
+} from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
+import AssignVolunteerDrawer from '../components/AssignVolunteerDrawer';
+import ChangeVolunteerRoleModal from '../components/ChangeVolunteerRoleModal';
+import TeamRosterModal from '../components/TeamRosterModal';
 
 interface MinistryTeamsSectionProps {
   ministryId: string;
@@ -72,9 +73,8 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   const dispatch = useAppDispatch();
 
   const campusesState = useAppSelector((state) => state.churchCampusSlice);
-  const { areasByMinistry, groupsByMinistry, serviceAreaGroups } = useAppSelector(
-    (state) => state.ministrySlice,
-  );
+  const { areasByMinistry, groupsByMinistry, serviceAreaGroups } =
+    useAppSelector((state) => state.ministrySlice);
   const {
     volunteers: { data: volunteersList },
     assignments,
@@ -90,18 +90,29 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   const [selectedGroupId, setSelectedGroupId] = useState<string>('ALL');
   const [showFilters, setShowFilters] = useState(false);
   const [searchMemberTerm, setSearchMemberTerm] = useState('');
-  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
+  const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Drawers & Modals
   const [assignDrawerOpen, setAssignDrawerOpen] = useState(false);
-  const [assignDefaultRole, setAssignDefaultRole] = useState<VolunteerRole | undefined>(undefined);
-  const [assignDefaultTeamId, setAssignDefaultTeamId] = useState<string | undefined>(undefined);
+  const [assignDefaultRole, setAssignDefaultRole] = useState<
+    VolunteerRole | undefined
+  >(undefined);
+  const [assignDefaultTeamId, setAssignDefaultTeamId] = useState<
+    string | undefined
+  >(undefined);
 
-  const [selectedRosterTeam, setSelectedRosterTeam] = useState<IServiceAreaGroup | null>(null);
+  const [selectedRosterTeam, setSelectedRosterTeam] =
+    useState<IServiceAreaGroup | null>(null);
   const [rosterDrawerOpen, setRosterDrawerOpen] = useState(false);
 
-  const [assignmentToDelete, setAssignmentToDelete] = useState<IVolunteerAssignment | null>(null);
+  const [assignmentToDelete, setAssignmentToDelete] =
+    useState<IVolunteerAssignment | null>(null);
   const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false);
+  const [assignmentToChangeRole, setAssignmentToChangeRole] =
+    useState<IVolunteerAssignment | null>(null);
+  const [changeRoleModalOpen, setChangeRoleModalOpen] = useState(false);
 
   const areas = useMemo(
     () =>
@@ -112,16 +123,20 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   );
   const groups = useMemo(
     () =>
-      [...(workspaceGroups || groupsByMinistry[ministryId] || [])].sort((a, b) =>
-        a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+      [...(workspaceGroups || groupsByMinistry[ministryId] || [])].sort(
+        (a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
       ),
     [workspaceGroups, groupsByMinistry, ministryId],
   );
   const campuses = campusesState.data;
 
   const effectiveCampusId = churchCampusId || selectedCampusId;
-  const campusTeamsKey = effectiveCampusId ? `campus_teams_${ministryId}_${effectiveCampusId}` : '';
-  const loadingCampusTeams = campusTeamsKey ? (loadingByPartition[campusTeamsKey] ?? false) : false;
+  const campusTeamsKey = effectiveCampusId
+    ? `campus_teams_${ministryId}_${effectiveCampusId}`
+    : '';
+  const loadingCampusTeams = campusTeamsKey
+    ? (loadingByPartition[campusTeamsKey] ?? false)
+    : false;
 
   // Workspace teams fast lookup map
   const workspaceTeamsMap = useMemo(() => {
@@ -219,7 +234,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     }
     const areaIdSet = new Set(areas.map((a) => a.id));
     return serviceAreaGroups.filter(
-      (sag) => sag.churchCampusId === effectiveCampusId && areaIdSet.has(sag.ministryAreaId),
+      (sag) =>
+        sag.churchCampusId === effectiveCampusId &&
+        areaIdSet.has(sag.ministryAreaId),
     );
   }, [workspaceTeams, serviceAreaGroups, effectiveCampusId, areas, ministryId]);
 
@@ -238,7 +255,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
   // Group Options for Filter
   const groupFilterOptions = useMemo(() => {
-    const sorted = [...groups].sort((a, b) => a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }));
+    const sorted = [...groups].sort((a, b) =>
+      a.name.localeCompare(b.name, 'es', { sensitivity: 'base' }),
+    );
     return [
       { id: 'ALL', name: `Todos los Grupos (${groups.length})` },
       ...sorted.map((g) => ({ id: g.id, name: g.name })),
@@ -250,23 +269,37 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
    */
   const volunteerTerm = useChurchTerm('volunteer');
   const volunteersTerm = useChurchTerm('volunteers');
-  const supervisorRoleLabel = useVolunteerRoleLabel(VolunteerRole.SUPERVISOR, ministryId, { short: true });
-  const volunteerRoleLabel = useVolunteerRoleLabel(VolunteerRole.VOLUNTEER, ministryId, { short: true });
+  const supervisorRoleLabel = useVolunteerRoleLabel(
+    VolunteerRole.SUPERVISOR,
+    ministryId,
+    { short: true },
+  );
+  const volunteerRoleLabel = useVolunteerRoleLabel(
+    VolunteerRole.VOLUNTEER,
+    ministryId,
+    { short: true },
+  );
 
   // Helper to extract user display information from an assignment
   const getVolunteerDetails = useCallback(
     (asg: IVolunteerAssignment) => {
-      const vId = asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+      const vId =
+        asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
       const vol =
         asg.volunteer ||
         asg.churchMember ||
         asg.ministryVolunteer ||
-        volunteersList.find((v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId));
-      const user = asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+        volunteersList.find(
+          (v) =>
+            v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+        );
+      const user =
+        asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
 
-      const rawName = user && (user.firstName || user.lastName)
-        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
-        : `${volunteerTerm} asignado(a)`;
+      const rawName =
+        user && (user.firstName || user.lastName)
+          ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+          : `${volunteerTerm} asignado(a)`;
       const fullName = capitalizeWords(rawName);
 
       return {
@@ -286,7 +319,10 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
       if (selectedAreaId !== 'ALL' && team.ministryAreaId !== selectedAreaId) {
         return false;
       }
-      if (selectedGroupId !== 'ALL' && team.ministryGroupConfigId !== selectedGroupId) {
+      if (
+        selectedGroupId !== 'ALL' &&
+        team.ministryGroupConfigId !== selectedGroupId
+      ) {
         return false;
       }
       return true;
@@ -306,12 +342,16 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     }> = [];
 
     sortedGroups.forEach((grp) => {
-      const matching = filteredTeams.filter((t) => t.ministryGroupConfigId === grp.id);
+      const matching = filteredTeams.filter(
+        (t) => t.ministryGroupConfigId === grp.id,
+      );
       if (matching.length > 0) {
         // Sort teams inside group alphabetically by Area name
         const sortedTeams = [...matching].sort((a, b) => {
-          const areaA = areas.find((ar) => ar.id === a.ministryAreaId)?.name || '';
-          const areaB = areas.find((ar) => ar.id === b.ministryAreaId)?.name || '';
+          const areaA =
+            areas.find((ar) => ar.id === a.ministryAreaId)?.name || '';
+          const areaB =
+            areas.find((ar) => ar.id === b.ministryAreaId)?.name || '';
           return areaA.localeCompare(areaB, 'es', { sensitivity: 'base' });
         });
         result.push({ group: grp, teams: sortedTeams });
@@ -320,7 +360,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
     // Leftover teams for groups not in the groups catalog
     const registeredGroupIds = new Set(groups.map((g) => g.id));
-    const leftover = filteredTeams.filter((t) => !registeredGroupIds.has(t.ministryGroupConfigId));
+    const leftover = filteredTeams.filter(
+      (t) => !registeredGroupIds.has(t.ministryGroupConfigId),
+    );
     if (leftover.length > 0) {
       result.push({
         group: {
@@ -336,7 +378,6 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
     return result;
   }, [groups, filteredTeams, areas, ministryId]);
-
 
   // Auto-expand group if filtered specifically
   useEffect(() => {
@@ -375,7 +416,10 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
     setExpandedGroups({});
   };
 
-  const handleOpenAssignDrawer = (role?: VolunteerRole, serviceAreaGroupId?: string) => {
+  const handleOpenAssignDrawer = (
+    role?: VolunteerRole,
+    serviceAreaGroupId?: string,
+  ) => {
     setAssignDefaultRole(role);
     setAssignDefaultTeamId(serviceAreaGroupId);
     setAssignDrawerOpen(true);
@@ -394,7 +438,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   const handleConfirmDelete = async () => {
     if (!assignmentToDelete) return;
     try {
-      await dispatch(DeleteVolunteerAssignment({ id: assignmentToDelete.id })).unwrap();
+      await dispatch(
+        DeleteVolunteerAssignment({ id: assignmentToDelete.id }),
+      ).unwrap();
       toast.success('Asignación removida exitosamente');
       setAssignmentToDelete(null);
       fetchCampusAssignments();
@@ -414,7 +460,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
   const teamsWithSupervisorCount = useMemo(() => {
     return currentCampusTeams.filter((team) => {
       const hasAssignmentSup = campusTeamAssignments.some(
-        (a) => a.serviceAreaGroupId === team.id && a.role === VolunteerRole.SUPERVISOR,
+        (a) =>
+          a.serviceAreaGroupId === team.id &&
+          a.role === VolunteerRole.SUPERVISOR,
       );
       if (hasAssignmentSup) return true;
       const wt = workspaceTeamsMap.get(team.id);
@@ -424,9 +472,12 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
 
   const totalTeamsRequiringSupervisorCount = useMemo(() => {
     return currentCampusTeams.filter((team) => {
-      const area = areas.find((a) => a.id === team.ministryAreaId) || team.ministryArea;
+      const area =
+        areas.find((a) => a.id === team.ministryAreaId) || team.ministryArea;
       const wt = workspaceTeamsMap.get(team.id);
-      return (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? true) !== false;
+      return (
+        (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? true) !== false
+      );
     }).length;
   }, [currentCampusTeams, areas, workspaceTeamsMap]);
 
@@ -452,18 +503,29 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
       {!hideMetrics && (
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
-            <p className="text-[10.5px] font-semibold text-gray-400">Total Equipos</p>
-            <p className="text-lg sm:text-xl font-black text-gray-900 mt-0.5">{totalTeamsCount}</p>
-          </div>
-          <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
-            <p className="text-[10.5px] font-semibold text-gray-400">Con Supervisor</p>
-            <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
-              {teamsWithSupervisorCount}/{totalTeamsRequiringSupervisorCount || totalTeamsCount || 1}
+            <p className="text-[10.5px] font-semibold text-gray-400">
+              Total Equipos
+            </p>
+            <p className="text-lg sm:text-xl font-black text-gray-900 mt-0.5">
+              {totalTeamsCount}
             </p>
           </div>
           <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
-            <p className="text-[10.5px] font-semibold text-gray-400">Total Plantilla</p>
-            <p className="text-lg sm:text-xl font-black text-teal-700 mt-0.5">{totalMembersCount}</p>
+            <p className="text-[10.5px] font-semibold text-gray-400">
+              Con Supervisor
+            </p>
+            <p className="text-lg sm:text-xl font-black text-indigo-700 mt-0.5">
+              {teamsWithSupervisorCount}/
+              {totalTeamsRequiringSupervisorCount || totalTeamsCount || 1}
+            </p>
+          </div>
+          <div className="bg-white rounded-2xl p-2.5 sm:p-3 border border-gray-200/80 shadow-2xs">
+            <p className="text-[10.5px] font-semibold text-gray-400">
+              Total Plantilla
+            </p>
+            <p className="text-lg sm:text-xl font-black text-teal-700 mt-0.5">
+              {totalMembersCount}
+            </p>
           </div>
         </div>
       )}
@@ -599,7 +661,11 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-gray-100/80">
             {selectedAreaId !== 'ALL' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
-                <span>Área: {areaFilterOptions.find((o) => o.id === selectedAreaId)?.name || selectedAreaId}</span>
+                <span>
+                  Área:{' '}
+                  {areaFilterOptions.find((o) => o.id === selectedAreaId)
+                    ?.name || selectedAreaId}
+                </span>
                 <button
                   type="button"
                   onClick={() => setSelectedAreaId('ALL')}
@@ -611,7 +677,11 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
             )}
             {selectedGroupId !== 'ALL' && (
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
-                <span>Grupo: {groupFilterOptions.find((o) => o.id === selectedGroupId)?.name || selectedGroupId}</span>
+                <span>
+                  Grupo:{' '}
+                  {groupFilterOptions.find((o) => o.id === selectedGroupId)
+                    ?.name || selectedGroupId}
+                </span>
                 <button
                   type="button"
                   onClick={() => setSelectedGroupId('ALL')}
@@ -664,7 +734,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
               <FolderKanban size={14} className="text-primary" />
               <span>
                 {teamsGroupedByGroup.length}{' '}
-                {teamsGroupedByGroup.length === 1 ? 'grupo disponible' : 'grupos disponibles'}
+                {teamsGroupedByGroup.length === 1
+                  ? 'grupo disponible'
+                  : 'grupos disponibles'}
               </span>
             </div>
             <div className="flex items-center gap-2">
@@ -692,7 +764,8 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
             // Statistics for this group
             const groupTeamIds = new Set(teams.map((t) => t.id));
             const groupAssignments = campusTeamAssignments.filter(
-              (a) => a.serviceAreaGroupId && groupTeamIds.has(a.serviceAreaGroupId),
+              (a) =>
+                a.serviceAreaGroupId && groupTeamIds.has(a.serviceAreaGroupId),
             );
             const groupSupervisors = groupAssignments.filter(
               (a) => a.role === VolunteerRole.SUPERVISOR,
@@ -704,27 +777,43 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
             const totalVolunteersCount =
               groupVolunteers.length > 0
                 ? groupVolunteers.length
-                : teams.reduce((acc, t) => acc + (workspaceTeamsMap.get(t.id)?.servidoresCount || 0), 0);
+                : teams.reduce(
+                    (acc, t) =>
+                      acc + (workspaceTeamsMap.get(t.id)?.servidoresCount || 0),
+                    0,
+                  );
 
             const totalSupervisorsCount =
               groupSupervisors.length > 0
                 ? groupSupervisors.length
-                : teams.reduce((acc, t) => acc + (workspaceTeamsMap.get(t.id)?.supervisors?.length || 0), 0);
+                : teams.reduce(
+                    (acc, t) =>
+                      acc +
+                      (workspaceTeamsMap.get(t.id)?.supervisors?.length || 0),
+                    0,
+                  );
 
             const teamsRequiringSupervisorInGroup = teams.filter((t) => {
-              const area = areas.find((a) => a.id === t.ministryAreaId) || t.ministryArea;
+              const area =
+                areas.find((a) => a.id === t.ministryAreaId) || t.ministryArea;
               const wt = workspaceTeamsMap.get(t.id);
-              return (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? true) !== false;
+              return (
+                (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? true) !==
+                false
+              );
             });
 
-            const uncoveredRequiredTeamsCount = teamsRequiringSupervisorInGroup.filter((t) => {
-              const hasAssignmentSup = campusTeamAssignments.some(
-                (a) => a.serviceAreaGroupId === t.id && a.role === VolunteerRole.SUPERVISOR,
-              );
-              if (hasAssignmentSup) return false;
-              const wt = workspaceTeamsMap.get(t.id);
-              return !(wt && wt.supervisors && wt.supervisors.length > 0);
-            }).length;
+            const uncoveredRequiredTeamsCount =
+              teamsRequiringSupervisorInGroup.filter((t) => {
+                const hasAssignmentSup = campusTeamAssignments.some(
+                  (a) =>
+                    a.serviceAreaGroupId === t.id &&
+                    a.role === VolunteerRole.SUPERVISOR,
+                );
+                if (hasAssignmentSup) return false;
+                const wt = workspaceTeamsMap.get(t.id);
+                return !(wt && wt.supervisors && wt.supervisors.length > 0);
+              }).length;
 
             const allTeamsCovered = uncoveredRequiredTeamsCount === 0;
 
@@ -765,16 +854,30 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                           </span>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200/70 shrink-0">
-                            <AlertCircle size={11} /> {uncoveredRequiredTeamsCount} sin supervisor
+                            <AlertCircle size={11} />{' '}
+                            {uncoveredRequiredTeamsCount} sin supervisor
                           </span>
                         )}
                       </div>
                       <p className="text-[11px] font-medium text-gray-500 mt-0.5">
-                        <span className="font-bold text-gray-700">{teams.length}</span>{' '}
-                        {teams.length === 1 ? 'área / equipo' : 'áreas / equipos'} •{' '}
-                        <span className="font-bold text-teal-700">{totalVolunteersCount}</span>{' '}
-                        {totalVolunteersCount === 1 ? volunteerTerm.toLowerCase() : volunteersTerm.toLowerCase()} •{' '}
-                        <span className="font-bold text-indigo-700">{totalSupervisorsCount}</span> supervisores
+                        <span className="font-bold text-gray-700">
+                          {teams.length}
+                        </span>{' '}
+                        {teams.length === 1
+                          ? 'área / equipo'
+                          : 'áreas / equipos'}{' '}
+                        •{' '}
+                        <span className="font-bold text-teal-700">
+                          {totalVolunteersCount}
+                        </span>{' '}
+                        {totalVolunteersCount === 1
+                          ? volunteerTerm.toLowerCase()
+                          : volunteersTerm.toLowerCase()}{' '}
+                        •{' '}
+                        <span className="font-bold text-indigo-700">
+                          {totalSupervisorsCount}
+                        </span>{' '}
+                        supervisores
                       </p>
                     </div>
                   </div>
@@ -813,15 +916,21 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                             const wt = workspaceTeamsMap.get(team.id);
                             const area =
                               areas.find((a) => a.id === team.ministryAreaId) ||
-                              areasByMinistry[ministryId]?.find((a) => a.id === team.ministryAreaId) ||
+                              areasByMinistry[ministryId]?.find(
+                                (a) => a.id === team.ministryAreaId,
+                              ) ||
                               team.ministryArea;
 
                             const teamRequiresSupervisor =
-                              (area?.requiresSupervisor ?? wt?.requiresSupervisor ?? team.ministryArea?.requiresSupervisor ?? true) !== false;
+                              (area?.requiresSupervisor ??
+                                wt?.requiresSupervisor ??
+                                team.ministryArea?.requiresSupervisor ??
+                                true) !== false;
 
-                            const allTeamAssignments = campusTeamAssignments.filter(
-                              (a) => a.serviceAreaGroupId === team.id,
-                            );
+                            const allTeamAssignments =
+                              campusTeamAssignments.filter(
+                                (a) => a.serviceAreaGroupId === team.id,
+                              );
 
                             const supervisors = allTeamAssignments.filter(
                               (a) => a.role === VolunteerRole.SUPERVISOR,
@@ -834,8 +943,14 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                               supervisors.length > 0
                                 ? supervisors
                                     .map((s) => getVolunteerDetails(s).fullName)
-                                    .sort((a, b) => a.localeCompare(b, 'es', { sensitivity: 'base' }))
-                                : (wt?.supervisors || []).map((s) => s.fullName);
+                                    .sort((a, b) =>
+                                      a.localeCompare(b, 'es', {
+                                        sensitivity: 'base',
+                                      }),
+                                    )
+                                : (wt?.supervisors || []).map(
+                                    (s) => s.fullName,
+                                  );
 
                             const effectiveTotalMembers =
                               allTeamAssignments.length > 0
@@ -843,19 +958,26 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                 : wt?.totalMembersCount || 0;
 
                             const effectiveSupervisorsCount =
-                              supervisors.length > 0 ? supervisors.length : wt?.supervisors?.length || 0;
+                              supervisors.length > 0
+                                ? supervisors.length
+                                : wt?.supervisors?.length || 0;
 
                             const effectiveVolunteersCount =
-                              volunteers.length > 0 ? volunteers.length : wt?.servidoresCount || 0;
+                              volunteers.length > 0
+                                ? volunteers.length
+                                : wt?.servidoresCount || 0;
 
                             // Search filtering
                             const q = searchMemberTerm.toLowerCase().trim();
                             if (q) {
-                              const hasSupervisorMatch = effectiveSupervisorNames.some((name) =>
-                                name.toLowerCase().includes(q),
-                              );
+                              const hasSupervisorMatch =
+                                effectiveSupervisorNames.some((name) =>
+                                  name.toLowerCase().includes(q),
+                                );
                               const hasVolunteerMatch = volunteers.some((v) =>
-                                getVolunteerDetails(v).fullName.toLowerCase().includes(q),
+                                getVolunteerDetails(v)
+                                  .fullName.toLowerCase()
+                                  .includes(q),
                               );
                               if (!hasSupervisorMatch && !hasVolunteerMatch) {
                                 return null;
@@ -883,7 +1005,9 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200/80 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all shrink-0 shadow-2xs">
                                     <span>
                                       {effectiveTotalMembers}{' '}
-                                      {effectiveTotalMembers === 1 ? 'miembro' : 'miembros'}
+                                      {effectiveTotalMembers === 1
+                                        ? 'miembro'
+                                        : 'miembros'}
                                     </span>
                                     <ChevronRight
                                       size={13}
@@ -904,15 +1028,22 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                               className="text-indigo-600 shrink-0"
                                             />
                                             <span>
-                                              Supervisores ({effectiveSupervisorNames.length}):
+                                              Supervisores (
+                                              {effectiveSupervisorNames.length}
+                                              ):
                                             </span>
                                           </div>
                                           <ul className="flex flex-col gap-1 pl-4 list-disc text-gray-800 font-medium marker:text-indigo-500">
-                                            {effectiveSupervisorNames.map((name, sIdx) => (
-                                              <li key={sIdx} className="leading-snug">
-                                                {name}
-                                              </li>
-                                            ))}
+                                            {effectiveSupervisorNames.map(
+                                              (name, sIdx) => (
+                                                <li
+                                                  key={sIdx}
+                                                  className="leading-snug"
+                                                >
+                                                  {name}
+                                                </li>
+                                              ),
+                                            )}
                                           </ul>
                                         </div>
                                       </div>
@@ -923,7 +1054,10 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                     return (
                                       <div className="text-xs bg-slate-50/70 p-3 rounded-2xl border border-gray-100 group-hover:bg-slate-100/60 transition-colors">
                                         <div className="flex items-center gap-1.5 text-amber-700 font-bold">
-                                          <AlertCircle size={14} className="shrink-0 text-amber-600" />
+                                          <AlertCircle
+                                            size={14}
+                                            className="shrink-0 text-amber-600"
+                                          />
                                           <span>Sin supervisor asignado</span>
                                         </div>
                                       </div>
@@ -936,24 +1070,33 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                 {/* Card Click Hint */}
                                 <div className="flex items-center justify-end text-[11px] text-gray-400 font-medium -mt-1 px-1">
                                   <span className="group-hover:text-primary font-semibold transition-colors flex items-center gap-1">
-                                    <span>Ver plantilla completa ({effectiveTotalMembers})</span>
-                                    <ChevronRight size={12} className="group-hover:translate-x-0.5 transition-transform" />
+                                    <span>
+                                      Ver plantilla completa (
+                                      {effectiveTotalMembers})
+                                    </span>
+                                    <ChevronRight
+                                      size={12}
+                                      className="group-hover:translate-x-0.5 transition-transform"
+                                    />
                                   </span>
                                 </div>
 
                                 {/* Totals Breakdown and Actions */}
                                 <div className="flex items-center justify-between gap-2 pt-2.5 border-t border-gray-100 flex-wrap">
                                   <div className="flex items-center gap-2.5 text-xs text-gray-500 font-semibold">
-                                    {(teamRequiresSupervisor || effectiveSupervisorsCount > 0) && (
+                                    {(teamRequiresSupervisor ||
+                                      effectiveSupervisorsCount > 0) && (
                                       <>
                                         <span className="inline-flex items-center gap-1 text-indigo-700 font-bold">
-                                          <ShieldCheck size={13} /> {effectiveSupervisorsCount} sup.
+                                          <ShieldCheck size={13} />{' '}
+                                          {effectiveSupervisorsCount} sup.
                                         </span>
                                         <span>•</span>
                                       </>
                                     )}
                                     <span className="inline-flex items-center gap-1 text-teal-700 font-bold">
-                                      <Users size={13} /> {effectiveVolunteersCount} serv.
+                                      <Users size={13} />{' '}
+                                      {effectiveVolunteersCount} serv.
                                     </span>
                                   </div>
 
@@ -966,7 +1109,10 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          handleOpenAssignDrawer(VolunteerRole.SUPERVISOR, team.id)
+                                          handleOpenAssignDrawer(
+                                            VolunteerRole.SUPERVISOR,
+                                            team.id,
+                                          )
                                         }
                                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200/80 hover:bg-indigo-100 active:scale-95 transition-all cursor-pointer"
                                         title="Agregar Supervisor al equipo"
@@ -977,7 +1123,10 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                       <button
                                         type="button"
                                         onClick={() =>
-                                          handleOpenAssignDrawer(VolunteerRole.VOLUNTEER, team.id)
+                                          handleOpenAssignDrawer(
+                                            VolunteerRole.VOLUNTEER,
+                                            team.id,
+                                          )
                                         }
                                         className="inline-flex items-center gap-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-teal-50 text-teal-700 border border-teal-200/80 hover:bg-teal-100 active:scale-95 transition-all cursor-pointer"
                                         title={`Agregar ${volunteerRoleLabel} al equipo`}
@@ -997,7 +1146,10 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                       title="Ver todos los integrantes"
                                       aria-label="Ver todos los integrantes"
                                     >
-                                      <ChevronRight size={16} className="group-hover:translate-x-0.5 transition-transform" />
+                                      <ChevronRight
+                                        size={16}
+                                        className="group-hover:translate-x-0.5 transition-transform"
+                                      />
                                     </button>
                                   </div>
                                 </div>
@@ -1015,23 +1167,24 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
         </div>
       )}
 
-      {/* TEAM ROSTER DRAWER (OPENS ON CARD CLICK TO SHOW FULL MEMBER LIST) */}
+      {/* TEAM ROSTER MODAL (OPENS ON CARD CLICK TO SHOW FULL MEMBER LIST) */}
       {selectedRosterTeam && (
-        <TeamRosterDrawer
+        <TeamRosterModal
           open={rosterDrawerOpen}
           onOpenChange={setRosterDrawerOpen}
           team={selectedRosterTeam}
           areaName={
-            areas.find((a) => a.id === selectedRosterTeam.ministryAreaId)?.name ||
-            selectedRosterTeam.ministryArea?.name
+            areas.find((a) => a.id === selectedRosterTeam.ministryAreaId)
+              ?.name || selectedRosterTeam.ministryArea?.name
           }
           groupName={
-            groups.find((g) => g.id === selectedRosterTeam.ministryGroupConfigId)?.name ||
-            selectedRosterTeam.ministryGroupConfig?.name
+            groups.find(
+              (g) => g.id === selectedRosterTeam.ministryGroupConfigId,
+            )?.name || selectedRosterTeam.ministryGroupConfig?.name
           }
           campusName={
-            campuses.find((c) => c.id === selectedRosterTeam.churchCampusId)?.name ||
-            selectedRosterTeam.churchCampus?.name
+            campuses.find((c) => c.id === selectedRosterTeam.churchCampusId)
+              ?.name || selectedRosterTeam.churchCampus?.name
           }
           assignments={campusTeamAssignments}
           volunteersList={volunteersList}
@@ -1041,8 +1194,27 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
           onDeleteAssignment={(asg) => {
             handleOpenDelete(asg);
           }}
+          onChangeRole={(asg) => {
+            setAssignmentToChangeRole(asg);
+            setChangeRoleModalOpen(true);
+          }}
         />
       )}
+
+      {/* ROLE CHANGE / PROMOTION / DEMOTION MODAL */}
+      <ChangeVolunteerRoleModal
+        open={changeRoleModalOpen}
+        onOpenChange={setChangeRoleModalOpen}
+        assignment={assignmentToChangeRole}
+        ministryId={ministryId}
+        churchCampusId={effectiveCampusId}
+        areas={areas}
+        groups={groups}
+        campuses={campuses}
+        serviceAreaGroups={currentCampusTeams}
+        volunteersList={volunteersList}
+        onSuccess={handleAssignSuccess}
+      />
 
       {/* CONTEXTUAL ASSIGN VOLUNTEER DRAWER */}
       <AssignVolunteerDrawer

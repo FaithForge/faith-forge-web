@@ -40,6 +40,7 @@ export interface VolunteerSliceState {
   errorAssignments: string | null;
 
   currentVolunteerAssignments: IVolunteerAssignment[];
+  currentVolunteerAssignmentHistory: IVolunteerAssignment[];
   loadingCurrentAssignments: boolean;
   errorCurrentAssignments: string | null;
 
@@ -70,6 +71,7 @@ const initialState: VolunteerSliceState = {
   errorAssignments: null,
 
   currentVolunteerAssignments: [],
+  currentVolunteerAssignmentHistory: [],
   loadingCurrentAssignments: false,
   errorCurrentAssignments: null,
 
@@ -89,6 +91,7 @@ export const volunteerSlice = createSlice({
   reducers: {
     clearCurrentVolunteerAssignments: (state) => {
       state.currentVolunteerAssignments = [];
+      state.currentVolunteerAssignmentHistory = [];
       state.errorCurrentAssignments = null;
     },
     clearActiveUserVolunteer: (state) => {
@@ -126,7 +129,8 @@ export const volunteerSlice = createSlice({
       )
       .addCase(GetVolunteers.rejected, (state, action) => {
         state.volunteers.loading = false;
-        state.volunteers.error = (action.payload as string) || 'Error al obtener voluntarios';
+        state.volunteers.error =
+          (action.payload as string) || 'Error al obtener voluntarios';
       });
 
     builder
@@ -138,12 +142,15 @@ export const volunteerSlice = createSlice({
         (state, action: PayloadAction<PaginationResponse<IVolunteer>>) => {
           state.volunteers.loadingMore = false;
           const existingIds = new Set(state.volunteers.data.map((v) => v.id));
-          const newVolunteers = action.payload.data.filter((v) => !existingIds.has(v.id));
+          const newVolunteers = action.payload.data.filter(
+            (v) => !existingIds.has(v.id),
+          );
           state.volunteers.data.push(...newVolunteers);
           if (newVolunteers.length === 0) {
             state.volunteers.totalPages = state.volunteers.currentPage;
           } else {
-            state.volunteers.totalPages = action.payload.totalPages || state.volunteers.currentPage;
+            state.volunteers.totalPages =
+              action.payload.totalPages || state.volunteers.currentPage;
           }
         },
       )
@@ -157,20 +164,26 @@ export const volunteerSlice = createSlice({
         state.loadingAction = true;
         state.errorAction = null;
       })
-      .addCase(CreateVolunteer.fulfilled, (state, action: PayloadAction<IVolunteer>) => {
-        state.loadingAction = false;
-        const index = state.volunteers.data.findIndex(
-          (v) => v.id === action.payload.id || (v.userId && v.userId === action.payload.userId),
-        );
-        if (index !== -1) {
-          state.volunteers.data[index] = action.payload;
-        } else {
-          state.volunteers.data.unshift(action.payload);
-        }
-      })
+      .addCase(
+        CreateVolunteer.fulfilled,
+        (state, action: PayloadAction<IVolunteer>) => {
+          state.loadingAction = false;
+          const index = state.volunteers.data.findIndex(
+            (v) =>
+              v.id === action.payload.id ||
+              (v.userId && v.userId === action.payload.userId),
+          );
+          if (index !== -1) {
+            state.volunteers.data[index] = action.payload;
+          } else {
+            state.volunteers.data.unshift(action.payload);
+          }
+        },
+      )
       .addCase(CreateVolunteer.rejected, (state, action) => {
         state.loadingAction = false;
-        state.errorAction = (action.payload as string) || 'Error al registrar voluntario';
+        state.errorAction =
+          (action.payload as string) || 'Error al registrar voluntario';
       });
 
     // -------------------------------------------------------------------------
@@ -186,26 +199,28 @@ export const volunteerSlice = createSlice({
         state.errorAssignments = null;
       })
       .addCase(GetVolunteerAssignments.fulfilled, (state, action) => {
-        const partitionKey = action.meta?.arg?.partitionKey || action.payload?.partitionKey;
+        const partitionKey =
+          action.meta?.arg?.partitionKey || action.payload?.partitionKey;
         if (partitionKey) {
           state.loadingByPartition[partitionKey] = false;
         }
-          state.loadingAssignments = false;
+        state.loadingAssignments = false;
 
-          const items: IVolunteerAssignment[] = Array.isArray(action.payload)
-            ? action.payload
-            : action.payload?.data || [];
+        const items: IVolunteerAssignment[] = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.data || [];
 
-          if (partitionKey) {
-            state.assignmentsByPartition[partitionKey] = items;
-          }
+        if (partitionKey) {
+          state.assignmentsByPartition[partitionKey] = items;
+        }
 
-          // Merge into unified assignments state ensuring no duplicates
-          const incomingIds = new Set(items.map((i) => i.id));
-          const remaining = state.assignments.filter((a) => !incomingIds.has(a.id));
-          state.assignments = [...remaining, ...items];
-        },
-      )
+        // Merge into unified assignments state ensuring no duplicates
+        const incomingIds = new Set(items.map((i) => i.id));
+        const remaining = state.assignments.filter(
+          (a) => !incomingIds.has(a.id),
+        );
+        state.assignments = [...remaining, ...items];
+      })
       .addCase(GetVolunteerAssignments.rejected, (state, action) => {
         const partitionKey = (action.meta as any)?.arg?.partitionKey;
         if (partitionKey) {
@@ -213,7 +228,8 @@ export const volunteerSlice = createSlice({
         }
         state.loadingAssignments = false;
         state.errorAssignments =
-          (action.payload as string) || 'Error al obtener asignaciones de voluntarios';
+          (action.payload as string) ||
+          'Error al obtener asignaciones de voluntarios';
       });
 
     builder
@@ -228,7 +244,11 @@ export const volunteerSlice = createSlice({
           if (!state.assignments.some((a) => a.id === action.payload.id)) {
             state.assignments.push(action.payload);
           }
-          if (!state.currentVolunteerAssignments.some((a) => a.id === action.payload.id)) {
+          if (
+            !state.currentVolunteerAssignments.some(
+              (a) => a.id === action.payload.id,
+            )
+          ) {
             state.currentVolunteerAssignments.push(action.payload);
           }
 
@@ -260,7 +280,8 @@ export const volunteerSlice = createSlice({
               (action.payload.role === VolunteerRole.VOLUNTEER ||
                 action.payload.role === VolunteerRole.SUPERVISOR)
             ) {
-              const sagCampusId = action.payload.serviceAreaGroup?.churchCampusId;
+              const sagCampusId =
+                action.payload.serviceAreaGroup?.churchCampusId;
               if (!sagCampusId || key.includes(sagCampusId)) {
                 matches = true;
               }
@@ -277,7 +298,8 @@ export const volunteerSlice = createSlice({
       )
       .addCase(CreateVolunteerAssignment.rejected, (state, action) => {
         state.loadingAction = false;
-        state.errorAction = (action.payload as string) || 'Error al crear asignación';
+        state.errorAction =
+          (action.payload as string) || 'Error al crear asignación';
       });
 
     builder
@@ -289,7 +311,9 @@ export const volunteerSlice = createSlice({
         UpdateVolunteerAssignment.fulfilled,
         (state, action: PayloadAction<IVolunteerAssignment>) => {
           state.loadingAction = false;
-          const idx = state.assignments.findIndex((a) => a.id === action.payload.id);
+          const idx = state.assignments.findIndex(
+            (a) => a.id === action.payload.id,
+          );
           if (idx !== -1) {
             state.assignments[idx] = action.payload;
           }
@@ -311,7 +335,8 @@ export const volunteerSlice = createSlice({
       )
       .addCase(UpdateVolunteerAssignment.rejected, (state, action) => {
         state.loadingAction = false;
-        state.errorAction = (action.payload as string) || 'Error al actualizar asignación';
+        state.errorAction =
+          (action.payload as string) || 'Error al actualizar asignación';
       });
 
     builder
@@ -319,21 +344,28 @@ export const volunteerSlice = createSlice({
         state.loadingAction = true;
         state.errorAction = null;
       })
-      .addCase(DeleteVolunteerAssignment.fulfilled, (state, action: PayloadAction<string>) => {
-        state.loadingAction = false;
-        state.assignments = state.assignments.filter((a) => a.id !== action.payload);
-        state.currentVolunteerAssignments = state.currentVolunteerAssignments.filter(
-          (a) => a.id !== action.payload,
-        );
-        Object.keys(state.assignmentsByPartition).forEach((key) => {
-          state.assignmentsByPartition[key] = state.assignmentsByPartition[key].filter(
+      .addCase(
+        DeleteVolunteerAssignment.fulfilled,
+        (state, action: PayloadAction<string>) => {
+          state.loadingAction = false;
+          state.assignments = state.assignments.filter(
             (a) => a.id !== action.payload,
           );
-        });
-      })
+          state.currentVolunteerAssignments =
+            state.currentVolunteerAssignments.filter(
+              (a) => a.id !== action.payload,
+            );
+          Object.keys(state.assignmentsByPartition).forEach((key) => {
+            state.assignmentsByPartition[key] = state.assignmentsByPartition[
+              key
+            ].filter((a) => a.id !== action.payload);
+          });
+        },
+      )
       .addCase(DeleteVolunteerAssignment.rejected, (state, action) => {
         state.loadingAction = false;
-        state.errorAction = (action.payload as string) || 'Error al eliminar asignación';
+        state.errorAction =
+          (action.payload as string) || 'Error al eliminar asignación';
       });
 
     // -------------------------------------------------------------------------
@@ -346,18 +378,23 @@ export const volunteerSlice = createSlice({
       })
       .addCase(
         GetVolunteerWithAssignments.fulfilled,
-         
         (state, action: PayloadAction<any>) => {
           state.loadingCurrentAssignments = false;
           state.currentVolunteerAssignments = Array.isArray(action.payload)
             ? action.payload
             : action.payload?.assignments || [];
+          state.currentVolunteerAssignmentHistory = Array.isArray(
+            action.payload,
+          )
+            ? []
+            : action.payload?.assignmentHistory || [];
         },
       )
       .addCase(GetVolunteerWithAssignments.rejected, (state, action) => {
         state.loadingCurrentAssignments = false;
         state.errorCurrentAssignments =
-          (action.payload as string) || 'Error al obtener asignaciones del voluntario';
+          (action.payload as string) ||
+          'Error al obtener asignaciones del voluntario';
       });
 
     // -------------------------------------------------------------------------
@@ -411,5 +448,3 @@ export const {
   resetVolunteerErrors,
 } = volunteerSlice.actions;
 export default volunteerSlice.reducer;
-
-

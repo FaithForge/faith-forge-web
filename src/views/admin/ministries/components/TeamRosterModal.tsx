@@ -1,0 +1,482 @@
+import Button from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import ModalOverlay from '@/components/ui/ModalOverlay';
+import { getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
+import {
+  IServiceAreaGroup,
+  IVolunteer,
+  IVolunteerAssignment,
+  MinistryType,
+  VolunteerRole,
+} from '@/libs/models';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import { capitalizeWords, formatPhoneWithDialCode } from '@/libs/utils/text';
+import {
+  ArrowUpDown,
+  Award,
+  Inbox,
+  Phone,
+  Plus,
+  ShieldCheck,
+  Trash2,
+  User as UserIcon,
+  Users,
+  X,
+} from 'lucide-react';
+import React, { useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+
+export interface TeamRosterModalProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  team: IServiceAreaGroup | null;
+  areaName?: string;
+  groupName?: string;
+  campusName?: string;
+  assignments: IVolunteerAssignment[];
+  volunteersList?: IVolunteer[];
+  onAssignClick: (role?: VolunteerRole) => void;
+  onDeleteAssignment: (asg: IVolunteerAssignment) => void;
+  onChangeRole?: (asg: IVolunteerAssignment) => void;
+}
+
+/**
+ * Modal dialog to inspect, search, and manage volunteers and supervisors
+ * assigned to a single specific Service Area Group team.
+ *
+ * @param {TeamRosterModalProps} props - Component properties.
+ * @returns {JSX.Element | null} The rendered roster modal dialog.
+ */
+export const TeamRosterModal: React.FC<TeamRosterModalProps> = ({
+  open,
+  onOpenChange,
+  team,
+  areaName,
+  groupName,
+  campusName,
+  assignments,
+  volunteersList = [],
+  onAssignClick,
+  onDeleteAssignment,
+  onChangeRole,
+}) => {
+  const { t } = useTranslation('admin');
+  const [searchText, setSearchText] = useState('');
+
+  const ministry = useAppSelector((state) =>
+    team?.ministryArea?.ministryId
+      ? state.ministrySlice.ministries.find(
+          (m) => m.id === team.ministryArea?.ministryId,
+        )
+      : undefined,
+  );
+  const churchOverrides = useAppSelector(
+    (state) =>
+      state.churchCampusSlice.churchTerminologyOverrides ||
+      state.churchCampusSlice.church?.terminologyOverrides,
+  );
+  const resolvedMinistryType =
+    ministry?.type ||
+    team?.ministryArea?.ministry?.type ||
+    MinistryType.GENERAL;
+  const ministryOverrides = useAppSelector((state) => {
+    return (
+      state.churchCampusSlice.ministryTerminologyOverrides?.[
+        resolvedMinistryType
+      ] ||
+      state.churchCampusSlice.church?.ministryTerminologyOverrides?.[
+        resolvedMinistryType
+      ]
+    );
+  });
+  const volunteerRoleLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+    ministryType: resolvedMinistryType,
+    ministryOverrides,
+    churchOverrides,
+  });
+  const volunteersRoleLabel = getVolunteerRoleLabel(VolunteerRole.VOLUNTEER, {
+    ministryType: resolvedMinistryType,
+    ministryOverrides,
+    churchOverrides,
+    plural: true,
+  });
+
+  // Reset search when opening
+  React.useEffect(() => {
+    if (open) {
+      setSearchText('');
+    }
+  }, [open]);
+
+  // Filter team assignments
+  const teamAssignments = useMemo(() => {
+    if (!team) return [];
+    return assignments.filter((a) => a.serviceAreaGroupId === team.id);
+  }, [assignments, team]);
+
+  const allAreas = useAppSelector(
+    (state) => state.ministrySlice.areasByMinistry,
+  );
+  const resolvedArea = useMemo(() => {
+    if (team?.ministryArea) return team.ministryArea;
+    if (!team?.ministryAreaId) return undefined;
+    for (const list of Object.values(allAreas)) {
+      const match = list.find((a) => a.id === team.ministryAreaId);
+      if (match) return match;
+    }
+    return undefined;
+  }, [team, allAreas]);
+
+  const requiresSupervisor = resolvedArea
+    ? resolvedArea.requiresSupervisor !== false
+    : true;
+
+  const getPersonName = React.useCallback(
+    (asg: IVolunteerAssignment): string => {
+      const vId =
+        asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+      const vol =
+        asg.volunteer ||
+        asg.churchMember ||
+        asg.ministryVolunteer ||
+        volunteersList.find(
+          (v) =>
+            v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+        );
+      const user =
+        asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+      const raw =
+        user && (user.firstName || user.lastName)
+          ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+          : '';
+      return capitalizeWords(raw);
+    },
+    [volunteersList],
+  );
+
+  // Supervisors (sorted alphabetically)
+  const supervisors = useMemo(() => {
+    return teamAssignments
+      .filter((a) => a.role === VolunteerRole.SUPERVISOR)
+      .sort((a, b) =>
+        getPersonName(a).localeCompare(getPersonName(b), 'es', {
+          sensitivity: 'base',
+        }),
+      );
+  }, [teamAssignments, getPersonName]);
+
+  // Volunteers / Teachers (sorted alphabetically)
+  const volunteers = useMemo(() => {
+    return teamAssignments
+      .filter((a) => a.role === VolunteerRole.VOLUNTEER)
+      .sort((a, b) =>
+        getPersonName(a).localeCompare(getPersonName(b), 'es', {
+          sensitivity: 'base',
+        }),
+      );
+  }, [teamAssignments, getPersonName]);
+
+  // Filter volunteers by local search
+  const filteredVolunteers = useMemo(() => {
+    if (!searchText.trim()) return volunteers;
+    const query = searchText.toLowerCase().trim();
+
+    return volunteers.filter((asg) => {
+      const fullName = getPersonName(asg).toLowerCase();
+      const vId =
+        asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+      const vol =
+        asg.volunteer ||
+        asg.churchMember ||
+        asg.ministryVolunteer ||
+        volunteersList.find(
+          (v) =>
+            v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+        );
+      const user =
+        asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+
+      const nationalId = user?.nationalId?.toLowerCase() || '';
+      const phone = user?.phone?.toLowerCase() || '';
+
+      return (
+        fullName.includes(query) ||
+        nationalId.includes(query) ||
+        phone.includes(query)
+      );
+    });
+  }, [volunteers, searchText, getPersonName, volunteersList]);
+
+  /**
+   * Renders a single row representing an assigned volunteer or supervisor.
+   *
+   * @param {IVolunteerAssignment} asg - The assignment entity.
+   * @param {string} roleLabel - Display label for the person's role.
+   * @returns {JSX.Element} The rendered person card.
+   */
+  const renderPersonRow = (asg: IVolunteerAssignment, roleLabel: string) => {
+    const vId =
+      asg.volunteerId || asg.churchMemberId || asg.ministryVolunteerId;
+    const vol =
+      asg.volunteer ||
+      asg.churchMember ||
+      asg.ministryVolunteer ||
+      volunteersList.find(
+        (v) => v.id === vId || (v.userId && v.userId === asg.volunteer?.userId),
+      );
+    const user =
+      asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
+    const name =
+      user && (user.firstName || user.lastName)
+        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+        : 'Servidor asignado';
+    const nationalId = user?.nationalId;
+    const phone = user?.phone;
+    const photoUrl = user?.photoUrl;
+    const dialCode =
+      user?.dialCodePhone ||
+      (user && 'dialCode' in user
+        ? (user as { dialCode?: string }).dialCode
+        : undefined);
+
+    return (
+      <div
+        key={asg.id}
+        className="flex items-center justify-between p-3 bg-white border border-gray-200/80 rounded-2xl shadow-2xs gap-3 hover:border-gray-300 transition-all"
+      >
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="w-9 h-9 rounded-xl bg-slate-100 border border-gray-200 text-gray-600 flex items-center justify-center font-bold text-xs shrink-0 overflow-hidden">
+            {photoUrl ? (
+              <img
+                src={photoUrl}
+                alt={name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <UserIcon size={16} />
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-xs font-bold text-gray-900 truncate">{name}</p>
+            <div className="flex items-center gap-2 text-[11px] text-gray-500 mt-0.5 flex-wrap">
+              <span className="font-semibold text-primary">{roleLabel}</span>
+              {nationalId && <span>• Doc: {nationalId}</span>}
+              {phone && (
+                <span className="inline-flex items-center gap-0.5">
+                  <Phone size={10} className="text-gray-400" />{' '}
+                  {formatPhoneWithDialCode(phone, dialCode)}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-1 shrink-0">
+          {onChangeRole && (
+            <button
+              type="button"
+              onClick={() => onChangeRole(asg)}
+              className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-primary hover:bg-primary/10 transition-colors shrink-0 cursor-pointer"
+              title={t('volunteer_role_change.btn_tooltip')}
+            >
+              <ArrowUpDown size={15} />
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => onDeleteAssignment(asg)}
+            className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-rose-600 hover:bg-rose-50 transition-colors shrink-0 cursor-pointer"
+            title="Remover del equipo"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+    );
+  };
+
+  const displayName = `${areaName ?? 'Área'} × ${groupName ?? 'Grupo'}`;
+
+  return (
+    <ModalOverlay
+      open={open}
+      onClose={() => onOpenChange(false)}
+      wrapperClassName="items-center justify-center p-3 sm:p-4"
+      panelClassName="w-full max-w-xl md:max-w-2xl lg:max-w-3xl mx-auto"
+    >
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col overflow-hidden border border-gray-200/90 mx-auto animate-in fade-in zoom-in-95 duration-200">
+        {/* Header Bar */}
+        <div className="w-full bg-white border-b border-gray-100 flex items-center justify-between px-5 py-4 shrink-0">
+          <div className="w-8 shrink-0" />
+          <h2 className="font-bold text-gray-800 text-base sm:text-lg flex items-center justify-center gap-2 text-center flex-1 truncate px-2">
+            <Users className="text-primary shrink-0" size={20} />
+            <span className="truncate">Plantilla del Equipo</span>
+          </h2>
+          <div className="w-8 shrink-0 flex items-center justify-end">
+            <button
+              type="button"
+              onClick={() => onOpenChange(false)}
+              className="w-8 h-8 flex items-center justify-center bg-gray-100 text-gray-500 rounded-full hover:bg-gray-200 hover:text-gray-700 active:scale-95 transition-all shrink-0 cursor-pointer"
+              aria-label="Cerrar modal"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+
+        {/* Scrollable Body Content */}
+        <div className="overflow-y-auto flex-1 p-4 sm:p-5 flex flex-col gap-5">
+          {/* Team Header Info */}
+          <div className="bg-slate-50 border border-gray-200/80 rounded-2xl p-4 flex flex-col gap-2">
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <h3 className="text-sm sm:text-base font-extrabold text-gray-900">
+                {displayName}
+              </h3>
+              <span className="text-xs font-bold px-2.5 py-0.5 rounded-full bg-teal-50 text-teal-700 border border-teal-200/80">
+                {teamAssignments.length}{' '}
+                {teamAssignments.length === 1 ? 'miembro' : 'miembros'}
+              </span>
+            </div>
+
+            {campusName && (
+              <p className="text-xs text-gray-500 font-medium">
+                Sede: {campusName}
+              </p>
+            )}
+          </div>
+
+          {/* SECTION 1: SUPERVISOR */}
+          <div className="flex flex-col gap-2.5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 uppercase tracking-wide">
+                <ShieldCheck size={15} />
+                <span>Supervisor de Equipo</span>
+                {!requiresSupervisor && (
+                  <span className="text-[10.5px] font-medium lowercase text-gray-400">
+                    (opcional)
+                  </span>
+                )}
+              </div>
+              {supervisors.length === 0 && (
+                <Button
+                  onClick={() => onAssignClick(VolunteerRole.SUPERVISOR)}
+                  size="sm"
+                  variant="default"
+                  className="text-[11px] py-1 px-2.5 gap-1"
+                >
+                  <Plus size={13} /> Asignar Supervisor
+                </Button>
+              )}
+            </div>
+
+            {supervisors.length === 0 ? (
+              requiresSupervisor ? (
+                <div className="p-3.5 bg-amber-50/60 border border-dashed border-amber-200 rounded-2xl flex items-center justify-between gap-3 text-amber-800">
+                  <div className="text-xs">
+                    <p className="font-bold">Sin supervisor asignado</p>
+                    <p className="text-amber-700 text-[11px]">
+                      Este equipo requiere un supervisor responsable de la
+                      operación.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => onAssignClick(VolunteerRole.SUPERVISOR)}
+                    size="sm"
+                    className="text-xs py-1 px-3 gap-1 shrink-0"
+                  >
+                    <Plus size={13} /> Asignar
+                  </Button>
+                </div>
+              ) : (
+                <div className="p-3 bg-slate-50/80 border border-dashed border-gray-200/90 rounded-2xl flex items-center justify-between gap-3 text-gray-600">
+                  <div className="text-xs">
+                    <p className="font-semibold text-gray-700">
+                      Sin supervisor asignado (Opcional)
+                    </p>
+                    <p className="text-gray-400 text-[11px]">
+                      Esta área no requiere supervisión obligatoria.
+                    </p>
+                  </div>
+                  <Button
+                    onClick={() => onAssignClick(VolunteerRole.SUPERVISOR)}
+                    size="sm"
+                    variant="default"
+                    className="text-xs py-1 px-3 gap-1 shrink-0"
+                  >
+                    <Plus size={13} /> Asignar
+                  </Button>
+                </div>
+              )
+            ) : (
+              <div className="flex flex-col gap-2">
+                {supervisors.map((s) => renderPersonRow(s, 'Supervisor'))}
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 2: VOLUNTEERS / TEACHERS */}
+          <div className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-700 uppercase tracking-wide">
+                <Award size={15} />
+                <span>
+                  {volunteersRoleLabel} ({volunteers.length})
+                </span>
+              </div>
+              <Button
+                onClick={() => onAssignClick(VolunteerRole.VOLUNTEER)}
+                size="sm"
+                className="text-xs py-1 px-2.5 gap-1"
+              >
+                <Plus size={14} /> Agregar {volunteerRoleLabel}
+              </Button>
+            </div>
+
+            {/* Search bar within team (only if multiple volunteers) */}
+            {volunteers.length > 3 && (
+              <Input
+                placeholder="Filtrar por nombre o documento..."
+                value={searchText}
+                onChange={(e) => setSearchText(e.target.value)}
+                icon="search"
+                className="text-xs py-1.5"
+              />
+            )}
+
+            {/* Volunteers List */}
+            {volunteers.length === 0 ? (
+              <div className="p-6 bg-slate-50 border border-dashed border-gray-200 rounded-2xl text-center flex flex-col items-center justify-center gap-2">
+                <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-gray-400">
+                  <Inbox size={20} />
+                </div>
+                <p className="text-xs text-gray-500 font-medium">
+                  Sin {volunteersRoleLabel.toLowerCase()} asignados a este equipo.
+                </p>
+                <Button
+                  onClick={() => onAssignClick(VolunteerRole.VOLUNTEER)}
+                  size="sm"
+                  className="text-xs py-1.5 px-3 gap-1 mt-1"
+                >
+                  <Plus size={14} /> Asignar Primer(a) {volunteerRoleLabel}
+                </Button>
+              </div>
+            ) : filteredVolunteers.length === 0 ? (
+              <div className="p-4 bg-slate-50 rounded-xl text-center text-xs text-gray-400">
+                No se encontraron {volunteersRoleLabel.toLowerCase()} que
+                coincidan con &quot;{searchText}&quot;
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {filteredVolunteers.map((v) =>
+                  renderPersonRow(v, volunteerRoleLabel),
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </ModalOverlay>
+  );
+};
+
+export default TeamRosterModal;
