@@ -445,20 +445,29 @@ const NewKidView = () => {
     .map((r) => ({ id: r.value, name: r.label }));
 
   const [isSearchingGuardian, setIsSearchingGuardian] = useState(false);
-  const checkNationalId = async () => {
+  /**
+   * Searches for an existing guardian by document and clears stale results when none is returned.
+   *
+   * @returns {Promise<void>} Resolves when the guardian lookup completes.
+   */
+  const checkNationalId = async (): Promise<void> => {
     const doc = getGuardianValues('nationalId');
     const docType = getGuardianValues('nationalIdType');
     if (doc && doc.trim().length > 0) {
       setIsSearchingGuardian(true);
+      setExistingGuardian(null);
       try {
         const data = await triggerGetGuardian({
           nationalId: doc.trim(),
           nationalIdType: docType,
         }).unwrap();
-        if (data) {
+        if (data?.id) {
           setExistingGuardian(data);
           toast.success(`${guardianTerm} encontrado(a) en la base de datos`);
+          return;
         }
+
+        setExistingGuardian(null);
       } catch {
         setExistingGuardian(null);
       } finally {
@@ -1036,4 +1045,3 @@ const NewKidView = () => {
 };
 
 export default NewKidView;
-

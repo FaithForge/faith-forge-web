@@ -94,18 +94,27 @@ export const AssignGuardianModal: React.FC<AssignGuardianModalProps> = ({
     }
   }, [existingGuardian]);
 
-  const handleSearchGuardian = async () => {
+  /**
+   * Searches for an existing guardian by document and clears stale results when none is returned.
+   *
+   * @returns {Promise<void>} Resolves when the guardian lookup completes.
+   */
+  const handleSearchGuardian = async (): Promise<void> => {
     const cleanDoc = nationalId.trim();
     if (cleanDoc) {
+      setExistingGuardian(null);
       try {
         const guardianData = await triggerGetGuardian({
           nationalId: cleanDoc,
           nationalIdType,
         }).unwrap();
-        if (guardianData) {
+        if (guardianData?.id) {
           setExistingGuardian(guardianData);
           toast.success(`${guardianTerm} encontrado(a) en el sistema`);
+          return;
         }
+
+        setExistingGuardian(null);
       } catch {
         setExistingGuardian(null);
       }
