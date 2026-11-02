@@ -1,12 +1,14 @@
 import Button from '@/components/ui/Button';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import PageHeader from '@/components/ui/PageHeader';
+import Select from '@/components/ui/Select';
 import { APP_ROUTES } from '@/config/routes';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { IMinistry, MinistryStateEnum, MinistryType } from '@/libs/models';
 import {
   useGetChurchCampusesQuery,
   useGetMinistryWorkspaceOverviewQuery,
+  useLazyGetMinistriesQuery,
 } from '@/libs/state/redux/api/churchApi';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { updateCurrentChurchCampus } from '@/libs/state/redux/slices/church/churchCampus.slice';
@@ -20,6 +22,7 @@ import {
   FolderKanban,
   Landmark,
   Layers,
+  MapPin,
   Plus,
   Star,
   Users,
@@ -231,16 +234,56 @@ export const MinistryWorkspaceView: React.FC = () => {
     workspace?.ministry?.churchCampusId,
   ]);
 
+  const [isChangingCampus, setIsChangingCampus] = useState(false);
+  const [triggerGetMinistries] = useLazyGetMinistriesQuery();
+
   /**
-   * Updates the selected campus and synchronizes with URL query and redux.
+   * Updates the selected campus and switches to the corresponding ministry in that campus.
    *
    * @param {string} newCampusId - Newly selected campus identifier.
    */
-  const handleCampusChange = (newCampusId: string) => {
+  const handleCampusChange = async (newCampusId: string) => {
+    if (!newCampusId || newCampusId === selectedCampusId) return;
+
+    setIsChangingCampus(true);
     setSelectedCampusId(newCampusId);
     sessionStorage.setItem('ministries_selected_campus_id', newCampusId);
     dispatch(updateCurrentChurchCampus(newCampusId));
-    navigate(`${APP_ROUTES.admin.ministries}?campusId=${newCampusId}`);
+
+    try {
+      const res = await triggerGetMinistries({
+        churchCampusId: newCampusId,
+      }).unwrap();
+      const campusMins: IMinistry[] = res || [];
+
+      if (campusMins.length > 0) {
+        // Find matching ministry in target campus:
+        // 1. Same ministry type (e.g., KIDS)
+        // 2. Same name (case-insensitive)
+        // 3. First available ministry
+        const matchingMin =
+          (activeMinistry?.type &&
+            campusMins.find((m) => m.type === activeMinistry.type)) ||
+          (activeMinistry?.name &&
+            campusMins.find(
+              (m) =>
+                m.name.toLowerCase() === activeMinistry.name.toLowerCase(),
+            )) ||
+          campusMins[0];
+
+        navigate(
+          `/admin/ministries/${matchingMin.id}/${activeTab}?campusId=${newCampusId}`,
+        );
+      } else {
+        // If the new campus has no ministries, navigate to the directory for that campus
+        navigate(`${APP_ROUTES.admin.ministries}?campusId=${newCampusId}`);
+      }
+    } catch {
+      // Fallback: Navigate to directory with the new campus
+      navigate(`${APP_ROUTES.admin.ministries}?campusId=${newCampusId}`);
+    } finally {
+      setIsChangingCampus(false);
+    }
   };
 
   // 5. Active Tab Management (Route-first)
@@ -260,12 +303,15 @@ export const MinistryWorkspaceView: React.FC = () => {
   const handleTabChange = (key: WorkspaceTabKey) => {
     const targetMinId = activeMinistry?.id || urlMinistryId;
     if (targetMinId) {
-      navigate(`/admin/ministries/${targetMinId}/${key}`);
+      navigate(
+        `/admin/ministries/${targetMinId}/${key}${selectedCampusId ? `?campusId=${selectedCampusId}` : ''}`,
+      );
     } else {
       setSearchParams(
         (prev) => {
           const next = new URLSearchParams(prev);
           next.set('tab', key);
+          if (selectedCampusId) next.set('campusId', selectedCampusId);
           return next;
         },
         { replace: true },
@@ -279,7 +325,9 @@ export const MinistryWorkspaceView: React.FC = () => {
    * @param {string} minId - Identifier of the ministry to switch to.
    */
   const handleSelectMinistry = (minId: string) => {
-    navigate(`/admin/ministries/${minId}/${activeTab}`);
+    navigate(
+      `/admin/ministries/${minId}/${activeTab}${selectedCampusId ? `?campusId=${selectedCampusId}` : ''}`,
+    );
   };
 
   // Modals state
@@ -310,6 +358,11 @@ export const MinistryWorkspaceView: React.FC = () => {
   const handleModalSuccess = () => {
     handleRefreshWorkspace();
   };
+
+  const campusOptions = useMemo(
+    () => campuses.map((c) => ({ id: c.id, name: c.name })),
+    [campuses],
+  );
 
   const selectedCampusName = useMemo(() => {
     const found = campuses.find((c) => c.id === selectedCampusId);
@@ -381,6 +434,35 @@ export const MinistryWorkspaceView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center gap-2 flex-wrap">
+                  {/* Integrated Campus Selector */}
+                  {campuses.length > 0 && (
+                    <div className="w-48 sm:w-56 shrink-0">
+                      <Select
+                        value={selectedCampusId}
+                        onChange={(e) => handleCampusChange(e.target.value)}
+                        disabled={loadingCampuses || isChangingCampus}
+                        className="w-full text-xs font-bold"
+                        aria-label={t(
+                          'ministry_workspace.select_campus_placeholder',
+                          {
+                            campus: campusTerm.toLowerCase(),
+                          },
+                        )}
+                      >
+                        <option value="" disabled>
+                          {t('ministry_workspace.select_campus_placeholder', {
+                            campus: campusTerm.toLowerCase(),
+                          })}
+                        </option>
+                        {campusOptions.map((opt) => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.name}
+                          </option>
+                        ))}
+                      </Select>
+                    </div>
+                  )}
+
                   {/* Ministry Switcher Chips (when multiple exist) */}
                   {campusMinistries.length > 1 && (
                     <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-0.5">
@@ -491,6 +573,7 @@ export const MinistryWorkspaceView: React.FC = () => {
 
                       <span className="text-xs font-medium text-slate-400 flex items-center gap-1">
                         <span>&bull;</span>
+                        <MapPin size={11} className="text-slate-400 shrink-0" />
                         <span>{selectedCampusName}</span>
                       </span>
 
@@ -646,15 +729,51 @@ export const MinistryWorkspaceView: React.FC = () => {
                 volunteers: volunteersTerm.toLowerCase(),
               })}
             </p>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleOpenCreateModal}
-              className="mt-2 flex items-center gap-2 text-xs sm:text-sm font-bold shadow-xs cursor-pointer"
-            >
-              <Plus size={16} />
-              <span>{t('ministry_workspace.create_ministry_btn')}</span>
-            </Button>
+            {/* Campus Selector in Empty State */}
+            {campuses.length > 0 && (
+              <div className="w-56 mt-1">
+                <Select
+                  value={selectedCampusId}
+                  onChange={(e) => handleCampusChange(e.target.value)}
+                  disabled={loadingCampuses || isChangingCampus}
+                  className="w-full text-xs font-bold text-left"
+                >
+                  {campusOptions.map((opt) => (
+                    <option key={opt.id} value={opt.id}>
+                      {opt.name}
+                    </option>
+                  ))}
+                </Select>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2 mt-2 flex-wrap justify-center">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() =>
+                  navigate(
+                    selectedCampusId
+                      ? `${APP_ROUTES.admin.ministries}?campusId=${selectedCampusId}`
+                      : APP_ROUTES.admin.ministries,
+                  )
+                }
+                className="text-xs font-bold gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft size={14} />
+                <span>{t('ministry_workspace.back_to_ministries')}</span>
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                onClick={handleOpenCreateModal}
+                className="flex items-center gap-1.5 text-xs font-bold shadow-xs cursor-pointer"
+              >
+                <Plus size={15} />
+                <span>{t('ministry_workspace.create_ministry_btn')}</span>
+              </Button>
+            </div>
           </div>
         )}
       </div>

@@ -1,43 +1,81 @@
-import React, { useEffect, Suspense, lazy } from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster, toast } from 'sonner';
+import PrivateRoute from '@/components/auth/PrivateRoute';
+import NetworkStatusBanner from '@/components/common/NetworkStatusBanner';
+import AdminLayout from '@/components/layout/AdminLayout';
+import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
+import MainLayout from '@/components/layout/MainLayout';
+import MinistryCoordinatorLayout from '@/components/layout/MinistryCoordinatorLayout';
+import PageLoader from '@/components/layout/PageLoader';
+import ScrollToTop from '@/components/layout/ScrollToTop';
+import SuperAdminLayout from '@/components/layout/SuperAdminLayout';
+import { userRolesNavBarConfig } from '@/components/layout/TopBar';
+import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
+import { isFeatureEnabled } from '@/config/features';
+import { isRoleEnabled } from '@/config/roles';
+import { APP_ROUTES } from '@/config/routes';
+import { useChurchModules } from '@/libs/hooks/useChurchModules';
+import { useScreenWakeLock } from '@/libs/hooks/useScreenWakeLock';
+import { ChurchModule } from '@/libs/models/Church';
+import { baseApi } from '@/libs/state/redux/api/baseApi';
+import { useResolveChurchTenantQuery } from '@/libs/state/redux/api/churchApi';
+import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
+import { setChurch } from '@/libs/state/redux/slices/church/churchCampus.slice';
+import {
+  logout,
+  updateTokens,
+} from '@/libs/state/redux/slices/user/auth.slice';
+import { store } from '@/libs/state/redux/store';
+import {
+  GetChurchById,
+  GetChurchCampuses,
+} from '@/libs/state/redux/thunks/church/church.thunk';
+import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
+import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
+import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
+import { setHttpAuthHandlers } from '@/libs/utils/http';
+import { requestAndSyncPushSubscription } from '@/libs/utils/notifications/webPush';
+import {
+  applyChurchBrandingToDom,
+  getActiveTenantChurchId,
+  resolveTenantHostContext,
+} from '@/libs/utils/tenant';
+import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
 import { Analytics } from '@vercel/analytics/react';
 import { SpeedInsights } from '@vercel/speed-insights/react';
-import NetworkStatusBanner from '@/components/common/NetworkStatusBanner';
-import MainLayout from '@/components/layout/MainLayout';
-import ScrollToTop from '@/components/layout/ScrollToTop';
-import PrivateRoute from '@/components/auth/PrivateRoute';
-import PageLoader from '@/components/layout/PageLoader';
-import { APP_ROUTES } from '@/config/routes';
-import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { logout, updateTokens } from '@/libs/state/redux/slices/user/auth.slice';
-import { GetChurchById, GetChurchCampuses } from '@/libs/state/redux/thunks/church/church.thunk';
-import { GetMinistries } from '@/libs/state/redux/thunks/church/ministry.thunk';
-import { setHttpAuthHandlers } from '@/libs/utils/http';
-import { store } from '@/libs/state/redux/store';
-import { baseApi } from '@/libs/state/redux/api/baseApi';
-import { userRolesNavBarConfig } from '@/components/layout/TopBar';
-import { useScreenWakeLock } from '@/libs/hooks/useScreenWakeLock';
-import { isRoleEnabled } from '@/config/roles';
-import { requestAndSyncPushSubscription } from '@/libs/utils/notifications/webPush';
+import React, { Suspense, lazy, useEffect } from 'react';
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { Toaster, toast } from 'sonner';
 
 // Lazy-loaded route views for optimal code-splitting and reduced initial bundle size
 const LoginView = lazy(() => import('@/views/auth/LoginView'));
-const RegistrationDashboard = lazy(() => import('@/views/kid-registration/RegistrationDashboard'));
+const RegistrationDashboard = lazy(
+  () => import('@/views/kid-registration/RegistrationDashboard'),
+);
 const NewKidView = lazy(() => import('@/views/kid-registration/NewKidView'));
 const ScannerView = lazy(() => import('@/views/kid-registration/ScannerView'));
-const GenerateGuardianQRView = lazy(() => import('@/views/kid-registration/GenerateGuardianQRView'));
-const KidCheckInView = lazy(() => import('@/views/kid-registration/KidCheckInView'));
-const UpdateKidView = lazy(() => import('@/views/kid-registration/UpdateKidView'));
+const GenerateGuardianQRView = lazy(
+  () => import('@/views/kid-registration/GenerateGuardianQRView'),
+);
+const KidCheckInView = lazy(
+  () => import('@/views/kid-registration/KidCheckInView'),
+);
+const UpdateKidView = lazy(
+  () => import('@/views/kid-registration/UpdateKidView'),
+);
 const AttendanceTrackingView = lazy(
   () => import('@/views/kid-registration/AttendanceTrackingView'),
 );
-const AdminDashboardView = lazy(() => import('@/views/admin/AdminDashboardView'));
+const AdminDashboardView = lazy(
+  () => import('@/views/admin/AdminDashboardView'),
+);
 const CreateUserView = lazy(() => import('@/views/admin/users/CreateUserView'));
-const UserManagementView = lazy(() => import('@/views/admin/users/UserManagementView'));
+const UserManagementView = lazy(
+  () => import('@/views/admin/users/UserManagementView'),
+);
 const UserDetailView = lazy(() => import('@/views/admin/users/UserDetailView'));
 const UpdateUserView = lazy(() => import('@/views/admin/users/UpdateUserView'));
-const ChurchMeetingsView = lazy(() => import('@/views/admin/meetings/ChurchMeetingsView'));
+const ChurchMeetingsView = lazy(
+  () => import('@/views/admin/meetings/ChurchMeetingsView'),
+);
 const CampusesManagementView = lazy(
   () => import('@/views/admin/campuses/CampusesManagementView'),
 );
@@ -65,7 +103,9 @@ const AccountSignupPublicView = lazy(
 const AccountSignupConfirmationView = lazy(
   () => import('@/views/public/AccountSignupConfirmationView'),
 );
-const TermsOfServiceView = lazy(() => import('@/views/legal/TermsOfServiceView'));
+const TermsOfServiceView = lazy(
+  () => import('@/views/legal/TermsOfServiceView'),
+);
 const PrivacyPolicyView = lazy(() => import('@/views/legal/PrivacyPolicyView'));
 
 const ProfileRoute = lazy(() => import('@/views/profile/ProfileRoute'));
@@ -74,39 +114,26 @@ const KidChurchDashboardRoute = lazy(
 );
 const MyTeamView = lazy(() => import('@/views/volunteers/MyTeamView'));
 const VolunteerAttendanceView = lazy(
-  () => import('@/views/volunteers/VolunteerAttendanceView')
+  () => import('@/views/volunteers/VolunteerAttendanceView'),
 );
 const ChurchReportsView = lazy(
-  () => import('@/views/kid-church/reports/ChurchReportsView')
+  () => import('@/views/kid-church/reports/ChurchReportsView'),
 );
 const HubView = lazy(() => import('@/views/hub/HubView'));
 const KidGuardianDashboardView = lazy(
-  () => import('@/views/kid-guardian/KidGuardianDashboardView')
+  () => import('@/views/kid-guardian/KidGuardianDashboardView'),
 );
 const ChurchesManagementView = lazy(
-  () => import('@/views/super-admin/ChurchesManagementView')
+  () => import('@/views/super-admin/ChurchesManagementView'),
 );
 const MinistryCoordinatorDashboardView = lazy(
-  () => import('@/views/ministry-coordinator/views/MinistryCoordinatorDashboardView')
+  () =>
+    import('@/views/ministry-coordinator/views/MinistryCoordinatorDashboardView'),
 );
-import { isFeatureEnabled } from '@/config/features';
-import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
-import AdminLayout from '@/components/layout/AdminLayout';
-import SuperAdminLayout from '@/components/layout/SuperAdminLayout';
-import MinistryCoordinatorLayout from '@/components/layout/MinistryCoordinatorLayout';
-import TermsAcceptanceModal from '@/components/legal/TermsAcceptanceModal';
-import NoRolesAssignedView from '@/views/auth/NoRolesAssignedView';
-import { AppRole, UserExperienceEnum, UserRole } from '@/libs/utils/auth';
-import { FetchMyVolunteerPermissions } from '@/libs/state/redux/thunks/user/auth.thunk';
-import {
-  resolveTenantHostContext,
-  applyChurchBrandingToDom,
-  getActiveTenantChurchId,
-} from '@/libs/utils/tenant';
-import { useResolveChurchTenantQuery } from '@/libs/state/redux/api/churchApi';
-import { setChurch } from '@/libs/state/redux/slices/church/churchCampus.slice';
-import { useChurchModules } from '@/libs/hooks/useChurchModules';
-import { ChurchModule } from '@/libs/models/Church';
+const MinistryCoordinatorAttendanceView = lazy(
+  () =>
+    import('@/views/ministry-coordinator/views/MinistryCoordinatorAttendanceView'),
+);
 
 /**
  * Route protection wrapper requiring a specific church platform module to be active.
@@ -116,10 +143,10 @@ import { ChurchModule } from '@/libs/models/Church';
  * @param {React.ReactNode} props.children - Child elements to render if module is enabled
  * @returns {JSX.Element} Children or redirection to hub
  */
-const ModuleRoute: React.FC<{ module: ChurchModule; children: React.ReactNode }> = ({
-  module,
-  children,
-}) => {
+const ModuleRoute: React.FC<{
+  module: ChurchModule;
+  children: React.ReactNode;
+}> = ({ module, children }) => {
   const { hasModule } = useChurchModules();
   if (!hasModule(module)) {
     return <Navigate to={APP_ROUTES.hub} replace />;
@@ -129,14 +156,20 @@ const ModuleRoute: React.FC<{ module: ChurchModule; children: React.ReactNode }>
 
 const IndexRedirect = () => {
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
-  const rawExperiences = useAppSelector((state) => state.authSlice.experiences) || [];
+  const activeExperience = useAppSelector(
+    (state) => state.authSlice.activeExperience,
+  );
+  const rawExperiences =
+    useAppSelector((state) => state.authSlice.experiences) || [];
   const user = useAppSelector((state) => state.authSlice.user);
   const { hasModule } = useChurchModules();
 
   const hasKidChurch = hasModule(ChurchModule.KID_CHURCH);
   const experiences = rawExperiences.filter((exp) => {
-    if (exp === UserExperienceEnum.KID_CHURCH_STAFF || exp === UserExperienceEnum.KID_GUARDIAN) {
+    if (
+      exp === UserExperienceEnum.KID_CHURCH_STAFF ||
+      exp === UserExperienceEnum.KID_GUARDIAN
+    ) {
       return hasKidChurch;
     }
     return true;
@@ -145,7 +178,10 @@ const IndexRedirect = () => {
   const userRoles = (user?.roles || []) as AppRole[];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
   const enabledRoles = userRoles.filter(
-    (role) => role !== UserRole.USER && (role as string) !== 'USER' && isRoleEnabled(role)
+    (role) =>
+      role !== UserRole.USER &&
+      (role as string) !== 'USER' &&
+      isRoleEnabled(role),
   );
   const isMultiRoleUser =
     experiences.length > 1 ||
@@ -167,14 +203,21 @@ const IndexRedirect = () => {
   if (activeExperience === UserExperienceEnum.ADMIN) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
-  if (activeExperience === UserExperienceEnum.KID_CHURCH_STAFF && hasKidChurch) {
+  if (
+    activeExperience === UserExperienceEnum.KID_CHURCH_STAFF &&
+    hasKidChurch
+  ) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const roleDashboardUrl =
-      isEnabled && currentRole ? userRolesNavBarConfig[currentRole]?.dashboardUrl : null;
+      isEnabled && currentRole
+        ? userRolesNavBarConfig[currentRole]?.dashboardUrl
+        : null;
     const isOperationalUrl =
       roleDashboardUrl === APP_ROUTES.kidRegistration.root ||
       roleDashboardUrl === APP_ROUTES.kidChurch.root;
-    const dashboardUrl = isOperationalUrl ? roleDashboardUrl! : APP_ROUTES.kidRegistration.root;
+    const dashboardUrl = isOperationalUrl
+      ? roleDashboardUrl!
+      : APP_ROUTES.kidRegistration.root;
     return <Navigate to={dashboardUrl} replace />;
   }
 
@@ -184,23 +227,38 @@ const IndexRedirect = () => {
   }
 
   // 4. Single experience routing
-  if (experiences.includes(UserExperienceEnum.MINISTRY_COORDINATOR) && experiences.length === 1) {
+  if (
+    experiences.includes(UserExperienceEnum.MINISTRY_COORDINATOR) &&
+    experiences.length === 1
+  ) {
     return <Navigate to={APP_ROUTES.ministryCoordinator.root} replace />;
   }
-  if (experiences.includes(UserExperienceEnum.KID_GUARDIAN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.ADMIN)) {
+  if (
+    experiences.includes(UserExperienceEnum.KID_GUARDIAN) &&
+    !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) &&
+    !experiences.includes(UserExperienceEnum.ADMIN)
+  ) {
     return <Navigate to={APP_ROUTES.kidGuardian.root} replace />;
   }
-  if (experiences.includes(UserExperienceEnum.ADMIN) && !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) && !experiences.includes(UserExperienceEnum.KID_GUARDIAN)) {
+  if (
+    experiences.includes(UserExperienceEnum.ADMIN) &&
+    !experiences.includes(UserExperienceEnum.KID_CHURCH_STAFF) &&
+    !experiences.includes(UserExperienceEnum.KID_GUARDIAN)
+  ) {
     return <Navigate to={APP_ROUTES.admin.root} replace />;
   }
   if (hasKidChurch && enabledRoles.length > 0) {
     const isEnabled = currentRole ? isRoleEnabled(currentRole) : false;
     const roleDashboardUrl =
-      isEnabled && currentRole ? userRolesNavBarConfig[currentRole]?.dashboardUrl : null;
+      isEnabled && currentRole
+        ? userRolesNavBarConfig[currentRole]?.dashboardUrl
+        : null;
     const isOperationalUrl =
       roleDashboardUrl === APP_ROUTES.kidRegistration.root ||
       roleDashboardUrl === APP_ROUTES.kidChurch.root;
-    const dashboardUrl = isOperationalUrl ? roleDashboardUrl! : APP_ROUTES.kidRegistration.root;
+    const dashboardUrl = isOperationalUrl
+      ? roleDashboardUrl!
+      : APP_ROUTES.kidRegistration.root;
     return <Navigate to={dashboardUrl} replace />;
   }
 
@@ -274,7 +332,9 @@ function App() {
     const handleUnauthorized = () => {
       dispatch(logout());
       dispatch(baseApi.util.resetApiState());
-      toast.error('Tu sesión ha expirado. Por favor, inicia sesión nuevamente.');
+      toast.error(
+        'Tu sesión ha expirado. Por favor, inicia sesión nuevamente.',
+      );
     };
 
     const handleStorageChange = (e: StorageEvent) => {
@@ -285,7 +345,12 @@ function App() {
             const auth = JSON.parse(parsed.authSlice);
             const currentToken = store.getState().authSlice.token;
             if (auth.token && auth.token !== currentToken) {
-              dispatch(updateTokens({ token: auth.token, refreshToken: auth.refreshToken }));
+              dispatch(
+                updateTokens({
+                  token: auth.token,
+                  refreshToken: auth.refreshToken,
+                }),
+              );
             }
           }
         } catch {
@@ -306,7 +371,11 @@ function App() {
     return (
       <>
         <NetworkStatusBanner />
-        <Toaster position="top-center" richColors swipeDirections={['top', 'left', 'right']} />
+        <Toaster
+          position="top-center"
+          richColors
+          swipeDirections={['top', 'left', 'right']}
+        />
         {import.meta.env.PROD && (
           <>
             <Analytics />
@@ -320,12 +389,20 @@ function App() {
               <Route path={APP_ROUTES.auth.login} element={<LoginView />} />
               <Route element={<PrivateRoute />}>
                 <Route element={<SuperAdminLayout />}>
-                  <Route path={APP_ROUTES.superAdmin.root} element={<ChurchesManagementView />} />
+                  <Route
+                    path={APP_ROUTES.superAdmin.root}
+                    element={<ChurchesManagementView />}
+                  />
                   <Route
                     path={APP_ROUTES.superAdmin.churches}
                     element={<ChurchesManagementView />}
                   />
-                  <Route path="*" element={<Navigate to={APP_ROUTES.superAdmin.root} replace />} />
+                  <Route
+                    path="*"
+                    element={
+                      <Navigate to={APP_ROUTES.superAdmin.root} replace />
+                    }
+                  />
                 </Route>
               </Route>
             </Routes>
@@ -338,7 +415,11 @@ function App() {
   return (
     <>
       <NetworkStatusBanner />
-      <Toaster position="top-center" richColors swipeDirections={['top', 'left', 'right']} />
+      <Toaster
+        position="top-center"
+        richColors
+        swipeDirections={['top', 'left', 'right']}
+      />
       {import.meta.env.PROD && (
         <>
           <Analytics />
@@ -375,9 +456,15 @@ function App() {
                 )
               }
             />
-            <Route path={APP_ROUTES.legal.terms} element={<TermsOfServiceView />} />
+            <Route
+              path={APP_ROUTES.legal.terms}
+              element={<TermsOfServiceView />}
+            />
 
-            <Route path={APP_ROUTES.legal.privacy} element={<PrivacyPolicyView />} />
+            <Route
+              path={APP_ROUTES.legal.privacy}
+              element={<PrivacyPolicyView />}
+            />
             <Route element={<PrivateRoute />}>
               {/* Hub: Experience selector */}
               <Route path={APP_ROUTES.hub} element={<HubView />} />
@@ -397,18 +484,42 @@ function App() {
 
               {/* Admin Experience Layout (Decoupled from Kids Ministry) */}
               <Route element={<AdminLayout />}>
-                <Route path={APP_ROUTES.admin.root} element={<AdminDashboardView />} />
-                <Route path={APP_ROUTES.admin.createUser} element={<CreateUserView />} />
-                <Route path={APP_ROUTES.admin.users} element={<UserManagementView />} />
-                <Route path={APP_ROUTES.admin.userDetailDynamic} element={<UserDetailView />} />
-                <Route path={APP_ROUTES.admin.updateUserDynamic} element={<UpdateUserView />} />
+                <Route
+                  path={APP_ROUTES.admin.root}
+                  element={<AdminDashboardView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.createUser}
+                  element={<CreateUserView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.users}
+                  element={<UserManagementView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.userDetailDynamic}
+                  element={<UserDetailView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.updateUserDynamic}
+                  element={<UpdateUserView />}
+                />
                 <Route
                   path={APP_ROUTES.admin.userRoles}
                   element={<Navigate to={APP_ROUTES.admin.users} replace />}
                 />
-                <Route path={APP_ROUTES.admin.campuses} element={<CampusesManagementView />} />
-                <Route path={APP_ROUTES.admin.churchMeetings} element={<ChurchMeetingsView />} />
-                <Route path={APP_ROUTES.admin.printers} element={<PrintersManagementView />} />
+                <Route
+                  path={APP_ROUTES.admin.campuses}
+                  element={<CampusesManagementView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.churchMeetings}
+                  element={<ChurchMeetingsView />}
+                />
+                <Route
+                  path={APP_ROUTES.admin.printers}
+                  element={<PrintersManagementView />}
+                />
                 <Route
                   path={APP_ROUTES.admin.ministries}
                   element={<MinistriesDirectoryView />}
@@ -438,6 +549,10 @@ function App() {
                   element={<MinistryCoordinatorDashboardView />}
                 />
                 <Route
+                  path={APP_ROUTES.ministryCoordinator.attendance}
+                  element={<MinistryCoordinatorAttendanceView />}
+                />
+                <Route
                   path={APP_ROUTES.ministryCoordinator.myTeam}
                   element={<MyTeamView />}
                 />
@@ -454,8 +569,14 @@ function App() {
                   </ModuleRoute>
                 }
               >
-                <Route path={APP_ROUTES.kidChurch.root} element={<KidChurchDashboardRoute />} />
-                <Route path={APP_ROUTES.kidChurch.myTeam} element={<MyTeamView />} />
+                <Route
+                  path={APP_ROUTES.kidChurch.root}
+                  element={<KidChurchDashboardRoute />}
+                />
+                <Route
+                  path={APP_ROUTES.kidChurch.myTeam}
+                  element={<MyTeamView />}
+                />
                 <Route
                   path={APP_ROUTES.kidChurch.volunteerAttendance}
                   element={<VolunteerAttendanceView />}
@@ -470,9 +591,18 @@ function App() {
                     )
                   }
                 />
-                <Route path={APP_ROUTES.kidRegistration.root} element={<RegistrationDashboard />} />
-                <Route path={APP_ROUTES.kidRegistration.myTeam} element={<MyTeamView />} />
-                <Route path={APP_ROUTES.kidRegistration.new} element={<NewKidView />} />
+                <Route
+                  path={APP_ROUTES.kidRegistration.root}
+                  element={<RegistrationDashboard />}
+                />
+                <Route
+                  path={APP_ROUTES.kidRegistration.myTeam}
+                  element={<MyTeamView />}
+                />
+                <Route
+                  path={APP_ROUTES.kidRegistration.new}
+                  element={<NewKidView />}
+                />
                 <Route
                   path={APP_ROUTES.kidRegistration.checkInDynamic}
                   element={<KidCheckInView />}
@@ -481,7 +611,10 @@ function App() {
                   path={APP_ROUTES.kidRegistration.updateKidDynamic}
                   element={<UpdateKidView />}
                 />
-                <Route path={APP_ROUTES.kidRegistration.scanner} element={<ScannerView />} />
+                <Route
+                  path={APP_ROUTES.kidRegistration.scanner}
+                  element={<ScannerView />}
+                />
                 <Route
                   path={APP_ROUTES.kidRegistration.generateQR}
                   element={<GenerateGuardianQRView />}

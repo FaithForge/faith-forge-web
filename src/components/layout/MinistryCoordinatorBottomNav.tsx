@@ -1,9 +1,14 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import { LayoutDashboard, Users, LucideIcon } from 'lucide-react';
-import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
+import clsx from 'clsx';
+import {
+  ClipboardCheck,
+  LayoutDashboard,
+  LucideIcon,
+  Users,
+} from 'lucide-react';
+import React from 'react';
+import { useTranslation } from 'react-i18next';
+import { Link, useLocation } from 'react-router-dom';
 
 interface BottomNavItem {
   path: string;
@@ -13,7 +18,7 @@ interface BottomNavItem {
 
 /**
  * Dedicated Bottom Navigation Bar for the Ministry Coordinator workspace (`/ministry-coordinator`).
- * Strictly statistical and team directory navigation.
+ * Strictly statistical, attendance reporting, and team directory navigation.
  * Contains NO configuration, printer, or session management buttons.
  *
  * @returns {JSX.Element} Floating bottom nav bar.
@@ -29,6 +34,11 @@ export const MinistryCoordinatorBottomNav: React.FC = () => {
       label: t('navigation.dashboard', { defaultValue: 'Dashboard' }),
     },
     {
+      path: APP_ROUTES.ministryCoordinator.attendance,
+      icon: ClipboardCheck,
+      label: t('navigation.attendance', { defaultValue: 'Asistencia' }),
+    },
+    {
       path: APP_ROUTES.ministryCoordinator.myTeam,
       icon: Users,
       label: t('navigation.my_team', { defaultValue: 'Mi Equipo' }),
@@ -40,7 +50,7 @@ export const MinistryCoordinatorBottomNav: React.FC = () => {
       <nav
         role="navigation"
         aria-label="Navegación del Coordinador de Ministerio"
-        className="pointer-events-auto flex items-center justify-around w-full max-w-xs px-3 py-2 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-lg shadow-slate-900/5 transition-all"
+        className="pointer-events-auto flex items-center justify-around w-full max-w-sm px-3 py-2 bg-white/95 backdrop-blur-md rounded-3xl border border-slate-200/90 shadow-lg shadow-slate-900/5 transition-all"
       >
         {navItems.map((item) => {
           const Icon = item.icon;
@@ -57,12 +67,15 @@ export const MinistryCoordinatorBottomNav: React.FC = () => {
                   'w-12 h-7 rounded-full flex items-center justify-center transition-all duration-200',
                   isActive
                     ? 'bg-sky-100 text-[#0284c7] scale-105 shadow-2xs'
-                    : 'text-slate-400 group-hover:text-slate-600'
+                    : 'text-slate-400 group-hover:text-slate-600',
                 )}
               >
                 <Icon
                   size={20}
-                  className={clsx('transition-transform', isActive && 'stroke-[2.3px] text-[#0284c7]')}
+                  className={clsx(
+                    'transition-transform',
+                    isActive && 'stroke-[2.3px] text-[#0284c7]',
+                  )}
                 />
               </div>
               <span
@@ -70,7 +83,7 @@ export const MinistryCoordinatorBottomNav: React.FC = () => {
                   'text-[10px] tracking-tight whitespace-nowrap overflow-hidden text-ellipsis max-w-[72px] text-center mt-0.5 transition-colors',
                   isActive
                     ? 'text-[#0284c7] font-bold'
-                    : 'text-slate-500 font-medium group-hover:text-slate-700'
+                    : 'text-slate-500 font-medium group-hover:text-slate-700',
                 )}
               >
                 {item.label}

@@ -30,10 +30,14 @@ export const APP_ROUTES = {
     ministryDetail: (id: string | number) => `/admin/ministries/${id}`,
     ministrySectionDynamic: '/admin/ministries/:id/:section',
     ministryTeams: (id: string | number) => `/admin/ministries/${id}/teams`,
-    ministrySchedule: (id: string | number) => `/admin/ministries/${id}/schedule`,
-    ministryLeadership: (id: string | number) => `/admin/ministries/${id}/leadership`,
-    ministryOrganigram: (id: string | number) => `/admin/ministries/${id}/organigram`,
-    ministryStructure: (id: string | number) => `/admin/ministries/${id}/structure`,
+    ministrySchedule: (id: string | number) =>
+      `/admin/ministries/${id}/schedule`,
+    ministryLeadership: (id: string | number) =>
+      `/admin/ministries/${id}/leadership`,
+    ministryOrganigram: (id: string | number) =>
+      `/admin/ministries/${id}/organigram`,
+    ministryStructure: (id: string | number) =>
+      `/admin/ministries/${id}/structure`,
     volunteers: '/admin/volunteers',
     volunteerApplications: '/admin/volunteers/applications',
   },
@@ -60,6 +64,7 @@ export const APP_ROUTES = {
   },
   ministryCoordinator: {
     root: '/ministry-coordinator',
+    attendance: '/ministry-coordinator/attendance',
     myTeam: '/ministry-coordinator/my-team',
   },
   hub: '/hub',
@@ -74,4 +79,3 @@ export const APP_ROUTES = {
     privacy: '/privacy',
   },
 } as const;
-
