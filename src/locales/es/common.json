@@ -101,5 +101,19 @@
     "sync_completed": "¡Sincronización completada! {{count}} operaciones guardadas en el servidor.",
     "sync_completed_one": "¡Sincronización completada! 1 operación guardada en el servidor.",
     "sync_failed": "No se pudieron sincronizar algunas operaciones pendientes. Se reintentará más tarde."
+  },
+  "environment": {
+    "badge_label": "Pruebas / Local",
+    "badge_local": "Local",
+    "badge_staging": "Pruebas",
+    "badge_tooltip": "Entorno de Pruebas o Desarrollo",
+    "modal_title": "Ambiente de Pruebas / Local",
+    "modal_description": "Estás navegando en un entorno de pruebas o desarrollo. Las acciones realizadas aquí no impactan el ambiente productivo.",
+    "api_label": "API Backend",
+    "host_label": "Host Activo",
+    "mode_label": "Modo Vite",
+    "minimize": "Minimizar",
+    "expand": "Expandir",
+    "close": "Cerrar"
   }
 }

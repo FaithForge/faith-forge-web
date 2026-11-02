@@ -1,28 +1,37 @@
 import { formatPhoneDisplay } from './phone';
 
 /**
- * Capitalizes the first letter of every word in the given string.
+ * Capitalizes the first letter of every word in the given string, formatting it to Title Case.
+ * Handles accented characters, hyphens, parentheses, and normalizes consecutive spaces.
+ * E.g.: "JUAN CARLOS PEÑA MERLANO" -> "Juan Carlos Peña Merlano".
  *
  * @param {string} [input] - The input string to capitalize.
  * @returns {string} The capitalized string, or an empty string if input is falsy.
  */
 export const capitalizeWords = (input?: string): string => {
-  if (!input) {
-    return '';
-  }
+  if (!input) return '';
 
-  if (input.length === 0) {
-    return input;
-  }
+  const trimmed = input.trim();
+  if (trimmed.length === 0) return '';
 
-  const words = input.split(' ');
-  const capitalizedWords = words.map((word) => {
-    const firstChar = word.charAt(0).toUpperCase();
-    const restOfString = word.slice(1).toLowerCase();
-    return firstChar + restOfString;
-  });
+  return trimmed
+    .toLowerCase()
+    .replace(/(?:^|[\s\-(/])\p{L}/gu, (m) => m.toUpperCase())
+    .replace(/\s+/g, ' ');
+};
 
-  return capitalizedWords.join(' ');
+/**
+ * Formats a person's full name into Title Case (e.g., "Juan Carlos Peña Merlano").
+ * Can be called with (firstName, lastName) or a single full name string.
+ *
+ * @param {string} [firstName] - The first name(s) or full name string.
+ * @param {string} [lastName] - The last name(s).
+ * @returns {string} Formatted full name in Title Case, or an empty string if input is empty.
+ */
+export const formatPersonFullName = (firstName?: string, lastName?: string): string => {
+  const parts = [firstName?.trim(), lastName?.trim()].filter(Boolean);
+  if (parts.length === 0) return '';
+  return capitalizeWords(parts.join(' '));
 };
 
 /**
@@ -42,11 +51,16 @@ export const removeAccentsAndFormat = (text: string): string => {
     í: 'i',
     ó: 'o',
     ú: 'u',
+    Á: 'A',
+    É: 'E',
+    Í: 'I',
+    Ó: 'O',
+    Ú: 'U',
   };
 
   // Remove non-letter characters and replace accented characters with their unaccented counterparts
   text = text.replace(/[^a-zA-ZáéíóúÁÉÍÓÚñÑ\s]/g, ''); // Remove non-letter characters except "ñ"
-  text = text.replace(/[áéíóú]/g, (match) => accentMap[match] || match); // Replace accented characters
+  text = text.replace(/[áéíóúÁÉÍÓÚ]/g, (match) => accentMap[match] || match); // Replace accented characters
 
   // Trim leading and trailing spaces, and replace multiple spaces with a single space
   text = text.trim().replace(/\s+/g, ' ');
@@ -58,18 +72,27 @@ export const removeAccentsAndFormat = (text: string): string => {
  * Formats a person's name to show their first name(s) and only the first last name,
  * formatted in Camel/Title Case (e.g., "Juan Carlos Peña" from "JUAN CARLOS PEÑA MERLANO").
  *
- * @param {string} [firstName] - The first name(s).
+ * @param {string} [firstName] - The first name(s) or single combined string.
  * @param {string} [lastName] - The last name(s).
  * @returns {string} The formatted name.
  */
 export const formatPersonShortName = (firstName?: string, lastName?: string): string => {
-  const cleanFirst = capitalizeWords(firstName?.trim() || '');
-  const firstLastName = capitalizeWords(lastName?.trim()?.split(/\s+/)?.[0] || '');
+  let cleanFirst = firstName?.trim() || '';
+  let cleanLast = lastName?.trim() || '';
 
-  if (cleanFirst && firstLastName) {
-    return `${cleanFirst} ${firstLastName}`.trim();
+  if (cleanFirst && !cleanLast && cleanFirst.includes(' ')) {
+    const parts = cleanFirst.split(/\s+/);
+    cleanFirst = parts[0];
+    cleanLast = parts.slice(1).join(' ');
   }
-  return cleanFirst || firstLastName || '';
+
+  const formattedFirst = capitalizeWords(cleanFirst);
+  const firstLastName = capitalizeWords(cleanLast.split(/\s+/)?.[0] || '');
+
+  if (formattedFirst && firstLastName) {
+    return `${formattedFirst} ${firstLastName}`.trim();
+  }
+  return formattedFirst || firstLastName || '';
 };
 
 /**

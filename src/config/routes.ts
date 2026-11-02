@@ -40,6 +40,7 @@ export const APP_ROUTES = {
       `/admin/ministries/${id}/structure`,
     volunteers: '/admin/volunteers',
     volunteerApplications: '/admin/volunteers/applications',
+    systemOperations: '/admin/system',
   },
   kidChurch: {
     root: '/kid-church',
@@ -65,6 +66,7 @@ export const APP_ROUTES = {
   ministryCoordinator: {
     root: '/ministry-coordinator',
     attendance: '/ministry-coordinator/attendance',
+    attendanceMatrix: '/ministry-coordinator/attendance-matrix',
     myTeam: '/ministry-coordinator/my-team',
   },
   hub: '/hub',

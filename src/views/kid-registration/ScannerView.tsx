@@ -14,7 +14,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { ScanCodeKidRegistration } from '@/libs/state/redux/thunks/kid-church/kid-registration.thunk';
 import { useGetKidGroupsQuery, useCreateKidRegistrationMutation } from '@/libs/state/redux/api/kidChurchApi';
 import { cleanScanQRSearch, IScanCodeKidRelation } from '@/libs/state/redux/slices/kid-church/scan-code-kid-registration.slice';
-import { capitalizeWords } from '@/libs/utils/text';
+import { capitalizeWords, formatPersonFullName } from '@/libs/utils/text';
 import { isDateToday } from '@/libs/utils/date';
 import { KID_AGE_COPY, isKidOverage } from '@/libs/common-types/constants';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
@@ -200,10 +200,10 @@ const ScannerView = () => {
           setProcessingStep(t('kidRegistration:scanner.printing_bluetooth', { current: i + 1, total: selectedKids.length }));
 
           await bluetoothPrinter.printKidTicket({
-            kidName: `${kid?.firstName || ''} ${kid?.lastName || ''}`.trim(),
+            kidName: formatPersonFullName(kid?.firstName, kid?.lastName),
             kidGroup: group?.name || kid?.kidGroup?.name || 'General',
             securityCode: regRes?.securityCode || regRes?.code,
-            guardianName: `${kidGuardian.firstName} ${kidGuardian.lastName}`.trim(),
+            guardianName: formatPersonFullName(kidGuardian.firstName, kidGuardian.lastName),
             guardianPhone: kidGuardian.phone,
             observation: finalObs,
             campusName: currentCampus?.name,

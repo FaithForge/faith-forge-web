@@ -396,3 +396,114 @@ export interface ISendServiceRemindersResponse {
   totalSent: number;
   failedCount: number;
 }
+
+export enum MatrixRiskLevel {
+  CRITICAL = 'CRITICAL',
+  ALERT = 'ALERT',
+  REGULAR = 'REGULAR',
+  OPTIMAL = 'OPTIMAL',
+}
+
+export enum MatrixCellStatus {
+  ATTENDED = 'ATTENDED',
+  EXCUSED = 'EXCUSED',
+  UNEXCUSED = 'UNEXCUSED',
+  EXEMPT = 'EXEMPT',
+  NOT_SCHEDULED = 'NOT_SCHEDULED',
+}
+
+/**
+ * Predefined temporal windows for the attendance matrix.
+ */
+export enum AttendanceMatrixTimeframe {
+  LAST_6 = 'LAST_6',
+  LAST_12 = 'LAST_12',
+  MONTH = 'MONTH',
+  QUARTER = 'QUARTER',
+  CUSTOM = 'CUSTOM',
+}
+
+export interface GetMinistryAttendanceMatrixArgs {
+  ministryId: string;
+  churchCampusId?: string;
+  ministryAreaId?: string;
+  ministryGroupConfigId?: string;
+  timeframe?: AttendanceMatrixTimeframe;
+  from?: string;
+  to?: string;
+  limitEvents?: number;
+}
+
+export interface IMatrixEventColumn {
+  id: string;
+  meetingName: string;
+  date: string;
+  initialHour?: string;
+  finalHour?: string;
+  scheduledGroupIds: string[];
+}
+
+export interface IMatrixVolunteerRosterItem {
+  assignmentId: string;
+  churchMemberId: string;
+  userId?: string;
+  firstName: string;
+  lastName: string;
+  fullName: string;
+  photoUrl?: string;
+  phone?: string;
+  dialCodePhone?: string;
+  areaId?: string;
+  areaName: string;
+  groupId?: string;
+  groupName: string;
+  role: string;
+  attendanceRate: number;
+  riskLevel: MatrixRiskLevel;
+  unexcusedCount: number;
+  excusedCount: number;
+  attendedCount: number;
+  totalRequired: number;
+  matrix: Record<string, { status: MatrixCellStatus; observation?: string }>;
+}
+
+export interface IMatrixCriticalVolunteerSummary {
+  assignmentId: string;
+  fullName: string;
+  photoUrl?: string;
+  unexcusedCount: number;
+  attendanceRate: number;
+}
+
+export interface IMatrixKpis {
+  globalAttendanceRate: number;
+  targetAttendanceRate: number;
+  criticalRiskCount: number;
+  criticalVolunteers: IMatrixCriticalVolunteerSummary[];
+  totalUnexcused: number;
+  unexcusedImpactPercent: number;
+  perfectAttendanceRate: number;
+  perfectAttendanceCount: number;
+  totalVolunteers: number;
+}
+
+export interface IMatrixAvailableOption {
+  id: string;
+  name: string;
+}
+
+export interface IMinistryAttendanceMatrixResponse {
+  ministryId: string;
+  ministryName: string;
+  campusId: string;
+  selectedGroupId?: string;
+  availableGroups?: IMatrixAvailableOption[];
+  availableAreas?: IMatrixAvailableOption[];
+  temporalRange: {
+    from: string;
+    to: string;
+  };
+  events: IMatrixEventColumn[];
+  kpis: IMatrixKpis;
+  roster: IMatrixVolunteerRosterItem[];
+}

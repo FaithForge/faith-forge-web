@@ -165,6 +165,15 @@ export const AdminDashboardView: React.FC = () => {
       iconColor: 'text-slate-600',
       items: [
         {
+          id: 'system-operations',
+          title: t('admin:dashboard.system_operations_title'),
+          description: t('admin:dashboard.system_operations_desc'),
+          icon: SlidersHorizontal,
+          route: APP_ROUTES.admin.systemOperations,
+          iconBg: 'bg-indigo-50 border border-indigo-100/60',
+          iconColor: 'text-indigo-600',
+        },
+        {
           id: 'terminology-settings',
           title: t('admin:dashboard.terminology_title'),
           description: t('admin:dashboard.terminology_desc', { meetings: meetingsTerm.toLowerCase(), campuses: campusesTerm.toLowerCase() }),
@@ -172,15 +181,6 @@ export const AdminDashboardView: React.FC = () => {
           route: '',
           iconBg: 'bg-amber-50 border border-amber-100/60',
           iconColor: 'text-amber-600',
-        },
-        {
-          id: 'clear-cache',
-          title: t('admin:dashboard.clear_cache_title'),
-          description: t('admin:dashboard.clear_cache_desc'),
-          icon: RotateCcw,
-          route: '',
-          iconBg: 'bg-rose-50 border border-rose-100/60',
-          iconColor: 'text-rose-600',
         },
       ],
     },

@@ -23,7 +23,7 @@ import {
 } from '@/libs/state/redux/api/churchApi';
 
 import { useAppSelector } from '@/libs/state/redux/hooks';
-import { formatPersonShortName } from '@/libs/utils/text';
+import { formatPersonFullName, formatPersonShortName } from '@/libs/utils/text';
 import { KidSelector } from '../KidSelector';
 import { DoctorSelector, DoctorOption } from '../DoctorSelector';
 
@@ -191,7 +191,7 @@ export const ChildIncidentReportForm: React.FC<ChildIncidentReportFormProps> = (
           att.volunteerAssignment?.churchMember?.user;
         const photoUrl = user?.photoUrl || null;
         const rawName = user
-          ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+          ? formatPersonFullName(user.firstName, user.lastName)
           : 'Voluntario';
         const area =
           att.volunteerAssignment?.serviceAreaGroup?.ministryArea ||
@@ -214,7 +214,7 @@ export const ChildIncidentReportForm: React.FC<ChildIncidentReportFormProps> = (
       const user = asg.user || asg.volunteer?.user || asg.churchMember?.user;
       const photoUrl = user?.photoUrl || null;
       const rawName = user
-        ? `${user.firstName || ''} ${user.lastName || ''}`.trim()
+        ? formatPersonFullName(user.firstName, user.lastName)
         : 'Doctor';
       const area = asg.serviceAreaGroup?.ministryArea || asg.ministryArea;
       options.push({

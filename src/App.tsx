@@ -1,4 +1,5 @@
 import PrivateRoute from '@/components/auth/PrivateRoute';
+import EnvironmentBadge from '@/components/common/EnvironmentBadge';
 import NetworkStatusBanner from '@/components/common/NetworkStatusBanner';
 import AdminLayout from '@/components/layout/AdminLayout';
 import KidGuardianLayout from '@/components/layout/KidGuardianLayout';
@@ -94,6 +95,9 @@ const VolunteerDirectoryView = lazy(
 const VolunteerApplicationsView = lazy(
   () => import('@/views/admin/volunteers/VolunteerApplicationsView'),
 );
+const AdminSystemOperationsView = lazy(
+  () => import('@/views/admin/system/AdminSystemOperationsView'),
+);
 const VolunteerRequestPublicView = lazy(
   () => import('@/views/public/VolunteerRequestPublicView'),
 );
@@ -133,6 +137,10 @@ const MinistryCoordinatorDashboardView = lazy(
 const MinistryCoordinatorAttendanceView = lazy(
   () =>
     import('@/views/ministry-coordinator/views/MinistryCoordinatorAttendanceView'),
+);
+const MinistryCoordinatorAttendanceMatrixView = lazy(
+  () =>
+    import('@/views/ministry-coordinator/views/MinistryCoordinatorAttendanceMatrixView'),
 );
 
 /**
@@ -371,6 +379,7 @@ function App() {
     return (
       <>
         <NetworkStatusBanner />
+        <EnvironmentBadge />
         <Toaster
           position="top-center"
           richColors
@@ -415,6 +424,7 @@ function App() {
   return (
     <>
       <NetworkStatusBanner />
+      <EnvironmentBadge />
       <Toaster
         position="top-center"
         richColors
@@ -540,6 +550,10 @@ function App() {
                   path={APP_ROUTES.admin.volunteerApplications}
                   element={<VolunteerApplicationsView />}
                 />
+                <Route
+                  path={APP_ROUTES.admin.systemOperations}
+                  element={<AdminSystemOperationsView />}
+                />
               </Route>
 
               {/* Ministry Coordinator Experience Layout (Decoupled from Kids Ministry) */}
@@ -551,6 +565,10 @@ function App() {
                 <Route
                   path={APP_ROUTES.ministryCoordinator.attendance}
                   element={<MinistryCoordinatorAttendanceView />}
+                />
+                <Route
+                  path={APP_ROUTES.ministryCoordinator.attendanceMatrix}
+                  element={<MinistryCoordinatorAttendanceMatrixView />}
                 />
                 <Route
                   path={APP_ROUTES.ministryCoordinator.myTeam}

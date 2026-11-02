@@ -20,6 +20,7 @@ import {
 } from '@/libs/models';
 
 import { PAGINATION_REGISTRATION_LIMIT } from '@/libs/common-types/constants';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { baseApi } from './baseApi';
 
 export interface IUpdateKidGuardian {
@@ -459,9 +460,9 @@ export const kidChurchApi = baseApi.injectEndpoints({
 
           const primaryGuardian = k.relations?.[0] || k.guardians?.[0];
           const guardianFullName =
-            reg?.additionalInfo?.guardianFullName ||
+            formatPersonFullName(reg?.additionalInfo?.guardianFullName) ||
             (primaryGuardian
-              ? `${primaryGuardian.firstName || ''} ${primaryGuardian.lastName || ''}`.trim()
+              ? formatPersonFullName(primaryGuardian.firstName, primaryGuardian.lastName)
               : '');
           const guardianPhone = primaryGuardian
             ? `${primaryGuardian.dialCodePhone || ''}${primaryGuardian.phone || ''}`
@@ -470,7 +471,7 @@ export const kidChurchApi = baseApi.injectEndpoints({
           return {
             id: reg?.id || k.id || '',
             kidId: k.id || '',
-            kidFullName: `${k.firstName || ''} ${k.lastName || ''}`.trim(),
+            kidFullName: formatPersonFullName(k.firstName, k.lastName),
             userCode: k.userCode,
             gender: k.gender || '',
             photoUrl: k.photoUrl,

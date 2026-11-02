@@ -1,36 +1,40 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useTranslation } from 'react-i18next';
-import {
-  Users,
-  UserCheck,
-  BarChart3,
-  RefreshCw,
-  ClipboardCheck,
-  ChevronRight,
-  CheckCircle2,
-} from 'lucide-react';
-import clsx from 'clsx';
-import { toast } from 'sonner';
-import PullToRefresh from '@/components/ui/PullToRefresh';
+import KidDetailsModal from '@/components/modal/KidDetailsModal';
+import SelectSupportGroupModal from '@/components/modal/SelectSupportGroupModal';
 import Alert from '@/components/ui/Alert';
-import Input from '@/components/ui/Input';
 import Cell from '@/components/ui/Cell';
 import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
-import KidDetailsModal from '@/components/modal/KidDetailsModal';
-import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import Input from '@/components/ui/Input';
+import PullToRefresh from '@/components/ui/PullToRefresh';
 import { APP_ROUTES } from '@/config/routes';
 import { usePermissions } from '@/libs/hooks/usePermissions';
+import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { IKid, IKidGroup, UserGenderCode } from '@/libs/models';
+import { useAppSelector } from '@/libs/state/redux/hooks';
 import { capitalizeWords, parseEntitySearchParams } from '@/libs/utils/text';
-import useGroupCoordinatorStats, { isKidNewToday } from '../hooks/useGroupCoordinatorStats';
+import clsx from 'clsx';
+import {
+  BarChart3,
+  CheckCircle2,
+  ChevronRight,
+  ClipboardCheck,
+  RefreshCw,
+  UserCheck,
+  Users,
+} from 'lucide-react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 import GroupCoordinatorStatsCards from '../components/GroupCoordinatorStatsCards';
-import KidsPerClassroomChart from '../components/KidsPerClassroomChart';
 import KidsGenderChart from '../components/KidsGenderChart';
+import KidsPerClassroomChart from '../components/KidsPerClassroomChart';
+import useGroupCoordinatorStats, {
+  isKidNewToday,
+} from '../hooks/useGroupCoordinatorStats';
 // import KidsAgeDistributionChart from '../components/KidsAgeDistributionChart';
 import ServerDistributionCards from '../components/ServerDistributionCards';
-import TeamAttendanceSummaryCard from '../components/TeamAttendanceSummaryCard';
 import ServersPerAreaChart from '../components/ServersPerAreaChart';
+import TeamAttendanceSummaryCard from '../components/TeamAttendanceSummaryCard';
 
 type DashboardTab = 'metrics' | 'roster';
 
@@ -60,7 +64,27 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
   const supervisorsTerm = useKidsTerm('supervisor');
   const coordinatorsTerm = useChurchTerm('coordinators');
 
-  const { canTakeVolunteerAttendance } = usePermissions();
+  const {
+    canTakeVolunteerAttendance,
+    canSelectSupportGroup,
+    isSupportingGroup,
+  } = usePermissions();
+  const { activeGroupConfigId, activeGroupConfigName } = useAppSelector(
+    (state) => state.volunteerContextSlice,
+  );
+  const [supportModalOpen, setSupportModalOpen] = useState(false);
+
+  // Automatically open mandatory group selection modal if auxiliary coordinator has not chosen a valid group yet
+  useEffect(() => {
+    const hasValidActiveGroup = Boolean(
+      activeGroupConfigId &&
+      activeGroupConfigId !== 'ADMIN_GROUP' &&
+      isSupportingGroup,
+    );
+    if (canSelectSupportGroup && !hasValidActiveGroup) {
+      setSupportModalOpen(true);
+    }
+  }, [canSelectSupportGroup, activeGroupConfigId, isSupportingGroup]);
 
   const {
     currentMeeting,
@@ -100,7 +124,8 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
     }
 
     if (searchText) {
-      const { filterByFirstName, filterByLastName, numericId } = parseEntitySearchParams(searchText);
+      const { filterByFirstName, filterByLastName, numericId } =
+        parseEntitySearchParams(searchText);
       if (numericId) {
         result = result.filter((kid) => {
           const code = String(kid.userCode || kid.id || '').toLowerCase();
@@ -110,8 +135,12 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
         result = result.filter((kid) => {
           const first = (kid.firstName || '').toLowerCase();
           const last = (kid.lastName || '').toLowerCase();
-          const matchFirst = filterByFirstName ? first.includes(filterByFirstName.toLowerCase()) : true;
-          const matchLast = filterByLastName ? last.includes(filterByLastName.toLowerCase()) : true;
+          const matchFirst = filterByFirstName
+            ? first.includes(filterByFirstName.toLowerCase())
+            : true;
+          const matchLast = filterByLastName
+            ? last.includes(filterByLastName.toLowerCase())
+            : true;
           return matchFirst && matchLast;
         });
       }
@@ -155,7 +184,9 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
           >
             <RefreshCw
               size={14}
-              className={clsx((loading || isRefreshing) && 'animate-spin text-primary')}
+              className={clsx(
+                (loading || isRefreshing) && 'animate-spin text-primary',
+              )}
             />
             <span className="hidden sm:inline">
               {t('coordinator_dashboard.refresh', 'Actualizar')}
@@ -170,6 +201,44 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
         />
       )}
 
+      {/* Active Support Group Banner for Auxiliary Coordinators */}
+      {canSelectSupportGroup &&
+        isSupportingGroup &&
+        activeGroupConfigName &&
+        activeGroupConfigId !== 'ADMIN_GROUP' && (
+          <div className="bg-indigo-50/70 border border-indigo-200/80 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3 shadow-2xs">
+            <div className="flex items-center gap-3 min-w-0 flex-1">
+              <div className="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shrink-0 shadow-2xs">
+                <Users size={18} />
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-md bg-indigo-200/70 text-indigo-900">
+                    {t('coordinator_dashboard.support_badge', 'Apoyo')}
+                  </span>
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {t(
+                      'coordinator_dashboard.supporting_group_label',
+                      'Apoyando al grupo',
+                    )}
+                  </span>
+                </div>
+                <span className="text-sm font-black text-slate-900 truncate">
+                  {activeGroupConfigName}
+                </span>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSupportModalOpen(true)}
+              className="px-3 py-1.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs font-bold transition-all shadow-2xs shrink-0 cursor-pointer"
+            >
+              {t('coordinator_dashboard.change_group_action', 'Cambiar grupo')}
+            </button>
+          </div>
+        )}
+
       {/* Volunteer Attendance Alert Banner for Group Coordinators */}
       {canTakeVolunteerAttendance &&
         currentMeeting &&
@@ -178,7 +247,9 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
           <div>
             {attendanceSummary.counts.taken === 0 ? (
               <div
-                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+                onClick={() =>
+                  navigate(APP_ROUTES.kidChurch.volunteerAttendance)
+                }
                 className="bg-amber-50 border border-amber-300 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2.5 shadow-2xs cursor-pointer hover:bg-amber-100/70 transition-all active:scale-[0.99]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -202,7 +273,9 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
               </div>
             ) : attendanceSummary.counts.pending > 0 ? (
               <div
-                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+                onClick={() =>
+                  navigate(APP_ROUTES.kidChurch.volunteerAttendance)
+                }
                 className="bg-amber-50/90 border border-amber-200 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2.5 shadow-2xs cursor-pointer hover:bg-amber-100/70 transition-all active:scale-[0.99]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -231,7 +304,9 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
               </div>
             ) : (
               <div
-                onClick={() => navigate(APP_ROUTES.kidChurch.volunteerAttendance)}
+                onClick={() =>
+                  navigate(APP_ROUTES.kidChurch.volunteerAttendance)
+                }
                 className="bg-emerald-50/80 border border-emerald-200/80 rounded-2xl p-2.5 sm:p-3 flex items-center justify-between gap-2.5 shadow-2xs cursor-pointer hover:bg-emerald-100/70 transition-all active:scale-[0.99]"
               >
                 <div className="flex items-center gap-2.5 min-w-0">
@@ -273,14 +348,19 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
           )}
         >
           <Users className="w-4 h-4 text-primary" />
-          <span>{t('coordinator_dashboard.tab_kids_roster', 'Lista de Niños')}</span>
+          <span>
+            {t('coordinator_dashboard.tab_kids_roster', 'Lista de Niños')}
+          </span>
           <span className="bg-primary/10 text-primary text-[11px] font-black px-2 py-0.5 rounded-full">
             {kids.length}
           </span>
         </button>
       </div>
 
-      <PullToRefresh onRefresh={handleRefresh} disabled={loading || isRefreshing}>
+      <PullToRefresh
+        onRefresh={handleRefresh}
+        disabled={loading || isRefreshing}
+      >
         {/* TAB 1: MÉTRICAS & ANALÍTICA */}
         {activeTab === 'metrics' && (
           <div className="space-y-5">
@@ -372,7 +452,10 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
             </div>
 
             {/* Safe spacer so last card never collides with floating BottomNav */}
-            <div className="h-28 sm:h-32 shrink-0 pointer-events-none" aria-hidden="true" />
+            <div
+              className="h-28 sm:h-32 shrink-0 pointer-events-none"
+              aria-hidden="true"
+            />
           </div>
         )}
 
@@ -413,7 +496,9 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
                 <div className="grid grid-cols-6 gap-2">
                   {kidGroups.map((group: IKidGroup, index: number) => {
                     const isSelected = selectedKidGroupId === group.id;
-                    const count = kids.filter((k) => k.kidGroup?.id === group.id).length;
+                    const count = kids.filter(
+                      (k) => k.kidGroup?.id === group.id,
+                    ).length;
 
                     let colSpanClass = 'col-span-2';
                     if (kidGroups.length === 2) {
@@ -422,7 +507,10 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
                       const remainder = kidGroups.length % 3;
                       if (remainder === 1 && index === kidGroups.length - 1) {
                         colSpanClass = 'col-span-6';
-                      } else if (remainder === 2 && index >= kidGroups.length - 2) {
+                      } else if (
+                        remainder === 2 &&
+                        index >= kidGroups.length - 2
+                      ) {
                         colSpanClass = 'col-span-3';
                       }
                     }
@@ -431,7 +519,9 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
                       <button
                         key={group.id}
                         type="button"
-                        onClick={() => setSelectedKidGroupId(isSelected ? '' : group.id)}
+                        onClick={() =>
+                          setSelectedKidGroupId(isSelected ? '' : group.id)
+                        }
                         className={clsx(
                           'py-2 px-1.5 rounded-xl text-center border transition-all flex flex-col items-center justify-center active:scale-95 cursor-pointer min-w-0',
                           colSpanClass,
@@ -487,10 +577,14 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
                 <div className="bg-white rounded-3xl border border-slate-200/90 shadow-2xs divide-y divide-slate-100 overflow-hidden">
                   {filteredKids.map((kid: IKid) => {
                     const ageYears = Math.floor(kid.age ?? 0);
-                    const ageMonths = kid.ageInMonths ? kid.ageInMonths - ageYears * 12 : 0;
-                    const ageText = `${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`.trim();
+                    const ageMonths = kid.ageInMonths
+                      ? kid.ageInMonths - ageYears * 12
+                      : 0;
+                    const ageText =
+                      `${ageYears} años ${ageMonths > 0 ? `y ${ageMonths}m` : ''}`.trim();
                     const subtitleText = t('dashboard.classroom_label', {
-                      classroom: kid.kidGroup?.name || t('dashboard.classroom_no_group'),
+                      classroom:
+                        kid.kidGroup?.name || t('dashboard.classroom_no_group'),
                       age: ageText,
                     });
 
@@ -499,7 +593,8 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
                       <div className="flex items-center gap-1.5 shrink-0">
                         {isNew && (
                           <span className="px-2 py-0.5 text-[10px] font-extrabold bg-amber-100 text-amber-900 rounded-full border border-amber-200">
-                            ✨ {t('coordinator_dashboard.new_kid_badge', 'Nuevo')}
+                            ✨{' '}
+                            {t('coordinator_dashboard.new_kid_badge', 'Nuevo')}
                           </span>
                         )}
                         <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800 rounded-full border border-emerald-200">
@@ -511,9 +606,13 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
                     return (
                       <Cell
                         key={kid.id || kid.userCode}
-                        title={capitalizeWords(`${kid.firstName || ''} ${kid.lastName || ''}`.trim())}
+                        title={capitalizeWords(
+                          `${kid.firstName || ''} ${kid.lastName || ''}`.trim(),
+                        )}
                         subtitle={subtitleText}
-                        gender={kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'}
+                        gender={
+                          kid.gender === UserGenderCode.FEMALE ? 'F' : 'M'
+                        }
                         photoUrl={kid.photoUrl}
                         isRegistered={true}
                         badge={badgeElement}
@@ -525,7 +624,10 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
               )}
 
               {/* Safe spacer for roster tab */}
-              <div className="h-28 sm:h-32 shrink-0 pointer-events-none" aria-hidden="true" />
+              <div
+                className="h-28 sm:h-32 shrink-0 pointer-events-none"
+                aria-hidden="true"
+              />
             </div>
           </div>
         )}
@@ -537,6 +639,12 @@ export const CoordinatorKidChurchDashboardView: React.FC = () => {
         onOpenChange={setOpenKidDrawer}
         kid={selectedKid}
         showEpsAlert={false}
+      />
+
+      {/* Auxiliary Coordinator Group Selection Bottom Sheet */}
+      <SelectSupportGroupModal
+        open={supportModalOpen}
+        onOpenChange={setSupportModalOpen}
       />
     </div>
   );

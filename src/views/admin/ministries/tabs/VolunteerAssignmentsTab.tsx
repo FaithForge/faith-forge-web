@@ -17,6 +17,7 @@ import {
   GetVolunteerAssignments,
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
+import { formatPersonFullName } from '@/libs/utils/text';
 import clsx from 'clsx';
 import {
   AlertCircle,
@@ -513,7 +514,7 @@ export const VolunteerAssignmentsTab: React.FC<
       const user =
         asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
       return user && (user.firstName || user.lastName)
-        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+        ? formatPersonFullName(user.firstName, user.lastName)
         : '';
     },
     [volunteersList],

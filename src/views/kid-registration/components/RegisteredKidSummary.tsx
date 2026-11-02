@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import Can from '@/components/auth/Can';
 import { usePermissions } from '@/libs/hooks/usePermissions';
 import { getRegistrationLogInfo } from '@/libs/utils/registrationLog';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { FormattedRelation } from '../hooks/useKidCheckInData';
 
 interface RegisteredKidSummaryProps {
@@ -73,8 +74,8 @@ export const RegisteredKidSummary: React.FC<RegisteredKidSummaryProps> = ({
             <div className="text-right flex flex-col items-end">
               <span className="font-bold text-gray-800">
                 {registrationGuardian
-                  ? `${registrationGuardian.fullName} (${registrationGuardian.relation})`
-                  : kid?.currentKidRegistration?.additionalInfo?.guardianFullName ||
+                  ? `${formatPersonFullName(registrationGuardian.fullName)} (${registrationGuardian.relation})`
+                  : formatPersonFullName(kid?.currentKidRegistration?.additionalInfo?.guardianFullName) ||
                     `${guardianTerm} registrado(a)`}
               </span>
               {registrationGuardian?.phone && (
@@ -155,9 +156,9 @@ export const RegisteredKidSummary: React.FC<RegisteredKidSummaryProps> = ({
               <div className="col-span-12 border-t border-gray-50 my-0.5"></div>
               <div
                 className="col-span-4 text-gray-800 font-medium leading-tight truncate"
-                title={rel.fullName}
+                title={formatPersonFullName(rel.fullName)}
               >
-                {rel.fullName}
+                {formatPersonFullName(rel.fullName)}
               </div>
               <div className="col-span-3 text-gray-600">{rel.relation}</div>
               <div className="col-span-3 text-gray-600 flex items-center gap-1.5 flex-wrap">

@@ -957,7 +957,7 @@ export const MinistryTeamsSection: React.FC<MinistryTeamsSectionProps> = ({
                                       }),
                                     )
                                 : (wt?.supervisors || []).map(
-                                    (s) => s.fullName,
+                                    (s) => capitalizeWords(s.fullName),
                                   );
 
                             const effectiveTotalMembers =

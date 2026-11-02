@@ -228,7 +228,7 @@ export const TeamRosterModal: React.FC<TeamRosterModalProps> = ({
       asg.churchMember?.user || asg.volunteer?.user || vol?.user || asg.user;
     const name =
       user && (user.firstName || user.lastName)
-        ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+        ? capitalizeWords(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim())
         : 'Servidor asignado';
     const nationalId = user?.nationalId;
     const phone = user?.phone;

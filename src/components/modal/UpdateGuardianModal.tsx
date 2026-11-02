@@ -9,6 +9,7 @@ import { useUpdateKidGuardianMutation } from '@/libs/state/redux/api/kidChurchAp
 import { kidRelationSelect } from '@/libs/models/KidChurch';
 import { validatePhoneNumber, cleanPhoneDigits, isPhoneValid } from '@/libs/utils/phone';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
+import { formatPersonFullName } from '@/libs/utils/text';
 
 export interface GuardianToUpdate {
   id: string;
@@ -99,7 +100,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
         return;
       }
 
-      toast.success(`Datos de ${guardian.fullName} actualizados con éxito`);
+      toast.success(`Datos de ${formatPersonFullName(guardian.fullName)} actualizados con éxito`);
       onClose();
     } catch (err: any) {
       const errMsg = err?.message || err?.error || err?.response?.data?.message || `Error al actualizar ${guardianTerm.toLowerCase()}`;
@@ -114,7 +115,7 @@ const UpdateGuardianModal: React.FC<UpdateGuardianModalProps> = ({ open, onClose
         <div className="flex justify-between items-center mb-4 pb-3 border-b border-gray-100">
           <div>
             <h3 className="text-lg font-bold text-gray-800">Actualizar {guardianTerm}</h3>
-            <p className="text-xs font-medium text-gray-500 mt-0.5">{guardian?.fullName}</p>
+            <p className="text-xs font-medium text-gray-500 mt-0.5">{formatPersonFullName(guardian?.fullName)}</p>
           </div>
           <button 
             type="button" 

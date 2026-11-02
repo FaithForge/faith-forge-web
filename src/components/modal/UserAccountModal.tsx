@@ -17,6 +17,7 @@ import { IUser, generateSuggestedUsername, generateTemporaryPassword } from '@/l
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { formatPhoneDisplay } from '@/libs/utils/phone';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 
 interface UserAccountModalProps {
@@ -233,7 +234,7 @@ export const UserAccountModal: React.FC<UserAccountModalProps> = ({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-sm text-gray-900 truncate">
-                    {user.firstName} {user.lastName}
+                    {formatPersonFullName(user.firstName, user.lastName)}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
                     {user.nationalIdType || 'CC'}: <span className="font-semibold text-gray-700">{user.nationalId || 'Sin documento'}</span>

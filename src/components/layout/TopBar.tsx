@@ -1,46 +1,64 @@
-import React, { useState, useEffect, useMemo, lazy, Suspense } from 'react';
-import { useTranslation } from 'react-i18next';
-import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
-import {
-  User,
-  LogOut,
-  ChevronDown,
-  Check,
-  Search,
-  Sparkles,
-  Users as UsersIcon,
-  Crown,
-  Shield,
-  Sliders,
-  LayoutGrid,
-  Bell,
-} from 'lucide-react';
-import clsx from 'clsx';
 import { APP_ROUTES } from '@/config/routes';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useSearchScroll } from '@/libs/context/SearchScrollContext';
+import {
+  IVolunteerGroupConfigContext,
+  VolunteerRole,
+} from '@/libs/models/Volunteer';
+import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
-import { logout, changeCurrentRole, setActiveExperience } from '@/libs/state/redux/slices/user/auth.slice';
 import {
   setActiveGroupConfig,
   setActiveVolunteerRole,
 } from '@/libs/state/redux/slices/church/volunteerContext.slice';
-import { VolunteerRole, IVolunteerGroupConfigContext } from '@/libs/models/Volunteer';
-import { useSearchScroll } from '@/libs/context/SearchScrollContext';
-import { useGetInAppNotificationsQuery } from '@/libs/state/redux/api/userApi';
+import {
+  changeCurrentRole,
+  logout,
+  setActiveExperience,
+} from '@/libs/state/redux/slices/user/auth.slice';
+import * as DropdownMenu from '@radix-ui/react-dropdown-menu';
+import clsx from 'clsx';
+import {
+  Bell,
+  Check,
+  ChevronDown,
+  Crown,
+  LayoutGrid,
+  LogOut,
+  Search,
+  Shield,
+  Sliders,
+  Sparkles,
+  User,
+  Users as UsersIcon,
+} from 'lucide-react';
+import React, { lazy, Suspense, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
+import { useLocation, useNavigate } from 'react-router-dom';
 
-const UserProfileModal = lazy(() => import('@/components/modal/UserProfileModal'));
+const UserProfileModal = lazy(
+  () => import('@/components/modal/UserProfileModal'),
+);
 const ChangelogModal = lazy(() => import('@/components/modal/ChangelogModal'));
 const SettingsModal = lazy(() => import('@/components/modal/SettingsModal'));
-const NotificationsModal = lazy(() => import('@/components/modal/NotificationsModal'));
+const NotificationsModal = lazy(
+  () => import('@/components/modal/NotificationsModal'),
+);
 
-import { APP_VERSION } from '@/constants/version';
-import { ALL_SYSTEM_ROLES_ORDER, AppRole, ChurchRole, ChurchStaffRole, UserRole, UserExperienceEnum } from '@/libs/utils/auth';
 import { isRoleEnabled } from '@/config/roles';
-import { toast } from 'sonner';
-import { capitalizeWords } from '@/libs/utils/text';
+import { APP_VERSION } from '@/constants/version';
 import { useRoleTransition } from '@/libs/context/RoleTransitionContext';
-import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
+import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
+import {
+  ALL_SYSTEM_ROLES_ORDER,
+  AppRole,
+  ChurchRole,
+  ChurchStaffRole,
+  UserExperienceEnum,
+  UserRole,
+} from '@/libs/utils/auth';
+import { capitalizeWords } from '@/libs/utils/text';
+import { toast } from 'sonner';
 
 export type ThemeRole = {
   id: AppRole;
@@ -182,8 +200,17 @@ export const userRolesNavBarConfig: Record<AppRole, ThemeRole> = {
   },
 };
 
-export const getRoleIcon = (roleId?: string, label?: string, appTitle?: string) => {
-  if (appTitle === 'Admin' || roleId === UserRole.ADMIN || roleId === UserRole.SUPER_ADMIN || roleId === UserRole.STAFF) {
+export const getRoleIcon = (
+  roleId?: string,
+  label?: string,
+  appTitle?: string,
+) => {
+  if (
+    appTitle === 'Admin' ||
+    roleId === UserRole.ADMIN ||
+    roleId === UserRole.SUPER_ADMIN ||
+    roleId === UserRole.STAFF
+  ) {
     return Sliders;
   }
   const isCoord =
@@ -228,35 +255,36 @@ const isSystemAdminRole = (roleId?: string, appTitle?: string) => {
 const findAssignedGroupForRole = (
   roleId: AppRole,
   groups: IVolunteerGroupConfigContext[],
-  preferredGroupId?: string | null
+  preferredGroupId?: string | null,
 ): IVolunteerGroupConfigContext | null => {
   if (!groups || groups.length === 0) return null;
   const matches = groups.filter((group) => {
     if (roleId === ChurchRole.KID_CHURCH_GROUP_COORDINATOR) {
       if (group.groupRole === VolunteerRole.GROUP_COORDINATOR) return true;
       return group.areas?.some(
-        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.GROUP_COORDINATOR
+        (a) =>
+          !isAreaRegistration(a) && a.role === VolunteerRole.GROUP_COORDINATOR,
       );
     }
     if (roleId === ChurchRole.KID_CHURCH_SUPERVISOR) {
       if (group.groupRole === VolunteerRole.SUPERVISOR) return true;
       return group.areas?.some(
-        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR
+        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR,
       );
     }
     if (roleId === ChurchRole.KID_CHURCH_USER) {
       return group.areas?.some(
-        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER
+        (a) => !isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER,
       );
     }
     if (roleId === ChurchRole.KID_REGISTER_SUPERVISOR) {
       return group.areas?.some(
-        (a) => isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR
+        (a) => isAreaRegistration(a) && a.role === VolunteerRole.SUPERVISOR,
       );
     }
     if (roleId === ChurchRole.KID_REGISTER_USER) {
       return group.areas?.some(
-        (a) => isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER
+        (a) => isAreaRegistration(a) && a.role === VolunteerRole.VOLUNTEER,
       );
     }
     return false;
@@ -279,13 +307,17 @@ const TopBar = () => {
   const [changelogOpen, setChangelogOpen] = useState(false);
   const [settingsDrawerOpen, setSettingsModalOpen] = useState(false);
 
-  const { isSearchAvailable, isScrolledPastSearch, triggerFocusSearch } = useSearchScroll();
+  const { isSearchAvailable, isScrolledPastSearch, triggerFocusSearch } =
+    useSearchScroll();
   const { startTransition } = useRoleTransition();
 
   const user = useAppSelector((state) => state.authSlice.user);
   const currentRole = useAppSelector((state) => state.authSlice.currentRole);
-  const experiences = useAppSelector((state) => state.authSlice.experiences) || [];
-  const activeExperience = useAppSelector((state) => state.authSlice.activeExperience);
+  const experiences =
+    useAppSelector((state) => state.authSlice.experiences) || [];
+  const activeExperience = useAppSelector(
+    (state) => state.authSlice.activeExperience,
+  );
   const hasMultipleSpaces = experiences.length > 1;
 
   const [hasOpenedProfile, setHasOpenedProfile] = useState(false);
@@ -296,13 +328,14 @@ const TopBar = () => {
 
   const currentExperience = useMemo(() => {
     if (location.pathname.startsWith('/admin')) return UserExperienceEnum.ADMIN;
-    if (location.pathname.startsWith('/kid-guardian')) return UserExperienceEnum.KID_GUARDIAN;
+    if (location.pathname.startsWith('/kid-guardian'))
+      return UserExperienceEnum.KID_GUARDIAN;
     return UserExperienceEnum.KID_CHURCH_STAFF;
   }, [location.pathname]);
 
   const { data: notificationsData } = useGetInAppNotificationsQuery(
     { experience: currentExperience },
-    { skip: !user }
+    { skip: !user },
   );
   const unreadNotifCount = notificationsData?.unreadCount || 0;
 
@@ -331,6 +364,7 @@ const TopBar = () => {
     activeVolunteerRole,
     isOnboardingCompleted,
     userMsRoles,
+    isSupportingGroup,
   } = useAppSelector((state) => state.volunteerContextSlice);
 
   const { isConfigured } = useChurchMeetingStatus();
@@ -338,7 +372,10 @@ const TopBar = () => {
   // Open settings drawer on external request when BottomNav is not mounted (admin roles)
   useEffect(() => {
     const handleOpen = () => {
-      const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
+      const isAdminRole =
+        currentRole === 'ADMIN' ||
+        currentRole === 'SUPER_ADMIN' ||
+        currentRole === 'STAFF';
       if (isAdminRole) {
         handleOpenSettings(true);
       }
@@ -355,18 +392,35 @@ const TopBar = () => {
     ) {
       return;
     }
-    const isAdminRole = currentRole === 'ADMIN' || currentRole === 'SUPER_ADMIN' || currentRole === 'STAFF';
+    const isAdminRole =
+      currentRole === 'ADMIN' ||
+      currentRole === 'SUPER_ADMIN' ||
+      currentRole === 'STAFF';
     const isOperationalWorkspace =
       location.pathname.startsWith(APP_ROUTES.kidRegistration.root) ||
       location.pathname.startsWith(APP_ROUTES.kidChurch.root);
 
-    if (isAdminRole && isOperationalWorkspace && !isConfigured && !settingsDrawerOpen) {
+    if (
+      isAdminRole &&
+      isOperationalWorkspace &&
+      !isConfigured &&
+      !settingsDrawerOpen
+    ) {
       handleOpenSettings(true);
     }
-  }, [currentRole, activeVolunteerRole, location.pathname, isConfigured, settingsDrawerOpen]);
+  }, [
+    currentRole,
+    activeVolunteerRole,
+    location.pathname,
+    isConfigured,
+    settingsDrawerOpen,
+  ]);
 
-  const currentMasterCampus = useAppSelector((state) => state.churchCampusSlice.current);
-  const currentVolunteerCampus = campuses.find((c) => c.id === activeCampusId) || campuses[0];
+  const currentMasterCampus = useAppSelector(
+    (state) => state.churchCampusSlice.current,
+  );
+  const currentVolunteerCampus =
+    campuses.find((c) => c.id === activeCampusId) || campuses[0];
   const currentCampusName =
     activeCampusName ||
     currentVolunteerCampus?.name ||
@@ -379,35 +433,41 @@ const TopBar = () => {
   const kidsTeacherName = useKidsTerm('teacher');
   const churchVolunteerName = useChurchTerm('volunteer');
   const churchCampusTerm = useChurchTerm('campus');
-  const activeChurch = useAppSelector((state) => state.churchCampusSlice.church);
+  const activeChurch = useAppSelector(
+    (state) => state.churchCampusSlice.church,
+  );
 
   const availableGroups = currentVolunteerCampus?.groups || [];
   const areaCoordinates = currentVolunteerCampus?.areaCoordinates || [];
   const hasAreaCoordinatorAssignment = areaCoordinates.length > 0;
   const userRoles = (user?.roles as AppRole[]) || [];
   const isSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
-  const hasAreaCoordinatorRole = userRoles.includes(ChurchRole.KID_REGISTER_COORDINATOR);
+  const hasAreaCoordinatorRole = userRoles.includes(
+    ChurchRole.KID_REGISTER_COORDINATOR,
+  );
 
   const hasMultipleGroups = availableGroups.length > 1;
-  const hasAreaCoordinatorOption = hasAreaCoordinatorAssignment || hasAreaCoordinatorRole;
+  const hasAreaCoordinatorOption =
+    hasAreaCoordinatorAssignment || hasAreaCoordinatorRole;
 
   // Check if active role originates from church vs fixed user ms role
   const isChurchRole =
-    isChurchVolunteer &&
-    (!currentRole || !userMsRoles.includes(currentRole));
+    isChurchVolunteer && (!currentRole || !userMsRoles.includes(currentRole));
 
-  const isAreaCoordinatorActive = currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
+  const isAreaCoordinatorActive =
+    currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
 
   const handleGroupChange = (group: IVolunteerGroupConfigContext) => {
     const primaryArea = group.areas[0];
-    const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
+    const primaryRole =
+      primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
 
     dispatch(
       setActiveGroupConfig({
         groupConfigId: group.id,
         groupConfigName: group.name,
         role: primaryRole,
-      })
+      }),
     );
     dispatch(setActiveVolunteerRole(primaryRole));
 
@@ -422,14 +482,22 @@ const TopBar = () => {
     if (isCurrentRegistrationRole) {
       targetRole = currentRole;
     } else if (primaryRole === VolunteerRole.SUPERVISOR) {
-      targetRole = isKidRegistration ? ChurchRole.KID_REGISTER_SUPERVISOR : ChurchRole.KID_CHURCH_SUPERVISOR;
+      targetRole = isKidRegistration
+        ? ChurchRole.KID_REGISTER_SUPERVISOR
+        : ChurchRole.KID_CHURCH_SUPERVISOR;
     } else if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
       targetRole = ChurchRole.KID_CHURCH_GROUP_COORDINATOR;
     } else {
-      targetRole = isKidRegistration ? ChurchRole.KID_REGISTER_USER : ChurchRole.KID_CHURCH_USER;
+      targetRole = isKidRegistration
+        ? ChurchRole.KID_REGISTER_USER
+        : ChurchRole.KID_CHURCH_USER;
     }
 
-    if (targetRole && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
+    if (
+      targetRole &&
+      isRoleEnabled(targetRole) &&
+      userRolesNavBarConfig[targetRole]
+    ) {
       dispatch(changeCurrentRole(targetRole));
     }
 
@@ -442,7 +510,9 @@ const TopBar = () => {
             ? churchVolunteerName
             : kidsTeacherName;
 
-    const moduleName = isKidRegistration ? kidsRegistrationName : kidsModuleName;
+    const moduleName = isKidRegistration
+      ? kidsRegistrationName
+      : kidsModuleName;
 
     startTransition(
       {
@@ -453,11 +523,16 @@ const TopBar = () => {
         icon: getRoleIcon(targetRole, roleLabel, moduleName),
       },
       () => {
-        if (location.pathname.includes('/my-team') && primaryRole === VolunteerRole.VOLUNTEER) {
-          const fallbackUrl = userRolesNavBarConfig[targetRole]?.dashboardUrl || APP_ROUTES.kidRegistration.root;
+        if (
+          location.pathname.includes('/my-team') &&
+          primaryRole === VolunteerRole.VOLUNTEER
+        ) {
+          const fallbackUrl =
+            userRolesNavBarConfig[targetRole]?.dashboardUrl ||
+            APP_ROUTES.kidRegistration.root;
           navigate(fallbackUrl, { replace: true });
         }
-      }
+      },
     );
   };
 
@@ -470,7 +545,7 @@ const TopBar = () => {
         groupConfigId: '',
         groupConfigName: '',
         role: VolunteerRole.AREA_GENERAL_COORDINATOR,
-      })
+      }),
     );
     startTransition(
       {
@@ -481,7 +556,7 @@ const TopBar = () => {
       },
       () => {
         navigate(APP_ROUTES.kidRegistration.root, { replace: true });
-      }
+      },
     );
   };
 
@@ -497,7 +572,7 @@ const TopBar = () => {
       role !== UserRole.USER &&
       !isSystemAdminRole(role) &&
       userRolesNavBarConfig[role] !== undefined &&
-      isRoleEnabled(role)
+      isRoleEnabled(role),
   );
 
   // In addition to explicit userRoles, include roles from volunteer group assignments
@@ -505,21 +580,34 @@ const TopBar = () => {
     const roles: AppRole[] = [];
     currentVolunteerCampus?.groups?.forEach((group) => {
       const primaryArea = group.areas?.[0];
-      const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
+      const primaryRole =
+        primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
       const isGroupRegistration = primaryArea?.scope === 'KID_REGISTRATION';
       let targetRole: AppRole;
       if (primaryRole === VolunteerRole.GROUP_COORDINATOR) {
         targetRole = ChurchRole.KID_CHURCH_GROUP_COORDINATOR;
       } else if (primaryRole === VolunteerRole.SUPERVISOR) {
-        targetRole = isGroupRegistration ? ChurchRole.KID_REGISTER_SUPERVISOR : ChurchRole.KID_CHURCH_SUPERVISOR;
+        targetRole = isGroupRegistration
+          ? ChurchRole.KID_REGISTER_SUPERVISOR
+          : ChurchRole.KID_CHURCH_SUPERVISOR;
       } else {
-        targetRole = isGroupRegistration ? ChurchRole.KID_REGISTER_USER : ChurchRole.KID_CHURCH_USER;
+        targetRole = isGroupRegistration
+          ? ChurchRole.KID_REGISTER_USER
+          : ChurchRole.KID_CHURCH_USER;
       }
-      if (!roles.includes(targetRole) && isRoleEnabled(targetRole) && userRolesNavBarConfig[targetRole]) {
+      if (
+        !roles.includes(targetRole) &&
+        isRoleEnabled(targetRole) &&
+        userRolesNavBarConfig[targetRole]
+      ) {
         roles.push(targetRole);
       }
     });
-    if (hasAreaCoordinatorAssignment && !roles.includes(ChurchRole.KID_REGISTER_COORDINATOR) && isRoleEnabled(ChurchRole.KID_REGISTER_COORDINATOR)) {
+    if (
+      hasAreaCoordinatorAssignment &&
+      !roles.includes(ChurchRole.KID_REGISTER_COORDINATOR) &&
+      isRoleEnabled(ChurchRole.KID_REGISTER_COORDINATOR)
+    ) {
       roles.push(ChurchRole.KID_REGISTER_COORDINATOR);
     }
     return roles;
@@ -566,10 +654,13 @@ const TopBar = () => {
 
   /** Derives the user's initials from first and last name, fallback 'US'. */
   const userInitials = user
-    ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() || 'US'
+    ? `${user.firstName?.[0] ?? ''}${user.lastName?.[0] ?? ''}`.toUpperCase() ||
+      'US'
     : 'US';
 
-  const userName = user ? capitalizeWords(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()) : 'Usuario';
+  const userName = user
+    ? capitalizeWords(`${user.firstName ?? ''} ${user.lastName ?? ''}`.trim())
+    : 'Usuario';
   const userEmail = user?.email ?? '';
 
   const handleRoleChange = (roleItem: ThemeRole) => {
@@ -601,7 +692,8 @@ const TopBar = () => {
 
     // 2. Manage group context
     const isNewRoleAdmin = isSystemAdminRole(roleId, roleItem.appTitle);
-    const isNewRoleAreaCoordinator = roleId === ChurchRole.KID_REGISTER_COORDINATOR;
+    const isNewRoleAreaCoordinator =
+      roleId === ChurchRole.KID_REGISTER_COORDINATOR;
     let targetGroupName = '';
 
     if (isNewRoleAdmin) {
@@ -638,14 +730,39 @@ const TopBar = () => {
       if (assignedGroup) {
         targetGroupName = assignedGroup.name;
         const primaryRole =
-          assignedGroup.areas[0]?.role || assignedGroup.groupRole || newVolunteerRole;
+          assignedGroup.areas[0]?.role ||
+          assignedGroup.groupRole ||
+          newVolunteerRole;
         dispatch(
           setActiveGroupConfig({
             groupConfigId: assignedGroup.id,
             groupConfigName: assignedGroup.name,
             role: primaryRole,
+            isSupportingGroup: false,
           }),
         );
+      } else if (
+        newVolunteerRole === VolunteerRole.GROUP_COORDINATOR ||
+        roleItem.id === ChurchRole.KID_CHURCH_GROUP_COORDINATOR
+      ) {
+        // Group Coordinator without fixed group is in Support mode: do NOT assign ADMIN_GROUP
+        if (
+          isSupportingGroup &&
+          activeGroupConfigId &&
+          activeGroupConfigId !== 'ADMIN_GROUP'
+        ) {
+          targetGroupName = activeGroupConfigName || '';
+        } else {
+          targetGroupName = '';
+          dispatch(
+            setActiveGroupConfig({
+              groupConfigId: '',
+              groupConfigName: '',
+              role: newVolunteerRole,
+              isSupportingGroup: false,
+            }),
+          );
+        }
       } else if (isAdminUser) {
         // Powers acquired by admin: assign to Grupo Admin context
         targetGroupName = 'Grupo Admin';
@@ -654,6 +771,7 @@ const TopBar = () => {
             groupConfigId: 'ADMIN_GROUP',
             groupConfigName: 'Grupo Admin',
             role: newVolunteerRole,
+            isSupportingGroup: false,
           }),
         );
       } else {
@@ -663,6 +781,7 @@ const TopBar = () => {
             groupConfigId: '',
             groupConfigName: '',
             role: newVolunteerRole,
+            isSupportingGroup: false,
           }),
         );
       }
@@ -672,8 +791,8 @@ const TopBar = () => {
       roleItem.appTitle === 'KidRegistration'
         ? kidsRegistrationName
         : roleItem.appTitle === 'KidChurch'
-        ? kidsModuleName
-        : roleItem.appTitle;
+          ? kidsModuleName
+          : roleItem.appTitle;
 
     startTransition(
       {
@@ -685,14 +804,15 @@ const TopBar = () => {
       },
       () => {
         navigate(roleItem.dashboardUrl, { replace: true });
-      }
+      },
     );
   };
 
   /** Dispatches logout action and redirects to login page. */
   const handleLogout = () => {
     dispatch(logout());
-    if (typeof document !== 'undefined') document.body.className = 'antialiased';
+    if (typeof document !== 'undefined')
+      document.body.className = 'antialiased';
     navigate(APP_ROUTES.auth.login, { replace: true });
     toast.success('Se ha cerrado su sesión', {
       duration: 5000,
@@ -711,15 +831,21 @@ const TopBar = () => {
 
   React.useEffect(() => {
     if (availableRoles.length > 0 && availableRoles[0].id !== UserRole.USER) {
-      const isCurrentValid = currentRole && availableRoles.some((r) => r.id === currentRole);
-      if (!isCurrentValid || !isRoleEnabled(currentRole)) dispatch(changeCurrentRole(availableRoles[0].id));
+      const isCurrentValid =
+        currentRole && availableRoles.some((r) => r.id === currentRole);
+      if (!isCurrentValid || !isRoleEnabled(currentRole))
+        dispatch(changeCurrentRole(availableRoles[0].id));
     }
   }, [currentRole, availableRoles, dispatch]);
 
   // Synchronize and clean group context when role or campus changes
   React.useEffect(() => {
-    const isCurrentAdmin = isSystemAdminRole(currentRole, activeVisualRole.appTitle);
-    const isCurrentAreaCoord = currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
+    const isCurrentAdmin = isSystemAdminRole(
+      currentRole,
+      activeVisualRole.appTitle,
+    );
+    const isCurrentAreaCoord =
+      currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
 
     if (isCurrentAdmin) {
       // Admins do not have groups
@@ -744,6 +870,48 @@ const TopBar = () => {
         );
       }
     } else if (currentRole && isAdminUser) {
+      const isCoordRole =
+        currentRole === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+        activeVolunteerRole === VolunteerRole.GROUP_COORDINATOR;
+
+      if (isCoordRole) {
+        const assignedGroup = findAssignedGroupForRole(
+          currentRole,
+          availableGroups,
+          activeGroupConfigId,
+        );
+        if (!assignedGroup) {
+          // If already supporting a group, preserve it!
+          if (
+            isSupportingGroup &&
+            activeGroupConfigId &&
+            activeGroupConfigId !== 'ADMIN_GROUP'
+          ) {
+            return;
+          }
+          // Do not force ADMIN_GROUP for Group Coordinator without a fixed assignment
+          if (activeGroupConfigId === 'ADMIN_GROUP') {
+            dispatch(
+              setActiveGroupConfig({
+                groupConfigId: '',
+                groupConfigName: '',
+                role: activeVolunteerRole,
+                isSupportingGroup: false,
+              }),
+            );
+          }
+          return;
+        }
+      }
+
+      if (
+        isSupportingGroup &&
+        activeGroupConfigId &&
+        activeGroupConfigId !== 'ADMIN_GROUP'
+      ) {
+        return;
+      }
+
       const assignedGroup = findAssignedGroupForRole(
         currentRole,
         availableGroups,
@@ -759,6 +927,7 @@ const TopBar = () => {
               groupConfigId: 'ADMIN_GROUP',
               groupConfigName: 'Grupo Admin',
               role: activeVolunteerRole,
+              isSupportingGroup: false,
             }),
           );
         }
@@ -771,6 +940,7 @@ const TopBar = () => {
               assignedGroup.areas[0]?.role ||
               assignedGroup.groupRole ||
               activeVolunteerRole,
+            isSupportingGroup: false,
           }),
         );
       }
@@ -793,6 +963,8 @@ const TopBar = () => {
             }),
           );
         }
+      } else if (isSupportingGroup && activeGroupConfigId) {
+        // Active support assignment: preserve chosen support group
       } else if (activeGroupConfigId || activeGroupConfigName) {
         dispatch(
           setActiveGroupConfig({
@@ -811,11 +983,15 @@ const TopBar = () => {
     activeGroupConfigName,
     availableGroups,
     activeVolunteerRole,
+    isSupportingGroup,
     dispatch,
   ]);
 
   const isAreaCoordinator = currentRole === ChurchRole.KID_REGISTER_COORDINATOR;
-  const isCurrentVisualRoleAdmin = isSystemAdminRole(activeVisualRole.id, activeVisualRole.appTitle);
+  const isCurrentVisualRoleAdmin = isSystemAdminRole(
+    activeVisualRole.id,
+    activeVisualRole.appTitle,
+  );
 
   const hasMultipleRoles = availableRoles.length > 1;
   const canOpenContextDropdown =
@@ -858,7 +1034,14 @@ const TopBar = () => {
   };
 
   let roleLabelDisplay = getDynamicRoleLabel(activeVisualRole.id);
-  if (activeGroupConfigName && !isAreaCoordinator && !isCurrentVisualRoleAdmin) {
+  if (isSupportingGroup && !isAreaCoordinator && !isCurrentVisualRoleAdmin) {
+    roleLabelDisplay = `${roleLabelDisplay} - Apoyo`;
+  } else if (
+    activeGroupConfigName &&
+    activeGroupConfigId !== 'ADMIN_GROUP' &&
+    !isAreaCoordinator &&
+    !isCurrentVisualRoleAdmin
+  ) {
     roleLabelDisplay = `${roleLabelDisplay} - ${activeGroupConfigName}`;
   } else if (!isAreaCoordinator && !isCurrentVisualRoleAdmin) {
     roleLabelDisplay = `${roleLabelDisplay} - Apoyo`;
@@ -866,27 +1049,56 @@ const TopBar = () => {
 
   const roleSections = useMemo(() => {
     const sections: { title: string; roles: ThemeRole[] }[] = [];
-    const kidChurchRoles = availableRoles.filter((r) => r.appTitle === 'KidChurch');
-    const kidRegistrationRoles = availableRoles.filter((r) => r.appTitle === 'KidRegistration');
+    const kidChurchRoles = availableRoles.filter(
+      (r) => r.appTitle === 'KidChurch',
+    );
+    const kidRegistrationRoles = availableRoles.filter(
+      (r) => r.appTitle === 'KidRegistration',
+    );
 
-    if (kidChurchRoles.length > 0) sections.push({ title: `${kidsModuleName} · ${kidsClassroomsName}`, roles: kidChurchRoles });
-    if (kidRegistrationRoles.length > 0) sections.push({ title: `${kidsRegistrationName} · Punto de Entrada`, roles: kidRegistrationRoles });
+    if (kidChurchRoles.length > 0)
+      sections.push({
+        title: `${kidsModuleName} · ${kidsClassroomsName}`,
+        roles: kidChurchRoles,
+      });
+    if (kidRegistrationRoles.length > 0)
+      sections.push({
+        title: `${kidsRegistrationName} · Punto de Entrada`,
+        roles: kidRegistrationRoles,
+      });
 
     const otherRoles = availableRoles.filter(
-      (r) => r.appTitle !== 'Admin' && r.appTitle !== 'KidChurch' && r.appTitle !== 'KidRegistration'
+      (r) =>
+        r.appTitle !== 'Admin' &&
+        r.appTitle !== 'KidChurch' &&
+        r.appTitle !== 'KidRegistration',
     );
-    if (otherRoles.length > 0) sections.push({ title: 'Roles Disponibles', roles: otherRoles });
+    if (otherRoles.length > 0)
+      sections.push({ title: 'Roles Disponibles', roles: otherRoles });
 
     return sections;
-  }, [availableRoles, kidsModuleName, kidsClassroomsName, kidsRegistrationName]);
+  }, [
+    availableRoles,
+    kidsModuleName,
+    kidsClassroomsName,
+    kidsRegistrationName,
+  ]);
 
   const roleTriggerContent = (
-    <div className={clsx(
-      "flex items-center gap-2.5 outline-none rounded-xl py-0.5 px-1 transition-colors",
-      canOpenContextDropdown ? "hover:bg-black/10 cursor-pointer" : "cursor-default"
-    )}>
+    <div
+      className={clsx(
+        'flex items-center gap-2.5 outline-none rounded-xl py-0.5 px-1 transition-colors',
+        canOpenContextDropdown
+          ? 'hover:bg-black/10 cursor-pointer'
+          : 'cursor-default',
+      )}
+    >
       <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center bg-white p-1 shadow-xs shrink-0 self-center">
-         <img src="/logo-iglekids.png" alt={kidsModuleName} className="w-full h-full object-contain drop-shadow-xs" />
+        <img
+          src="/logo-iglekids.png"
+          alt={kidsModuleName}
+          className="w-full h-full object-contain drop-shadow-xs"
+        />
       </div>
       <div className="flex flex-col justify-center text-left min-w-0">
         <h1 className="font-extrabold text-[13px] sm:text-[15px] leading-snug tracking-tight truncate max-w-[200px] sm:max-w-xs md:max-w-sm">
@@ -894,7 +1106,9 @@ const TopBar = () => {
         </h1>
         <div className="flex items-center gap-1 text-[10px] sm:text-[11px] tracking-wide opacity-90 font-medium mt-0.5 leading-none">
           <span>Rol: {roleLabelDisplay}</span>
-          {canOpenContextDropdown && <ChevronDown size={11} className="shrink-0" />}
+          {canOpenContextDropdown && (
+            <ChevronDown size={11} className="shrink-0" />
+          )}
         </div>
       </div>
     </div>
@@ -903,7 +1117,6 @@ const TopBar = () => {
   return (
     <>
       <header className="bg-primary text-primary-foreground px-4 py-2 sm:py-2.5 flex justify-between items-center shrink-0 transition-colors duration-300 z-[200] relative shadow-none border-none outline-none">
-        
         {/* Lado Izquierdo: Menú de Roles y Contexto */}
         {canOpenContextDropdown ? (
           <DropdownMenu.Root>
@@ -912,7 +1125,7 @@ const TopBar = () => {
             </DropdownMenu.Trigger>
 
             <DropdownMenu.Portal>
-              <DropdownMenu.Content 
+              <DropdownMenu.Content
                 className="bg-white text-gray-900 rounded-2xl shadow-xl border border-gray-100 p-2 sm:p-2.5 min-w-[285px] sm:min-w-[320px] max-w-[360px] max-h-[75vh] overflow-y-auto z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-150"
                 sideOffset={8}
                 align="start"
@@ -924,7 +1137,9 @@ const TopBar = () => {
                       <Sparkles size={12} />
                     </div>
                     <span className="text-[10.5px] font-bold text-gray-700 uppercase tracking-wider truncate">
-                      {availableGroups.length > 1 ? 'Grupos de Servicio' : 'Roles y Módulos'}
+                      {availableGroups.length > 1
+                        ? 'Grupos de Servicio'
+                        : 'Roles y Módulos'}
                     </span>
                   </div>
                   {currentCampusName && (
@@ -943,19 +1158,21 @@ const TopBar = () => {
                     <DropdownMenu.Item
                       onSelect={handleAreaCoordinatorSelect}
                       className={clsx(
-                        "flex items-center justify-between p-2 rounded-xl cursor-pointer outline-none transition-all text-sm",
+                        'flex items-center justify-between p-2 rounded-xl cursor-pointer outline-none transition-all text-sm',
                         isAreaCoordinatorActive
-                          ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                          : "hover:bg-gray-50 text-gray-700"
+                          ? 'bg-primary/10 text-primary font-semibold shadow-2xs'
+                          : 'hover:bg-gray-50 text-gray-700',
                       )}
                     >
                       <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                        <div className={clsx(
-                          "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                          isAreaCoordinatorActive
-                            ? "bg-primary text-white"
-                            : "bg-indigo-50 text-indigo-700"
-                        )}>
+                        <div
+                          className={clsx(
+                            'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                            isAreaCoordinatorActive
+                              ? 'bg-primary text-white'
+                              : 'bg-indigo-50 text-indigo-700',
+                          )}
+                        >
                           <Crown size={16} />
                         </div>
                         <div className="flex flex-col min-w-0 flex-1">
@@ -990,10 +1207,16 @@ const TopBar = () => {
                     <div className="flex flex-col gap-1">
                       {availableGroups.map((group) => {
                         const primaryArea = group.areas[0];
-                        const primaryRole = primaryArea?.role || group.groupRole || VolunteerRole.VOLUNTEER;
-                        const isSupervisor = primaryRole === VolunteerRole.SUPERVISOR;
-                        const isCoordinator = primaryRole === VolunteerRole.GROUP_COORDINATOR;
-                        const isGroupRegistration = primaryArea?.scope === 'KID_REGISTRATION';
+                        const primaryRole =
+                          primaryArea?.role ||
+                          group.groupRole ||
+                          VolunteerRole.VOLUNTEER;
+                        const isSupervisor =
+                          primaryRole === VolunteerRole.SUPERVISOR;
+                        const isCoordinator =
+                          primaryRole === VolunteerRole.GROUP_COORDINATOR;
+                        const isGroupRegistration =
+                          primaryArea?.scope === 'KID_REGISTRATION';
                         const roleLabel = isSupervisor
                           ? 'Supervisor'
                           : isCoordinator
@@ -1001,31 +1224,39 @@ const TopBar = () => {
                             : isGroupRegistration
                               ? churchVolunteerName
                               : kidsTeacherName;
-                        const areaName = primaryArea?.name || (isGroupRegistration ? kidsRegistrationName : kidsModuleName);
-                        const isGroupActive = !isAreaCoordinatorActive && activeGroupConfigId === group.id;
+                        const areaName =
+                          primaryArea?.name ||
+                          (isGroupRegistration
+                            ? kidsRegistrationName
+                            : kidsModuleName);
+                        const isGroupActive =
+                          !isAreaCoordinatorActive &&
+                          activeGroupConfigId === group.id;
 
                         return (
                           <DropdownMenu.Item
                             key={group.id}
                             onSelect={() => handleGroupChange(group)}
                             className={clsx(
-                              "flex items-center justify-between p-2 rounded-xl cursor-pointer outline-none transition-all text-sm",
+                              'flex items-center justify-between p-2 rounded-xl cursor-pointer outline-none transition-all text-sm',
                               isGroupActive
-                                ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                                : "hover:bg-gray-50 text-gray-700"
+                                ? 'bg-primary/10 text-primary font-semibold shadow-2xs'
+                                : 'hover:bg-gray-50 text-gray-700',
                             )}
                           >
                             <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                              <div className={clsx(
-                                "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                                isGroupActive
-                                  ? "bg-primary text-white shadow-xs"
-                                  : isSupervisor
-                                    ? "bg-purple-50 text-purple-700"
-                                    : isCoordinator
-                                      ? "bg-indigo-50 text-indigo-700"
-                                      : "bg-emerald-50 text-emerald-700"
-                              )}>
+                              <div
+                                className={clsx(
+                                  'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                                  isGroupActive
+                                    ? 'bg-primary text-white shadow-xs'
+                                    : isSupervisor
+                                      ? 'bg-purple-50 text-purple-700'
+                                      : isCoordinator
+                                        ? 'bg-indigo-50 text-indigo-700'
+                                        : 'bg-emerald-50 text-emerald-700',
+                                )}
+                              >
                                 {isSupervisor ? (
                                   <Shield size={16} />
                                 ) : isCoordinator ? (
@@ -1067,8 +1298,10 @@ const TopBar = () => {
                       <div
                         key={section.title}
                         className={clsx(
-                          (sectionIdx > 0 || availableGroups.length > 1 || (!isAdminUser && hasAreaCoordinatorOption)) &&
-                            "pt-2 border-t border-gray-100"
+                          (sectionIdx > 0 ||
+                            availableGroups.length > 1 ||
+                            (!isAdminUser && hasAreaCoordinatorOption)) &&
+                            'pt-2 border-t border-gray-100',
                         )}
                       >
                         <div className="text-[10px] font-bold text-gray-400 mb-1 px-2 uppercase tracking-wider">
@@ -1076,30 +1309,39 @@ const TopBar = () => {
                         </div>
                         <div className="flex flex-col gap-0.5">
                           {section.roles.map((role) => {
-                            const isRoleActive = activeVisualRole.id === role.id;
-                            const isRoleAdmin = isSystemAdminRole(role.id, role.appTitle);
-                            const isRegistrationAreaCoord = role.id === ChurchRole.KID_REGISTER_COORDINATOR;
+                            const isRoleActive =
+                              activeVisualRole.id === role.id;
+                            const isRoleAdmin = isSystemAdminRole(
+                              role.id,
+                              role.appTitle,
+                            );
+                            const isRegistrationAreaCoord =
+                              role.id === ChurchRole.KID_REGISTER_COORDINATOR;
                             const isCoordinatorRole =
                               role.id === ChurchRole.MINISTRY_ADMIN ||
                               role.id === ChurchRole.KID_REGISTER_COORDINATOR ||
-                              role.id === ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
+                              role.id ===
+                                ChurchRole.KID_CHURCH_GROUP_COORDINATOR ||
                               role.id === ChurchRole.KID_SECURITY_COORDINATOR;
                             const isSupervisorRole =
                               role.id === ChurchRole.KID_REGISTER_SUPERVISOR ||
                               role.id === ChurchRole.KID_CHURCH_SUPERVISOR ||
                               role.id === ChurchRole.KID_SECURITY_SUPERVISOR;
-                            const RoleIcon = role.appTitle === 'Admin'
-                              ? Sliders
-                              : isCoordinatorRole
-                              ? Crown
-                              : isSupervisorRole
-                              ? Shield
-                              : UsersIcon;
+                            const RoleIcon =
+                              role.appTitle === 'Admin'
+                                ? Sliders
+                                : isCoordinatorRole
+                                  ? Crown
+                                  : isSupervisorRole
+                                    ? Shield
+                                    : UsersIcon;
 
                             let roleTitle = role.label;
                             if (role.id === ChurchRole.KID_CHURCH_USER) {
                               roleTitle = kidsTeacherName;
-                            } else if (role.id === ChurchRole.KID_REGISTER_USER) {
+                            } else if (
+                              role.id === ChurchRole.KID_REGISTER_USER
+                            ) {
                               roleTitle = churchVolunteerName;
                             }
 
@@ -1121,6 +1363,14 @@ const TopBar = () => {
                               if (assignedGroup) {
                                 assignedGroupName = assignedGroup.name;
                                 isRoleAdminAcquired = false;
+                              } else if (
+                                role.id ===
+                                ChurchRole.KID_CHURCH_GROUP_COORDINATOR
+                              ) {
+                                // Coordinators without fixed assignment are in support mode
+                                assignedGroupName = 'Apoyo';
+                                isApoyoBadge = true;
+                                isRoleAdminAcquired = false;
                               } else if (isAdminUser) {
                                 assignedGroupName = 'Grupo Admin';
                                 isRoleAdminAcquired = true;
@@ -1136,7 +1386,9 @@ const TopBar = () => {
                               subtitle = 'Control global del sistema';
                             } else if (role.id === UserRole.ADMIN) {
                               subtitle = `Administración de ${churchCampusTerm.toLowerCase()} y usuarios`;
-                            } else if (role.id === ChurchRole.KID_REGISTER_COORDINATOR) {
+                            } else if (
+                              role.id === ChurchRole.KID_REGISTER_COORDINATOR
+                            ) {
                               subtitle = `Todos los grupos de ${kidsRegistrationName.toLowerCase()}`;
                             } else if (isRoleAdminAcquired) {
                               subtitle = 'Poderes de administración';
@@ -1146,66 +1398,77 @@ const TopBar = () => {
                                 role.appTitle === 'KidRegistration'
                                   ? kidsRegistrationName
                                   : role.appTitle === 'KidChurch'
-                                  ? kidsModuleName
-                                  : null;
+                                    ? kidsModuleName
+                                    : null;
                               subtitle = moduleSuffix
                                 ? `${assignedGroupName} · ${moduleSuffix}`
                                 : assignedGroupName;
                             } else if (role.appTitle === 'KidChurch') {
-                              subtitle = isCoordinatorRole ? `Gestión general de ${kidsClassroomsName.toLowerCase()}` : `Supervisión de ${kidsClassroomsName.toLowerCase()}`;
+                              subtitle = isCoordinatorRole
+                                ? `Gestión general de ${kidsClassroomsName.toLowerCase()}`
+                                : `Supervisión de ${kidsClassroomsName.toLowerCase()}`;
                             } else if (role.appTitle === 'KidRegistration') {
-                              subtitle = isSupervisorRole ? 'Supervisión de estaciones' : 'Atención en estaciones';
+                              subtitle = isSupervisorRole
+                                ? 'Supervisión de estaciones'
+                                : 'Atención en estaciones';
                             } else {
                               subtitle = role.appTitle;
                             }
 
                             const iconColorClass = isRoleActive
-                              ? "bg-primary text-white shadow-xs"
+                              ? 'bg-primary text-white shadow-xs'
                               : role.appTitle === 'Admin'
-                              ? "bg-slate-100 text-slate-700"
-                              : role.appTitle === 'KidChurch'
-                              ? "bg-indigo-50 text-indigo-700"
-                              : "bg-emerald-50 text-emerald-700";
+                                ? 'bg-slate-100 text-slate-700'
+                                : role.appTitle === 'KidChurch'
+                                  ? 'bg-indigo-50 text-indigo-700'
+                                  : 'bg-emerald-50 text-emerald-700';
 
                             return (
                               <DropdownMenu.Item
                                 key={role.id}
                                 onSelect={() => handleRoleChange(role)}
                                 className={clsx(
-                                  "flex items-center justify-between p-2 rounded-xl cursor-pointer outline-none transition-all text-sm",
+                                  'flex items-center justify-between p-2 rounded-xl cursor-pointer outline-none transition-all text-sm',
                                   isRoleActive
-                                    ? "bg-primary/10 text-primary font-semibold shadow-2xs"
-                                    : "hover:bg-gray-50 text-gray-700"
+                                    ? 'bg-primary/10 text-primary font-semibold shadow-2xs'
+                                    : 'hover:bg-gray-50 text-gray-700',
                                 )}
                               >
                                 <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                                  <div className={clsx(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors",
-                                    iconColorClass
-                                  )}>
+                                  <div
+                                    className={clsx(
+                                      'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                                      iconColorClass,
+                                    )}
+                                  >
                                     <RoleIcon size={16} />
                                   </div>
                                   <div className="flex flex-col min-w-0 flex-1">
                                     <div className="flex items-center gap-1.5 flex-wrap">
-                                      <span className={clsx(
-                                        "text-sm leading-tight truncate",
-                                        isRoleActive ? "font-bold text-primary" : "font-semibold text-gray-900"
-                                      )}>
+                                      <span
+                                        className={clsx(
+                                          'text-sm leading-tight truncate',
+                                          isRoleActive
+                                            ? 'font-bold text-primary'
+                                            : 'font-semibold text-gray-900',
+                                        )}
+                                      >
                                         {roleTitle}
                                       </span>
                                       {assignedGroupName && (
                                         <span
                                           className={clsx(
-                                            "text-[10px] font-semibold px-1.5 py-0.2 rounded-md shrink-0 border",
+                                            'text-[10px] font-semibold px-1.5 py-0.2 rounded-md shrink-0 border',
                                             isRoleActive
-                                              ? "bg-white/80 text-primary border-primary/20 shadow-2xs"
+                                              ? 'bg-white/80 text-primary border-primary/20 shadow-2xs'
                                               : isApoyoBadge
-                                              ? "bg-amber-50 text-amber-700 border-amber-200/60"
-                                              : isRoleAdminAcquired
-                                              ? "bg-amber-50 text-amber-800 border-amber-200/60"
-                                              : role.appTitle === 'KidChurch'
-                                              ? "bg-purple-50 text-purple-700 border-purple-200/60"
-                                              : "bg-emerald-50 text-emerald-700 border-emerald-200/60"
+                                                ? 'bg-amber-50 text-amber-700 border-amber-200/60'
+                                                : isRoleAdminAcquired
+                                                  ? 'bg-amber-50 text-amber-800 border-amber-200/60'
+                                                  : role.appTitle ===
+                                                      'KidChurch'
+                                                    ? 'bg-purple-50 text-purple-700 border-purple-200/60'
+                                                    : 'bg-emerald-50 text-emerald-700 border-emerald-200/60',
                                           )}
                                         >
                                           {assignedGroupName}
@@ -1230,7 +1493,6 @@ const TopBar = () => {
                     ))}
                   </div>
                 )}
-
               </DropdownMenu.Content>
             </DropdownMenu.Portal>
           </DropdownMenu.Root>
@@ -1238,160 +1500,178 @@ const TopBar = () => {
           roleTriggerContent
         )}
 
-      {/* Lado Derecho: Iconos y Avatar de Usuario */}
-      <div className="flex items-center gap-2">
-        {/* Botón de Búsqueda dinámico (estilo Telegram al hacer scroll) */}
-        {isSearchAvailable && (
+        {/* Lado Derecho: Iconos y Avatar de Usuario */}
+        <div className="flex items-center gap-2">
+          {/* Botón de Búsqueda dinámico (estilo Telegram al hacer scroll) */}
+          {isSearchAvailable && (
+            <button
+              type="button"
+              onClick={triggerFocusSearch}
+              title={t('navigation.search')}
+              aria-label={t('navigation.search')}
+              className={clsx(
+                'w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90',
+                isScrolledPastSearch
+                  ? 'opacity-100 scale-100 bg-black/15 hover:bg-black/25 text-white cursor-pointer'
+                  : 'opacity-0 scale-75 pointer-events-none w-0 -mr-2 overflow-hidden',
+              )}
+            >
+              <Search size={18} />
+            </button>
+          )}
+
+          {/* Botón de Notificaciones */}
           <button
             type="button"
-            onClick={triggerFocusSearch}
-            title={t('navigation.search')}
-            aria-label={t('navigation.search')}
-            className={clsx(
-              "w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90",
-              isScrolledPastSearch
-                ? "opacity-100 scale-100 bg-black/15 hover:bg-black/25 text-white cursor-pointer"
-                : "opacity-0 scale-75 pointer-events-none w-0 -mr-2 overflow-hidden"
-            )}
+            onClick={() => {
+              setHasOpenedNotifications(true);
+              setNotificationsOpen(true);
+            }}
+            title="Notificaciones"
+            aria-label="Notificaciones"
+            className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90 bg-black/15 hover:bg-black/25 text-white cursor-pointer relative"
           >
-            <Search size={18} />
+            <Bell size={18} />
+            {unreadNotifCount > 0 && (
+              <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-rose-500 text-white rounded-full text-[10px] font-black flex items-center justify-center animate-pulse shadow-xs">
+                {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
+              </span>
+            )}
           </button>
+
+          {/* Menú de Usuario */}
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95">
+              <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-black/20 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner overflow-hidden">
+                {user?.photoUrl ? (
+                  <img
+                    src={user.photoUrl}
+                    alt={userName}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  userInitials
+                )}
+              </div>
+            </DropdownMenu.Trigger>
+
+            <DropdownMenu.Portal>
+              <DropdownMenu.Content
+                className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[180px] z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
+                sideOffset={8}
+                align="end"
+              >
+                <div className="px-3 py-2 border-b border-gray-100 mb-1 flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold overflow-hidden shrink-0">
+                    {user?.photoUrl ? (
+                      <img
+                        src={user.photoUrl}
+                        alt={userName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      userInitials
+                    )}
+                  </div>
+                  <div className="overflow-hidden">
+                    <p className="font-bold text-sm truncate">{userName}</p>
+                    {(userEmail || user?.phone) && (
+                      <p className="text-xs text-text-muted truncate">
+                        {userEmail || user?.phone}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <DropdownMenu.Item
+                  onSelect={() => navigate(APP_ROUTES.profile)}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
+                >
+                  <User size={16} className="text-text-muted" />
+                  {t('navigation.profile')}
+                </DropdownMenu.Item>
+
+                {hasMultipleSpaces && (
+                  <DropdownMenu.Item
+                    onSelect={() => navigate(APP_ROUTES.hub)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 text-gray-700 transition-colors text-sm"
+                  >
+                    <LayoutGrid size={16} className="text-gray-500" />
+                    <span>Cambiar de espacio</span>
+                  </DropdownMenu.Item>
+                )}
+
+                <DropdownMenu.Item
+                  onSelect={handleLogout}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-red-50 text-red-600 transition-colors text-sm mt-1 font-medium"
+                >
+                  <LogOut size={16} />
+                  <span>{t('navigation.logout')}</span>
+                </DropdownMenu.Item>
+
+                <div className="mt-2 pt-2 border-t border-gray-100 text-center px-2">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenChangelog(true)}
+                    className="w-full text-[10px] text-gray-400 hover:text-gray-600 transition-colors cursor-pointer text-center leading-tight py-0.5 group"
+                  >
+                    <span className="block truncate font-medium">
+                      {activeChurch?.name || kidsModuleName}
+                    </span>
+                    <span className="text-gray-400 group-hover:text-gray-600 mt-0.5 inline-block">
+                      v{APP_VERSION} ·{' '}
+                      <span className="underline decoration-dotted underline-offset-2">
+                        Ver novedades
+                      </span>
+                    </span>
+                  </button>
+                </div>
+              </DropdownMenu.Content>
+            </DropdownMenu.Portal>
+          </DropdownMenu.Root>
+        </div>
+
+        {/* User Profile Modal */}
+        {hasOpenedProfile && (
+          <Suspense fallback={null}>
+            <UserProfileModal
+              open={profileOpen}
+              onOpenChange={handleOpenProfile}
+            />
+          </Suspense>
         )}
 
-        {/* Botón de Notificaciones */}
-        <button
-          type="button"
-          onClick={() => {
-            setHasOpenedNotifications(true);
-            setNotificationsOpen(true);
-          }}
-          title="Notificaciones"
-          aria-label="Notificaciones"
-          className="w-8 h-8 rounded-full flex items-center justify-center transition-all duration-200 outline-none active:scale-90 bg-black/15 hover:bg-black/25 text-white cursor-pointer relative"
-        >
-          <Bell size={18} />
-          {unreadNotifCount > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 bg-rose-500 text-white rounded-full text-[10px] font-black flex items-center justify-center animate-pulse shadow-xs">
-              {unreadNotifCount > 9 ? '9+' : unreadNotifCount}
-            </span>
-          )}
-        </button>
+        {/* Changelog Drawer */}
+        {hasOpenedChangelog && (
+          <Suspense fallback={null}>
+            <ChangelogModal
+              open={changelogOpen}
+              onOpenChange={handleOpenChangelog}
+            />
+          </Suspense>
+        )}
 
-        {/* Menú de Usuario */}
-        <DropdownMenu.Root>
-          <DropdownMenu.Trigger className="outline-none rounded-full ring-2 ring-transparent hover:ring-white/30 transition-all relative active:scale-95">
-            <div className="w-7.5 h-7.5 sm:w-8 sm:h-8 rounded-full bg-black/20 text-[11px] sm:text-xs flex items-center justify-center font-bold shadow-inner overflow-hidden">
-              {user?.photoUrl ? (
-                <img src={user.photoUrl} alt={userName} className="w-full h-full object-cover" />
-              ) : (
-                userInitials
-              )}
-            </div>
-          </DropdownMenu.Trigger>
+        {/* Drawer para cambiar de sede o grupo manualmente */}
+        {hasOpenedSettings && (
+          <Suspense fallback={null}>
+            <SettingsModal
+              open={settingsDrawerOpen}
+              onOpenChange={handleOpenSettings}
+            />
+          </Suspense>
+        )}
 
-          <DropdownMenu.Portal>
-            <DropdownMenu.Content 
-              className="bg-surface text-text-main rounded-xl shadow-lg border border-gray-100 p-2 min-w-[180px] z-[250] pointer-events-auto animate-in fade-in zoom-in-95 duration-200"
-              sideOffset={8}
-              align="end"
-            >
-              <div className="px-3 py-2 border-b border-gray-100 mb-1 flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-primary/10 text-primary text-xs flex items-center justify-center font-bold overflow-hidden shrink-0">
-                  {user?.photoUrl ? (
-                    <img src={user.photoUrl} alt={userName} className="w-full h-full object-cover" />
-                  ) : (
-                    userInitials
-                  )}
-                </div>
-                <div className="overflow-hidden">
-                  <p className="font-bold text-sm truncate">{userName}</p>
-                  {(userEmail || user?.phone) && (
-                    <p className="text-xs text-text-muted truncate">{userEmail || user?.phone}</p>
-                  )}
-                </div>
-              </div>
-              
-              <DropdownMenu.Item 
-                onSelect={() => navigate(APP_ROUTES.profile)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 transition-colors text-sm"
-              >
-                <User size={16} className="text-text-muted" />
-                {t('navigation.profile')}
-              </DropdownMenu.Item>
-
-              {hasMultipleSpaces && (
-                <DropdownMenu.Item 
-                  onSelect={() => navigate(APP_ROUTES.hub)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-gray-100 text-gray-700 transition-colors text-sm"
-                >
-                  <LayoutGrid size={16} className="text-gray-500" />
-                  <span>Cambiar de espacio</span>
-                </DropdownMenu.Item>
-              )}
-              
-              <DropdownMenu.Item 
-                onSelect={handleLogout}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer outline-none hover:bg-red-50 text-red-600 transition-colors text-sm mt-1 font-medium"
-              >
-                <LogOut size={16} />
-                <span>{t('navigation.logout')}</span>
-              </DropdownMenu.Item>
-
-              <div className="mt-2 pt-2 border-t border-gray-100 text-center px-2">
-                <button
-                  type="button"
-                  onClick={() => handleOpenChangelog(true)}
-                  className="w-full text-[10px] text-gray-400 hover:text-gray-600 transition-colors cursor-pointer text-center leading-tight py-0.5 group"
-                >
-                  <span className="block truncate font-medium">
-                    {activeChurch?.name || kidsModuleName}
-                  </span>
-                  <span className="text-gray-400 group-hover:text-gray-600 mt-0.5 inline-block">
-                    v{APP_VERSION} · <span className="underline decoration-dotted underline-offset-2">Ver novedades</span>
-                  </span>
-                </button>
-              </div>
-            </DropdownMenu.Content>
-          </DropdownMenu.Portal>
-        </DropdownMenu.Root>
-      </div>
-
-      {/* User Profile Modal */}
-      {hasOpenedProfile && (
-        <Suspense fallback={null}>
-          <UserProfileModal open={profileOpen} onOpenChange={handleOpenProfile} />
-        </Suspense>
-      )}
-
-      {/* Changelog Drawer */}
-      {hasOpenedChangelog && (
-        <Suspense fallback={null}>
-          <ChangelogModal open={changelogOpen} onOpenChange={handleOpenChangelog} />
-        </Suspense>
-      )}
-
-      {/* Drawer para cambiar de sede o grupo manualmente */}
-      {hasOpenedSettings && (
-        <Suspense fallback={null}>
-          <SettingsModal
-            open={settingsDrawerOpen}
-            onOpenChange={handleOpenSettings}
-          />
-        </Suspense>
-      )}
-
-      {/* Notifications Drawer */}
-      {hasOpenedNotifications && (
-        <Suspense fallback={null}>
-          <NotificationsModal
-            open={notificationsOpen}
-            onOpenChange={setNotificationsOpen}
-            experience={currentExperience}
-          />
-        </Suspense>
-      )}
-
-    </header>
+        {/* Notifications Drawer */}
+        {hasOpenedNotifications && (
+          <Suspense fallback={null}>
+            <NotificationsModal
+              open={notificationsOpen}
+              onOpenChange={setNotificationsOpen}
+              experience={currentExperience}
+            />
+          </Suspense>
+        )}
+      </header>
     </>
   );
 };

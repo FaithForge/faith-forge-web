@@ -8,6 +8,7 @@ import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import { CreateVolunteer, GetVolunteers } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { toast } from 'sonner';
 import { UserPlus, User as UserIcon } from 'lucide-react';
 
@@ -155,7 +156,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
                       {user.photoUrl ? (
                         <img
                           src={user.photoUrl}
-                          alt={user.firstName}
+                          alt={formatPersonFullName(user.firstName, user.lastName)}
                           className="w-full h-full object-cover rounded-full"
                         />
                       ) : (
@@ -164,7 +165,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
                     </div>
                     <div className="min-w-0">
                       <p className="text-xs font-bold text-gray-900 truncate">
-                        {user.firstName} {user.lastName}
+                        {formatPersonFullName(user.firstName, user.lastName)}
                       </p>
                       <p className="text-[11px] text-gray-500 truncate">
                         Doc: {user.nationalId || 'S/N'}
@@ -187,7 +188,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
                 {selectedUser.photoUrl ? (
                   <img
                     src={selectedUser.photoUrl}
-                    alt={selectedUser.firstName}
+                    alt={formatPersonFullName(selectedUser.firstName, selectedUser.lastName)}
                     className="w-full h-full object-cover rounded-full"
                   />
                 ) : (
@@ -196,7 +197,7 @@ export const RegisterVolunteerModal: React.FC<RegisterVolunteerModalProps> = ({
               </div>
               <div className="min-w-0">
                 <p className="text-xs font-bold text-gray-900 truncate">
-                  {selectedUser.firstName} {selectedUser.lastName}
+                  {formatPersonFullName(selectedUser.firstName, selectedUser.lastName)}
                 </p>
                 <p className="text-[11px] text-gray-500 truncate">
                   Doc: {selectedUser.nationalId || 'S/N'} • Tel: {selectedUser.phone || 'S/T'}

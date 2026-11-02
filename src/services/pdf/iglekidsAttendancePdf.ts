@@ -5,6 +5,7 @@ import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/es';
 import { IAttendanceReportData } from '@/libs/models';
 import { getGroupAgeRank } from '@/libs/utils/kidGroup';
+import { capitalizeWords } from '@/libs/utils/text';
 
 dayjs.extend(utc);
 dayjs.locale('es');
@@ -96,15 +97,7 @@ const formatAge = (age: number, birthday?: string): string => {
  * @param {string} str - Input string.
  * @returns {string} Title-cased string.
  */
-const toTitleCase = (str: string): string => {
-  if (!str) return '';
-  return str
-    .toLowerCase()
-    .split(' ')
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(' ');
-};
+const toTitleCase = (str: string): string => capitalizeWords(str);
 
 /**
  * Formats a phone number with its dial code.

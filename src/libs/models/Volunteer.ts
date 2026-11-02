@@ -72,6 +72,7 @@ export interface IVolunteerAssignment {
   endedAt?: string | Date | null;
   assignedByUserId?: string | null;
   endedByUserId?: string | null;
+  endedReason?: string | null;
   assignedByUser?: Partial<IUser>;
   endedByUser?: Partial<IUser>;
   volunteer?: IVolunteer;
@@ -94,6 +95,11 @@ export interface UpdateVolunteerAssignmentPayload {
   ministryAreaId?: string;
   ministryId?: string;
   state?: MinistryVolunteerAssignmentStateEnum;
+}
+
+export interface DeleteVolunteerAssignmentPayload {
+  assignmentId: string;
+  endedReason?: string;
 }
 
 /**

@@ -113,7 +113,14 @@
     "minicard_teachers": "Maestros",
     "minicard_supervisors": "Supervisores",
     "refresh": "Actualizar datos",
-    "last_updated": "Actualizado en tiempo real"
+    "last_updated": "Actualizado en tiempo real",
+    "select_support_group_title": "Seleccionar Grupo a Apoyar",
+    "select_support_group_desc": "Como coordinador de apoyo temporal, debes seleccionar a qué grupo estás apoyando hoy para visualizar sus métricas y habilitar la toma de asistencia.",
+    "toast_support_group_selected": "Apoyando ahora a {{group}}",
+    "support_badge": "Apoyo",
+    "supporting_group_label": "Apoyando al grupo",
+    "change_group_action": "Cambiar grupo",
+    "no_groups_found": "No se encontraron grupos configurados en esta sede."
   },
   "supervisor_team": {
     "title": "Mi Equipo",

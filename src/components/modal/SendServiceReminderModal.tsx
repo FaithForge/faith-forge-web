@@ -18,6 +18,7 @@ import {
 } from '@/libs/state/redux/api/churchApi';
 import { IServiceReminderPreviewItem } from '@/libs/models';
 import { LumbrelaDateTime } from '@/libs/utils/lumbrelaDateTime';
+import { formatPersonFullName } from '@/libs/utils/text';
 
 export interface SendServiceReminderModalProps {
   open: boolean;
@@ -270,7 +271,7 @@ export const SendServiceReminderModal: React.FC<SendServiceReminderModalProps> =
                             <div className="min-w-0 flex-1">
                               <div className="flex items-center gap-2">
                                 <span className="font-bold text-slate-900 truncate">
-                                  {item.fullName || 'Colaborador'}
+                                  {formatPersonFullName(item.fullName) || 'Colaborador'}
                                 </span>
                                 {item.groupName && (
                                   <span className="text-[10px] font-semibold text-indigo-700 bg-indigo-50 px-2 py-0.5 rounded-lg border border-indigo-100">

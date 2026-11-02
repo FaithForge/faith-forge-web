@@ -12,6 +12,7 @@ import {
 import { useAppSelector } from '@/libs/state/redux/hooks';
 import { bluetoothPrinter } from '@/libs/utils/printer/bluetoothPrinter';
 import { KID_AGE_COPY } from '@/libs/common-types/constants';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { APP_ROUTES } from '@/config/routes';
 import { FormattedRelation } from './useKidCheckInData';
 
@@ -134,13 +135,13 @@ export const useKidCheckInActions = ({
         const group = kidGroups.find((g) => g.id === targetGroupId);
         const currentReg = kid.currentKidRegistration as { securityCode?: string } | undefined;
         await bluetoothPrinter.printKidTicket({
-          kidName: `${kid.firstName} ${kid.lastName}`.trim(),
+          kidName: formatPersonFullName(kid.firstName, kid.lastName),
           kidGroup: group?.name || kid.kidGroup?.name || 'General',
           securityCode:
             registrationResponse?.securityCode ||
             registrationResponse?.code ||
             currentReg?.securityCode,
-          guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : undefined,
+          guardianName: guardian ? formatPersonFullName(guardian.firstName, guardian.lastName) : undefined,
           guardianPhone: guardian?.displayPhone || guardian?.rawPhone,
           observation: finalObservation || undefined,
           campusName: currentCampus?.name,
@@ -210,10 +211,10 @@ export const useKidCheckInActions = ({
         );
         const currentReg = kid.currentKidRegistration as any;
         await bluetoothPrinter.printKidTicket({
-          kidName: `${kid.firstName} ${kid.lastName}`.trim(),
+          kidName: formatPersonFullName(kid.firstName, kid.lastName),
           kidGroup: kid.kidGroup?.name || 'General',
           securityCode: currentReg?.securityCode || currentReg?.code,
-          guardianName: guardian ? `${guardian.firstName} ${guardian.lastName}`.trim() : undefined,
+          guardianName: guardian ? formatPersonFullName(guardian.firstName, guardian.lastName) : undefined,
           guardianPhone: guardian?.displayPhone || guardian?.rawPhone,
           campusName: currentCampus?.name,
           meetingName: currentMeeting?.name,
@@ -260,7 +261,7 @@ export const useKidCheckInActions = ({
   const handleConfirmDeleteGuardianRelation = async (): Promise<void> => {
     if (!guardianRelationToDelete || !kid?.id) return;
     const targetGuardianId = guardianRelationToDelete.guardianId || guardianRelationToDelete.id;
-    const guardianName = guardianRelationToDelete.fullName;
+    const guardianName = formatPersonFullName(guardianRelationToDelete.fullName);
 
     try {
       await deleteGuardianRelation({

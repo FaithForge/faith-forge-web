@@ -36,6 +36,7 @@ import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber } from '@/libs/utils/phone';
 import { toDateOnlyInputValue } from '@/libs/utils/date';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { APP_ROUTES } from '@/config/routes';
 import Input from '@/components/ui/Input';
 import PhoneInput from '@/components/ui/PhoneInput';
@@ -385,7 +386,7 @@ const UpdateUserView: React.FC = () => {
 
             <div className="flex-1 text-center sm:text-left flex flex-col justify-center">
               <h2 className="text-base font-extrabold text-gray-900">
-                {loadedUser?.firstName} {loadedUser?.lastName}
+                {formatPersonFullName(loadedUser?.firstName, loadedUser?.lastName)}
               </h2>
               <p className="text-xs text-gray-500 mt-0.5">
                 ID: #{loadedUser?.userCode || loadedUser?.id?.slice(0, 8)} • {loadedUser?.nationalIdType || 'CC'}: {loadedUser?.nationalId}

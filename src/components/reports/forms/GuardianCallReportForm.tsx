@@ -171,7 +171,7 @@ export const GuardianCallReportForm: React.FC<GuardianCallReportFormProps> = ({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-bold text-xs text-gray-800 truncate">
-                        {formatPersonShortName(`${g.firstName} ${g.lastName}`)}
+                        {formatPersonShortName(g.firstName, g.lastName)}
                       </p>
                       <span className="font-semibold text-gray-500 text-[11px]">
                         ({relationLabel})

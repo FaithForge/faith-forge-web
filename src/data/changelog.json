@@ -1,13 +1,29 @@
 [
   {
+    "version": "3.21.0",
+    "type": "minor",
+    "timestamp": "2026-11-02T16:53:24.633Z",
+    "dateFormatted": "02/11/2026 11:53 AM",
+    "title": "Nueva consola de operaciones y mantenimiento del sistema",
+    "changes": [
+      "Nueva sección administrativa de operaciones del sistema con acceso centralizado a herramientas técnicas y mantenimiento.",
+      "Consola interactiva para ejecución controlada de migraciones de datos con diagnóstico en tiempo real.",
+      "Panel unificado para purga selectiva y total de la memoria caché del sistema."
+    ]
+  },
+  {
     "version": "3.20.0",
     "type": "minor",
     "timestamp": "2026-11-01T22:44:49.390Z",
     "dateFormatted": "01/11/2026 05:44 PM",
-    "title": "Promoción y cambio de rol en equipos e historial de servicio",
+    "title": "Consola de asistencia multievento y gestión de equipos de servicio",
     "changes": [
-      "Nueva opción para promover o cambiar de rol a miembros dentro del ministerio conservando su historial de asistencias.",
-      "Visualización de fechas de inicio y fin de cada etapa de servicio en el perfil de las personas."
+      "Nueva consola de diagnóstico y matriz de asistencia con mapa de calor multievento para coordinadores.",
+      "Herramientas de contacto inmediato por mensajería o llamada y gestión de desvinculación con justificación obligatoria.",
+      "Exportación completa de la matriz de asistencia en formato compatible con hojas de cálculo.",
+      "Opción para promover o cambiar de rol a miembros dentro del ministerio conservando su historial de servicio.",
+      "Normalización visual de nombres y apellidos en toda la aplicación para una lectura más clara y uniforme.",
+      "Distintivo visual naranja de entorno de pruebas y local para evitar confusiones operativas con el entorno productivo."
     ]
   },
   {

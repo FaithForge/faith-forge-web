@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { EnrichedVolunteerAttendance } from '../hooks/useMinistryServiceAttendance';
 
 interface MinistryAttendanceGeneralListProps {
@@ -337,7 +338,7 @@ export const MinistryAttendanceGeneralList: React.FC<
                     {item.photoUrl ? (
                       <img
                         src={item.photoUrl}
-                        alt={item.fullName}
+                        alt={formatPersonFullName(item.fullName)}
                         className="w-full h-full object-cover"
                       />
                     ) : (
@@ -348,7 +349,7 @@ export const MinistryAttendanceGeneralList: React.FC<
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <h4 className="text-xs sm:text-sm font-bold text-slate-900 truncate">
-                        {item.fullName}
+                        {formatPersonFullName(item.fullName)}
                       </h4>
                     </div>
 

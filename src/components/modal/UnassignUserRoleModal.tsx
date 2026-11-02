@@ -9,6 +9,7 @@ import { IUser } from '@/libs/models';
 import { UserRole, ALL_SYSTEM_ROLES_METADATA } from '@/libs/utils/auth';
 import Button from '@/components/ui/Button';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { formatPersonFullName } from '@/libs/utils/text';
 
 interface UnassignUserRoleModalProps {
   open: boolean;
@@ -109,7 +110,7 @@ export const UnassignUserRoleModal: React.FC<UnassignUserRoleModalProps> = ({
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="font-bold text-sm text-gray-900 truncate">
-                    {user.firstName} {user.lastName}
+                    {formatPersonFullName(user.firstName, user.lastName)}
                   </p>
                   <p className="text-xs text-gray-500 truncate">
                     {user.nationalIdType || 'CC'}: {user.nationalId || 'Sin documento'} • Roles asignados:{' '}

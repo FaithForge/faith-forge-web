@@ -100,7 +100,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
               ? 'border-slate-200 bg-slate-50/80 text-slate-400 cursor-not-allowed'
               : isAllSelected
                 ? 'border-slate-200 bg-white text-slate-800 hover:border-slate-300 shadow-2xs'
-                : 'border-[#0284c7] bg-sky-50/60 text-[#0284c7] shadow-xs',
+                : 'border-primary bg-primary/10 text-primary shadow-xs',
             disabled && 'opacity-50 cursor-not-allowed',
             className,
           )}
@@ -113,7 +113,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
                   ? 'text-slate-300'
                   : isAllSelected
                     ? 'text-slate-400'
-                    : 'text-[#0284c7]',
+                    : 'text-primary',
               )}
             />
             <span className="truncate">{getTriggerText()}</span>
@@ -126,7 +126,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
         <DropdownMenu.Content
           align="start"
           sideOffset={6}
-          className="w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-[300] space-y-1 animate-in fade-in-80 zoom-in-95"
+          className="w-72 bg-white rounded-2xl shadow-xl border border-slate-200 p-2 z-[10050] space-y-1 animate-in fade-in-80 zoom-in-95"
         >
           {/* Header Action: Todos los servicios (solo si hay más de 1 reunión) */}
           {meetings.length > 1 && (
@@ -137,7 +137,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
                 className={clsx(
                   'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-bold transition-colors text-left',
                   isAllSelected
-                    ? 'bg-sky-50 text-[#0284c7]'
+                    ? 'bg-primary/10 text-primary'
                     : 'text-slate-700 hover:bg-slate-50',
                 )}
               >
@@ -146,7 +146,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
                     className={clsx(
                       'w-4 h-4 rounded-md border flex items-center justify-center',
                       isAllSelected
-                        ? 'border-[#0284c7] bg-[#0284c7] text-white'
+                        ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-slate-300',
                     )}
                   >
@@ -196,7 +196,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
                     className={clsx(
                       'w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs transition-colors text-left',
                       isChecked
-                        ? 'bg-sky-50/70 text-slate-900 font-semibold'
+                        ? 'bg-primary/10 text-slate-900 font-semibold'
                         : 'text-slate-700 hover:bg-slate-50 font-normal',
                     )}
                   >
@@ -205,7 +205,7 @@ export const MeetingsMultiSelect: React.FC<MeetingsMultiSelectProps> = ({
                         className={clsx(
                           'w-4 h-4 rounded-md border flex items-center justify-center shrink-0',
                           isChecked
-                            ? 'border-[#0284c7] bg-[#0284c7] text-white'
+                            ? 'border-primary bg-primary text-primary-foreground'
                             : 'border-slate-300 bg-white',
                         )}
                       >

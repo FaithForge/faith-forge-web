@@ -40,7 +40,7 @@ import {
 } from '@/libs/models';
 import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import { APP_ROUTES } from '@/config/routes';
-import { formatPhoneWithDialCode } from '@/libs/utils/text';
+import { formatPersonFullName, formatPhoneWithDialCode } from '@/libs/utils/text';
 import RegisterVolunteerModal from './components/RegisterVolunteerModal';
 import VolunteerDetailDrawer from './components/VolunteerDetailDrawer';
 import { VolunteerApplicationsTab } from './components/VolunteerApplicationsTab';
@@ -697,7 +697,7 @@ const VolunteerDirectoryView: React.FC = () => {
                 const user = volunteer.user;
                 const name =
                   user && (user.firstName || user.lastName)
-                    ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+                    ? formatPersonFullName(user.firstName, user.lastName)
                     : volunteerTerm;
                 const userAssignments =
                   assignmentsByVolunteerId[volunteer.id] ||

@@ -27,7 +27,7 @@ import { CellListSkeleton } from '@/components/ui/DetailSkeleton';
 import EndOfListFunnyBadge from '@/components/ui/EndOfListFunnyBadge';
 import { useInfiniteScroll } from '@/libs/hooks/useInfiniteScroll';
 import { formatDateTime } from '@/libs/utils/date';
-import { capitalizeWords } from '@/libs/utils/text';
+import { capitalizeWords, formatPersonFullName } from '@/libs/utils/text';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { useChurchTerm } from '@/libs/hooks/useTerm';
 import { FaWhatsapp } from 'react-icons/fa6';
@@ -460,7 +460,7 @@ export const VolunteerApplicationsTab: React.FC<VolunteerApplicationsTabProps> =
                             {applicantUser?.gender && <span className="text-slate-300">•</span>}
                             <a
                               href={`https://wa.me/${fullPhone}?text=${encodeURIComponent(
-                                `¡Hola ${firstName}! Te saluda ${
+                                `¡Hola ${capitalizeWords(firstName)}! Te saluda ${
                                   currentUser?.firstName
                                     ? capitalizeWords(currentUser.firstName.split(' ')[0])
                                     : 'el equipo de coordinación'
@@ -639,7 +639,7 @@ export const VolunteerApplicationsTab: React.FC<VolunteerApplicationsTabProps> =
         onOpenChange={(open) => !open && setApplicationToApprove(null)}
         title="Aprobar Postulación"
         description={`¿Estás seguro de aprobar a ${
-          applicationToApprove?.user?.firstName || 'este solicitante'
+          capitalizeWords(applicationToApprove?.user?.firstName) || 'este solicitante'
         } como ${
           roleLabelShort[applicationToApprove?.requestedRole as VolunteerRole] ||
           applicationToApprove?.requestedRole
@@ -661,7 +661,7 @@ export const VolunteerApplicationsTab: React.FC<VolunteerApplicationsTabProps> =
               <div>
                 <h3 className="text-base font-bold text-gray-900">Rechazar Postulación</h3>
                 <p className="text-xs text-gray-500">
-                  {applicationToReject.user?.firstName} {applicationToReject.user?.lastName}
+                  {formatPersonFullName(applicationToReject.user?.firstName, applicationToReject.user?.lastName)}
                 </p>
               </div>
             </div>

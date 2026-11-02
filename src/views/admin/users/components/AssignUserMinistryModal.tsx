@@ -28,6 +28,7 @@ import { useChurchTerm, getVolunteerRoleLabel } from '@/libs/hooks/useTerm';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { formatPersonFullName } from '@/libs/utils/text';
 import clsx from 'clsx';
 
 interface AssignUserMinistryModalProps {
@@ -357,7 +358,7 @@ export const AssignUserMinistryModal: React.FC<AssignUserMinistryModalProps> = (
               <p className="text-xs text-gray-500 mt-0.5">
                 {volunteerTerm}:{' '}
                 <span className="font-semibold text-gray-700">
-                  {user?.firstName} {user?.lastName}
+                  {formatPersonFullName(user?.firstName, user?.lastName)}
                 </span>
               </p>
             </div>

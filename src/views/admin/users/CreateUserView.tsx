@@ -33,6 +33,7 @@ import {
 import { resizeAndCropImageToSquare } from '@/libs/utils/image';
 import { validateTwoLastNames } from '@/libs/utils/validator';
 import { validatePhoneNumber } from '@/libs/utils/phone';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { useBackSwipeGuard } from '@/libs/hooks/useBackSwipeGuard';
 import { APP_ROUTES } from '@/config/routes';
 import dayjs from 'dayjs';
@@ -292,7 +293,7 @@ const CreateUserView: React.FC = () => {
             
             // Display confirmation screen with credentials and WhatsApp share button
             setCreatedAccountResult({
-              fullName: `${data.firstName.trim()} ${data.lastName.trim()}`,
+              fullName: formatPersonFullName(data.firstName, data.lastName),
               username: data.username.trim().toLowerCase(),
               password: data.password.trim(),
               email: data.email ? data.email.trim().toLowerCase() : undefined,

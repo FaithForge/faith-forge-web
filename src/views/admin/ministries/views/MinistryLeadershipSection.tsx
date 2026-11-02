@@ -242,7 +242,7 @@ export const MinistryLeadershipSection: React.FC<
           userId: item.volunteerId,
           user: {
             id: item.volunteerId,
-            firstName: item.fullName,
+            firstName: item.fullName ? capitalizeWords(item.fullName) : '',
             lastName: '',
             phone: item.phone,
             dialCodePhone: item.dialCodePhone,

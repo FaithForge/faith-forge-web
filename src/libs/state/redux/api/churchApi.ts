@@ -12,9 +12,11 @@ import {
   CreateChurchReportPayload,
   CreateVolunteerAttendancePayload,
   DeleteChurchStaffPayload,
+  DeleteVolunteerAssignmentPayload,
   GetCalendarMeetingsArgs,
   GetChurchMeetingDetailArgs,
   GetMinistryAnalyticsArgs,
+  GetMinistryAttendanceMatrixArgs,
   GetMinistryWorkspaceArgs,
   GetVolunteerAssignmentsPayload,
   GetVolunteerAttendancePayload,
@@ -31,8 +33,11 @@ import {
   IChurchStaff,
   IMinistry,
   IMinistryAnalyticsResponse,
+  IMinistryAttendanceMatrixResponse,
   IMinistryMeetingGroupAssignment,
   IMinistryWorkspaceOverview,
+  IRunCodeMigrationPayload,
+  IRunCodeMigrationResponse,
   ISendServiceRemindersResponse,
   IServiceReminderPreviewResponse,
   IVolunteer,
@@ -362,6 +367,23 @@ export const churchApi = baseApi.injectEndpoints({
       providesTags: (_result, _error, arg) => [
         { type: 'Ministry', id: `ANALYTICS_${arg.id}` },
         { type: 'VolunteerAttendance', id: 'LIST' },
+      ],
+    }),
+
+    getMinistryAttendanceMatrix: builder.query<
+      IMinistryAttendanceMatrixResponse,
+      GetMinistryAttendanceMatrixArgs
+    >({
+      query: ({ ministryId, ...params }) => ({
+        microservice: MicroserviceEnum.Church,
+        url: `/ministry/${ministryId}/attendance-matrix`,
+        method: HttpRequestMethod.GET,
+        params,
+      }),
+      providesTags: (_result, _error, arg) => [
+        { type: 'Ministry', id: `MATRIX_${arg.ministryId}` },
+        { type: 'VolunteerAttendance', id: 'LIST' },
+        { type: 'VolunteerAssignment', id: 'LIST' },
       ],
     }),
 
@@ -795,15 +817,25 @@ export const churchApi = baseApi.injectEndpoints({
       ],
     }),
 
-    deleteVolunteerAssignment: builder.mutation<void, string>({
-      query: (assignmentId) => ({
-        microservice: MicroserviceEnum.Church,
-        url: `/volunteer-assignment/${assignmentId}`,
-        method: HttpRequestMethod.DELETE,
-      }),
+    deleteVolunteerAssignment: builder.mutation<
+      void,
+      string | DeleteVolunteerAssignmentPayload
+    >({
+      query: (arg) => {
+        const assignmentId = typeof arg === 'string' ? arg : arg.assignmentId;
+        const endedReason =
+          typeof arg === 'string' ? undefined : arg.endedReason;
+        return {
+          microservice: MicroserviceEnum.Church,
+          url: `/volunteer-assignment/${assignmentId}`,
+          method: HttpRequestMethod.DELETE,
+          body: endedReason ? { endedReason } : undefined,
+        };
+      },
       invalidatesTags: [
         { type: 'Ministry', id: 'WORKSPACE' },
         { type: 'VolunteerAssignment', id: 'LIST' },
+        { type: 'VolunteerAttendance', id: 'LIST' },
       ],
     }),
 
@@ -855,6 +887,18 @@ export const churchApi = baseApi.injectEndpoints({
             ];
         }
       },
+    }),
+
+    runCodeMigration: builder.mutation<
+      IRunCodeMigrationResponse,
+      IRunCodeMigrationPayload
+    >({
+      query: (payload) => ({
+        microservice: MicroserviceEnum.Church,
+        url: '/admin/code-migrations/run',
+        method: HttpRequestMethod.POST,
+        data: payload,
+      }),
     }),
 
     getVolunteerAttendance: builder.query<
@@ -1182,6 +1226,8 @@ export const {
   useLazyGetMinistriesQuery,
   useGetMinistryAnalyticsQuery,
   useLazyGetMinistryAnalyticsQuery,
+  useGetMinistryAttendanceMatrixQuery,
+  useLazyGetMinistryAttendanceMatrixQuery,
   useGetCalendarMeetingsQuery,
   useLazyGetCalendarMeetingsQuery,
   useGetChurchMeetingDetailQuery,
@@ -1198,4 +1244,5 @@ export const {
   useGetMinistryServiceRemindersPreviewQuery,
   useLazyGetMinistryServiceRemindersPreviewQuery,
   useSendMinistryServiceRemindersMutation,
+  useRunCodeMigrationMutation,
 } = churchApi;

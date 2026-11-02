@@ -7,3 +7,4 @@ export * from './KidAttendanceReport';
 export * from './Ministry';
 export * from './Volunteer';
 export * from './ChurchReport';
+export * from './codeMigration';

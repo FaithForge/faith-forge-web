@@ -19,15 +19,16 @@ Vite 6 + React 18 SPA, TypeScript (strict), Tailwind CSS v4, React Router DOM 6 
 13. **Authorization must use semantic capabilities (`can()`, `<Can />`) or Router Dispatchers.** NEVER check raw operational roles (`isSupervisor`, `isAdmin`, `isAreaCoordinator`, `canManageChurchReports`) directly inside UI views, tabs, or action buttons. Use `can('capability:name')` from `usePermissions()` or `<Can capability="..." />`.
 14. **Role domain isolation and disabled roles.** Teacher role (`KID_CHURCH_USER`) is disabled in `ROLE_VISIBILITY_CONFIG` and must NEVER have active hub cards, fallback routing, or powers. Registration inventory/WhatsApp reports belong strictly to Registration Supervisors (`reports:send-service-report`). Kid Church attendance PDF and incident reports belong strictly to Group Coordinators (`reports:view-attendance-pdf`, `reports:manage`). Check-in schedule & overage limit bypasses belong strictly to Coordinators/Admins (`checkin:bypass-schedule`, `checkin:bypass-age-limit`).
 15. **Naming conventions: Views and Modals.** All routed view components in `src/views` MUST end with `View` (e.g. `KidChurchDashboardView`, `AdminDashboardView`), never `Page` or raw `Dashboard`. All dialogs, sheets, and overlay panels in `src/components/modal/` MUST be named `*Modal.tsx` (e.g. `SettingsModal`, `KidDetailsModal`), never `*Drawer`. Domain subcomponents belong in `components/` under their view folder without repetitive prefixes.
+16. **Never burn date format strings.** Always use shared constants from `@/libs/common-types/constants` (`DATE_FORMAT_ISO`, `DATE_FORMAT_DISPLAY`, `DATE_TIME_FORMAT_ISO`, `TIME_FORMAT_SHORT`). Never hardcode `'YYYY-MM-DD'` or `'DD/MM/YYYY'` across views or hooks.
 
 ## Read the matching skill BEFORE starting these tasks
 
-| Task | Read first |
-|---|---|
+| Task                                                             | Read first                                    |
+| ---------------------------------------------------------------- | --------------------------------------------- |
 | Fetching or mutating server data, touching a thunk or data slice | `.agents/skills/rtk-query-migration/SKILL.md` |
-| Any visible text, new view/modal/drawer, church/ministry terms | `.agents/skills/i18n-terminology/SKILL.md` |
-| Building UI: forms, icons, TopBar/layouts, mobile behavior | `.agents/skills/ui-consistency/SKILL.md` |
-| Finishing a task / preparing a commit (version bump + changelog) | `.agents/skills/release-changelog/SKILL.md` |
+| Any visible text, new view/modal/drawer, church/ministry terms   | `.agents/skills/i18n-terminology/SKILL.md`    |
+| Building UI: forms, icons, TopBar/layouts, mobile behavior       | `.agents/skills/ui-consistency/SKILL.md`      |
+| Finishing a task / preparing a commit (version bump + changelog) | `.agents/skills/release-changelog/SKILL.md`   |
 
 ## Code Style
 

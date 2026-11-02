@@ -12,7 +12,7 @@ import {
   GetVolunteers,
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { formatDateOnly } from '@/libs/utils/date';
-import { capitalizeWords, formatPhoneWithDialCode } from '@/libs/utils/text';
+import { capitalizeWords, formatPersonFullName, formatPhoneWithDialCode } from '@/libs/utils/text';
 import clsx from 'clsx';
 import {
   Award,
@@ -113,7 +113,7 @@ export const VolunteerDetailDrawer: React.FC<VolunteerDetailDrawerProps> = ({
   const user = volunteer?.user;
   const name =
     user && (user.firstName || user.lastName)
-      ? `${user.firstName ?? ''} ${user.lastName ?? ''}`.trim()
+      ? formatPersonFullName(user.firstName, user.lastName)
       : volunteerTerm;
 
   const handleOpenDelete = (asg: IVolunteerAssignment) => {

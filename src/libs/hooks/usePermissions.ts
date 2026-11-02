@@ -1,8 +1,13 @@
-import { useCallback, useMemo } from 'react';
-import { useAppSelector } from '@/libs/state/redux/hooks';
-import { AppRole, ChurchRole, ChurchStaffRole, UserRole } from '@/libs/utils/auth';
-import { AppCapability, hasCapability } from '@/libs/utils/auth/capabilities';
 import { VolunteerRole } from '@/libs/models/Volunteer';
+import { useAppSelector } from '@/libs/state/redux/hooks';
+import {
+  AppRole,
+  ChurchRole,
+  ChurchStaffRole,
+  UserRole,
+} from '@/libs/utils/auth';
+import { AppCapability, hasCapability } from '@/libs/utils/auth/capabilities';
+import { useCallback, useMemo } from 'react';
 
 /**
  * Hook to resolve unified roles and semantic permissions for the authenticated user.
@@ -18,7 +23,10 @@ export const usePermissions = () => {
     (state) => state.volunteerContextSlice.activeVolunteerRole,
   );
 
-  const userRoles = useMemo(() => (user?.roles as AppRole[]) || [], [user?.roles]);
+  const userRoles = useMemo(
+    () => (user?.roles as AppRole[]) || [],
+    [user?.roles],
+  );
 
   const activeRoles = useMemo(() => {
     if (currentRole) {
@@ -33,7 +41,8 @@ export const usePermissions = () => {
   );
 
   const hasVolunteerRole = useCallback(
-    (...roles: VolunteerRole[]) => !!activeVolunteerRole && roles.includes(activeVolunteerRole),
+    (...roles: VolunteerRole[]) =>
+      !!activeVolunteerRole && roles.includes(activeVolunteerRole),
     [activeVolunteerRole],
   );
 
@@ -58,18 +67,28 @@ export const usePermissions = () => {
     isExplicitServidor || isExplicitSupervisor || isExplicitGroupCoordinator;
 
   const {
+    activeCampusId,
+    campuses,
     activeGroupConfigId,
     activeGroupConfigName,
+    isSupportingGroup,
   } = useAppSelector((state) => state.volunteerContextSlice);
 
+  const currentCampusContext =
+    campuses.find((c) => c.id === activeCampusId) || campuses[0];
+  const availableGroups = currentCampusContext?.groups || [];
+
   const isApoyoGroup = Boolean(
+    !isSupportingGroup &&
     activeGroupConfigName?.toLowerCase().includes('apoyo'),
   );
 
   const hasAssignedGroup = Boolean(
-    activeGroupConfigId &&
+    (activeGroupConfigId &&
       activeGroupConfigId !== 'ADMIN_GROUP' &&
-      !isApoyoGroup,
+      !isApoyoGroup) ||
+    (isSupportingGroup &&
+      Boolean(activeGroupConfigId && activeGroupConfigId !== 'ADMIN_GROUP')),
   );
 
   const isAccountSuperAdmin = userRoles.includes(UserRole.SUPER_ADMIN);
@@ -78,16 +97,23 @@ export const usePermissions = () => {
     userRoles.includes(UserRole.ADMIN) ||
     userRoles.includes(ChurchStaffRole.CHURCH_ADMIN);
 
-  const isSuperAdmin = activeRoles.has(UserRole.SUPER_ADMIN) || (!isExplicitScopedRole && isAccountSuperAdmin);
+  const isSuperAdmin =
+    activeRoles.has(UserRole.SUPER_ADMIN) ||
+    (!isExplicitScopedRole && isAccountSuperAdmin);
   const isAdmin =
-    hasRole(UserRole.SUPER_ADMIN, UserRole.ADMIN, ChurchStaffRole.CHURCH_ADMIN) ||
+    hasRole(
+      UserRole.SUPER_ADMIN,
+      UserRole.ADMIN,
+      ChurchStaffRole.CHURCH_ADMIN,
+    ) ||
     (!isExplicitScopedRole && isAccountAdmin);
   const isStaff =
     isAdmin ||
     activeRoles.has(UserRole.STAFF) ||
     activeRoles.has(ChurchStaffRole.CHURCH_STAFF) ||
     (!isExplicitScopedRole &&
-      (userRoles.includes(UserRole.STAFF) || userRoles.includes(ChurchStaffRole.CHURCH_STAFF)));
+      (userRoles.includes(UserRole.STAFF) ||
+        userRoles.includes(ChurchStaffRole.CHURCH_STAFF)));
   const isMinistryAdmin =
     isAdmin ||
     activeRoles.has(ChurchRole.MINISTRY_ADMIN) ||
@@ -107,7 +133,12 @@ export const usePermissions = () => {
 
   // A user is classified as 'Apoyo' if they are an operational role without an assigned group,
   // or explicitly assigned to a support group / temporary ad-hoc grant.
-  const isApoyo = !isAdmin && !isAreaCoordinator && (!hasAssignedGroup || isApoyoGroup);
+  // When an auxiliary coordinator selects a supported group, isSupportingGroup is true.
+  const isApoyo =
+    !isAdmin &&
+    !isAreaCoordinator &&
+    (!hasAssignedGroup || isApoyoGroup) &&
+    !isSupportingGroup;
 
   const isGroupCoordinator =
     !isExplicitServidor &&
@@ -116,6 +147,19 @@ export const usePermissions = () => {
       isExplicitGroupCoordinator ||
       hasRole(ChurchRole.KID_CHURCH_GROUP_COORDINATOR) ||
       hasVolunteerRole(VolunteerRole.GROUP_COORDINATOR));
+
+  const hasFixedGroupAssignment = Boolean(
+    availableGroups.some(
+      (g) =>
+        g.groupRole === VolunteerRole.GROUP_COORDINATOR ||
+        g.areas?.some((a) => a.role === VolunteerRole.GROUP_COORDINATOR),
+    ),
+  );
+
+  const canSelectSupportGroup = Boolean(
+    (isGroupCoordinator || isExplicitGroupCoordinator || isAdmin) &&
+    !hasFixedGroupAssignment,
+  );
 
   const isSupervisor =
     !isExplicitServidor &&
@@ -136,7 +180,8 @@ export const usePermissions = () => {
         ChurchRole.KID_REGISTER_USER,
         ChurchRole.KID_CHURCH_USER,
         ChurchRole.KID_SECURITY_USER,
-      ) || hasVolunteerRole(VolunteerRole.VOLUNTEER)));
+      ) ||
+        hasVolunteerRole(VolunteerRole.VOLUNTEER)));
 
   const isKidChurchRole = useMemo(() => {
     if (currentRole) {
@@ -209,7 +254,10 @@ export const usePermissions = () => {
    */
   const canTakeVolunteerAttendance = useMemo(() => {
     if (isExplicitServidor || isApoyo) return false;
-    if (!hasAssignedGroup && !(isSuperAdmin && currentRole === UserRole.SUPER_ADMIN)) {
+    if (
+      !hasAssignedGroup &&
+      !(isSuperAdmin && currentRole === UserRole.SUPER_ADMIN)
+    ) {
       return false;
     }
 
@@ -352,6 +400,9 @@ export const usePermissions = () => {
     isExplicitSupervisor,
     isExplicitGroupCoordinator,
     isApoyo,
+    isSupportingGroup: Boolean(isSupportingGroup),
+    canSelectSupportGroup,
+    hasFixedGroupAssignment,
     hasAssignedGroup,
     isKidChurchRole,
     isKidRegistrationRole,
@@ -363,4 +414,3 @@ export const usePermissions = () => {
     can,
   };
 };
-

@@ -1,10 +1,10 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import {
   IVolunteerCampusContext,
   IVolunteerGroupConfigContext,
   VolunteerRole,
 } from '@/libs/models/Volunteer';
 import { AppRole } from '@/libs/utils/auth';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface VolunteerContextState {
   isChurchVolunteer: boolean;
@@ -20,6 +20,7 @@ export interface VolunteerContextState {
   activeMinistryName: string | null;
   activeMinistryType: string | null;
   isOnboardingCompleted: boolean;
+  isSupportingGroup?: boolean;
 }
 
 const initialState: VolunteerContextState = {
@@ -36,6 +37,7 @@ const initialState: VolunteerContextState = {
   activeMinistryName: null,
   activeMinistryType: null,
   isOnboardingCompleted: false,
+  isSupportingGroup: false,
 };
 
 export const volunteerContextSlice = createSlice({
@@ -83,15 +85,19 @@ export const volunteerContextSlice = createSlice({
       state.activeCampusId = action.payload.campusId;
       state.activeCampusName = action.payload.campusName;
       // Reset group when campus changes unless it still exists
-      const campus = state.campuses.find((c) => c.id === action.payload.campusId);
+      const campus = state.campuses.find(
+        (c) => c.id === action.payload.campusId,
+      );
       if (campus) {
         const stillHasGroup = campus.groups.some(
-          (g: IVolunteerGroupConfigContext) => g.id === state.activeGroupConfigId,
+          (g: IVolunteerGroupConfigContext) =>
+            g.id === state.activeGroupConfigId,
         );
         if (!stillHasGroup) {
           state.activeGroupConfigId = null;
           state.activeGroupConfigName = null;
           state.activeVolunteerRole = null;
+          state.isSupportingGroup = false;
         }
       }
     },
@@ -101,6 +107,7 @@ export const volunteerContextSlice = createSlice({
         groupConfigId: string;
         groupConfigName: string;
         role?: VolunteerRole | null;
+        isSupportingGroup?: boolean;
       }>,
     ) => {
       state.activeGroupConfigId = action.payload.groupConfigId;
@@ -108,6 +115,23 @@ export const volunteerContextSlice = createSlice({
       if (action.payload.role !== undefined) {
         state.activeVolunteerRole = action.payload.role;
       }
+      state.isSupportingGroup = Boolean(action.payload.isSupportingGroup);
+    },
+    setSupportedGroupConfig: (
+      state,
+      action: PayloadAction<{
+        groupConfigId: string;
+        groupConfigName: string;
+      }>,
+    ) => {
+      state.activeGroupConfigId = action.payload.groupConfigId;
+      state.activeGroupConfigName = action.payload.groupConfigName;
+      state.isSupportingGroup = true;
+    },
+    clearSupportedGroupConfig: (state) => {
+      state.activeGroupConfigId = null;
+      state.activeGroupConfigName = null;
+      state.isSupportingGroup = false;
     },
     setActiveVolunteerRole: (
       state,
@@ -142,6 +166,8 @@ export const {
   setUserMsRoles,
   setActiveCampus,
   setActiveGroupConfig,
+  setSupportedGroupConfig,
+  clearSupportedGroupConfig,
   setActiveVolunteerRole,
   setActiveMinistry,
   setOnboardingCompleted,

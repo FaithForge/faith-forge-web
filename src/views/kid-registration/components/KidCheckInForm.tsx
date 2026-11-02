@@ -3,6 +3,7 @@ import { AlertTriangle, UserPlus, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Select from '@/components/ui/Select';
 import Can from '@/components/auth/Can';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { FormattedRelation } from '../hooks/useKidCheckInData';
 
 interface KidCheckInFormProps {
@@ -95,9 +96,9 @@ export const KidCheckInForm: React.FC<KidCheckInFormProps> = ({
                 <div className="flex-1 min-w-0">
                   <p
                     className="font-bold text-xs text-gray-800 break-words leading-tight"
-                    title={`${rel.fullName} (${rel.relation})`}
+                    title={`${formatPersonFullName(rel.fullName)} (${rel.relation})`}
                   >
-                    {rel.fullName}{' '}
+                    {formatPersonFullName(rel.fullName)}{' '}
                     <span className="font-semibold text-gray-500 text-[11px]">({rel.relation})</span>
                   </p>
                   <div className="flex items-center gap-1.5 flex-wrap">

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { formatPersonFullName } from '@/libs/utils/text';
 import { AreaAttendanceBreakdown } from '../hooks/useMinistryServiceAttendance';
 
 interface MinistryAttendanceAreaBreakdownProps {
@@ -245,7 +246,7 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
                             {vol.photoUrl ? (
                               <img
                                 src={vol.photoUrl}
-                                alt={vol.fullName}
+                                alt={formatPersonFullName(vol.fullName)}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -255,7 +256,7 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
 
                           <div className="min-w-0">
                             <h4 className="text-xs font-bold text-slate-900 truncate">
-                              {vol.fullName}
+                              {formatPersonFullName(vol.fullName)}
                             </h4>
                             <div className="flex items-center gap-1.5 text-[10px] text-slate-500 mt-0.5">
                               <span>{vol.groupName}</span>

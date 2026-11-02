@@ -22,6 +22,7 @@ import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import PageHeader from '@/components/ui/PageHeader';
+import { formatPersonFullName } from '@/libs/utils/text';
 
 /**
  * View for Searching and Assigning Roles to Users.
@@ -209,7 +210,7 @@ const AssignUserRolesView: React.FC = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <h3 className="font-black text-lg text-gray-900 truncate">
-                      {foundUser.firstName} {foundUser.lastName}
+                      {formatPersonFullName(foundUser.firstName, foundUser.lastName)}
                     </h3>
                     <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
                       {foundUser.state || 'ACTIVO'}

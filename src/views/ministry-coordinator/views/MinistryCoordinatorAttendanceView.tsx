@@ -21,6 +21,7 @@ import {
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FaChild } from 'react-icons/fa6';
+import AttendanceMatrixNavigationTabs from '../components/AttendanceMatrixNavigationTabs';
 import { MinistryAttendanceAreaBreakdown } from '../components/MinistryAttendanceAreaBreakdown';
 import { MinistryAttendanceGeneralList } from '../components/MinistryAttendanceGeneralList';
 import { MinistryAttendanceStatsHeader } from '../components/MinistryAttendanceStatsHeader';
@@ -162,6 +163,9 @@ export const MinistryCoordinatorAttendanceView: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {/* Top Navigation Switcher: Por Servicio vs Matriz Multievento */}
+      <AttendanceMatrixNavigationTabs />
 
       {/* Date & Service Filter Controls */}
       <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-2xs space-y-3.5">

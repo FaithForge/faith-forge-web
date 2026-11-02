@@ -16,6 +16,7 @@ import Select from '@/components/ui/Select';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
+import { formatPersonFullName } from '@/libs/utils/text';
 import clsx from 'clsx';
 
 interface GrantTemporaryPermissionModalProps {
@@ -187,7 +188,7 @@ export const GrantTemporaryPermissionModal: React.FC<GrantTemporaryPermissionMod
               <p className="text-xs text-gray-500 mt-0.5">
                 Para:{' '}
                 <span className="font-semibold text-gray-700">
-                  {user?.firstName} {user?.lastName}
+                  {formatPersonFullName(user?.firstName, user?.lastName)}
                 </span>
               </p>
             </div>

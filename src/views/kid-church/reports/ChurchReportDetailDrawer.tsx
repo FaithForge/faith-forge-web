@@ -33,7 +33,7 @@ import {
   ReportType,
 } from '@/libs/models/ChurchReport';
 import { useGetKidQuery } from '@/libs/state/redux/api/kidChurchApi';
-import { formatPersonShortName } from '@/libs/utils/text';
+import { formatPersonFullName, formatPersonShortName } from '@/libs/utils/text';
 
 interface ChurchReportDetailDrawerProps {
   report: IChurchReport | null;
@@ -97,7 +97,7 @@ export const ChurchReportDetailDrawer: React.FC<ChurchReportDetailDrawerProps> =
       : null);
 
   const guardianFullName = matchedGuardian
-    ? formatPersonShortName(`${matchedGuardian.firstName} ${matchedGuardian.lastName}`.trim())
+    ? formatPersonShortName(matchedGuardian.firstName, matchedGuardian.lastName)
     : t('reports.guardian_call_fields.registered_guardian', {
         ns: 'kidChurch',
         defaultValue: 'Acudiente registrado',
@@ -207,7 +207,7 @@ export const ChurchReportDetailDrawer: React.FC<ChurchReportDetailDrawerProps> =
                   {t('reports.child_involved', { ns: 'kidChurch', defaultValue: 'Niño involucrado' })}
                 </span>
                 <h4 className="text-sm sm:text-base font-bold text-gray-900 truncate">
-                  {resolvedKidName || (fullKid ? `${fullKid.firstName} ${fullKid.lastName}` : 'Niño')}
+                  {resolvedKidName || (fullKid ? formatPersonFullName(fullKid.firstName, fullKid.lastName) : 'Niño')}
                 </h4>
               </div>
             </div>

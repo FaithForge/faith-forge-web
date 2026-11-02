@@ -1,4 +1,5 @@
 import DateCalendarPicker from '@/components/ui/DateCalendarPicker';
+import { DATE_FORMAT_ISO } from '@/libs/common-types/constants';
 import { formatDateOnly } from '@/libs/utils/date';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
@@ -57,13 +58,13 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
   const [specificDay, setSpecificDay] = useState(
     value.preset === 'DAY' && value.from
       ? value.from
-      : dayjs().format('YYYY-MM-DD'),
+      : dayjs().format(DATE_FORMAT_ISO),
   );
   const [customFrom, setCustomFrom] = useState(
-    value.from || dayjs().subtract(7, 'day').format('YYYY-MM-DD'),
+    value.from || dayjs().subtract(7, 'day').format(DATE_FORMAT_ISO),
   );
   const [customTo, setCustomTo] = useState(
-    value.to || dayjs().format('YYYY-MM-DD'),
+    value.to || dayjs().format(DATE_FORMAT_ISO),
   );
 
   const presets: { id: TemporalFilterPreset; label: string }[] = [
@@ -115,7 +116,7 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
             searchDate = searchDate.subtract(1, 'day');
             attempts += 1;
           }
-          targetDay = searchDate.format('YYYY-MM-DD');
+          targetDay = searchDate.format(DATE_FORMAT_ISO);
           setSpecificDay(targetDay);
         }
       }
@@ -143,8 +144,8 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
     setShowCustomInputs(false);
 
     if (preset === 'LAST_7_DAYS') {
-      const from = today.subtract(6, 'day').format('YYYY-MM-DD');
-      const to = today.format('YYYY-MM-DD');
+      const from = today.subtract(6, 'day').format(DATE_FORMAT_ISO);
+      const to = today.format(DATE_FORMAT_ISO);
       onChange({
         preset,
         from,
@@ -154,8 +155,8 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
         }),
       });
     } else if (preset === 'WEEK') {
-      const from = today.startOf('week').format('YYYY-MM-DD');
-      const to = today.endOf('week').format('YYYY-MM-DD');
+      const from = today.startOf('week').format(DATE_FORMAT_ISO);
+      const to = today.endOf('week').format(DATE_FORMAT_ISO);
       onChange({
         preset,
         from,
@@ -163,8 +164,8 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
         label: t('common:temporal.week', { defaultValue: 'Esta semana' }),
       });
     } else if (preset === 'MONTH') {
-      const from = today.startOf('month').format('YYYY-MM-DD');
-      const to = today.endOf('month').format('YYYY-MM-DD');
+      const from = today.startOf('month').format(DATE_FORMAT_ISO);
+      const to = today.endOf('month').format(DATE_FORMAT_ISO);
       onChange({
         preset,
         from,
@@ -172,8 +173,8 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
         label: today.format('MMMM YYYY'),
       });
     } else if (preset === 'CURRENT_YEAR') {
-      const from = today.startOf('year').format('YYYY-MM-DD');
-      const to = today.endOf('year').format('YYYY-MM-DD');
+      const from = today.startOf('year').format(DATE_FORMAT_ISO);
+      const to = today.endOf('year').format(DATE_FORMAT_ISO);
       onChange({
         preset,
         from,
@@ -182,8 +183,8 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
       });
     } else if (preset === 'LAST_YEAR') {
       const prevYear = today.subtract(1, 'year');
-      const from = prevYear.startOf('year').format('YYYY-MM-DD');
-      const to = prevYear.endOf('year').format('YYYY-MM-DD');
+      const from = prevYear.startOf('year').format(DATE_FORMAT_ISO);
+      const to = prevYear.endOf('year').format(DATE_FORMAT_ISO);
       onChange({
         preset,
         from,
@@ -207,7 +208,7 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
               className={clsx(
                 'px-3 py-1.5 rounded-xl text-xs font-semibold whitespace-nowrap transition-all shrink-0 outline-hidden',
                 isActive
-                  ? 'bg-[#0284c7] text-white shadow-xs scale-[1.02]'
+                  ? 'bg-primary text-primary-foreground shadow-xs scale-[1.02]'
                   : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200 hover:border-slate-300',
               )}
             >
@@ -219,10 +220,10 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
 
       {/* Date controls when DAY is selected: using custom calendar picker */}
       {showCustomInputs && value.preset === 'DAY' && (
-        <div className="p-3 bg-white rounded-2xl border border-sky-100 shadow-2xs space-y-2">
+        <div className="p-3 bg-white rounded-2xl border border-primary/20 shadow-2xs space-y-2">
           <div className="flex items-center justify-between text-xs font-bold text-slate-700">
             <span className="flex items-center gap-1.5">
-              <CalendarDays className="w-4 h-4 text-[#0284c7]" />
+              <CalendarDays className="w-4 h-4 text-primary" />
               {t('common:temporal.service_day', {
                 defaultValue: 'Día a consultar',
               })}
@@ -245,7 +246,7 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
             }}
             allowedDaysOfWeek={allowedDaysOfWeek}
             allowedDates={allowedDates}
-            maxDate={maxDate || dayjs().format('YYYY-MM-DD')}
+            maxDate={maxDate || dayjs().format(DATE_FORMAT_ISO)}
             minDate={minDate}
             helpText={
               allowedDaysOfWeek && allowedDaysOfWeek.length > 0
@@ -261,9 +262,9 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
 
       {/* Date controls when CUSTOM range is selected */}
       {showCustomInputs && value.preset === 'CUSTOM' && (
-        <div className="p-3 bg-white rounded-2xl border border-sky-100 shadow-2xs space-y-2">
+        <div className="p-3 bg-white rounded-2xl border border-primary/20 shadow-2xs space-y-2">
           <div className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-[#0284c7]" />
+            <Calendar className="w-3.5 h-3.5 text-primary" />
             <span>
               {t('common:temporal.custom_range', {
                 defaultValue: 'Rango personalizado',
@@ -288,7 +289,7 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
                 }}
                 allowedDaysOfWeek={allowedDaysOfWeek}
                 allowedDates={allowedDates}
-                maxDate={customTo || maxDate || dayjs().format('YYYY-MM-DD')}
+                maxDate={customTo || maxDate || dayjs().format(DATE_FORMAT_ISO)}
                 minDate={minDate}
               />
             </div>
@@ -310,7 +311,7 @@ export const TemporalFilterSelector: React.FC<TemporalFilterSelectorProps> = ({
                 allowedDaysOfWeek={allowedDaysOfWeek}
                 allowedDates={allowedDates}
                 minDate={customFrom || minDate}
-                maxDate={maxDate || dayjs().format('YYYY-MM-DD')}
+                maxDate={maxDate || dayjs().format(DATE_FORMAT_ISO)}
               />
             </div>
           </div>

@@ -14,6 +14,7 @@ import { generateKidAttendancePdf } from '@/services/pdf/iglekidsAttendancePdf';
 import { useModalBackClose } from '@/libs/hooks/useModalBackClose';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import { sortKidGroupsByAge } from '@/libs/utils/kidGroup';
+import { DATE_FORMAT_ISO } from '@/libs/common-types/constants';
 
 const DAYS_TO_NUM: Record<string, number> = {
   SUNDAY: 0,
@@ -94,8 +95,8 @@ const KidChurchReportModal: React.FC<KidChurchReportModalProps> = ({ open, onOpe
   const kidsModuleName = useKidsTerm('module_alias');
   const campusTerm = useChurchTerm('campus');
   const meetingTerm = useChurchTerm('meeting');
-  const todayStr = useMemo(() => dayjs().format('YYYY-MM-DD'), []);
-  const minDateStr = useMemo(() => dayjs().subtract(5, 'year').format('YYYY-MM-DD'), []);
+  const todayStr = useMemo(() => dayjs().format(DATE_FORMAT_ISO), []);
+  const minDateStr = useMemo(() => dayjs().subtract(5, 'year').format(DATE_FORMAT_ISO), []);
   const [selectedDate, setSelectedDate] = useState<string>(todayStr);
 
   const [isLoading, setIsLoading] = useState(false);
@@ -161,7 +162,7 @@ const KidChurchReportModal: React.FC<KidChurchReportModalProps> = ({ open, onOpe
           while (d.day() !== targetDayNum) {
             d = d.subtract(1, 'day');
           }
-          setSelectedDate(d.format('YYYY-MM-DD'));
+          setSelectedDate(d.format(DATE_FORMAT_ISO));
           return;
         }
       }
@@ -225,7 +226,7 @@ const KidChurchReportModal: React.FC<KidChurchReportModalProps> = ({ open, onOpe
         while (d.day() !== targetDayNum) {
           d = d.subtract(1, 'day');
         }
-        setSelectedDate(d.format('YYYY-MM-DD'));
+        setSelectedDate(d.format(DATE_FORMAT_ISO));
       }
     }
   };

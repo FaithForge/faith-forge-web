@@ -1,6 +1,7 @@
 import { HttpRequestMethod, MS } from '@/libs/common-types/global';
 import { IAttendanceReportData, IAttendanceReportAttendee, IAttendanceReportSummary } from '@/libs/models';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { formatPersonFullName } from '@/libs/utils/text';
 
 /**
  * Parameters to request attendance report details from the kid-church microservice.
@@ -163,11 +164,11 @@ export const generatePreviewAttendanceData = (params: IFetchAttendanceReportPara
       .filter((a) => a.medicalCondition?.hasCondition)
       .map((a) => ({
         kidId: a.kid.id,
-        kidFullName: `${a.kid.firstName} ${a.kid.lastName}`,
+        kidFullName: formatPersonFullName(a.kid.firstName, a.kid.lastName),
         groupName: a.group.name,
         conditionName: a.medicalCondition?.name || 'Condición Médica',
         description: a.medicalCondition?.description || '',
-        guardianName: `${a.guardian.fullName} (${a.guardian.relation})`,
+        guardianName: `${formatPersonFullName(a.guardian.fullName)} (${a.guardian.relation})`,
         guardianPhone: a.guardian.phone,
       })),
   };
@@ -275,11 +276,11 @@ export const getAttendanceReportDetail = async (
               .filter((a) => a.medicalCondition?.hasCondition)
               .map((a) => ({
                 kidId: a.kid.id,
-                kidFullName: `${a.kid.firstName} ${a.kid.lastName}`,
+                kidFullName: formatPersonFullName(a.kid.firstName, a.kid.lastName),
                 groupName: a.group.name,
                 conditionName: a.medicalCondition?.name || 'Condición Médica',
                 description: a.medicalCondition?.description || '',
-                guardianName: `${a.guardian.fullName} (${a.guardian.relation})`,
+                guardianName: `${formatPersonFullName(a.guardian.fullName)} (${a.guardian.relation})`,
                 guardianPhone: a.guardian.phone,
               })),
       };

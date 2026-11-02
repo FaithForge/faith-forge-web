@@ -39,6 +39,8 @@
     "printers_management_desc": "Configura y gestiona las impresoras térmicas asignadas por {{campus}} para check-in infantil.",
     "system_cat": "Sistema",
     "system_cat_desc": "Tareas de mantenimiento, optimización y utilidades del sistema.",
+    "system_operations_title": "Operaciones del Sistema",
+    "system_operations_desc": "Mantenimiento operativo, borrado segmentado de caché y ejecución controlada de migraciones de código.",
     "terminology_title": "Vocabulario & Reglas",
     "terminology_desc": "Personaliza los nombres de {{meetings}}, {{campuses}}, roles y áreas según los conceptos de tu congregación.",
     "clear_cache_title": "Borrar Caché",
@@ -746,5 +748,84 @@
     "history_badge_closed": "Finalizado",
     "period_range": "{{start}} — {{end}}",
     "ongoing": "Presente"
+  },
+  "system_operations": {
+    "header_title": "Operaciones del Sistema",
+    "header_subtitle": "Herramientas de mantenimiento técnico, migraciones de código y control de memoria caché.",
+    "badge": "Mantenimiento & Operaciones",
+    "tabs": {
+      "migrations": "Migraciones de Código",
+      "cache": "Gestión de Caché"
+    },
+    "migrations": {
+      "title": "Ejecutor de Migraciones de Código",
+      "subtitle": "Ejecuta migraciones backend registradas en los microservicios con trazabilidad y diagnóstico en tiempo real.",
+      "cheat_sheet_title": "Migraciones del Monorepo",
+      "cheat_sheet_subtitle": "Selecciona una migración conocida para prellenar los parámetros al instante:",
+      "custom_migration_hint": "O ingresa manualmente cualquier nombre de migración:",
+      "cheat_sheet": {
+        "church_decouple_desc": "Desacopla IDs de miembros de iglesia de los IDs de usuario.",
+        "user_sync_desc": "Sincroniza usuarios con documento a miembros de iglesia.",
+        "kid_church_migrate_desc": "Crea y vincula usuarios para registros legacy de niños."
+      },
+      "form": {
+        "microservice_label": "Microservicio Destino",
+        "microservice_placeholder": "Selecciona un microservicio",
+        "migration_name_label": "Nombre de la Migración",
+        "migration_name_placeholder": "ej. MigrateExistingKidsToUsers1792100001000",
+        "force_label": "Forzar re-ejecución (force: true)",
+        "force_hint": "Habilita este parámetro solo si deseas volver a procesar una migración que ya fue completada exitosamente.",
+        "submit_btn": "Ejecutar Migración",
+        "running_btn": "Ejecutando..."
+      },
+      "confirm": {
+        "title": "¿Ejecutar Migración de Código?",
+        "desc": "Se ejecutará '{{name}}' en el microservicio '{{microservice}}'. Esta operación aplicará cambios directamente en la base de datos.",
+        "force_warning": "ADVERTENCIA: Activaste la opción de forzar re-ejecución. Esto re-procesará datos ya migrados.",
+        "confirm_btn": "Sí, ejecutar ahora",
+        "cancel_btn": "Cancelar"
+      },
+      "results": {
+        "title": "Resultado de la Ejecución",
+        "status_already_completed": "Ya completada anteriormente",
+        "status_already_completed_hint": "Esta migración ya se ejecutó con éxito y no fue necesario repetirla.",
+        "status_executed": "Ejecutada exitosamente",
+        "status_not_found": "Migración no encontrada",
+        "status_failed": "Error en la ejecución",
+        "duration": "Duración",
+        "executed_at": "Fecha de ejecución",
+        "microservice": "Microservicio",
+        "available_migrations": "Migraciones disponibles registradas:",
+        "error_details": "Detalle técnico del error:",
+        "force_retry_btn": "Cargar y Forzar Re-ejecución"
+      },
+      "history": {
+        "title": "Historial de esta Sesión",
+        "empty": "No hay ejecuciones registradas en esta sesión.",
+        "clear_history": "Limpiar historial"
+      },
+      "notifications": {
+        "started": "Ejecutando migración...",
+        "executed_success": "Migración ejecutada con éxito",
+        "already_completed": "La migración ya había sido completada previamente",
+        "not_found": "La migración no existe en el microservicio seleccionado",
+        "failed": "Ocurrió un fallo al ejecutar la migración",
+        "validation_error": "Por favor completa el microservicio y el nombre de la migración"
+      }
+    },
+    "cache": {
+      "title": "Gestión de Memoria Caché",
+      "subtitle": "Purga datos obsoletos de memoria local, HTTP client y Redux por secciones o para todo el sistema.",
+      "printers_title": "Impresoras Térmicas",
+      "printers_desc": "Configuraciones Bluetooth, red y estados en memoria de impresoras.",
+      "services_title": "{{meetings}} y {{campuses}}",
+      "services_desc": "Catálogos de cultos, sedes, áreas y asignaciones de servidores.",
+      "registrations_title": "Registros y Asistencias de Niños",
+      "registrations_desc": "Salones de edad, condiciones médicas y acudientes registrados.",
+      "all_title": "Limpieza Total del Sistema",
+      "all_desc": "Invalida simultáneamente todos los catálogos y cachés en memoria.",
+      "clean_btn": "Limpiar",
+      "clean_all_btn": "Limpiar Todo el Sistema"
+    }
   }
 }

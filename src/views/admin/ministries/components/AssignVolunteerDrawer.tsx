@@ -28,6 +28,7 @@ import {
 } from '@/libs/state/redux/thunks/church/volunteer.thunk';
 import { GetUsers } from '@/libs/state/redux/thunks/user/user.thunk';
 import { microserviceApiRequest } from '@/libs/utils/http';
+import { formatPersonFullName } from '@/libs/utils/text';
 import clsx from 'clsx';
 import {
   Award,
@@ -582,7 +583,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                   {selectedUser.photoUrl ? (
                     <img
                       src={selectedUser.photoUrl}
-                      alt={selectedUser.firstName}
+                      alt={formatPersonFullName(selectedUser.firstName, selectedUser.lastName)}
                       className="w-full h-full object-cover"
                     />
                   ) : (
@@ -591,7 +592,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                 </div>
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-gray-900 truncate">
-                    {selectedUser.firstName} {selectedUser.lastName}
+                    {formatPersonFullName(selectedUser.firstName, selectedUser.lastName)}
                   </p>
                   <p className="text-xs text-gray-500">
                     Doc: {selectedUser.nationalId || 'S/N'} • Tel:{' '}
@@ -643,7 +644,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                           {user.photoUrl ? (
                             <img
                               src={user.photoUrl}
-                              alt={user.firstName}
+                              alt={formatPersonFullName(user.firstName, user.lastName)}
                               className="w-full h-full object-cover rounded-full"
                             />
                           ) : (
@@ -652,7 +653,7 @@ export const AssignVolunteerDrawer: React.FC<AssignVolunteerDrawerProps> = ({
                         </div>
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-gray-900 truncate">
-                            {user.firstName} {user.lastName}
+                            {formatPersonFullName(user.firstName, user.lastName)}
                           </p>
                           <p className="text-[11px] text-gray-500 truncate">
                             Doc: {user.nationalId || 'S/N'}

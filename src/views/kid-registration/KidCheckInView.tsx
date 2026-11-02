@@ -24,7 +24,7 @@ import { usePermissions } from '@/libs/hooks/usePermissions';
 import { useChurchMeetingStatus } from '@/libs/hooks/useChurchMeetingStatus';
 import { useKidsTerm } from '@/libs/hooks/useTerm';
 import { KID_AGE_COPY } from '@/libs/common-types/constants';
-import { capitalizeWords } from '@/libs/utils/text';
+import { capitalizeWords, formatPersonFullName } from '@/libs/utils/text';
 import { APP_ROUTES } from '@/config/routes';
 import { isFeatureEnabled } from '@/config/features';
 
@@ -392,7 +392,7 @@ const KidCheckInView: React.FC = () => {
           if (!open) setGuardianRelationToDelete(null);
         }}
         title={`¿Eliminar relación de ${guardianTerm.toLowerCase()}?`}
-        description={`¿Estás seguro de que deseas desvincular a ${guardianRelationToDelete?.fullName || `este(a) ${guardianTerm.toLowerCase()}`} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}
+        description={`¿Estás seguro de que deseas desvincular a ${formatPersonFullName(guardianRelationToDelete?.fullName) || `este(a) ${guardianTerm.toLowerCase()}`} del niño? Esta acción eliminará la relación pero mantendrá el historial de registros.`}
         confirmText="Sí, eliminar"
         cancelText={t('common:actions.cancel')}
         type="danger"

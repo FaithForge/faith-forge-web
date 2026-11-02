@@ -36,7 +36,10 @@ export type AppCapability =
   | 'platform:manage-churches'
   | 'church:manage-settings'
   // Recordatorios de Servicio (Experimental Admin)
-  | 'admin:send-service-reminders';
+  | 'admin:send-service-reminders'
+  // Operaciones Técnicas y Mantenimiento de Sistema
+  | 'admin:manage-system-operations'
+  | 'admin:run-code-migrations';
 
 /**
  * Contexto mínimo necesario para resolver capabilities.
@@ -123,6 +126,10 @@ export const hasCapability = (cap: AppCapability, ctx: CapabilityContext): boole
       return ctx.isSuperAdmin || ctx.isAdmin;
 
     case 'admin:send-service-reminders':
+      return ctx.isSuperAdmin || ctx.isAdmin;
+
+    case 'admin:manage-system-operations':
+    case 'admin:run-code-migrations':
       return ctx.isSuperAdmin || ctx.isAdmin;
 
     default:

@@ -269,7 +269,7 @@ export const KidSelector: React.FC<KidSelectorProps> = ({
                       >
                         <User size={12} className={isCheckInGuardian ? 'text-emerald-600' : 'text-gray-500'} />
                         <span>
-                          {formatPersonShortName(`${g.firstName} ${g.lastName}`)} ({relationLabel})
+                          {formatPersonShortName(g.firstName, g.lastName)} ({relationLabel})
                         </span>
                         {g.phone && (
                           <span className="text-[11px] text-gray-500 font-normal">

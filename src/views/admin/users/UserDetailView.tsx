@@ -39,7 +39,7 @@ import {
 } from '@/libs/state/redux/thunks/user/user.thunk';
 import { ALL_SYSTEM_ROLES_METADATA, UserRole } from '@/libs/utils/auth';
 import { formatDateOnly, toDateOnlyInputValue } from '@/libs/utils/date';
-import { capitalizeWords } from '@/libs/utils/text';
+import { capitalizeWords, formatPersonFullName } from '@/libs/utils/text';
 import clsx from 'clsx';
 import dayjs from 'dayjs';
 import 'dayjs/locale/es';
@@ -1368,8 +1368,7 @@ const UserDetailView: React.FC = () => {
                                     <span>
                                       • Otorgado por:{' '}
                                       <span className="font-medium">
-                                        {grant.grantedByUser.firstName}{' '}
-                                        {grant.grantedByUser.lastName}
+                                        {formatPersonFullName(grant.grantedByUser.firstName, grant.grantedByUser.lastName)}
                                       </span>
                                     </span>
                                   )}
@@ -1448,7 +1447,7 @@ const UserDetailView: React.FC = () => {
         open={showDeleteAssignmentModal}
         onOpenChange={setShowDeleteAssignmentModal}
         title="¿Eliminar asignación ministerial?"
-        description={`¿Estás seguro de que deseas eliminar esta asignación de servicio para ${user?.firstName || ''} ${user?.lastName || ''}? Esta acción no se puede deshacer.`}
+        description={`¿Estás seguro de que deseas eliminar esta asignación de servicio para ${formatPersonFullName(user?.firstName, user?.lastName)}? Esta acción no se puede deshacer.`}
         confirmText="Sí, eliminar asignación"
         cancelText="Cancelar"
         type="danger"
@@ -1460,7 +1459,7 @@ const UserDetailView: React.FC = () => {
         open={showRevokeGrantModal}
         onOpenChange={setShowRevokeGrantModal}
         title="¿Revocar permiso temporal?"
-        description={`¿Estás seguro de que deseas revocar inmediatamente este permiso temporal concedido a ${user?.firstName || ''} ${user?.lastName || ''}? Perderá los accesos asociados de inmediato.`}
+        description={`¿Estás seguro de que deseas revocar inmediatamente este permiso temporal concedido a ${formatPersonFullName(user?.firstName, user?.lastName)}? Perderá los accesos asociados de inmediato.`}
         confirmText="Sí, revocar permiso"
         cancelText="Cancelar"
         type="danger"
@@ -1496,7 +1495,7 @@ const UserDetailView: React.FC = () => {
         open={showDeleteRoleModal}
         onOpenChange={setShowDeleteRoleModal}
         title={`¿Eliminar rol "${roleToDeleteMeta?.name || roleToDelete}"?`}
-        description={`¿Estás seguro de que deseas revocar el rol "${roleToDeleteMeta?.name || roleToDelete}" a ${user?.firstName || ''} ${user?.lastName || ''}? El usuario perderá de inmediato los accesos y permisos asociados a este rol en la plataforma.`}
+        description={`¿Estás seguro de que deseas revocar el rol "${roleToDeleteMeta?.name || roleToDelete}" a ${formatPersonFullName(user?.firstName, user?.lastName)}? El usuario perderá de inmediato los accesos y permisos asociados a este rol en la plataforma.`}
         confirmText="Sí, eliminar rol"
         cancelText="Cancelar"
         type="danger"
@@ -1525,7 +1524,7 @@ const UserDetailView: React.FC = () => {
               />
             </div>
             <h4 className="font-black text-gray-900 text-base text-center">
-              {user.firstName} {user.lastName}
+              {formatPersonFullName(user.firstName, user.lastName)}
             </h4>
             <p className="text-xs text-gray-500 mt-0.5">
               {user.nationalIdType || 'CC'}: {user.nationalId}

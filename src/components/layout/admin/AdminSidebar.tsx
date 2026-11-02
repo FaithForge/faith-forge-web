@@ -12,6 +12,7 @@ import {
   UserPlus,
   Sparkles,
   RotateCcw,
+  SlidersHorizontal,
   ChevronLeft,
   ChevronRight,
   LayoutGrid,
@@ -296,6 +297,36 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
             </h2>
           )}
           <div className="space-y-0.5">
+            <NavLink
+              to={APP_ROUTES.admin.systemOperations}
+              onClick={handleNavClick}
+              title={collapsed && !isMobileDrawer ? 'Operaciones del Sistema' : undefined}
+              className={clsx(
+                'group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150',
+                location.pathname.startsWith(APP_ROUTES.admin.systemOperations)
+                  ? 'bg-indigo-50/70 text-indigo-700 font-bold shadow-2xs'
+                  : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900',
+                collapsed && !isMobileDrawer && 'justify-center px-0'
+              )}
+            >
+              <div
+                className={clsx(
+                  'w-8 h-8 rounded-lg flex items-center justify-center shrink-0 transition-colors',
+                  location.pathname.startsWith(APP_ROUTES.admin.systemOperations)
+                    ? 'text-indigo-600'
+                    : 'text-slate-400 group-hover:text-slate-700'
+                )}
+              >
+                <SlidersHorizontal size={18} />
+              </div>
+              {(!collapsed || isMobileDrawer) && (
+                <span className="truncate flex-1">Operaciones del Sistema</span>
+              )}
+              {(!collapsed || isMobileDrawer) && location.pathname.startsWith(APP_ROUTES.admin.systemOperations) && (
+                <span className="w-1.5 h-1.5 rounded-full bg-indigo-600 shrink-0 ml-auto" />
+              )}
+            </NavLink>
+
             <button
               type="button"
               onClick={() => {
@@ -313,26 +344,6 @@ export const AdminSidebar: React.FC<AdminSidebarProps> = ({
               </div>
               {(!collapsed || isMobileDrawer) && (
                 <span className="truncate flex-1 text-left">Vocabulario & Reglas</span>
-              )}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => {
-                handleNavClick();
-                onOpenClearCache();
-              }}
-              title={collapsed && !isMobileDrawer ? 'Borrar Caché' : undefined}
-              className={clsx(
-                'w-full group flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100/80 hover:text-slate-900 transition-colors cursor-pointer',
-                collapsed && !isMobileDrawer && 'justify-center px-0'
-              )}
-            >
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 text-slate-400 group-hover:text-slate-700">
-                <RotateCcw size={18} />
-              </div>
-              {(!collapsed || isMobileDrawer) && (
-                <span className="truncate flex-1 text-left">Borrar Caché</span>
               )}
             </button>
           </div>

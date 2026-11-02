@@ -18,6 +18,7 @@ import {
 } from '@/libs/state/redux/api/churchApi';
 import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { setActiveMinistry } from '@/libs/state/redux/slices/church/volunteerContext.slice';
+import { formatPersonFullName } from '@/libs/utils/text';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -373,7 +374,8 @@ export const useMinistryServiceAttendance = () => {
         asg.user;
       const firstName = user?.firstName || '';
       const lastName = user?.lastName || '';
-      const fullName = `${firstName} ${lastName}`.trim() || 'Servidor';
+      const fullName =
+        formatPersonFullName(firstName, lastName) || 'Servidor';
 
       const isGroupCoordinator = asg.role === VolunteerRole.GROUP_COORDINATOR;
       const isCoordinatorRole =

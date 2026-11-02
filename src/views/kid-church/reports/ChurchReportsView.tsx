@@ -236,11 +236,11 @@ export const ChurchReportsView: React.FC = () => {
     const map: Record<string, string> = {};
     if (kidsResponse?.data) {
       kidsResponse.data.forEach((k) => {
-        map[k.id] = formatPersonShortName(`${k.firstName} ${k.lastName}`);
+        map[k.id] = formatPersonShortName(k.firstName, k.lastName);
       });
     }
     attendanceKids.forEach((k) => {
-      map[k.id] = formatPersonShortName(`${k.firstName} ${k.lastName}`);
+      map[k.id] = formatPersonShortName(k.firstName, k.lastName);
     });
     return map;
   }, [kidsResponse, attendanceKids]);
@@ -251,7 +251,8 @@ export const ChurchReportsView: React.FC = () => {
       const u = att.volunteerAssignment?.user;
       if (u) {
         map[att.volunteerAssignmentId || att.id] = formatPersonShortName(
-          `${u.firstName || ''} ${u.lastName || ''}`.trim(),
+          u.firstName,
+          u.lastName,
         );
       }
     });
@@ -281,7 +282,7 @@ export const ChurchReportsView: React.FC = () => {
 
     const matchedGuardian = callDetails?.guardianId ? guardiansMap[callDetails.guardianId] : null;
     const guardianName = matchedGuardian
-      ? formatPersonShortName(`${matchedGuardian.firstName} ${matchedGuardian.lastName}`.trim())
+      ? formatPersonShortName(matchedGuardian.firstName, matchedGuardian.lastName)
       : null;
     const guardianRel = callDetails?.guardianRelationship || (matchedGuardian ? matchedGuardian.relation : '');
 
