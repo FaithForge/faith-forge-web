@@ -1,6 +1,5 @@
 import { VolunteerAttendanceStatus } from '@/libs/models';
 import clsx from 'clsx';
-import dayjs from 'dayjs';
 import {
   AlertCircle,
   CheckCircle2,
@@ -10,6 +9,7 @@ import {
   HelpCircle,
   Layers,
   Minus,
+  Users,
 } from 'lucide-react';
 import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -136,7 +136,11 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
             >
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-10 h-10 rounded-2xl bg-sky-50 text-[#0284c7] flex items-center justify-center shrink-0 border border-sky-100 shadow-2xs">
-                  <Layers className="w-5 h-5" />
+                  {area.areaId === 'COORDINATORS' ? (
+                    <Users className="w-5 h-5" />
+                  ) : (
+                    <Layers className="w-5 h-5" />
+                  )}
                 </div>
 
                 <div className="min-w-0">
@@ -157,6 +161,15 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
                         <span>•</span>
                         <span className="font-semibold text-rose-600">
                           {area.unexcused} faltas
+                        </span>
+                      </>
+                    )}
+                    {area.exempt > 0 && (
+                      <>
+                        <span>•</span>
+                        <span className="font-semibold text-slate-600">
+                          {area.exempt}{' '}
+                          {area.exempt === 1 ? 'exento' : 'exentos'}
                         </span>
                       </>
                     )}
@@ -296,12 +309,6 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
                             <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-medium bg-slate-100 text-slate-500">
                               <Clock className="w-3 h-3" />
                               <span>Sin marcar</span>
-                            </span>
-                          )}
-
-                          {vol.attendanceTakeDate && (
-                            <span className="text-[9px] text-slate-400 block mt-0.5">
-                              {dayjs(vol.attendanceTakeDate).format('hh:mm A')}
                             </span>
                           )}
                         </div>

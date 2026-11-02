@@ -34,11 +34,13 @@
     "filter_attended": "Asistieron",
     "filter_unexcused": "Inasistencias",
     "filter_excused": "Excusados",
+    "filter_exempt": "Exentos",
     "filter_pending": "Pendientes",
     "kpi_total_scheduled": "Convocados",
     "kpi_attended": "Asistieron",
     "kpi_unexcused": "Inasistencias",
     "kpi_excused": "Excusados",
+    "kpi_exempt": "Exentos",
     "kpi_pending": "Pendientes",
     "attendance_not_taken_title": "Asistencia aún no tomada",
     "attendance_not_taken_desc": "Aún no se han registrado marcas de asistencia para este servicio.",
@@ -49,6 +51,7 @@
     "quick_custom_date": "Elegir fecha",
     "role_supervisor": "Supervisor",
     "role_coordinator": "Coordinador",
-    "role_volunteer": "Servidor"
+    "role_volunteer": "Servidor",
+    "area_coordinators": "Coordinadores"
   }
 }

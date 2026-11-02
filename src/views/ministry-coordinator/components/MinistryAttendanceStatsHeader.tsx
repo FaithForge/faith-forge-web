@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   Clock,
   HelpCircle,
+  Minus,
   Users,
 } from 'lucide-react';
 import React from 'react';
@@ -18,6 +19,7 @@ interface MinistryAttendanceStatsHeaderProps {
     attended: number;
     unexcused: number;
     excused: number;
+    exempt?: number;
     pending: number;
     attendancePercent: number;
   };
@@ -52,11 +54,12 @@ export const MinistryAttendanceStatsHeader: React.FC<
     attended,
     unexcused,
     excused,
+    exempt = 0,
     pending,
     attendancePercent,
   } = metrics;
 
-  const totalCalculated = attended + unexcused + excused + pending;
+  const totalCalculated = attended + unexcused + excused + exempt + pending;
   const denominator = totalCalculated > 0 ? totalCalculated : totalScheduled;
 
   return (
@@ -114,7 +117,7 @@ export const MinistryAttendanceStatsHeader: React.FC<
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {/* Total Scheduled */}
         <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -209,6 +212,28 @@ export const MinistryAttendanceStatsHeader: React.FC<
             </span>
           </div>
         </div>
+
+        {/* Exempt */}
+        <div className="p-3.5 sm:p-4 rounded-2xl border border-slate-200/80 bg-slate-50/50 flex flex-col justify-between">
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] font-bold text-slate-600 block">
+              {t('hub:attendance_report.kpi_exempt', {
+                defaultValue: 'Exentos',
+              })}
+            </span>
+            <div className="w-7 h-7 rounded-xl bg-slate-200 text-slate-700 flex items-center justify-center">
+              <Minus className="w-3.5 h-3.5" />
+            </div>
+          </div>
+          <div className="mt-2">
+            <span className="text-xl sm:text-2xl font-black text-slate-700 block leading-tight">
+              {exempt}
+            </span>
+            <span className="text-[10px] text-slate-400 font-medium mt-0.5 block">
+              No aplica / Dispensa
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Progress Distribution Bar */}
@@ -231,6 +256,12 @@ export const MinistryAttendanceStatsHeader: React.FC<
                 <span className="inline-flex items-center gap-1 text-amber-700 font-bold">
                   <span className="w-2 h-2 rounded-full bg-amber-500" />
                   {excused} Excusas
+                </span>
+              )}
+              {exempt > 0 && (
+                <span className="inline-flex items-center gap-1 text-slate-600 font-bold">
+                  <span className="w-2 h-2 rounded-full bg-slate-400" />
+                  {exempt} Exentos
                 </span>
               )}
               {pending > 0 && (
@@ -262,6 +293,13 @@ export const MinistryAttendanceStatsHeader: React.FC<
                 style={{ width: `${(unexcused / denominator) * 100}%` }}
                 className="bg-rose-500 h-full transition-all"
                 title={`Inasistencias: ${unexcused}`}
+              />
+            )}
+            {exempt > 0 && (
+              <div
+                style={{ width: `${(exempt / denominator) * 100}%` }}
+                className="bg-slate-400 h-full transition-all"
+                title={`Exentos: ${exempt}`}
               />
             )}
             {pending > 0 && (

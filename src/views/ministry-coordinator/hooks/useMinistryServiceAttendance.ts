@@ -20,6 +20,7 @@ import { useAppDispatch, useAppSelector } from '@/libs/state/redux/hooks';
 import { setActiveMinistry } from '@/libs/state/redux/slices/church/volunteerContext.slice';
 import dayjs from 'dayjs';
 import { useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 const DAYJS_TO_DAYS: Record<number, Days> = {
   0: Days.SUNDAY,
@@ -56,6 +57,7 @@ export interface AreaAttendanceBreakdown {
   attended: number;
   unexcused: number;
   excused: number;
+  exempt: number;
   pending: number;
   attendancePercent: number;
   volunteers: EnrichedVolunteerAttendance[];
@@ -69,6 +71,7 @@ export interface AreaAttendanceBreakdown {
  * @returns {object} State, query results, computed metrics, and control setters.
  */
 export const useMinistryServiceAttendance = () => {
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const { isAdmin } = usePermissions();
 
@@ -372,10 +375,26 @@ export const useMinistryServiceAttendance = () => {
       const lastName = user?.lastName || '';
       const fullName = `${firstName} ${lastName}`.trim() || 'Servidor';
 
+      const isGroupCoordinator = asg.role === VolunteerRole.GROUP_COORDINATOR;
+      const isCoordinatorRole =
+        isGroupCoordinator ||
+        asg.role === VolunteerRole.AREA_GENERAL_COORDINATOR ||
+        asg.role === VolunteerRole.MINISTRY_GENERAL_COORDINATOR;
+
+      const coordinatorsLabel = t('hub:attendance_report.area_coordinators', {
+        defaultValue: 'Coordinadores',
+      });
+
       const area = asg.serviceAreaGroup?.ministryArea || asg.ministryArea;
-      const areaId =
-        area?.id || asg.ministryAreaId || asg.serviceAreaGroupId || 'NO_AREA';
-      const areaName = area?.name || 'General';
+      const areaId = isGroupCoordinator
+        ? 'COORDINATORS'
+        : area?.id ||
+          asg.ministryAreaId ||
+          asg.serviceAreaGroupId ||
+          (isCoordinatorRole ? 'COORDINATORS' : 'COORDINATORS');
+      const areaName = isGroupCoordinator
+        ? coordinatorsLabel
+        : area?.name || coordinatorsLabel;
 
       const group =
         asg.serviceAreaGroup?.ministryGroupConfig || asg.ministryGroupConfig;
@@ -419,11 +438,13 @@ export const useMinistryServiceAttendance = () => {
       });
     }
 
-    // Sort: scheduled first, then by area and full name
+    // Sort: scheduled first, then coordinators first, then by area and full name
     return list.sort((a, b) => {
       if (a.isScheduled !== b.isScheduled) {
         return a.isScheduled ? -1 : 1;
       }
+      if (a.areaId === 'COORDINATORS' && b.areaId !== 'COORDINATORS') return -1;
+      if (b.areaId === 'COORDINATORS' && a.areaId !== 'COORDINATORS') return 1;
       const areaCompare = a.areaName.localeCompare(b.areaName);
       if (areaCompare !== 0) return areaCompare;
       return a.fullName.localeCompare(b.fullName);
@@ -433,6 +454,7 @@ export const useMinistryServiceAttendance = () => {
     scheduledGroupIds,
     attendanceMap,
     recordedAttendances,
+    t,
   ]);
 
   // Determine whether attendance has been taken for this service/date
@@ -444,6 +466,7 @@ export const useMinistryServiceAttendance = () => {
     let attended = 0;
     let unexcused = 0;
     let excused = 0;
+    let exempt = 0;
     let pending = 0;
 
     enrichedVolunteers.forEach((v) => {
@@ -459,6 +482,8 @@ export const useMinistryServiceAttendance = () => {
         unexcused++;
       } else if (v.attendanceStatus === VolunteerAttendanceStatus.EXCUSED) {
         excused++;
+      } else if (v.attendanceStatus === VolunteerAttendanceStatus.EXEMPT) {
+        exempt++;
       } else if (v.attendanceStatus === 'PENDING') {
         pending++;
       }
@@ -473,6 +498,7 @@ export const useMinistryServiceAttendance = () => {
       attended,
       unexcused,
       excused,
+      exempt,
       pending,
       attendancePercent,
     };
@@ -492,6 +518,7 @@ export const useMinistryServiceAttendance = () => {
           attended: 0,
           unexcused: 0,
           excused: 0,
+          exempt: 0,
           pending: 0,
           attendancePercent: 0,
           volunteers: [],
@@ -511,16 +538,24 @@ export const useMinistryServiceAttendance = () => {
         areaEntry.unexcused++;
       } else if (v.attendanceStatus === VolunteerAttendanceStatus.EXCUSED) {
         areaEntry.excused++;
+      } else if (v.attendanceStatus === VolunteerAttendanceStatus.EXEMPT) {
+        areaEntry.exempt++;
       } else if (v.attendanceStatus === 'PENDING') {
         areaEntry.pending++;
       }
     });
 
-    return Array.from(areaMap.values()).map((area) => ({
-      ...area,
-      attendancePercent:
-        area.total > 0 ? Math.round((area.attended / area.total) * 100) : 0,
-    }));
+    return Array.from(areaMap.values())
+      .map((area) => ({
+        ...area,
+        attendancePercent:
+          area.total > 0 ? Math.round((area.attended / area.total) * 100) : 0,
+      }))
+      .sort((a, b) => {
+        if (a.areaId === 'COORDINATORS') return -1;
+        if (b.areaId === 'COORDINATORS') return 1;
+        return a.areaName.localeCompare(b.areaName);
+      });
   }, [enrichedVolunteers]);
 
   const isLoading =

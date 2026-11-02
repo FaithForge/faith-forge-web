@@ -1,7 +1,6 @@
 import Input from '@/components/ui/Input';
 import { VolunteerAttendanceStatus } from '@/libs/models';
 import clsx from 'clsx';
-import dayjs from 'dayjs';
 import {
   AlertCircle,
   Check,
@@ -24,7 +23,7 @@ interface MinistryAttendanceGeneralListProps {
 }
 
 type StatusFilterOption =
-  'ALL' | 'ATTENDED' | 'UNEXCUSED' | 'EXCUSED' | 'PENDING';
+  'ALL' | 'ATTENDED' | 'UNEXCUSED' | 'EXCUSED' | 'EXEMPT' | 'PENDING';
 
 /**
  * General flat list view of all volunteers for the service, with real-time search,
@@ -87,6 +86,9 @@ export const MinistryAttendanceGeneralList: React.FC<
       if (statusFilter === 'EXCUSED') {
         return item.attendanceStatus === VolunteerAttendanceStatus.EXCUSED;
       }
+      if (statusFilter === 'EXEMPT') {
+        return item.attendanceStatus === VolunteerAttendanceStatus.EXEMPT;
+      }
       if (statusFilter === 'PENDING') {
         return (
           item.attendanceStatus === 'PENDING' ||
@@ -103,6 +105,7 @@ export const MinistryAttendanceGeneralList: React.FC<
     let attended = 0;
     let unexcused = 0;
     let excused = 0;
+    let exempt = 0;
     let pending = 0;
 
     volunteers.forEach((v) => {
@@ -115,6 +118,8 @@ export const MinistryAttendanceGeneralList: React.FC<
         unexcused++;
       } else if (v.attendanceStatus === VolunteerAttendanceStatus.EXCUSED) {
         excused++;
+      } else if (v.attendanceStatus === VolunteerAttendanceStatus.EXEMPT) {
+        exempt++;
       } else {
         pending++;
       }
@@ -125,6 +130,7 @@ export const MinistryAttendanceGeneralList: React.FC<
       attended,
       unexcused,
       excused,
+      exempt,
       pending,
     };
   }, [volunteers]);
@@ -255,6 +261,27 @@ export const MinistryAttendanceGeneralList: React.FC<
               ({counts.excused})
             </span>
           </button>
+
+          {counts.exempt > 0 && (
+            <button
+              type="button"
+              onClick={() => setStatusFilter('EXEMPT')}
+              className={clsx(
+                'px-3 py-1 rounded-xl font-bold transition-all shrink-0 flex items-center gap-1.5',
+                statusFilter === 'EXEMPT'
+                  ? 'bg-slate-700 text-white shadow-2xs'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200',
+              )}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+              <span>
+                {t('hub:attendance_report.filter_exempt', {
+                  defaultValue: 'Exentos',
+                })}{' '}
+                ({counts.exempt})
+              </span>
+            </button>
+          )}
 
           {counts.pending > 0 && (
             <button
@@ -402,12 +429,6 @@ export const MinistryAttendanceGeneralList: React.FC<
                       </span>
                     )}
                   </div>
-
-                  {item.attendanceTakeDate && (
-                    <span className="text-[10px] text-slate-400 font-medium">
-                      {dayjs(item.attendanceTakeDate).format('hh:mm A')}
-                    </span>
-                  )}
                 </div>
               </div>
             );

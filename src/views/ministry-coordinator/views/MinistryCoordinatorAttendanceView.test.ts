@@ -43,6 +43,18 @@ describe('Ministry Coordinator Attendance Logic', () => {
     {
       assignmentId: 'asg-4',
       assignment: { id: 'asg-4', role: VolunteerRole.VOLUNTEER },
+      fullName: 'Margarita Mendoza',
+      role: VolunteerRole.VOLUNTEER,
+      areaId: 'area-parvulos',
+      areaName: 'Párvulos',
+      groupId: 'grp-1',
+      groupName: 'Grupo 1',
+      isScheduled: true,
+      attendanceStatus: VolunteerAttendanceStatus.EXEMPT,
+    },
+    {
+      assignmentId: 'asg-5',
+      assignment: { id: 'asg-5', role: VolunteerRole.VOLUNTEER },
       fullName: 'Ana Torres',
       role: VolunteerRole.VOLUNTEER,
       areaId: 'area-parvulos',
@@ -59,6 +71,7 @@ describe('Ministry Coordinator Attendance Logic', () => {
     let attended = 0;
     let unexcused = 0;
     let excused = 0;
+    let exempt = 0;
 
     mockVolunteers.forEach((v) => {
       if (v.isScheduled) totalScheduled++;
@@ -67,12 +80,15 @@ describe('Ministry Coordinator Attendance Logic', () => {
         unexcused++;
       else if (v.attendanceStatus === VolunteerAttendanceStatus.EXCUSED)
         excused++;
+      else if (v.attendanceStatus === VolunteerAttendanceStatus.EXEMPT)
+        exempt++;
     });
 
-    expect(totalScheduled).toBe(3);
+    expect(totalScheduled).toBe(4);
     expect(attended).toBe(2); // 1 scheduled + 1 support
     expect(unexcused).toBe(1);
     expect(excused).toBe(1);
+    expect(exempt).toBe(1);
 
     const scheduledAttended = mockVolunteers.filter(
       (v) =>
@@ -80,7 +96,7 @@ describe('Ministry Coordinator Attendance Logic', () => {
         v.attendanceStatus === VolunteerAttendanceStatus.ATTENDED,
     ).length;
     const rate = Math.round((scheduledAttended / totalScheduled) * 100);
-    expect(rate).toBe(33); // 1 out of 3 scheduled attended
+    expect(rate).toBe(25); // 1 out of 4 scheduled attended
   });
 
   it('correctly aggregates volunteers by area', () => {
@@ -102,7 +118,7 @@ describe('Ministry Coordinator Attendance Logic', () => {
 
     const parvulos = areaMap.get('area-parvulos');
     expect(parvulos).toBeDefined();
-    expect(parvulos?.total).toBe(2);
+    expect(parvulos?.total).toBe(3);
     expect(parvulos?.attended).toBe(1);
   });
 
@@ -110,7 +126,7 @@ describe('Ministry Coordinator Attendance Logic', () => {
     const scheduled = mockVolunteers.filter((v) => v.isScheduled);
     const support = mockVolunteers.filter((v) => !v.isScheduled);
 
-    expect(scheduled.length).toBe(3);
+    expect(scheduled.length).toBe(4);
     expect(support.length).toBe(1);
     expect(support[0].fullName).toBe('Ana Torres');
     expect(support[0].groupName).toBe('Grupo 2');
@@ -133,6 +149,45 @@ describe('Ministry Coordinator Attendance Logic', () => {
     };
     const shouldIncludeSupport =
       unscheduledMarked.isScheduled || unscheduledMarked.hasRecord;
-    expect(shouldIncludeSupport).toBe(true);
+    expect(shouldIncludeSupport).toEqual(true);
+  });
+
+  it('correctly maps group coordinators to the Coordinadores category and sorts them first', () => {
+    const coordinator: EnrichedVolunteerAttendance = {
+      assignmentId: 'asg-coord-1',
+      assignment: { id: 'asg-coord-1', role: VolunteerRole.GROUP_COORDINATOR },
+      fullName: 'Emilia Cohen',
+      role: VolunteerRole.GROUP_COORDINATOR,
+      areaId: 'COORDINATORS',
+      areaName: 'Coordinadores',
+      groupId: 'grp-1',
+      groupName: 'Grupo 1',
+      isScheduled: true,
+      attendanceStatus: VolunteerAttendanceStatus.ATTENDED,
+    };
+
+    const allWithCoord = [...mockVolunteers, coordinator];
+    const areaBreakdown = Array.from(
+      allWithCoord
+        .reduce((acc, v) => {
+          const existing = acc.get(v.areaId) || {
+            areaId: v.areaId,
+            areaName: v.areaName,
+            total: 0,
+          };
+          existing.total++;
+          acc.set(v.areaId, existing);
+          return acc;
+        }, new Map<string, { areaId: string; areaName: string; total: number }>())
+        .values(),
+    ).sort((a, b) => {
+      if (a.areaId === 'COORDINATORS') return -1;
+      if (b.areaId === 'COORDINATORS') return 1;
+      return a.areaName.localeCompare(b.areaName);
+    });
+
+    expect(areaBreakdown[0].areaId).toEqual('COORDINATORS');
+    expect(areaBreakdown[0].areaName).toEqual('Coordinadores');
+    expect(areaBreakdown[0].total).toEqual(1);
   });
 });
