@@ -1,8 +1,9 @@
 import { SelectMinistryModal } from '@/components/modal/SelectMinistryModal';
-import Input from '@/components/ui/Input';
+import DateCalendarPicker from '@/components/ui/DateCalendarPicker';
 import Select from '@/components/ui/Select';
 import { useChurchTerm, useKidsTerm } from '@/libs/hooks/useTerm';
 import clsx from 'clsx';
+import dayjs from 'dayjs';
 import {
   ArrowRightLeft,
   Building2,
@@ -46,6 +47,7 @@ export const MinistryCoordinatorAttendanceView: React.FC = () => {
     setSelectedDate,
     setToday,
     setLastSunday,
+    allowedDaysOfWeek,
     availableMeetings,
     selectedMeetingId,
     setSelectedMeetingId,
@@ -69,6 +71,9 @@ export const MinistryCoordinatorAttendanceView: React.FC = () => {
 
   const isKidsMinistry = activeMinistry?.type === 'KIDS';
   const hasMeetings = availableMeetings.length > 0;
+  const isTodayAllowed = allowedDaysOfWeek
+    ? allowedDaysOfWeek.includes(dayjs().day())
+    : true;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
@@ -175,15 +180,17 @@ export const MinistryCoordinatorAttendanceView: React.FC = () => {
 
               {/* Quick Jump Buttons */}
               <div className="flex items-center gap-1 text-[11px]">
-                <button
-                  type="button"
-                  onClick={setToday}
-                  className="px-2 py-0.5 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
-                >
-                  {t('hub:attendance_report.quick_today', {
-                    defaultValue: 'Hoy',
-                  })}
-                </button>
+                {isTodayAllowed && (
+                  <button
+                    type="button"
+                    onClick={setToday}
+                    className="px-2 py-0.5 rounded-lg font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
+                  >
+                    {t('hub:attendance_report.quick_today', {
+                      defaultValue: 'Hoy',
+                    })}
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={setLastSunday}
@@ -196,11 +203,11 @@ export const MinistryCoordinatorAttendanceView: React.FC = () => {
               </div>
             </div>
 
-            <Input
-              type="date"
+            <DateCalendarPicker
               value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-full text-xs font-medium"
+              onChange={setSelectedDate}
+              allowedDaysOfWeek={allowedDaysOfWeek}
+              className="w-full"
             />
           </div>
 

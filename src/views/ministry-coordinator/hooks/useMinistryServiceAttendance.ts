@@ -156,10 +156,52 @@ export const useMinistryServiceAttendance = () => {
     }
   }, [availableMinistries, activeMinistryId, dispatch]);
 
-  // Selected date state (defaults to today's date in YYYY-MM-DD)
+  // Fetch all active campus meetings
+  const { data: rawMeetings = [], isLoading: isLoadingMeetings } =
+    useGetChurchMeetingsQuery(
+      effectiveCampusId ? { churchCampusId: effectiveCampusId } : undefined,
+      { skip: !effectiveCampusId },
+    );
+
+  // Allowed days of the week based on active campus church meetings
+  const allowedDaysOfWeek = useMemo(() => {
+    const days = new Set<number>();
+
+    if (rawMeetings && rawMeetings.length > 0) {
+      rawMeetings.forEach((m) => {
+        if (m.state && m.state === ChurchMeetingStateEnum.DELETED) return;
+        if (m.day) {
+          const found = Object.entries(DAYJS_TO_DAYS).find(
+            ([, v]) => v === m.day,
+          );
+          if (found) days.add(Number(found[0]));
+        }
+      });
+    }
+
+    return days.size > 0 ? Array.from(days) : undefined;
+  }, [rawMeetings]);
+
+  // Selected date state (defaults to today or nearest service day)
   const [selectedDate, setSelectedDate] = useState<string>(() =>
     dayjs().format('YYYY-MM-DD'),
   );
+
+  // Auto-align selectedDate to the most recent allowed service day if needed
+  useEffect(() => {
+    if (allowedDaysOfWeek && allowedDaysOfWeek.length > 0) {
+      const currentDay = dayjs(selectedDate).day();
+      if (!allowedDaysOfWeek.includes(currentDay)) {
+        let d = dayjs();
+        let attempts = 0;
+        while (!allowedDaysOfWeek.includes(d.day()) && attempts < 7) {
+          d = d.subtract(1, 'day');
+          attempts++;
+        }
+        setSelectedDate(d.format('YYYY-MM-DD'));
+      }
+    }
+  }, [allowedDaysOfWeek, selectedDate]);
 
   // Quick jump actions
   const setToday = () => {
@@ -167,18 +209,19 @@ export const useMinistryServiceAttendance = () => {
   };
 
   const setLastSunday = () => {
-    const today = dayjs();
-    const dayOfWeek = today.day();
-    const lastSun = dayOfWeek === 0 ? today : today.subtract(dayOfWeek, 'day');
-    setSelectedDate(lastSun.format('YYYY-MM-DD'));
+    let d = dayjs();
+    if (allowedDaysOfWeek && allowedDaysOfWeek.length > 0) {
+      let attempts = 0;
+      while (!allowedDaysOfWeek.includes(d.day()) && attempts < 7) {
+        d = d.subtract(1, 'day');
+        attempts++;
+      }
+    } else {
+      const dayOfWeek = d.day();
+      d = dayOfWeek === 0 ? d : d.subtract(dayOfWeek, 'day');
+    }
+    setSelectedDate(d.format('YYYY-MM-DD'));
   };
-
-  // Fetch all active campus meetings
-  const { data: rawMeetings = [], isLoading: isLoadingMeetings } =
-    useGetChurchMeetingsQuery(
-      effectiveCampusId ? { churchCampusId: effectiveCampusId } : undefined,
-      { skip: !effectiveCampusId },
-    );
 
   // Fetch calendar meeting instances for the exact selected date
   const {
@@ -312,11 +355,14 @@ export const useMinistryServiceAttendance = () => {
     );
   }, [assignments]);
 
-  // Enriched list of all volunteer attendance entries
+  // Enriched list of volunteer attendance entries relevant to this service
   const enrichedVolunteers: EnrichedVolunteerAttendance[] = useMemo(() => {
     const hasAnyRecords = recordedAttendances.length > 0;
+    const hasScheduledRestriction = scheduledGroupIds.length > 0;
 
-    return eligibleAssignments.map((asg) => {
+    const list: EnrichedVolunteerAttendance[] = [];
+
+    for (const asg of eligibleAssignments) {
       const user =
         asg.churchMember?.user ||
         asg.volunteer?.user ||
@@ -337,17 +383,24 @@ export const useMinistryServiceAttendance = () => {
       const groupName = group?.name || 'Sin Grupo';
 
       const isScheduled =
-        scheduledGroupIds.length === 0 ||
+        !hasScheduledRestriction ||
         (Boolean(groupId) && scheduledGroupIds.includes(groupId as string));
 
       const recorded = attendanceMap.get(asg.id);
+
+      // If this volunteer is NOT in the scheduled group and has NO attendance mark,
+      // they do not belong to this service report.
+      if (!isScheduled && !recorded) {
+        continue;
+      }
+
       const attendanceStatus = recorded
         ? recorded.attendanceStatus
-        : hasAnyRecords
+        : hasAnyRecords && isScheduled
           ? 'PENDING'
           : undefined;
 
-      return {
+      list.push({
         assignmentId: asg.id,
         assignment: asg,
         userId: user?.id,
@@ -363,7 +416,17 @@ export const useMinistryServiceAttendance = () => {
         isScheduled,
         attendanceStatus,
         attendanceTakeDate: recorded?.attendanceTakeDate,
-      };
+      });
+    }
+
+    // Sort: scheduled first, then by area and full name
+    return list.sort((a, b) => {
+      if (a.isScheduled !== b.isScheduled) {
+        return a.isScheduled ? -1 : 1;
+      }
+      const areaCompare = a.areaName.localeCompare(b.areaName);
+      if (areaCompare !== 0) return areaCompare;
+      return a.fullName.localeCompare(b.fullName);
     });
   }, [
     eligibleAssignments,
@@ -471,6 +534,7 @@ export const useMinistryServiceAttendance = () => {
     setSelectedDate,
     setToday,
     setLastSunday,
+    allowedDaysOfWeek,
     availableMeetings,
     selectedMeetingId,
     setSelectedMeetingId,

@@ -43,6 +43,14 @@ export const MinistryAttendanceGeneralList: React.FC<
   const [onlyScheduled, setOnlyScheduled] = useState(false);
 
   const hasScheduledFilter = scheduledGroupIds.length > 0;
+  const supportCount = useMemo(
+    () => volunteers.filter((v) => !v.isScheduled).length,
+    [volunteers],
+  );
+  const scheduledCount = useMemo(
+    () => volunteers.filter((v) => v.isScheduled).length,
+    [volunteers],
+  );
 
   // Filter volunteers based on search, status tab, and scheduled flag
   const filteredVolunteers = useMemo(() => {
@@ -143,8 +151,8 @@ export const MinistryAttendanceGeneralList: React.FC<
             />
           </div>
 
-          {/* Toggle "Solo grupo programado" */}
-          {hasScheduledFilter && (
+          {/* Toggle "Solo grupo programado" when there are external supports */}
+          {hasScheduledFilter && supportCount > 0 && (
             <div className="flex items-center gap-2">
               <button
                 type="button"
@@ -158,9 +166,12 @@ export const MinistryAttendanceGeneralList: React.FC<
               >
                 <Sparkles className="w-3.5 h-3.5 text-[#0284c7]" />
                 <span>
-                  {t('hub:attendance_report.scheduled_volunteer', {
+                  {t('hub:attendance_report.filter_only_scheduled', {
                     defaultValue: 'Solo grupo programado',
                   })}
+                </span>
+                <span className="text-[10px] px-1.5 py-0.2 rounded-md bg-sky-100 text-[#0284c7] font-extrabold">
+                  {scheduledCount}
                 </span>
                 {onlyScheduled && <Check className="w-3 h-3 text-[#0284c7]" />}
               </button>

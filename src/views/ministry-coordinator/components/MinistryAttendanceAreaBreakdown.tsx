@@ -11,7 +11,7 @@ import {
   Layers,
   Minus,
 } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AreaAttendanceBreakdown } from '../hooks/useMinistryServiceAttendance';
 
@@ -32,16 +32,34 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
 > = ({ areas, hasScheduledFilter = false }) => {
   const { t } = useTranslation(['hub', 'common', 'kidChurch']);
 
-  // Map to control expanded/collapsed state per area
-  const [collapsedAreas, setCollapsedAreas] = useState<Record<string, boolean>>(
+  // Map to control expanded/collapsed state per area (default: all collapsed / closed)
+  const [expandedAreas, setExpandedAreas] = useState<Record<string, boolean>>(
     {},
   );
 
+  const allExpanded = useMemo(() => {
+    return (
+      areas.length > 0 && areas.every((a) => Boolean(expandedAreas[a.areaId]))
+    );
+  }, [areas, expandedAreas]);
+
   const toggleArea = (areaId: string) => {
-    setCollapsedAreas((prev) => ({
+    setExpandedAreas((prev) => ({
       ...prev,
       [areaId]: !prev[areaId],
     }));
+  };
+
+  const handleToggleAll = () => {
+    if (allExpanded) {
+      setExpandedAreas({});
+    } else {
+      const all: Record<string, boolean> = {};
+      areas.forEach((a) => {
+        all[a.areaId] = true;
+      });
+      setExpandedAreas(all);
+    }
   };
 
   if (areas.length === 0) {
@@ -54,8 +72,43 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
 
   return (
     <div className="space-y-3.5">
+      {/* Top Header: Total count and Expand/Collapse All Action */}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-semibold text-slate-500">
+          {areas.length}{' '}
+          {areas.length === 1 ? 'área de servicio' : 'áreas de servicio'}
+        </span>
+
+        <button
+          type="button"
+          onClick={handleToggleAll}
+          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-xs font-bold text-slate-700 shadow-2xs transition-colors cursor-pointer select-none"
+        >
+          {allExpanded ? (
+            <>
+              <ChevronUp className="w-3.5 h-3.5 text-[#0284c7]" />
+              <span>
+                {t('hub:attendance_report.collapse_all', {
+                  defaultValue: 'Colapsar todos',
+                })}
+              </span>
+            </>
+          ) : (
+            <>
+              <ChevronDown className="w-3.5 h-3.5 text-[#0284c7]" />
+              <span>
+                {t('hub:attendance_report.expand_all', {
+                  defaultValue: 'Desplegar todos',
+                })}
+              </span>
+            </>
+          )}
+        </button>
+      </div>
+
+      {/* Area Cards List */}
       {areas.map((area) => {
-        const isCollapsed = Boolean(collapsedAreas[area.areaId]);
+        const isExpanded = Boolean(expandedAreas[area.areaId]);
         const percentColor =
           area.attendancePercent >= 75
             ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
@@ -122,10 +175,10 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
                 </div>
 
                 <div className="text-slate-400">
-                  {isCollapsed ? (
-                    <ChevronDown className="w-4 h-4" />
-                  ) : (
+                  {isExpanded ? (
                     <ChevronUp className="w-4 h-4" />
+                  ) : (
+                    <ChevronDown className="w-4 h-4" />
                   )}
                 </div>
               </div>
@@ -145,7 +198,7 @@ export const MinistryAttendanceAreaBreakdown: React.FC<
             </div>
 
             {/* Collapsible Volunteers Roster */}
-            {!isCollapsed && (
+            {isExpanded && (
               <div className="p-4 sm:p-5 pt-2 border-t border-slate-100 space-y-2.5">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
                   {area.volunteers.map((vol) => {

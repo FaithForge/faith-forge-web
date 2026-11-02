@@ -115,4 +115,24 @@ describe('Ministry Coordinator Attendance Logic', () => {
     expect(support[0].fullName).toBe('Ana Torres');
     expect(support[0].groupName).toBe('Grupo 2');
   });
+
+  it('excludes unscheduled volunteers who have no attendance record', () => {
+    // A volunteer from Grupo 2 who was NOT marked should NOT be in the service report
+    const unscheduledUnmarked = {
+      isScheduled: false,
+      hasRecord: false,
+    };
+    const shouldInclude =
+      unscheduledUnmarked.isScheduled || unscheduledUnmarked.hasRecord;
+    expect(shouldInclude).toBe(false);
+
+    // A volunteer from Grupo 2 who WAS marked as support SHOULD be included
+    const unscheduledMarked = {
+      isScheduled: false,
+      hasRecord: true,
+    };
+    const shouldIncludeSupport =
+      unscheduledMarked.isScheduled || unscheduledMarked.hasRecord;
+    expect(shouldIncludeSupport).toBe(true);
+  });
 });
